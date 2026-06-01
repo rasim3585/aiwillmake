@@ -99,4 +99,5 @@ app.post('/api/generate', limiter, async (req, res) => {
 });
 
 process.stdin.resume();
-app.listen(3000, () => console.log('Server running on 3000'));
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on ${port}`));
