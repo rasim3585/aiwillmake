@@ -1,0 +1,95 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>aiwillmake — AI will write it</title>
+  <meta name="description" content="From social media to legal documents, medical explanations to job applications — AI writes it all." />
+  <style>
+    :root{--bg1:#050816;--bg2:#11172b;--card:#111b33;--muted:#94a2c9;--accent1:#5f7dff;--accent2:#9b4dff;--glass:rgba(255,255,255,0.06);--border:#27315d}
+    html,body{margin:0;padding:0;height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#eef3ff;background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased}
+    body{background-image:radial-gradient(circle at top left, rgba(95,125,255,0.14) 0%, transparent 30%),radial-gradient(circle at bottom right, rgba(155,77,255,0.12) 0%, transparent 28%)}
+    .page{max-width:1180px;margin:0 auto;padding:40px 28px;display:grid;gap:40px}
+    .navbar{display:flex;justify-content:space-between;align-items:center;gap:22px}
+    .brand{font-weight:800;font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+    .nav-link{color:var(--muted);text-decoration:none;font-size:.95rem;transition:color .2s}
+    .nav-link:hover{color:#fff}
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center}
+    .hero-copy{max-width:640px}
+    .eyebrow{color:var(--muted);text-transform:uppercase;letter-spacing:.28em;font-size:.78rem;margin-bottom:18px}
+    h1{margin:0;font-size:clamp(2.8rem,4.5vw,4.8rem);line-height:1.02;letter-spacing:-.03em}
+    .sub{margin-top:18px;color:#cfd6ff;max-width:720px;font-size:1.05rem;line-height:1.8}
+    .cta-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:28px}
+    .btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;color:#fff;padding:16px 24px;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 20px 50px rgba(95,125,255,0.2);transition:transform .2s}
+    .btn-primary:hover{transform:translateY(-2px)}
+    .note{color:var(--muted);font-size:.95rem}
+    .hero-card{position:relative;background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));border:1px solid var(--glass);border-radius:28px;padding:28px;backdrop-filter:blur(14px);overflow:hidden}
+    .blob{position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(95,125,255,0.18);top:-70px;right:-90px;filter:blur(60px)}
+    .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-top:12px}
+    .feature{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;text-align:center;transition:transform .2s,box-shadow .2s}
+    .feature:hover{transform:translateY(-4px);box-shadow:0 18px 48px rgba(20,30,60,0.2)}
+    .feature-icon{width:52px;height:52px;margin:0 auto 18px;border-radius:16px;display:grid;place-items:center;font-size:1.4rem;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff}
+    .feature-title{margin:0;color:#fff;font-size:1rem;font-weight:700}
+    .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .price-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:28px;min-height:200px;display:grid;gap:14px}
+    .plan{display:inline-block;background:rgba(95,125,255,0.14);color:var(--accent1);padding:.55rem 1rem;border-radius:999px;font-weight:700;font-size:.92rem}
+    .price{margin:0;font-size:2.4rem;font-weight:800;color:#fff}
+    .price-note{color:var(--muted);font-size:.95rem;line-height:1.6}
+    footer{padding:24px 0;color:var(--muted);text-align:center;font-size:.92rem;border-top:1px solid rgba(255,255,255,0.06)}
+    @media(max-width:980px){.hero{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.pricing{grid-template-columns:1fr}}
+    @media(max-width:640px){.page{padding:24px 18px}.cards{grid-template-columns:1fr}.hero-card{padding:20px}.hero{gap:24px}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="navbar">
+      <div class="brand">aiwillmake</div>
+      <nav><a href="app.html" class="nav-link">Go to App</a></nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">AI Writing Studio</div>
+        <h1>Whatever you need to say — AI will write it.</h1>
+        <p class="sub">From social media to legal documents, medical explanations to job applications — AI writes it all.</p>
+        <div class="cta-row">
+          <button class="btn-primary">Start Writing</button>
+          <div class="note">Instant results for marketers, professionals, practitioners and students.</div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="blob" aria-hidden="true"></div>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div style="font-size:1rem;font-weight:700;color:#fff">Featured outputs</div>
+          <div style="display:grid;gap:12px">
+            <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,0.06)">“Submit your application with confidence — enjoy tailored bullet points, clear formatting, and strong action verbs.”</div>
+            <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,0.06)">“Your prescription summary is ready: symptoms, duration, and the next care step explained in accessible language.”</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="cards">
+        <div class="feature"><div class="feature-icon">✍️</div><div class="feature-title">Write for Me</div></div>
+        <div class="feature"><div class="feature-icon">📄</div><div class="feature-title">Official & Legal</div></div>
+        <div class="feature"><div class="feature-icon">🩺</div><div class="feature-title">Health</div></div>
+        <div class="feature"><div class="feature-icon">💼</div><div class="feature-title">Career</div></div>
+        <div class="feature"><div class="feature-icon">🎓</div><div class="feature-title">Education</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h3 style="font-size:1.45rem;margin-bottom:18px">Pricing</h3>
+      <div class="pricing">
+        <div class="price-card"><span class="plan">Starter</span><p class="price">$9</p><p class="price-note">Perfect for individual creators and light use.</p></div>
+        <div class="price-card"><span class="plan">Pro</span><p class="price">$14</p><p class="price-note">Great for freelancers and growing teams.</p></div>
+        <div class="price-card"><span class="plan">Business</span><p class="price">$49</p><p class="price-note">Best for power users, agencies, and companies.</p></div>
+      </div>
+    </section>
+
+    <footer>© 2026 aiwillmake — AI writing for every need.</footer>
+  </div>
+</body>
+</html>
