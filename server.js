@@ -11,11 +11,6 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again in a minute.' }
 });
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY in environment. Please set it in .env.');
-  process.exit(1);
-}
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
