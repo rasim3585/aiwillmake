@@ -801,12 +801,10 @@
           container.appendChild(card);
         });
 
-        // Update credits after successful generation
+        // Guest credit tracking (auth users handled in finally via fetchAndShowCredits)
         if (!accessToken) {
           incGuestUsed();
           updateCreditUI(getGuestUsed(), GUEST_LIMIT, true);
-        } else if (data.credits_used != null) {
-          updateCreditUI(data.credits_used, AUTH_LIMIT, false);
         }
 
         document.getElementById('resultsSection').classList.remove('hidden');
@@ -817,6 +815,8 @@
         btn.disabled = false;
         btn.textContent = 'Generate ✦';
         setActionBtns(false);
+        // Always refresh credit display from server (may re-disable if limit reached)
+        if (accessToken) fetchAndShowCredits();
       }
     }
 
