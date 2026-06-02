@@ -345,6 +345,18 @@
     .caption-text { font-size: .93rem; line-height: 1.68; color: var(--text); }
 
     .hidden { display: none; }
+    /* Action buttons */
+    .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-action {
+      padding: 12px 20px; border-radius: 13px; font: inherit; font-size: .88rem;
+      font-weight: 600; cursor: pointer; transition: background .2s, opacity .2s;
+      border: 1px solid; flex: 1; min-width: 200px; text-align: center;
+    }
+    .btn-action:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-regen { background: rgba(110,129,255,0.1); color: var(--accent); border-color: rgba(110,129,255,0.22); }
+    .btn-regen:hover:not(:disabled) { background: rgba(110,129,255,0.18); }
+    .btn-diff { background: rgba(163,96,255,0.1); color: var(--accent2); border-color: rgba(163,96,255,0.22); }
+    .btn-diff:hover:not(:disabled) { background: rgba(163,96,255,0.18); }
 
     @media (max-width: 860px) {
       .category-grid { grid-template-columns: repeat(2, 1fr); }
@@ -425,6 +437,10 @@
         <p class="results-note">Click copy to save each one.</p>
       </div>
       <div class="cards-grid" id="captionsContainer"></div>
+      <div class="action-btns">
+        <button type="button" class="btn-action btn-regen" id="regenBtn">🔄 Get 6 more like these</button>
+        <button type="button" class="btn-action btn-diff" id="diffBtn">✨ Try completely different approach</button>
+      </div>
     </section>
 
   </div>
@@ -619,7 +635,12 @@
       return document.getElementById(id)?.value?.trim() || '';
     }
 
-    async function generate() {
+    function setActionBtns(disabled) {
+      document.getElementById('regenBtn').disabled = disabled;
+      document.getElementById('diffBtn').disabled = disabled;
+    }
+
+    async function generate(modifier = '') {
       if (!selectedCatId || !selectedSubId) {
         alert('Please select a category and subcategory.');
         return;
@@ -646,6 +667,7 @@
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.textContent = 'Generating...';
+      setActionBtns(true);
 
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -653,7 +675,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields })
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, modifier: modifier || undefined })
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -702,10 +724,15 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Generate ✦';
+        setActionBtns(false);
       }
     }
 
-    document.getElementById('generateBtn').addEventListener('click', generate);
+    document.getElementById('generateBtn').addEventListener('click', () => generate());
+    document.getElementById('regenBtn').addEventListener('click', () =>
+      generate('Make these 6 outputs completely different from the previous ones. New angles, new phrasings, new emotional approaches.'));
+    document.getElementById('diffBtn').addEventListener('click', () =>
+      generate('Use a totally different tone, style and approach. Ignore previous outputs completely. Surprise the reader.'));
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
 
     initAuth().then(() => init());

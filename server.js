@@ -46,7 +46,7 @@ async function requireAuth(req, res, next) {
 
 app.post('/api/generate', requireAuth, limiter, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, fields } = req.body;
+    const { categoryId, subcategoryId, fields, modifier } = req.body;
 
     const category = categories.categories.find(c => c.id === categoryId);
     if (!category) return res.status(400).json({ error: 'Invalid category' });
@@ -78,7 +78,7 @@ app.post('/api/generate', requireAuth, limiter, async (req, res) => {
 Görevin:
 1. Kullanıcının durumunu analiz et, duygusal ve bağlamsal detayları belirle
 2. Alakasız bilgileri görmezden gel
-3. İnsan gibi hissettiren, özgün 5 farklı metin yaz
+3. İnsan gibi hissettiren, özgün 6 farklı metin yaz
 4. Her metin farklı bir yaklaşım kullansın (örn. doğrudan, dolaylı, duygusal, pratik, mizahi)
 5. İsim verilmişse doğal şekilde kullan
 6. Dilbilgisi kurallarına tam uy, özne-yüklem uyumuna dikkat et
@@ -98,7 +98,7 @@ ${situationLines}
 Your job:
 1. Analyze the situation and identify the key emotional/contextual details
 2. Ignore irrelevant information
-3. Write 5 distinct messages that feel human and authentic
+3. Write 6 distinct messages that feel human and authentic
 4. Each message should have a different approach (e.g. direct, subtle, emotional, practical, humorous)
 5. Use the person's name if provided
 6. Use proper grammar and punctuation throughout
@@ -118,7 +118,7 @@ IMPORTANT: Return only plain text. No markdown, no bold, no headers, no asterisk
 مهمتك:
 1. حلّل الوضع وحدّد التفاصيل العاطفية والسياقية المهمة
 2. تجاهل المعلومات غير ذات الصلة
-3. اكتب 5 رسائل مختلفة تبدو إنسانية وأصيلة
+3. اكتب 6 رسائل مختلفة تبدو إنسانية وأصيلة
 4. لكل رسالة أسلوب مختلف (مثل: مباشر، دبلوماسي، عاطفي، عملي، خفيف الظل)
 5. استخدم الاسم بشكل طبيعي إن وُجد
 6. التزم بقواعد النحو والإملاء العربي الصحيح
@@ -138,7 +138,7 @@ ${situationLines}
 Deine Aufgabe:
 1. Analysiere die Situation und identifiziere die emotionalen und kontextuellen Details
 2. Ignoriere irrelevante Informationen
-3. Schreibe 5 verschiedene Texte, die menschlich und authentisch wirken
+3. Schreibe 6 verschiedene Texte, die menschlich und authentisch wirken
 4. Jeder Text soll einen anderen Ansatz haben (z. B. direkt, subtil, emotional, sachlich, humorvoll)
 5. Verwende den Namen natürlich, falls angegeben
 6. Achte auf korrekte Grammatik und Rechtschreibung
@@ -158,7 +158,7 @@ WICHTIG: Gib nur einfachen Text zurück. Kein Markdown, keine Fettschrift, keine
 Ta mission :
 1. Analyser la situation et identifier les détails émotionnels et contextuels clés
 2. Ignorer les informations non pertinentes
-3. Rédiger 5 messages distincts qui semblent humains et authentiques
+3. Rédiger 6 messages distincts qui semblent humains et authentiques
 4. Chaque message doit avoir une approche différente (ex. direct, subtil, émotionnel, pratique, humoristique)
 5. Utiliser le prénom naturellement s'il est fourni
 6. Respecter les règles grammaticales et orthographiques du français
@@ -178,7 +178,7 @@ IMPORTANT : Retourner uniquement du texte brut. Pas de markdown, pas de gras, pa
 Tu tarea:
 1. Analizar la situación e identificar los detalles emocionales y contextuales clave
 2. Ignorar información irrelevante
-3. Escribir 5 mensajes distintos que se sientan humanos y auténticos
+3. Escribir 6 mensajes distintos que se sientan humanos y auténticos
 4. Cada mensaje debe tener un enfoque diferente (ej. directo, sutil, emocional, práctico, humorístico)
 5. Usar el nombre de forma natural si se proporciona
 6. Respetar las reglas gramaticales y ortográficas del español
@@ -198,7 +198,7 @@ IMPORTANTE: Devuelve solo texto plano. Sin markdown, sin negrita, sin títulos, 
 Il tuo compito:
 1. Analizzare la situazione e identificare i dettagli emotivi e contestuali chiave
 2. Ignorare le informazioni irrilevanti
-3. Scrivere 5 messaggi distinti che sembrino umani e autentici
+3. Scrivere 6 messaggi distinti che sembrino umani e autentici
 4. Ogni messaggio deve avere un approccio diverso (es. diretto, sottile, emotivo, pratico, umoristico)
 5. Usare il nome in modo naturale se fornito
 6. Rispettare le regole grammaticali e ortografiche dell'italiano
@@ -214,7 +214,8 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
 ...`
     };
 
-    const prompt = systemPrompts[fields.language] || systemPrompts['English'];
+    const basePrompt = systemPrompts[fields.language] || systemPrompts['English'];
+    const prompt = modifier ? `${basePrompt}\n\n${modifier}` : basePrompt;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
@@ -232,7 +233,7 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: categoryId === 'official_legal' ? 4096 : 1024,
+          max_tokens: categoryId === 'official_legal' ? 5120 : 1280,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -273,12 +274,12 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
           return { badge: null, text: clean(trimmed) };
         })
         .filter(Boolean)
-        .slice(0, 5);
+        .slice(0, 6);
     } else {
       captions = text.split('\n')
         .map(l => clean(l).replace(/^\d+[\.\)]\s*/, '').trim())
         .filter(l => l.length > 5)
-        .slice(0, 5);
+        .slice(0, 6);
     }
 
     res.json({ captions });
