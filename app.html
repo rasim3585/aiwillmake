@@ -286,12 +286,19 @@
     }
     .caption-card:hover { border-color: var(--border-med); box-shadow: 0 4px 22px rgba(0,0,0,0.2); }
 
-    .caption-top { display: flex; justify-content: space-between; align-items: center; }
+    .caption-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .caption-top-left { display: flex; align-items: center; gap: 8px; }
     .caption-num {
       width: 24px; height: 24px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       display: grid; place-items: center;
       font-size: .7rem; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .caption-badge {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--accent);
+      background: rgba(110,129,255,0.13); border: 1px solid rgba(110,129,255,0.22);
+      padding: 3px 8px; border-radius: 5px; flex-shrink: 0;
     }
     .copy-btn {
       border: 1px solid var(--border);
@@ -560,15 +567,25 @@
         const container = document.getElementById('captionsContainer');
         container.innerHTML = '';
 
-        captions.forEach((text, i) => {
+        const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        captions.forEach((item, i) => {
+          const isObj = item !== null && typeof item === 'object';
+          const text = isObj ? item.text : item;
+          const badge = isObj ? item.badge : null;
+          const displayText = escHtml(text).replace(/\n/g, '<br>');
+
           const card = document.createElement('div');
           card.className = 'caption-card';
           card.innerHTML = `
             <div class="caption-top">
-              <span class="caption-num">${i + 1}</span>
+              <div class="caption-top-left">
+                <span class="caption-num">${i + 1}</span>
+                ${badge ? `<span class="caption-badge">${escHtml(badge)}</span>` : ''}
+              </div>
               <button type="button" class="copy-btn">Copy</button>
             </div>
-            <p class="caption-text">${text}</p>`;
+            <p class="caption-text">${displayText}</p>`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
             e.target.textContent = 'Copied ✓';

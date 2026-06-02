@@ -83,7 +83,7 @@ IMPORTANT: Return only plain text messages. No markdown, no bold, no headers, no
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
+          max_tokens: categoryId === 'official_legal' ? 4096 : 1024,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -101,16 +101,36 @@ IMPORTANT: Return only plain text messages. No markdown, no bold, no headers, no
     }
 
     const text = data.content[0].text;
-    const captions = text.split('\n')
-      .map(l => l
-        .replace(/^\d+[\.\)]\s*/, '')
-        .replace(/\*\*/g, '')
-        .replace(/#+\s?/g, '')
-        .replace(/\*/g, '')
-        .trim()
-      )
-      .filter(l => l.length > 5)
-      .slice(0, 5);
+    const clean = s => s.replace(/\*\*/g, '').replace(/#+\s?/g, '').replace(/\*/g, '');
+
+    let captions;
+
+    if (categoryId === 'official_legal') {
+      const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
+      captions = rawBlocks.slice(1)
+        .map(block => {
+          const trimmed = block.trim();
+          if (trimmed.length < 20) return null;
+          const lines = trimmed.split('\n');
+          const firstLine = lines[0].trim();
+          const isTitle = firstLine.length < 60
+            && !firstLine.startsWith('Sayın')
+            && !firstLine.startsWith('Dear')
+            && !/^Konu:/i.test(firstLine)
+            && lines.length > 1;
+          if (isTitle) {
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()) };
+          }
+          return { badge: null, text: clean(trimmed) };
+        })
+        .filter(Boolean)
+        .slice(0, 5);
+    } else {
+      captions = text.split('\n')
+        .map(l => clean(l).replace(/^\d+[\.\)]\s*/, '').trim())
+        .filter(l => l.length > 5)
+        .slice(0, 5);
+    }
 
     res.json({ captions });
   } catch (err) {
