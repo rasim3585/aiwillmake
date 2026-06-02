@@ -533,7 +533,7 @@
               "placeholder": "Örn: Vatandaş, kiracı, öğrenci, işletme sahibi..."
             }
           ],
-          "prompt_template": "Sen bir hukuki yazı asistanısın. {{authority}} kurumuna sunulmak üzere {{subject}} konusunda 5 farklı dilekçe taslağı {{language}} dilinde yaz. Durum: {{issue_description}}. Talep: {{desired_outcome}}. {{applicant_role}}Ülke/hukuk sistemi bağlamı: {{country}}. Resmi, nazik ve iddialara dayalı bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı dilekçe metni üret. Her biri doğrudan kullanılabilir, eksiksiz bir dilekçe olsun.\n\nMuhatap kurum: {{authority}}\nKonu: {{subject}}\nDurum: {{issue_description}}\nTalep: {{desired_outcome}}\n{{applicant_role}}Ülke: {{country}}\n\nHer dilekçe şu formatı izlesin:\n- \"Sayın [kurum/makam],\" ile başlasın\n- Konu satırı içersin\n- Durumu ve talebi içersin\n- \"Gereğini saygılarımla arz ederim.\" veya benzeri resmi kapanış\n- Alt kısımda imza bloğu (Ad Soyad / Tarih / İletişim)\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (yarım sayfa, sadece özü)\n2. Detaylı ve gerekçeli (tüm argümanlar, yasal dayanak atıfları)\n3. Sert ve kararlı (hakların ihlal edildiğini vurgular, acil işlem talep eder)\n4. Diplomatik (nazik ama net, işbirliğine açık ton)\n5. Resmi ve bürokratik (tam resmi dil, madde madde yapı)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir dilekçe metni döndür, numaralı liste halinde."
         },
         {
           "id": "complaint_letter",
@@ -573,7 +573,7 @@
               "options": ["Resmi ve ölçülü", "Sert ve kararlı", "Son uyarı niteliğinde"]
             }
           ],
-          "prompt_template": "Sen bir hukuki yazı asistanısın. {{recipient}} adresine {{subject}} hakkında 5 farklı resmi şikayet mektubu taslağı {{language}} dilinde yaz. Detaylar: {{complaint_details}}. Beklenen çözüm: {{desired_outcome}}. Ton: {{tone}}. Ülke/hukuk bağlamı: {{country}}. Resmi, somut iddialara dayalı ve çözüm odaklı bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı şikayet mektubu metni üret. Her biri doğrudan gönderilebilir, eksiksiz bir mektup olsun.\n\nMuhatap: {{recipient}}\nŞikayet konusu: {{subject}}\nDetaylar: {{complaint_details}}\nBeklenen çözüm: {{desired_outcome}}\nİstenen ton: {{tone}}\nÜlke: {{country}}\n\nHer mektup şu formatı izlesin:\n- \"Sayın [muhatap/kurum],\" ile başlasın\n- Şikayeti somut olay ve tarihlerle açıklasın\n- Beklenen çözümü açıkça talep etsin\n- Yanıt süresi belirtsin (örn. 15 iş günü)\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (sadece olay + talep)\n2. Detaylı ve belgeye dayalı (tüm olgular sıralı)\n3. Sert ve yaptırım odaklı (yasal yollara başvurulacağını ima eder)\n4. Diplomatik (çözüm odaklı, iyi niyetli ton)\n5. Resmi ve bürokratik (madde madde, referans numaralı yapı)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir mektup metni döndür, numaralı liste halinde."
         },
         {
           "id": "official_request",
@@ -607,7 +607,7 @@
               "placeholder": "Örn: 15 iş günü içinde, acil..."
             }
           ],
-          "prompt_template": "Sen bir hukuki yazı asistanısın. {{recipient_authority}} kurumuna {{request_subject}} konusunda 5 farklı resmi talep mektubu taslağı {{language}} dilinde yaz. Gerekçe: {{reason}}. {{deadline}}Ülke/hukuk bağlamı: {{country}}. Kibar, net ve resmi bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı resmi talep mektubu metni üret. Her biri doğrudan gönderilebilir, eksiksiz bir mektup olsun.\n\nMuhatap kurum: {{recipient_authority}}\nTalep konusu: {{request_subject}}\nGerekçe: {{reason}}\n{{deadline}}Ülke: {{country}}\n\nHer mektup şu formatı izlesin:\n- \"Sayın [kurum/yetkili],\" ile başlasın\n- Talebin ne olduğunu ve gerekçesini açıklasın\n- Hukuki veya idari dayanak içersin (uygunsa)\n- Yanıt veya işlem için süre talep etsin\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (talebi doğrudan ifade eder)\n2. Detaylı ve gerekçeli (tüm argümanlar ve dayanak)\n3. Sert ve kararlı (gecikme ya da reddin kabul edilmeyeceğini ima eder)\n4. Diplomatik (nazik ve işbirliğine açık)\n5. Resmi ve bürokratik (madde madde, tam resmi yazışma dili)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir mektup metni döndür, numaralı liste halinde."
         },
         {
           "id": "legal_objection",
@@ -647,7 +647,7 @@
               "placeholder": "Örn: Yürütmeyi durdurma talep ediyorum, 30 günlük itiraz süresi..."
             }
           ],
-          "prompt_template": "Sen bir hukuki yazı asistanısın. {{authority}} makamına {{objection_type}} türünde 5 farklı resmi itiraz dilekçesi taslağı {{language}} dilinde yaz. Konu: {{subject}}. Hukuki dayanak: {{legal_basis}}. {{urgency}}Ülke/hukuk sistemi bağlamı: {{country}}. Kesin, iddialara dayalı ve hukuki terminoloji kullanan resmi bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı itiraz dilekçesi metni üret. Her biri doğrudan kullanılabilir, eksiksiz bir dilekçe olsun.\n\nBaşvuru makamı: {{authority}}\nİtiraz türü: {{objection_type}}\nİtiraz konusu: {{subject}}\nHukuki dayanak: {{legal_basis}}\n{{urgency}}Ülke: {{country}}\n\nHer dilekçe şu formatı izlesin:\n- \"Sayın [makam/kurum],\" ile başlasın\n- İtiraz edilen karar veya işlemi açıkça tanımlasın\n- Hukuki dayanağı ve gerekçeyi somut olarak ifade etsin\n- Talep edilen sonucu (iptal, düzeltme, yeniden değerlendirme vb.) belirtsin\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (itirazı ve talebi özlü biçimde ifade eder)\n2. Detaylı ve hukuki (tüm gerekçeler, yasal maddeler, emsal atıfları)\n3. Sert ve kararlı (hakkın açıkça ihlal edildiğini vurgular, yargı yoluna gidileceğini belirtir)\n4. Diplomatik (idarenin hatayı fark edeceğine dair güveni yansıtır)\n5. Resmi ve bürokratik (madde madde yapı, tam hukuki yazışma dili)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir dilekçe metni döndür, numaralı liste halinde."
         }
       ]
     }
