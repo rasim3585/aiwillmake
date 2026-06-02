@@ -45,7 +45,7 @@
               "placeholder": "Sevgilinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin sevgilisine göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. Ton: {{tone}}. Konu/Durum: {{situation}}. {{partner_name}}Ülke bağlamı: {{country}}. Samimi ve doğal bir dil kullan, fazla resmi veya klişe olma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri sevgilisine göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum: {{situation}}\nTon: {{tone}}\n{{partner_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu mesajın özüne yerleştir — o durumu yaşıyormuş gibi yaz, genel bir aşk/özlem mesajı yazma. İsim verilmişse uygun mesajlarda doğal şekilde kullan. Her mesaj farklı bir yaklaşım kullansın: biri kısa ve duygusal yoğun, biri daha uzun ve açıklayıcı, biri hafif mizahi (tona uygunsa), biri sade ve içten, biri beklenmedik bir açıdan. Klişe kalıplardan kaçın. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "ex_partner",
@@ -85,7 +85,7 @@
               "placeholder": "Kişinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin eski sevgilisine göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. İlişki nasıl bitti: {{relationship_end}}. Geçen süre: {{time_passed}}. Amaç: {{goal}}. Arka plan: {{situation}}. {{ex_name}}Ülke bağlamı: {{country}}. Duygusal zekayı yansıt, fazla dramatik veya itici olma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri eski sevgilisine göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nİlişkinin sonu: {{relationship_end}}\nGeçen süre: {{time_passed}}\nAmaç: {{goal}}\nArka plan: {{situation}}\n{{ex_name}}Kültür bağlamı: {{country}}\n\nTalimatlar:\n- Geçen süreyi soyut bırakma: \"{{time_passed}}\" geçmiş — bunu mesajlarda hissettir, \"uzun zaman oldu\" deme, o sürenin ağırlığını yansıt\n- İlişki bitişini mesajın duygusal tonuna yansıt: ihanet varsa doğrudan söyleme ama bir kırılmışlık, temkinlilik hissi ver; kavgayla bittiyse hâlâ kalan bir gerilim olabilir; karşılıklı kararsa daha olgun ve sakin bir ton kullan\n- Amaç \"Yeniden başlamak\" ise umut içeren ama çaresiz veya baskıcı olmayan mesajlar yaz\n- Amaç \"Kapanış yaşamak\" ise kapıyı kapatan ama saygılı, acı içermeyen mesajlar yaz\n- Amaç \"Özür dilemek\" ise ne için özür dilendiğini arka plandan çıkar ve mesaja yansıt\n- İsim verilmişse uygun mesajlarda kullan\n- Her mesaj farklı uzunluk ve duygusal yoğunlukta olsun\nSadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "crush",
@@ -113,7 +113,7 @@
               "placeholder": "Kişinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin beğendiği birine göndereceği 5 farklı ilk mesaj veya konuşma başlatma taslağı {{language}} dilinde yaz. Yaklaşım: {{approach}}. Bağlam: {{situation}}. {{crush_name}}Ülke bağlamı: {{country}}. Samimi ve özgün tut, çok yapay veya şabloncu olma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri beğendiği kişiye ilk (veya yeniden) mesaj atmak için 5 farklı taslak istiyor. {{language}} dilinde yaz.\n\nTanışma bağlamı: {{situation}}\nYaklaşım tarzı: {{approach}}\n{{crush_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Tanışma bağlamını ({{situation}}) mesajın içine organik yerleştir — o bağlamdan doğan doğal bir konuşma başlangıcı gibi hissettir, genel \"merhaba\" mesajı yazma. İsim verilmişse uygun mesajlarda kullan. Her mesaj farklı bir kapı arasın: biri soruyla başlasın, biri ortak bağlama değinsin, biri doğrudan niyeti ima etsin, biri hafif ve casual olsun, biri merak uyandırsın. Yapay veya ezberlenmiş gibi hissettirme. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "friend",
@@ -141,7 +141,7 @@
               "placeholder": "Arkadaşın adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin arkadaşına göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. Ton: {{tone}}. Konu/Durum: {{situation}}. {{friend_name}}Ülke bağlamı: {{country}}. Arkadaşlar arasındaki doğal dili kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri arkadaşına göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum/Konu: {{situation}}\nTon: {{tone}}\n{{friend_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu ({{situation}}) mesajın merkezine koy — sanki o durumu bilen biri yazıyor gibi, formül değil. İsim verilmişse bazı mesajlarda doğal şekilde kullan. Her mesaj farklı bir yaklaşım kullansın: biri direkt ve kısa, biri uzun ve detaylı, biri espriyle açan (tona uygunsa), biri soru soran ve diyalog açan, biri duygusal ve içten. Arkadaşlar arasındaki samimi ve rahat dili yansıt. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "family",
@@ -168,7 +168,7 @@
             }
           ],
           "optional_fields": [],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin {{family_member}}'ına göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. Ton: {{tone}}. Konu/Durum: {{situation}}. Ülke bağlamı: {{country}}. Aile ilişkilerine uygun, samimi bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{family_member}}'ına göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum/Konu: {{situation}}\nTon: {{tone}}\nKültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu mesajın içine somut şekilde yerleştir, soyut kalmayan ifadeler kullan. {{family_member}} ile kurulan ilişkinin dinamiğini yansıt — anne ile konuşma dili, kardeş ile konuşma dili veya büyükanne ile konuşma dili birbirinden farklıdır. {{country}} kültürel bağlamına uygun bir aile iletişim tonu kullan. Her mesaj farklı uzunluk ve duygusal derinlikte olsun. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "apology",
@@ -202,7 +202,7 @@
               "placeholder": "Kişinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin {{recipient}}'a göndereceği 5 farklı özür mesajı taslağı {{language}} dilinde yaz. Özür nedeni: {{reason}}. Ciddiyeti: {{severity}}. {{recipient_name}}Ülke bağlamı: {{country}}. Samimi, savunmacı olmayan ve sorumluluk alan bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{recipient}}'a özür dilemek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nÖzür nedeni: {{reason}}\nCiddiyet: {{severity}}\n{{recipient_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Özür nedenini ({{reason}}) mesajın içine direkt yansıt — \"yaptığım şey için özür dilerim\" değil, tam olarak ne için özür dilendiğini mesajda göster. Ciddiyet \"Ciddi / Derin\" ise sorumluluk tam olarak kabul eden, konuyu küçümsemeyen bir dil kullan; \"Hafif / Günlük\" ise daha rahat ve kısa olabilir. İsim verilmişse uygun mesajlarda kullan. Her mesaj farklı bir yaklaşım kullansın: biri özür + somut açıklama, biri kısa ve öz sadece özür, biri özür + telafi önerisi, biri duygusal ve uzun, biri özür + gelecekteki davranış taahhüdü. Savunmacı ton kullanma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "rejection",
@@ -229,7 +229,7 @@
             }
           ],
           "optional_fields": [],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin {{context}} için göndereceği 5 farklı ret mesajı taslağı {{language}} dilinde yaz. Ton: {{tone}}. Durum: {{situation}}. Ülke bağlamı: {{country}}. Karşı tarafı zedelemeden ama net bir şekilde ret ifade et. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{context}} bağlamında aldığı bir teklifi/talebi reddetmek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum: {{situation}}\nTon: {{tone}}\nKültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu ({{situation}}) mesajın içine yerleştir — o spesifik teklif veya talebe yanıt veriyor gibi yaz, jenerik bir ret mesajı değil. Ret kararı muğlak kalmasın, her mesajda açıkça belli olsun. Ton \"Kesin ve sınır koyucu\" ise tartışmaya yer bırakmayan bir dil kullan; \"Nazik ve anlayışlı\" ise karşı tarafın duygularını gözeten ama yine de net bir ret yaz. Her mesaj farklı bir yaklaşım kullansın: biri kısa ve net, biri açıklama içeren, biri empatiyle başlayıp reddeden, biri alternatif öneren (uygunsa), biri sınır koyucu. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "congratulations",
@@ -263,7 +263,7 @@
               "placeholder": "Kişinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin {{recipient}}'ına {{occasion}} için göndereceği 5 farklı tebrik mesajı taslağı {{language}} dilinde yaz. Ton: {{tone}}. {{recipient_name}}Ülke bağlamı: {{country}}. İçten ve özgün tut, klişeden kaçın. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{recipient}}'ına {{occasion}} için 5 farklı tebrik mesajı taslağı {{language}} dilinde yazıyor.\n\nTon: {{tone}}\n{{recipient_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: {{occasion}} vesilesiyle {{recipient}} ilişkisine özel bir dil kullan — yakın arkadaşa doğum günü mesajı ile iş arkadaşına terfi tebriki farklı bir ton gerektirir. İsim verilmişse mesajlarda doğal şekilde kullan. Her mesaj birbirinden farklı olsun: biri kısa ve güçlü, biri uzun ve duygusal, biri anı veya espri içeren (ilişkiye uygunsa), biri gelecek odaklı, biri sadece o anı kutlayan. \"Nice yıllara\", \"tebrikler\" gibi klişe kalıpların ötesine geç. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         }
       ]
     },
