@@ -1,3 +1,4 @@
+console.log('SERVER VERSION: 2.0 - NEW CODE');
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -86,6 +87,8 @@ async function incrementCredits(token, userId, current) {
 }
 
 app.get('/api/credits', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   console.log('[/api/credits] token present:', !!token, '| supabase:', !!supabase);
   if (!supabase || !token) return res.json({ credits_used: 0, limit: 5, guest: !token });
