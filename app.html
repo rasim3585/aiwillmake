@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -6,40 +6,56 @@
   <title>aiwillmake — AI Writing App</title>
   <meta name="description" content="Generate AI-powered content for every category with custom forms." />
   <style>
-    :root{--bg1:#040714;--bg2:#101b34;--card:#111d3b;--muted:#95a4ca;--text:#eef4ff;--border:rgba(255,255,255,0.08);--accent:#6e81ff;--accent2:#a360ff;--success:#10b981}
+    :root{--bg1:#040714;--bg2:#101b34;--muted:#95a4ca;--text:#eef4ff;--border:rgba(255,255,255,0.08);--accent:#6e81ff;--accent2:#a360ff;--success:#10b981}
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--text);background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased}
-    body{background-image:radial-gradient(circle at top left, rgba(110,129,255,0.16) 0%, transparent 28%),radial-gradient(circle at bottom right, rgba(163,96,255,0.1) 0%, transparent 30%)}
+    html,body{margin:0;padding:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:var(--text);background:linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased;min-height:100%}
+    body{background-image:radial-gradient(circle at top left,rgba(110,129,255,0.16) 0%,transparent 28%),radial-gradient(circle at bottom right,rgba(163,96,255,0.1) 0%,transparent 30%)}
     .page{max-width:1200px;margin:0 auto;padding:32px 24px;display:grid;gap:28px}
     .header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07)}
     .brand{font-size:1.15rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
     .nav{display:flex;gap:14px}
     .nav a{color:var(--muted);text-decoration:none;font-size:.95rem;transition:color .2s}
     .nav a:hover{color:#fff}
-    .category-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
+    /* category cards */
+    .category-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
     .cat-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:24px;padding:24px;cursor:pointer;transition:transform .2s,background .2s,border-color .2s;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-    .cat-card.active{background:linear-gradient(180deg, rgba(110,129,255,0.18), rgba(163,96,255,0.12));border-color:rgba(110,129,255,0.35);transform:translateY(-2px)}
-    .cat-icon{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:1.7rem;background:rgba(255,255,255,0.08);color:#fff}
+    .cat-card:hover{background:rgba(255,255,255,0.06);transform:translateY(-1px)}
+    .cat-card.active{background:linear-gradient(180deg,rgba(110,129,255,0.18),rgba(163,96,255,0.12));border-color:rgba(110,129,255,0.35);transform:translateY(-2px)}
+    .cat-icon{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:1.7rem;background:rgba(255,255,255,0.08)}
     .cat-title{font-size:1rem;font-weight:700;margin:0}
-    .form-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:28px;padding:28px;display:grid;gap:22px}
+    /* subcategory cards */
+    .section-label{color:var(--muted);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 6px}
+    .section-title{font-size:1.2rem;font-weight:700;margin:0 0 16px}
+    .subcat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .subcat-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:18px;padding:18px 16px;cursor:pointer;transition:transform .2s,background .2s,border-color .2s;text-align:left}
+    .subcat-card:hover{background:rgba(255,255,255,0.06);transform:translateY(-1px)}
+    .subcat-card.active{background:linear-gradient(180deg,rgba(110,129,255,0.15),rgba(163,96,255,0.1));border-color:rgba(110,129,255,0.35)}
+    .subcat-title{font-size:.92rem;font-weight:700;margin:0 0 5px}
+    .subcat-desc{color:var(--muted);font-size:.8rem;margin:0;line-height:1.4}
+    /* form */
+    .form-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:28px;padding:28px}
+    .form-inner{display:grid;gap:18px}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .optional-divider{color:var(--muted);font-size:.83rem;padding-top:6px;border-top:1px solid var(--border);margin-top:2px}
     label{display:block;color:var(--muted);font-size:.94rem;margin-bottom:8px}
     select,input,textarea{width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--text);font:inherit;outline:none;transition:border-color .2s}
     select:focus,input:focus,textarea:focus{border-color:var(--accent)}
     textarea{resize:vertical;min-height:120px}
     .hidden{display:none}
-    .btn-generate{width:100%;padding:16px 18px;border:none;border-radius:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 18px 50px rgba(110,129,255,0.18);transition:transform .2s}
-    .btn-generate:hover{transform:translateY(-2px)}
+    .btn-generate{width:100%;padding:16px 18px;border:none;border-radius:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 18px 50px rgba(110,129,255,0.18);transition:transform .2s,opacity .2s}
+    .btn-generate:hover:not(:disabled){transform:translateY(-2px)}
+    .btn-generate:disabled{opacity:.5;cursor:not-allowed}
+    /* results */
     .results{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:26px;padding:24px;display:grid;gap:18px}
     .results h2{margin:0;font-size:1.2rem}
     .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
     .caption-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:18px;display:grid;gap:12px}
-    .caption-meta{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .caption-meta{display:flex;justify-content:space-between;align-items:center}
     .caption-num{color:var(--accent);font-weight:800}
-    .copy-btn{border:none;border-radius:12px;padding:10px 14px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;transition:opacity .2s}
-    .copy-btn:hover{opacity:.92}
-    .note{color:var(--muted);font-size:.95rem}
-    @media(max-width:960px){.category-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}    
+    .copy-btn{border:none;border-radius:12px;padding:10px 14px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;transition:opacity .2s;flex-shrink:0}
+    .copy-btn:hover{opacity:.85}
+    .note{color:var(--muted);font-size:.95rem;margin:0}
+    @media(max-width:960px){.category-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}.cards-grid{grid-template-columns:1fr}}
     @media(max-width:680px){.category-grid{grid-template-columns:1fr}.page{padding:20px 16px}}
   </style>
 </head>
@@ -51,384 +67,231 @@
     </header>
 
     <section>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap">
-        <div>
-          <h1 style="margin:0;font-size:2.4rem;line-height:1.05">Choose a category, fill the form, and generate instantly.</h1>
-          <p class="note">Create custom prompts for every workflow: copywriting, legal drafts, health summaries, career letters, and education motivation.</p>
-        </div>
-      </div>
+      <h1 style="margin:0 0 8px;font-size:2.4rem;line-height:1.05">Choose a category, fill the form, and generate instantly.</h1>
+      <p class="note">Messaging, social media, and legal drafts — powered by AI.</p>
     </section>
 
     <section class="category-grid" id="categoryGrid">
-      <button type="button" class="cat-card active" data-category="write">
-        <div class="cat-icon">✍️</div>
-        <p class="cat-title">Write for Me</p>
-      </button>
-      <button type="button" class="cat-card" data-category="official">
-        <div class="cat-icon">📄</div>
-        <p class="cat-title">Official & Legal</p>
-      </button>
-      <button type="button" class="cat-card" data-category="health">
-        <div class="cat-icon">🩺</div>
-        <p class="cat-title">Health</p>
-      </button>
-      <button type="button" class="cat-card" data-category="career">
-        <div class="cat-icon">💼</div>
-        <p class="cat-title">Career</p>
-      </button>
-      <button type="button" class="cat-card" data-category="education">
-        <div class="cat-icon">🎓</div>
-        <p class="cat-title">Education</p>
-      </button>
+      <p style="color:var(--muted);font-size:.9rem">Loading...</p>
     </section>
 
-    <section class="form-card">
+    <section id="subcatSection" class="hidden">
+      <p class="section-label">Subcategory</p>
+      <h3 class="section-title" id="catTitle"></h3>
+      <div class="subcat-grid" id="subcatGrid"></div>
+    </section>
+
+    <section class="form-card hidden" id="formCard">
       <form id="mainForm" novalidate>
-        <div class="form-row">
-          <div>
-            <label for="language">Language</label>
-            <select id="language">
-              <option value="English">English</option>
-              <option value="Turkish">Turkish</option>
-              <option value="Arabic">Arabic</option>
-            </select>
-          </div>
-          <div>
-            <label for="country">Country</label>
-            <select id="country">
-              <option value="Turkey">Turkey</option>
-              <option value="Qatar">Qatar</option>
-              <option value="UK">UK</option>
-              <option value="USA">USA</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+        <div class="form-inner">
+          <div class="form-row" id="commonFields"></div>
+          <div id="dynamicFields" style="display:grid;gap:18px"></div>
+          <button type="button" class="btn-generate" id="generateBtn">Generate</button>
         </div>
-
-        <div class="form-block" id="write" data-title="Write for Me">
-          <div class="form-row">
-            <div>
-              <label for="writePlatform">Platform</label>
-              <input id="writePlatform" type="text" placeholder="Instagram, LinkedIn, email" />
-            </div>
-            <div>
-              <label for="writeTone">Tone</label>
-              <input id="writeTone" type="text" placeholder="Friendly, formal, urgent" />
-            </div>
-          </div>
-          <div>
-            <label for="writeDescription">Description</label>
-            <textarea id="writeDescription" placeholder="Describe what you want to write"></textarea>
-          </div>
-        </div>
-
-        <div class="form-block hidden" id="official" data-title="Official & Legal">
-          <div class="form-row">
-            <div>
-              <label for="officialType">Document Type</label>
-              <input id="officialType" type="text" placeholder="Contract, notice, agreement" />
-            </div>
-            <div>
-              <label for="officialStatus">Situation Description</label>
-              <input id="officialStatus" type="text" placeholder="What is happening and who is involved" />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-block hidden" id="health" data-title="Health">
-          <div class="form-row">
-            <div>
-              <label for="healthSymptoms">Symptoms</label>
-              <input id="healthSymptoms" type="text" placeholder="Fever, cough, fatigue" />
-            </div>
-            <div>
-              <label for="healthDuration">Duration</label>
-              <input id="healthDuration" type="text" placeholder="3 days, 2 weeks" />
-            </div>
-          </div>
-          <div>
-            <label for="healthDoctor">Doctor Type</label>
-            <input id="healthDoctor" type="text" placeholder="General practitioner, cardiologist" />
-          </div>
-        </div>
-
-        <div class="form-block hidden" id="career" data-title="Career">
-          <div class="form-row">
-            <div>
-              <label for="careerPosition">Position</label>
-              <input id="careerPosition" type="text" placeholder="Software engineer, manager" />
-            </div>
-            <div>
-              <label for="careerCompany">Company</label>
-              <input id="careerCompany" type="text" placeholder="Company name or sector" />
-            </div>
-          </div>
-          <div>
-            <label for="careerExperience">Experience</label>
-            <input id="careerExperience" type="text" placeholder="5 years, entry-level, senior" />
-          </div>
-        </div>
-
-        <div class="form-block hidden" id="education" data-title="Education">
-          <div class="form-row">
-            <div>
-              <label for="educationProgram">Program</label>
-              <input id="educationProgram" type="text" placeholder="Computer Science, MBA" />
-            </div>
-            <div>
-              <label for="educationSchool">School</label>
-              <input id="educationSchool" type="text" placeholder="University or institution" />
-            </div>
-          </div>
-          <div>
-            <label for="educationMotivation">Motivation</label>
-            <textarea id="educationMotivation" placeholder="Why are you applying?"></textarea>
-          </div>
-        </div>
-
-        <button type="button" class="btn-generate">Generate</button>
       </form>
     </section>
 
     <section class="results hidden" id="resultsSection">
-      <div class="results-header">
-        <h2>Generated captions</h2>
-        <p class="note">Click copy to save each caption.</p>
-      </div>
+      <h2>Generated texts</h2>
+      <p class="note">Click copy to save each text.</p>
       <div class="cards-grid" id="captionsContainer"></div>
     </section>
   </div>
 
   <script>
-    const categories = document.querySelectorAll('.cat-card');
-    const formBlocks = document.querySelectorAll('.form-block');
-    const resultsSection = document.getElementById('resultsSection');
-    const captionsContainer = document.getElementById('captionsContainer');
-    const form = document.getElementById('mainForm');
-    let activeCategory = 'write';
+    let appData = null;
+    let selectedCatId = null;
+    let selectedSubId = null;
 
-    console.log('DOM elements loaded:', {
-      categoriesCount: categories.length,
-      formBlocksCount: formBlocks.length,
-      formFound: !!form,
-      resultsFound: !!resultsSection,
-      captionsFound: !!captionsContainer
-    });
-
-    categories.forEach(card => {
-      card.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        categories.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        activeCategory = card.dataset.category;
-        console.log('Category selected:', activeCategory);
-        formBlocks.forEach(block => {
-          block.classList.toggle('hidden', block.id !== activeCategory);
-        });
-      });
-    });
-
-    function getField(id) {
-      return document.getElementById(id).value.trim();
+    async function init() {
+      try {
+        const res = await fetch('/api/categories');
+        appData = await res.json();
+        renderCommonFields();
+        renderCategories();
+      } catch (e) {
+        document.getElementById('categoryGrid').innerHTML = '<p style="color:#f87171">Failed to load categories. Please refresh.</p>';
+      }
     }
 
-    function buildPrompt() {
-      const language = getField('language');
-      const country = getField('country');
-      if (activeCategory === 'write') {
-        const platform = getField('writePlatform');
-        const tone = getField('writeTone');
-        const description = getField('writeDescription');
-        return `Generate exactly 5 social media captions in ${language} for a ${platform} account. Tone: ${tone}. Country: ${country}. About: ${description}. Return only a numbered list, nothing else.`;
-      }
-      if (activeCategory === 'official') {
-        const type = getField('officialType');
-        const status = getField('officialStatus');
-        return `Generate exactly 5 official and legal text snippets in ${language} for ${country}. Document type: ${type}. Situation: ${status}. Return only a numbered list, nothing else.`;
-      }
-      if (activeCategory === 'health') {
-        const symptoms = getField('healthSymptoms');
-        const duration = getField('healthDuration');
-        const doctor = getField('healthDoctor');
-        return `Generate exactly 5 clear health-related statements in ${language} for ${country}. Symptoms: ${symptoms}. Duration: ${duration}. Doctor type: ${doctor}. Return only a numbered list, nothing else.`;
-      }
-      if (activeCategory === 'career') {
-        const position = getField('careerPosition');
-        const company = getField('careerCompany');
-        const experience = getField('careerExperience');
-        return `Generate exactly 5 career-focused lines in ${language} for ${country}. Position: ${position}. Company: ${company}. Experience: ${experience}. Return only a numbered list, nothing else.`;
-      }
-      if (activeCategory === 'education') {
-        const program = getField('educationProgram');
-        const school = getField('educationSchool');
-        const motivation = getField('educationMotivation');
-        return `Generate exactly 5 education application sentences in ${language} for ${country}. Program: ${program}. School: ${school}. Motivation: ${motivation}. Return only a numbered list, nothing else.`;
-      }
-      return '';
+    function renderCommonFields() {
+      document.getElementById('commonFields').innerHTML = appData.common_fields.map(f => {
+        const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        return `<div><label for="cf-${f.key}">${f.label} <span style="color:var(--accent2)">*</span></label><select id="cf-${f.key}">${opts}</select></div>`;
+      }).join('');
     }
 
-    function validateForm() {
-      const commonFields = [
-        {id: 'language', label: 'Language'},
-        {id: 'country', label: 'Country'}
-      ];
-      const categoryFields = {
-        write: [
-          {id: 'writePlatform', label: 'Platform'},
-          {id: 'writeTone', label: 'Tone'},
-          {id: 'writeDescription', label: 'Description'}
-        ],
-        official: [
-          {id: 'officialType', label: 'Document Type'},
-          {id: 'officialStatus', label: 'Situation Description'}
-        ],
-        health: [
-          {id: 'healthSymptoms', label: 'Symptoms'},
-          {id: 'healthDuration', label: 'Duration'},
-          {id: 'healthDoctor', label: 'Doctor Type'}
-        ],
-        career: [
-          {id: 'careerPosition', label: 'Position'},
-          {id: 'careerCompany', label: 'Company'},
-          {id: 'careerExperience', label: 'Experience'}
-        ],
-        education: [
-          {id: 'educationProgram', label: 'Program'},
-          {id: 'educationSchool', label: 'School'},
-          {id: 'educationMotivation', label: 'Motivation'}
-        ]
-      };
-      const fields = commonFields.concat(categoryFields[activeCategory] || []);
-      const missing = fields.filter(field => !getField(field.id));
-      if (missing.length) {
-        const labels = missing.map(field => field.label).join(', ');
-        alert(`Please fill in the following fields: ${labels}`);
-        return false;
-      }
-      return true;
+    function renderCategories() {
+      const grid = document.getElementById('categoryGrid');
+      grid.innerHTML = appData.categories.map(cat =>
+        `<button type="button" class="cat-card" data-id="${cat.id}">
+          <div class="cat-icon">${cat.icon}</div>
+          <p class="cat-title">${cat.name}</p>
+        </button>`
+      ).join('');
+      grid.querySelectorAll('.cat-card').forEach(card =>
+        card.addEventListener('click', () => selectCategory(card.dataset.id))
+      );
     }
 
-    async function sendRequest() {
-      let payload = {
-        accountType: activeCategory,
-        language: getField('language'),
-        country: getField('country')
-      };
-      
-      if (activeCategory === 'write') {
-        payload.platform = getField('writePlatform');
-        payload.tone = getField('writeTone');
-        payload.description = getField('writeDescription');
-      } else if (activeCategory === 'official') {
-        payload.type = getField('officialType');
-        payload.status = getField('officialStatus');
-        payload.description = getField('officialStatus');
-      } else if (activeCategory === 'health') {
-        payload.symptoms = getField('healthSymptoms');
-        payload.duration = getField('healthDuration');
-        payload.doctor = getField('healthDoctor');
-        payload.description = getField('healthSymptoms');
-      } else if (activeCategory === 'career') {
-        payload.position = getField('careerPosition');
-        payload.company = getField('careerCompany');
-        payload.experience = getField('careerExperience');
-        payload.description = getField('careerPosition');
-      } else if (activeCategory === 'education') {
-        payload.program = getField('educationProgram');
-        payload.school = getField('educationSchool');
-        payload.motivation = getField('educationMotivation');
-        payload.description = getField('educationMotivation');
-      }
-      
-      console.log('sendRequest payload:', payload);
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
-      console.log('fetch returned status:', response.status, 'ok:', response.ok);
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        console.error('fetch error body:', errorText);
-        let errorMsg = 'Unable to generate';
-        try { errorMsg = JSON.parse(errorText).error || errorMsg; } catch (_) {}
-        throw new Error(errorMsg);
-      }
-      const responseData = await response.json();
-      console.log('fetch responseData:', responseData);
-      console.log('captions in response:', Array.isArray(responseData.captions), responseData.captions?.length);
-      return responseData;
+    function selectCategory(id) {
+      selectedCatId = id;
+      selectedSubId = null;
+      document.querySelectorAll('.cat-card').forEach(c => c.classList.toggle('active', c.dataset.id === id));
+
+      const cat = appData.categories.find(c => c.id === id);
+      document.getElementById('catTitle').textContent = cat.name;
+      const grid = document.getElementById('subcatGrid');
+      grid.innerHTML = cat.subcategories.map(sub =>
+        `<button type="button" class="subcat-card" data-id="${sub.id}">
+          <p class="subcat-title">${sub.name}</p>
+          <p class="subcat-desc">${sub.description}</p>
+        </button>`
+      ).join('');
+      grid.querySelectorAll('.subcat-card').forEach(card =>
+        card.addEventListener('click', () => selectSubcategory(card.dataset.id))
+      );
+
+      document.getElementById('subcatSection').classList.remove('hidden');
+      document.getElementById('formCard').classList.add('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('subcatSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    const generateBtn = document.querySelector('.btn-generate');
-    console.log('generateBtn element found:', generateBtn);
-    
-    if (generateBtn) {
-      generateBtn.addEventListener('click', async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Generate button clicked, activeCategory:', activeCategory);
-        
-        if (!validateForm()) {
-          console.log('validateForm returned false');
-          return;
-        }
-        
-        console.log('validateForm passed');
+    function selectSubcategory(id) {
+      selectedSubId = id;
+      document.querySelectorAll('.subcat-card').forEach(c => c.classList.toggle('active', c.dataset.id === id));
 
-        generateBtn.disabled = true;
-        generateBtn.textContent = 'Generating...';
-        console.log('Button disabled, sending request...');
+      const cat = appData.categories.find(c => c.id === selectedCatId);
+      const sub = cat.subcategories.find(s => s.id === id);
+      renderDynamicFields(sub);
 
-        try {
-          console.log('Calling sendRequest...');
-          const data = await sendRequest();
-          console.log('sendRequest returned:', data);
-          const captions = data.captions || [];
-          console.log('Captions array:', captions);
-          console.log('Captions count:', captions.length);
-          if (captions.length === 0) {
-            console.warn('captions array is empty — no cards will render');
+      document.getElementById('formCard').classList.remove('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function fieldHTML(f, required) {
+      const star = required ? ` <span style="color:var(--accent2)">*</span>` : '';
+      const label = `<label for="df-${f.key}">${f.label}${star}</label>`;
+      if (f.type === 'select') {
+        const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        return `${label}<select id="df-${f.key}">${opts}</select>`;
+      }
+      if (f.type === 'textarea') {
+        return `${label}<textarea id="df-${f.key}" placeholder="${f.placeholder || ''}"></textarea>`;
+      }
+      return `${label}<input id="df-${f.key}" type="text" placeholder="${f.placeholder || ''}" />`;
+    }
+
+    function groupFields(fields, required) {
+      let html = '';
+      let i = 0;
+      while (i < fields.length) {
+        const f = fields[i];
+        if (f.type === 'textarea') {
+          html += `<div>${fieldHTML(f, required)}</div>`;
+          i++;
+        } else {
+          const next = fields[i + 1];
+          if (next && next.type !== 'textarea') {
+            html += `<div class="form-row"><div>${fieldHTML(f, required)}</div><div>${fieldHTML(next, required)}</div></div>`;
+            i += 2;
+          } else {
+            html += `<div>${fieldHTML(f, required)}</div>`;
+            i++;
           }
-          captionsContainer.innerHTML = '';
-
-          captions.forEach((caption, index) => {
-            console.log(`Rendering caption ${index + 1}:`, caption);
-            const card = document.createElement('div');
-            card.className = 'caption-card';
-            card.innerHTML = `<div><div class="caption-meta"><span class="caption-num">${index + 1}</span></div><p>${caption}</p></div><button type="button" class="copy-btn">Copy</button>`;
-            const button = card.querySelector('.copy-btn');
-            button.addEventListener('click', async () => {
-              await navigator.clipboard.writeText(caption);
-              button.textContent = 'Copied';
-              button.style.background = 'var(--success)';
-              setTimeout(() => { button.textContent = 'Copy'; button.style.background = ''; }, 1800);
-            });
-            captionsContainer.appendChild(card);
-          });
-          
-          resultsSection.classList.remove('hidden');
-          resultsSection.scrollIntoView({behavior:'smooth', block:'start'});
-          console.log('Results displayed successfully');
-        } catch (error) {
-          console.error('Generate failed with error:', error);
-          console.error('Error stack:', error.stack);
-          alert(`Error: ${error.message}`);
-        } finally {
-          generateBtn.disabled = false;
-          generateBtn.textContent = 'Generate';
-          console.log('Button re-enabled');
         }
-      });
-    } else {
-      console.error('Generate button not found!');
+      }
+      return html;
     }
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      console.log('Form submit event fired (should not happen now)');
-    });
+    function renderDynamicFields(sub) {
+      let html = groupFields(sub.required_fields, true);
+      if (sub.optional_fields.length > 0) {
+        html += `<div class="optional-divider">Optional fields</div>`;
+        html += groupFields(sub.optional_fields, false);
+      }
+      document.getElementById('dynamicFields').innerHTML = html;
+    }
+
+    function val(id) {
+      return document.getElementById(id)?.value?.trim() || '';
+    }
+
+    async function generate() {
+      if (!selectedCatId || !selectedSubId) {
+        alert('Please select a category and subcategory.');
+        return;
+      }
+      const cat = appData.categories.find(c => c.id === selectedCatId);
+      const sub = cat.subcategories.find(s => s.id === selectedSubId);
+      const fields = {};
+
+      for (const f of appData.common_fields) {
+        const v = val(`cf-${f.key}`);
+        if (!v) { alert(`${f.label} is required.`); return; }
+        fields[f.key] = v;
+      }
+      for (const f of sub.required_fields) {
+        const v = val(`df-${f.key}`);
+        if (!v) { alert(`${f.label} is required.`); return; }
+        fields[f.key] = v;
+      }
+      for (const f of sub.optional_fields) {
+        const v = val(`df-${f.key}`);
+        if (v) fields[f.key] = v;
+      }
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Generation failed');
+        }
+        const data = await res.json();
+        const captions = data.captions || [];
+        const container = document.getElementById('captionsContainer');
+        container.innerHTML = '';
+        captions.forEach((text, i) => {
+          const card = document.createElement('div');
+          card.className = 'caption-card';
+          card.innerHTML = `
+            <div class="caption-meta">
+              <span class="caption-num">${i + 1}</span>
+              <button type="button" class="copy-btn">Copy</button>
+            </div>
+            <p style="margin:0;line-height:1.65">${text}</p>`;
+          card.querySelector('.copy-btn').addEventListener('click', async (e) => {
+            await navigator.clipboard.writeText(text);
+            e.target.textContent = 'Copied';
+            e.target.style.background = 'var(--success)';
+            setTimeout(() => { e.target.textContent = 'Copy'; e.target.style.background = ''; }, 1800);
+          });
+          container.appendChild(card);
+        });
+        document.getElementById('resultsSection').classList.remove('hidden');
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate';
+      }
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', generate);
+    document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
+
+    init();
   </script>
 </body>
 </html>

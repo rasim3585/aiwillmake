@@ -1,6 +1,8 @@
-﻿const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const categories = require('./categories.json');
+
 const app = express();
 
 const limiter = rateLimit({
@@ -15,34 +17,43 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+app.get('/api/categories', (req, res) => {
+  res.json(categories);
+});
+
 app.post('/api/generate', limiter, async (req, res) => {
-  console.log('API KEY CHECK:', process.env.ANTHROPIC_API_KEY ? 'LOADED' : 'MISSING');
   try {
-    const { accountType, language, description, country } = req.body;
-    
-    let prompt = '';
-    
-    if (accountType === 'write') {
-      const { platform, tone } = req.body;
-      prompt = `Generate exactly 5 social media captions in ${language} for ${platform}. Tone: ${tone}. About: ${description}. Context: ${country}. Return only a numbered list, nothing else.`;
-    } else if (accountType === 'health') {
-      const { symptoms, duration, doctor } = req.body;
-      prompt = `Sen bir tıbbi yazı asistanısın. Hastanın doktora söyleyeceği 5 farklı anamnez cümlesi veya paragrafı ${language} dilinde yaz. Birinci şahıs (ben...) kullan. Hashtag kullanma. Semptomlar: ${symptoms}, Süre: ${duration}, Doktor: ${doctor}, Ülke: ${country}. Sadece numaralı listeyi döndür, başka hiçbir şey yazma.`;
-    } else if (accountType === 'official') {
-      const { type, status } = req.body;
-      prompt = `Sen bir hukuki yazı asistanısın. Kişinin avukata veya resmi makama sunacağı 5 farklı resmi metin taslağı ${language} dilinde yaz. Resmi dil kullan, hashtag kullanma. Belge Türü: ${type}, Durum: ${status}, Ülke: ${country}. Sadece numaralı listeyi döndür.`;
-    } else if (accountType === 'career') {
-      const { position, company, experience } = req.body;
-      prompt = `Sen bir kariyer koçusun. Kişinin iş başvurusu için 5 farklı profesyonel metin taslağı ${language} dilinde yaz. Pozisyon: ${position}, Şirket: ${company}, Deneyim: ${experience}, Ülke: ${country}. Sadece numaralı listeyi döndür, başka hiçbir şey yazma.`;
-    } else if (accountType === 'education') {
-      const { program, school, motivation } = req.body;
-      prompt = `Sen bir eğitim danışmanısın. Kişinin okul başvurusu için 5 farklı motivasyon mektubu taslağı ${language} dilinde yaz. Program: ${program}, Okul: ${school}, Motivasyon: ${motivation}, Ülke: ${country}. Sadece numaralı listeyi döndür, başka hiçbir şey yazma.`;
-    } else {
-      throw new Error('Invalid category');
+    const { categoryId, subcategoryId, fields } = req.body;
+
+    const category = categories.categories.find(c => c.id === categoryId);
+    if (!category) return res.status(400).json({ error: 'Invalid category' });
+
+    const subcategory = category.subcategories.find(s => s.id === subcategoryId);
+    if (!subcategory) return res.status(400).json({ error: 'Invalid subcategory' });
+
+    const requiredKeys = [
+      ...categories.common_fields.map(f => f.key),
+      ...subcategory.required_fields.map(f => f.key)
+    ];
+    const missing = requiredKeys.filter(key => !fields[key]?.trim());
+    if (missing.length) {
+      return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
     }
-    
-    console.log(`[${accountType}] Sending prompt to Anthropic API`);
-    console.log(`[${accountType}] PROMPT:`, prompt);
+
+    let prompt = subcategory.prompt_template;
+
+    for (const field of [...categories.common_fields, ...subcategory.required_fields]) {
+      prompt = prompt.split(`{{${field.key}}}`).join(fields[field.key] || '');
+    }
+
+    for (const field of subcategory.optional_fields) {
+      const value = fields[field.key]?.trim() || '';
+      const cleanLabel = field.label.replace(/ \(opsiyonel\)| \(optional\)/gi, '');
+      const replacement = value ? `${cleanLabel}: ${value}. ` : '';
+      prompt = prompt.split(`{{${field.key}}}`).join(replacement);
+    }
+
+    console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
     const MAX_RETRIES = 3;
     const RETRY_DELAY_MS = 2000;
@@ -64,35 +75,25 @@ app.post('/api/generate', limiter, async (req, res) => {
       });
 
       data = await response.json();
-      console.log(`[${accountType}] Attempt ${attempt} status:`, response.status);
-
-      if (response.status === 429) {
-        console.warn(`[${accountType}] Rate limited by Anthropic, attempt ${attempt}/${MAX_RETRIES}. Retrying in ${RETRY_DELAY_MS}ms...`);
-        if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-          continue;
-        }
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        continue;
       }
       break;
     }
 
-    console.log(`[${accountType}] FULL RESPONSE:`, JSON.stringify(data, null, 2));
-
     if (!response.ok) {
-      throw new Error(`Anthropic API error: ${response.status} - ${data.error?.message || data.message || 'Unknown error'}`);
+      throw new Error(`Anthropic API error: ${response.status} - ${data.error?.message || 'Unknown error'}`);
     }
 
     const text = data.content[0].text;
-    console.log(`[${accountType}] RAW TEXT (${text.length} chars):`, text);
-
     const captions = text.split('\n')
       .map(l => l.replace(/^\d+[\.\)]\s*/, '').trim())
       .filter(l => l.length > 5)
       .slice(0, 5);
 
-    console.log(`[${accountType}] PARSED CAPTIONS (${captions.length} items):`, captions);
     res.json({ captions });
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
