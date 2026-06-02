@@ -41,10 +41,66 @@ async function requireAuth(req, res, next) {
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
   req.user = user;
+  req.token = token;
   next();
 }
 
-app.post('/api/generate', requireAuth, limiter, async (req, res) => {
+async function optionalAuth(req, res, next) {
+  if (!supabase) return next();
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) return next();
+  try {
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (user) { req.user = user; req.token = token; }
+  } catch (_) {}
+  next();
+}
+
+const SUPABASE_REST = `${supabaseUrl}/rest/v1`;
+const sbHeaders = (token) => ({
+  'Authorization': `Bearer ${token}`,
+  'apikey': process.env.SUPABASE_ANON_KEY || '',
+  'Content-Type': 'application/json'
+});
+
+async function getCredits(token, userId) {
+  const res = await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`, {
+    headers: sbHeaders(token)
+  });
+  const rows = await res.json();
+  return Array.isArray(rows) ? (rows[0]?.credits_used ?? 0) : 0;
+}
+
+async function incrementCredits(token, userId, current) {
+  await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { ...sbHeaders(token), 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ credits_used: current + 1 })
+  }).then(async r => {
+    if (r.status === 404 || (await r.text()) === '') {
+      await fetch(`${SUPABASE_REST}/user_credits`, {
+        method: 'POST',
+        headers: sbHeaders(token),
+        body: JSON.stringify({ user_id: userId, credits_used: 1 })
+      });
+    }
+  }).catch(() => {});
+}
+
+app.get('/api/credits', async (req, res) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!supabase || !token) return res.json({ credits_used: 0, limit: 5, guest: !token });
+  try {
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) return res.json({ credits_used: 0, limit: 5, guest: true });
+    const credits_used = await getCredits(token, user.id);
+    res.json({ credits_used, limit: 5, guest: false });
+  } catch (_) {
+    res.json({ credits_used: 0, limit: 5, guest: true });
+  }
+});
+
+app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
   try {
     const { categoryId, subcategoryId, fields, variation } = req.body;
     const variationPrompts = {
@@ -52,6 +108,14 @@ app.post('/api/generate', requireAuth, limiter, async (req, res) => {
       completely_new: 'IGNORE everything about the previous outputs. Use a completely different tone, style and creative approach. Be bold and unexpected.'
     };
     const modifier = variationPrompts[variation] || null;
+
+    let creditsUsed = 0;
+    if (req.user) {
+      creditsUsed = await getCredits(req.token, req.user.id);
+      if (creditsUsed >= 5) {
+        return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
+      }
+    }
 
     const category = categories.categories.find(c => c.id === categoryId);
     if (!category) return res.status(400).json({ error: 'Invalid category' });
@@ -287,7 +351,11 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
         .slice(0, 6);
     }
 
-    res.json({ captions });
+    if (req.user) {
+      await incrementCredits(req.token, req.user.id, creditsUsed);
+    }
+
+    res.json({ captions, credits_used: req.user ? creditsUsed + 1 : null });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

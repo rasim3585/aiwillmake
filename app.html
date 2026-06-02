@@ -286,6 +286,18 @@
     }
     .btn-generate:active:not(:disabled) { transform: translateY(0); }
     .btn-generate:disabled { opacity: .42; cursor: not-allowed; }
+    /* Credits */
+    .credit-wrap { display: grid; gap: 6px; }
+    .credit-row { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; }
+    .credit-label { color: var(--text-muted); }
+    .credit-count { color: var(--text-sec); font-weight: 600; }
+    .credit-dots { display: flex; gap: 5px; }
+    .cdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: background .3s; }
+    .cdot.used { background: var(--accent); }
+    .cdot.over { background: #f87171; }
+    .upgrade-msg { font-size: .86rem; color: #f87171; text-align: center; padding: 10px 0 2px; }
+    .upgrade-msg a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .upgrade-msg a:hover { text-decoration: underline; }
 
     /* ── Results ── */
     .results-section { display: grid; gap: 20px; }
@@ -426,6 +438,16 @@
         <div class="form-inner">
           <div class="form-row" id="commonFields"></div>
           <div id="dynamicFields" style="display:grid;gap:18px"></div>
+          <div class="credit-wrap hidden" id="creditWrap">
+            <div class="credit-row">
+              <span class="credit-label" id="creditLabel">Generations used</span>
+              <span class="credit-count" id="creditCount"></span>
+            </div>
+            <div class="credit-dots" id="creditDots"></div>
+            <div class="upgrade-msg hidden" id="upgradeMsg">
+              Free limit reached. <a href="index.html">Upgrade to continue →</a>
+            </div>
+          </div>
           <button type="button" class="btn-generate" id="generateBtn">Generate ✦</button>
         </div>
       </form>
@@ -449,6 +471,57 @@
   <script>
     let sbClient = null;
     let accessToken = null;
+    const GUEST_LIMIT = 3;
+    const AUTH_LIMIT = 5;
+
+    function getGuestUsed() { return parseInt(localStorage.getItem('guest_uses') || '0', 10); }
+    function incGuestUsed() { localStorage.setItem('guest_uses', getGuestUsed() + 1); }
+
+    function updateCreditUI(used, limit, isGuest) {
+      const wrap = document.getElementById('creditWrap');
+      const label = document.getElementById('creditLabel');
+      const count = document.getElementById('creditCount');
+      const dots = document.getElementById('creditDots');
+      const upgradeMsg = document.getElementById('upgradeMsg');
+      const generateBtn = document.getElementById('generateBtn');
+
+      wrap.classList.remove('hidden');
+      label.textContent = isGuest ? 'Free uses (guest)' : 'Generations used';
+      const remaining = Math.max(limit - used, 0);
+      count.textContent = `${used} / ${limit}`;
+
+      dots.innerHTML = Array.from({ length: limit }, (_, i) => {
+        const cls = i < used ? (used >= limit ? 'cdot over' : 'cdot used') : 'cdot';
+        return `<span class="${cls}"></span>`;
+      }).join('');
+
+      if (used >= limit) {
+        upgradeMsg.classList.remove('hidden');
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Upgrade to continue';
+      } else {
+        upgradeMsg.classList.add('hidden');
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate ✦';
+        if (remaining === 1) count.style.color = '#f59e0b';
+        else count.style.color = '';
+      }
+    }
+
+    async function fetchAndShowCredits() {
+      if (accessToken) {
+        try {
+          const res = await fetch('/api/credits', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          const data = await res.json();
+          updateCreditUI(data.credits_used, AUTH_LIMIT, false);
+        } catch (_) {}
+      } else {
+        const used = getGuestUsed();
+        updateCreditUI(used, GUEST_LIMIT, true);
+      }
+    }
 
     async function initAuth() {
       try {
@@ -475,9 +548,11 @@
             document.getElementById('navUser').textContent = session.user.email || '';
             document.getElementById('signOutBtn').classList.remove('hidden');
             document.getElementById('authGate').classList.add('hidden');
+            fetchAndShowCredits();
           } else {
             accessToken = null;
             document.getElementById('authGate').classList.remove('hidden');
+            fetchAndShowCredits();
           }
         });
       } catch (e) {
@@ -664,6 +739,15 @@
         if (v) fields[f.key] = v;
       }
 
+      // Guest limit check
+      if (!accessToken) {
+        const guestUsed = getGuestUsed();
+        if (guestUsed >= GUEST_LIMIT) {
+          updateCreditUI(guestUsed, GUEST_LIMIT, true);
+          return;
+        }
+      }
+
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.textContent = 'Generating...';
@@ -717,6 +801,14 @@
           container.appendChild(card);
         });
 
+        // Update credits after successful generation
+        if (!accessToken) {
+          incGuestUsed();
+          updateCreditUI(getGuestUsed(), GUEST_LIMIT, true);
+        } else if (data.credits_used != null) {
+          updateCreditUI(data.credits_used, AUTH_LIMIT, false);
+        }
+
         document.getElementById('resultsSection').classList.remove('hidden');
         document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
@@ -733,7 +825,7 @@
     document.getElementById('diffBtn').addEventListener('click', () => generate('completely_new'));
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
 
-    initAuth().then(() => init());
+    initAuth().then(() => { init(); fetchAndShowCredits(); });
   </script>
 </body>
 </html>
