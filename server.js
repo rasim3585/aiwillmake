@@ -76,14 +76,24 @@ async function getCredits(token, userId) {
 
 async function incrementCredits(token, userId, current) {
   const body = { user_id: userId, credits_used: current + 1 };
-  console.log('[credits] UPSERT body:', JSON.stringify(body));
-  const res = await fetch(`${SUPABASE_REST}/user_credits`, {
-    method: 'POST',
-    headers: { ...sbHeaders(token), 'Prefer': 'resolution=merge-duplicates' },
-    body: JSON.stringify(body)
-  });
-  const text = await res.text();
-  console.log('[credits] UPSERT status:', res.status, '| body:', text || '(empty)');
+  console.log('[credits] UPSERT start — userId:', userId, 'new value:', current + 1);
+  console.log('[credits] UPSERT URL:', `${SUPABASE_REST}/user_credits`);
+  try {
+    const res = await fetch(`${SUPABASE_REST}/user_credits`, {
+      method: 'POST',
+      headers: { ...sbHeaders(token), 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify(body)
+    });
+    const text = await res.text();
+    console.log('[credits] UPSERT status:', res.status, '| response body:', text || '(empty)');
+    if (res.status >= 400) {
+      console.error('[credits] UPSERT FAILED — status:', res.status, '| detail:', text);
+    } else {
+      console.log('[credits] UPSERT SUCCESS');
+    }
+  } catch (e) {
+    console.error('[credits] UPSERT EXCEPTION:', e.message);
+  }
 }
 
 app.get('/api/credits', async (req, res) => {
