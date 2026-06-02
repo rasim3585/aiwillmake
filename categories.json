@@ -53,16 +53,28 @@
           "description": "Eski sevgiliye yönelik mesajlar: yeniden bağlanma, kapanış, özür veya selamlama",
           "required_fields": [
             {
-              "key": "goal",
-              "label": "Amaç",
+              "key": "relationship_end",
+              "label": "İlişki nasıl bitti?",
               "type": "select",
-              "options": ["Yeniden bağlanmak", "Kapanış / Veda", "Özür dilemek", "Sadece merhaba demek", "Bir şeyi netleştirmek"]
+              "options": ["Kavga", "Uzaklaşma", "Karşılıklı karar", "İhanet"]
+            },
+            {
+              "key": "time_passed",
+              "label": "Ne kadar zaman geçti?",
+              "type": "select",
+              "options": ["1 aydan az", "1-6 ay", "6 ay-1 yıl", "1 yıldan fazla"]
+            },
+            {
+              "key": "goal",
+              "label": "Amacın ne?",
+              "type": "select",
+              "options": ["Yeniden başlamak", "Kapanış yaşamak", "Sadece hal hatır sormak", "Özür dilemek"]
             },
             {
               "key": "situation",
               "label": "Arka Plan",
               "type": "textarea",
-              "placeholder": "Ne oldu, ne kadar zaman geçti, nasıl bir ilişkiydi..."
+              "placeholder": "Ne oldu, nasıl bir ilişkiydi, eklemek istediğin detaylar..."
             }
           ],
           "optional_fields": [
@@ -73,7 +85,7 @@
               "placeholder": "Kişinin adı"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin eski sevgilisine göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. Amaç: {{goal}}. Arka plan: {{situation}}. {{ex_name}}Ülke bağlamı: {{country}}. Duygusal zekayı yansıt, fazla dramatik veya itici olma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "Sen bir mesaj yazma asistanısın. Bir kişinin eski sevgilisine göndereceği 5 farklı mesaj taslağı {{language}} dilinde yaz. İlişki nasıl bitti: {{relationship_end}}. Geçen süre: {{time_passed}}. Amaç: {{goal}}. Arka plan: {{situation}}. {{ex_name}}Ülke bağlamı: {{country}}. Duygusal zekayı yansıt, fazla dramatik veya itici olma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
         },
         {
           "id": "crush",
