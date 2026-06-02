@@ -46,7 +46,12 @@ async function requireAuth(req, res, next) {
 
 app.post('/api/generate', requireAuth, limiter, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, fields, modifier } = req.body;
+    const { categoryId, subcategoryId, fields, variation } = req.body;
+    const variationPrompts = {
+      different: 'Generate 6 NEW outputs that are DIFFERENT from a previous attempt. Use different sentence structures, vocabulary and emotional angles.',
+      completely_new: 'IGNORE everything about the previous outputs. Use a completely different tone, style and creative approach. Be bold and unexpected.'
+    };
+    const modifier = variationPrompts[variation] || null;
 
     const category = categories.categories.find(c => c.id === categoryId);
     if (!category) return res.status(400).json({ error: 'Invalid category' });

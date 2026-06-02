@@ -640,7 +640,7 @@
       document.getElementById('diffBtn').disabled = disabled;
     }
 
-    async function generate(modifier = '') {
+    async function generate(variation = '') {
       if (!selectedCatId || !selectedSubId) {
         alert('Please select a category and subcategory.');
         return;
@@ -675,7 +675,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, modifier: modifier || undefined })
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, variation: variation || undefined })
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -729,10 +729,8 @@
     }
 
     document.getElementById('generateBtn').addEventListener('click', () => generate());
-    document.getElementById('regenBtn').addEventListener('click', () =>
-      generate('Make these 6 outputs completely different from the previous ones. New angles, new phrasings, new emotional approaches.'));
-    document.getElementById('diffBtn').addEventListener('click', () =>
-      generate('Use a totally different tone, style and approach. Ignore previous outputs completely. Surprise the reader.'));
+    document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
+    document.getElementById('diffBtn').addEventListener('click', () => generate('completely_new'));
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
 
     initAuth().then(() => init());
