@@ -29,138 +29,159 @@
     }
     body {
       background-image:
-        radial-gradient(ellipse 700px 500px at 5% -5%, rgba(110,129,255,0.1) 0%, transparent 65%),
+        radial-gradient(ellipse 700px 500px at 5% -5%, rgba(110,129,255,0.11) 0%, transparent 65%),
         radial-gradient(ellipse 500px 600px at 95% 90%, rgba(163,96,255,0.07) 0%, transparent 65%);
     }
-    .page { max-width: 1080px; margin: 0 auto; padding: 36px 24px 80px; display: grid; gap: 80px; }
+
+    .page { max-width: 1080px; margin: 0 auto; padding: 36px 24px 80px; }
 
     /* ── Header ── */
-    .header { display: flex; justify-content: space-between; align-items: center; }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 100px;
+    }
     .brand {
       font-size: 1rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .nav-link {
-      color: var(--text-sec); text-decoration: none; font-size: .9rem;
+      color: var(--text-sec); text-decoration: none; font-size: .88rem;
       border: 1px solid var(--border); padding: 8px 18px; border-radius: 99px;
       transition: color .2s, border-color .2s;
     }
     .nav-link:hover { color: var(--text); border-color: var(--border-med); }
 
     /* ── Hero ── */
-    .hero { display: grid; gap: 20px; max-width: 760px; }
+    .hero { text-align: center; max-width: 740px; margin: 0 auto 96px; }
     .eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
+      display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px;
+      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
       color: var(--accent); background: rgba(110,129,255,0.1);
-      border: 1px solid rgba(110,129,255,0.2); padding: 6px 14px; border-radius: 99px;
-      width: fit-content;
+      border: 1px solid rgba(110,129,255,0.2); padding: 5px 14px; border-radius: 99px;
     }
     .hero-title {
-      font-size: clamp(2.4rem, 5.5vw, 4rem);
-      font-weight: 800; line-height: 1.06; letter-spacing: -.03em;
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      font-weight: 800; line-height: 1.05; letter-spacing: -.03em; margin-bottom: 20px;
     }
     .hero-title span {
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .hero-sub { color: var(--text-sec); font-size: 1.08rem; line-height: 1.7; max-width: 580px; }
+    .hero-sub {
+      color: var(--text-sec); font-size: 1.1rem; line-height: 1.7;
+      margin-bottom: 36px;
+    }
+    .cta-group { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
     .btn-primary {
       display: inline-flex; align-items: center; gap: 8px;
       background: linear-gradient(95deg, var(--accent), var(--accent2));
       border: none; color: #fff; padding: 16px 32px; border-radius: 14px;
       font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none;
-      box-shadow: 0 8px 30px var(--glow), inset 0 1px 0 rgba(255,255,255,0.15);
+      box-shadow: 0 8px 30px var(--glow), inset 0 1px 0 rgba(255,255,255,0.14);
       transition: transform .2s, box-shadow .2s;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px var(--glow), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px var(--glow), inset 0 1px 0 rgba(255,255,255,0.14); }
+    .hero-note { color: var(--text-muted); font-size: .86rem; }
 
-    /* ── Category showcase ── */
-    .section-label {
-      font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
-      color: var(--text-muted); margin-bottom: 20px;
+    /* ── Section titles ── */
+    .section-eyebrow {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .13em;
+      color: var(--accent); margin-bottom: 10px;
     }
-    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .cat-showcase {
-      background: var(--surface);
+    .section-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 10px; }
+    .section-sub { color: var(--text-sec); font-size: .97rem; line-height: 1.6; margin-bottom: 44px; }
+
+    /* ── Feature section ── */
+    .features { margin-bottom: 96px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .feature-col {
+      padding: 32px 28px;
       border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 26px 24px;
-      transition: border-color .2s, box-shadow .2s;
+      background: var(--surface);
     }
-    .cat-showcase:hover { border-color: var(--border-med); box-shadow: 0 8px 32px rgba(0,0,0,0.22); }
-    .cat-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
-    .cat-icon-wrap {
-      width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
-      background: linear-gradient(135deg, rgba(110,129,255,0.2), rgba(163,96,255,0.13));
-      border: 1px solid rgba(110,129,255,0.2);
-      display: grid; place-items: center; font-size: 1.5rem;
+    .feature-col:first-child { border-radius: 20px 0 0 20px; }
+    .feature-col:last-child { border-radius: 0 20px 20px 0; }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(110,129,255,0.18), rgba(163,96,255,0.12));
+      border: 1px solid rgba(110,129,255,0.18);
+      display: grid; place-items: center; font-size: 1.4rem;
+      margin-bottom: 18px;
     }
-    .cat-name { font-size: 1rem; font-weight: 700; color: var(--text); }
-    .cat-desc { font-size: .83rem; color: var(--text-sec); margin-top: 2px; line-height: 1.4; }
-    .scenarios { display: grid; gap: 8px; }
-    .scenario {
+    .feature-name { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .feature-desc { color: var(--text-sec); font-size: .84rem; line-height: 1.55; margin-bottom: 20px; }
+    .feature-list { display: grid; gap: 9px; }
+    .feature-item {
       display: flex; align-items: flex-start; gap: 9px;
-      font-size: .84rem; color: var(--text-sec); line-height: 1.4;
+      font-size: .83rem; color: var(--text-sec); line-height: 1.4;
     }
-    .scenario-dot {
-      width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
-      flex-shrink: 0; margin-top: 7px;
-    }
+    .bullet { color: var(--accent); font-size: .65rem; margin-top: 5px; flex-shrink: 0; }
 
     /* ── How it works ── */
-    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .step-card {
+    .how { margin-bottom: 96px; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .step {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 24px;
+      border-radius: 20px; padding: 28px;
     }
-    .step-num-badge {
-      width: 32px; height: 32px; border-radius: 50%;
+    .step-num {
+      width: 34px; height: 34px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       display: grid; place-items: center;
-      font-size: .78rem; font-weight: 800; color: #fff; margin-bottom: 16px;
+      font-size: .78rem; font-weight: 800; color: #fff;
+      margin-bottom: 18px;
     }
-    .step-title { font-size: .96rem; font-weight: 700; margin-bottom: 6px; }
-    .step-desc { font-size: .84rem; color: var(--text-sec); line-height: 1.5; }
+    .step-title { font-size: .97rem; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { color: var(--text-sec); font-size: .85rem; line-height: 1.55; }
 
     /* ── Pricing ── */
+    .pricing { margin-bottom: 96px; }
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .price-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 22px; padding: 28px; display: grid; gap: 12px;
+      border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 14px;
     }
     .price-card.featured {
-      background: linear-gradient(160deg, rgba(110,129,255,0.12), rgba(163,96,255,0.08));
-      border-color: rgba(110,129,255,0.35);
+      background: linear-gradient(160deg, rgba(110,129,255,0.11), rgba(163,96,255,0.07));
+      border-color: rgba(110,129,255,0.32);
     }
     .plan-badge {
-      display: inline-block; font-size: .78rem; font-weight: 700;
-      padding: 4px 12px; border-radius: 99px;
-      background: rgba(110,129,255,0.12); color: var(--accent);
-      border: 1px solid rgba(110,129,255,0.2);
-      width: fit-content;
+      display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: .04em;
+      padding: 4px 12px; border-radius: 99px; width: fit-content;
+      background: rgba(110,129,255,0.1); color: var(--accent);
+      border: 1px solid rgba(110,129,255,0.18);
     }
-    .plan-badge.featured { background: rgba(110,129,255,0.2); }
-    .price { font-size: 2.4rem; font-weight: 800; color: var(--text); }
-    .price span { font-size: 1rem; font-weight: 500; color: var(--text-sec); }
-    .price-desc { font-size: .87rem; color: var(--text-sec); line-height: 1.55; }
-    .price-features { display: grid; gap: 8px; margin-top: 4px; }
-    .price-feature { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--text-sec); }
-    .check { color: var(--accent); font-size: .8rem; }
+    .price-amount { font-size: 2.6rem; font-weight: 800; line-height: 1; }
+    .price-amount span { font-size: .95rem; font-weight: 500; color: var(--text-sec); }
+    .price-desc { color: var(--text-sec); font-size: .86rem; line-height: 1.55; }
+    .price-divider { border: none; border-top: 1px solid var(--border); }
+    .price-features { display: grid; gap: 9px; }
+    .price-feature { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text-sec); }
+    .check { color: var(--accent); font-weight: 700; font-size: .8rem; }
 
-    footer {
-      text-align: center; color: var(--text-muted); font-size: .88rem;
-      border-top: 1px solid var(--border); padding-top: 32px;
+    /* ── Bottom CTA ── */
+    .bottom-cta {
+      text-align: center; padding: 56px 32px;
+      background: linear-gradient(160deg, rgba(110,129,255,0.08), rgba(163,96,255,0.05));
+      border: 1px solid rgba(110,129,255,0.18);
+      border-radius: 28px; margin-bottom: 56px;
     }
+    .bottom-cta h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
+    .bottom-cta p { color: var(--text-sec); font-size: .97rem; margin-bottom: 28px; }
+
+    footer { text-align: center; color: var(--text-muted); font-size: .86rem; padding-top: 32px; border-top: 1px solid var(--border); }
 
     @media (max-width: 860px) {
-      .cat-grid { grid-template-columns: 1fr; }
-      .steps-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; gap: 12px; }
+      .feature-col { border-radius: 16px !important; }
+      .steps { grid-template-columns: 1fr; }
       .pricing-grid { grid-template-columns: 1fr; }
+      .header { margin-bottom: 60px; }
     }
     @media (max-width: 540px) {
-      .page { padding: 20px 16px 60px; gap: 56px; }
+      .page { padding: 20px 16px 60px; }
+      .hero { margin-bottom: 64px; }
     }
   </style>
 </head>
@@ -176,59 +197,51 @@
     <section class="hero">
       <div class="eyebrow">✦ AI Writing Studio</div>
       <h1 class="hero-title">Whatever you need to say —<br><span>AI will write it.</span></h1>
-      <p class="hero-sub">From love messages to legal complaints, social media to official letters — AI writes it all. Personalized, instant, and ready to send.</p>
-      <div>
+      <p class="hero-sub">From love messages to legal complaints, social media captions to official petitions — describe your situation and get 5 personalized, ready-to-send texts instantly.</p>
+      <div class="cta-group">
         <a href="app.html" class="btn-primary">Start Writing →</a>
+        <span class="hero-note">No account needed. Results in seconds.</span>
       </div>
     </section>
 
-    <!-- Categories -->
-    <section>
-      <div class="section-label">What you can write</div>
-      <div class="cat-grid">
+    <!-- Features -->
+    <section class="features">
+      <div class="section-eyebrow">What you can write</div>
+      <h2 class="section-title">Three categories, endless use cases.</h2>
+      <p class="section-sub">Tell AI what you need. It handles the writing — you handle the sending.</p>
 
-        <div class="cat-showcase">
-          <div class="cat-head">
-            <div class="cat-icon-wrap">💬</div>
-            <div>
-              <div class="cat-name">Kişisel Mesajlaşma</div>
-              <div class="cat-desc">Her ilişki için kişisel mesajlar</div>
-            </div>
-          </div>
-          <div class="scenarios">
-            <div class="scenario"><span class="scenario-dot"></span><span>Eski sevgiliye kapanış yaşatacak, baskıcı olmayan bir mesaj</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>Beğendiğin birine ilk mesaj — doğal ve özgün</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>Ailenle zor bir konuyu konuşmak için doğru kelimeler</span></div>
+      <div class="feature-grid">
+
+        <div class="feature-col">
+          <div class="feature-icon">💬</div>
+          <div class="feature-name">Kişisel Mesajlaşma</div>
+          <div class="feature-desc">Sevdiklerine, arkadaşlarına veya eski sevgiliye — her duruma uygun mesaj.</div>
+          <div class="feature-list">
+            <div class="feature-item"><span class="bullet">◆</span><span>Eski sevgiliye kapanış veya yeniden bağlanma mesajı</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>Beğendiğin birine ilk, doğal mesaj</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>İçten özür, tebrik veya aile mesajları</span></div>
           </div>
         </div>
 
-        <div class="cat-showcase">
-          <div class="cat-head">
-            <div class="cat-icon-wrap">📱</div>
-            <div>
-              <div class="cat-name">Sosyal Medya</div>
-              <div class="cat-desc">Platform odaklı içerik üretimi</div>
-            </div>
-          </div>
-          <div class="scenarios">
-            <div class="scenario"><span class="scenario-dot"></span><span>Instagram fotoğrafına ton ve ruh haline uygun caption</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>İşletmen için ürün tanıtım ve kampanya metinleri</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>Spor kulübün için maç öncesi/sonrası paylaşım</span></div>
+        <div class="feature-col">
+          <div class="feature-icon">📱</div>
+          <div class="feature-name">Sosyal Medya</div>
+          <div class="feature-desc">Her platform için ton ve hedef kitleye uygun içerik.</div>
+          <div class="feature-list">
+            <div class="feature-item"><span class="bullet">◆</span><span>Instagram, Twitter, LinkedIn caption ve post metinleri</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>Ürün tanıtımı, kampanya ve motivasyon içerikleri</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>Spor kulübü duyuruları ve kişisel hikaye paylaşımları</span></div>
           </div>
         </div>
 
-        <div class="cat-showcase">
-          <div class="cat-head">
-            <div class="cat-icon-wrap">⚖️</div>
-            <div>
-              <div class="cat-name">Resmi & Hukuki</div>
-              <div class="cat-desc">Kullanıma hazır resmi belgeler</div>
-            </div>
-          </div>
-          <div class="scenarios">
-            <div class="scenario"><span class="scenario-dot"></span><span>Belediyeye veya bakanlığa sunulacak dilekçe taslağı</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>Ürün/hizmet hakkında resmi şikayet mektubu</span></div>
-            <div class="scenario"><span class="scenario-dot"></span><span>İdari karara karşı hukuki itiraz dilekçesi</span></div>
+        <div class="feature-col">
+          <div class="feature-icon">⚖️</div>
+          <div class="feature-name">Resmi & Hukuki</div>
+          <div class="feature-desc">Kullanıma hazır, formatlanmış resmi belgeler.</div>
+          <div class="feature-list">
+            <div class="feature-item"><span class="bullet">◆</span><span>Devlet kurumuna dilekçe — "Sayın..." formatında</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>Ürün/hizmet şikayeti ve resmi talep mektupları</span></div>
+            <div class="feature-item"><span class="bullet">◆</span><span>Karara itiraz dilekçesi, 5 farklı ton ve uzunlukta</span></div>
           </div>
         </div>
 
@@ -236,66 +249,80 @@
     </section>
 
     <!-- How it works -->
-    <section>
-      <div class="section-label">How it works</div>
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-num-badge">1</div>
-          <div class="step-title">Choose a category</div>
-          <div class="step-desc">Select messaging, social media, or legal. Then pick the specific type that fits your situation.</div>
+    <section class="how">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">Three steps. Five results.</h2>
+      <p class="section-sub">No prompting skills required. Just answer the questions and let AI do the rest.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Pick a category & type</div>
+          <div class="step-desc">Choose from messaging, social media, or legal. Then select the specific type — e.g. "ex partner" or "complaint letter".</div>
         </div>
-        <div class="step-card">
-          <div class="step-num-badge">2</div>
+        <div class="step">
+          <div class="step-num">2</div>
           <div class="step-title">Describe your situation</div>
-          <div class="step-desc">Fill in the details — the more specific you are, the more personalized and accurate the output.</div>
+          <div class="step-desc">Fill in the form fields. The more specific you are, the more personal and accurate the output will be.</div>
         </div>
-        <div class="step-card">
-          <div class="step-num-badge">3</div>
-          <div class="step-title">Get 5 ready-to-use texts</div>
-          <div class="step-desc">Receive 5 different versions in your language. Copy the one you like and send it directly.</div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Copy and send</div>
+          <div class="step-desc">Get 5 different versions in your language. Pick the one that fits, copy it, and send. Done.</div>
         </div>
       </div>
     </section>
 
     <!-- Pricing -->
-    <section>
-      <div class="section-label">Pricing</div>
-      <div class="pricing-grid">
+    <section class="pricing">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">Simple, honest pricing.</h2>
+      <p class="section-sub">Start free, upgrade when you need more.</p>
 
+      <div class="pricing-grid">
         <div class="price-card">
           <span class="plan-badge">Starter</span>
-          <div class="price">$9 <span>/ month</span></div>
-          <div class="price-desc">Perfect for personal use and light writing needs.</div>
+          <div class="price-amount">$9 <span>/ month</span></div>
+          <div class="price-desc">For individuals and occasional writers.</div>
+          <hr class="price-divider" />
           <div class="price-features">
-            <div class="price-feature"><span class="check">✦</span> 50 generations / month</div>
-            <div class="price-feature"><span class="check">✦</span> All 3 categories</div>
-            <div class="price-feature"><span class="check">✦</span> All languages</div>
+            <div class="price-feature"><span class="check">✓</span> 50 generations / month</div>
+            <div class="price-feature"><span class="check">✓</span> All 3 categories</div>
+            <div class="price-feature"><span class="check">✓</span> 7 languages</div>
           </div>
         </div>
 
         <div class="price-card featured">
-          <span class="plan-badge featured">Pro</span>
-          <div class="price">$14 <span>/ month</span></div>
-          <div class="price-desc">Great for freelancers, creators, and professionals.</div>
+          <span class="plan-badge">Pro</span>
+          <div class="price-amount">$14 <span>/ month</span></div>
+          <div class="price-desc">For creators, freelancers, and professionals.</div>
+          <hr class="price-divider" />
           <div class="price-features">
-            <div class="price-feature"><span class="check">✦</span> 200 generations / month</div>
-            <div class="price-feature"><span class="check">✦</span> Priority generation speed</div>
-            <div class="price-feature"><span class="check">✦</span> Save & export texts</div>
+            <div class="price-feature"><span class="check">✓</span> 200 generations / month</div>
+            <div class="price-feature"><span class="check">✓</span> Priority speed</div>
+            <div class="price-feature"><span class="check">✓</span> Save & export texts</div>
           </div>
         </div>
 
         <div class="price-card">
           <span class="plan-badge">Business</span>
-          <div class="price">$49 <span>/ month</span></div>
-          <div class="price-desc">Best for teams, agencies, and power users.</div>
+          <div class="price-amount">$49 <span>/ month</span></div>
+          <div class="price-desc">For teams, agencies, and power users.</div>
+          <hr class="price-divider" />
           <div class="price-features">
-            <div class="price-feature"><span class="check">✦</span> Unlimited generations</div>
-            <div class="price-feature"><span class="check">✦</span> Team collaboration</div>
-            <div class="price-feature"><span class="check">✦</span> API access</div>
+            <div class="price-feature"><span class="check">✓</span> Unlimited generations</div>
+            <div class="price-feature"><span class="check">✓</span> Team seats</div>
+            <div class="price-feature"><span class="check">✓</span> API access</div>
           </div>
         </div>
-
       </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="bottom-cta">
+      <h2>Ready to write something?</h2>
+      <p>Open the app, pick a category, and get your first text in under 30 seconds.</p>
+      <a href="app.html" class="btn-primary">Start Writing →</a>
     </section>
 
     <footer>© 2026 aiwillmake — AI writing for every need.</footer>
