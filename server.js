@@ -62,7 +62,10 @@ Your job:
 User's situation:
 ${situationLines}
 
-Return only a numbered list of 5 messages.`;
+IMPORTANT: Return only plain text messages. No markdown, no bold, no headers, no asterisks, no hashtags. Just numbered plain text like:
+1. [message]
+2. [message]
+...`;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
@@ -99,7 +102,13 @@ Return only a numbered list of 5 messages.`;
 
     const text = data.content[0].text;
     const captions = text.split('\n')
-      .map(l => l.replace(/^\d+[\.\)]\s*/, '').trim())
+      .map(l => l
+        .replace(/^\d+[\.\)]\s*/, '')
+        .replace(/\*\*/g, '')
+        .replace(/#+\s?/g, '')
+        .replace(/\*/g, '')
+        .trim()
+      )
       .filter(l => l.length > 5)
       .slice(0, 5);
 
