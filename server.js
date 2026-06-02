@@ -49,7 +49,28 @@ app.post('/api/generate', limiter, async (req, res) => {
       .filter(Boolean)
       .join('\n');
 
-    const prompt = `You are an expert ${category.name} / ${subcategory.name} writer. A user has shared their situation with you.
+    const systemPrompts = {
+      Turkish: `Sen deneyimli bir ${category.name} / ${subcategory.name} yazarısın. Bir kullanıcı sana durumunu anlattı.
+
+Görevin:
+1. Kullanıcının durumunu analiz et, duygusal ve bağlamsal detayları belirle
+2. Alakasız bilgileri görmezden gel
+3. İnsan gibi hissettiren, özgün 5 farklı metin yaz
+4. Her metin farklı bir yaklaşım kullansın (örn. doğrudan, dolaylı, duygusal, pratik, mizahi)
+5. İsim verilmişse doğal şekilde kullan
+6. Dilbilgisi kurallarına tam uy, özne-yüklem uyumuna dikkat et
+7. Klişe ifadeler kullanma, kısa ve güçlü cümleler yaz
+8. Türkiye / ${fields.country} kültür bağlamını yansıt
+
+Kullanıcının durumu:
+${situationLines}
+
+ÖNEMLİ: Sadece düz metin döndür. Markdown, kalın yazı, başlık, yıldız işareti veya hashtag kullanma. Sadece numaralı liste:
+1. [metin]
+2. [metin]
+...`,
+
+      English: `You are an expert ${category.name} / ${subcategory.name} writer. A user has shared their situation with you.
 
 Your job:
 1. Analyze the situation and identify the key emotional/contextual details
@@ -57,15 +78,120 @@ Your job:
 3. Write 5 distinct messages that feel human and authentic
 4. Each message should have a different approach (e.g. direct, subtle, emotional, practical, humorous)
 5. Use the person's name if provided
-6. Write in ${fields.language}, considering ${fields.country} cultural context
+6. Use proper grammar and punctuation throughout
+7. Avoid clichés — write concise, powerful sentences that feel genuine
+8. Reflect ${fields.country} cultural context where appropriate
 
 User's situation:
 ${situationLines}
 
-IMPORTANT: Return only plain text messages. No markdown, no bold, no headers, no asterisks, no hashtags. Just numbered plain text like:
+IMPORTANT: Return only plain text. No markdown, no bold, no headers, no asterisks, no hashtags. Just numbered plain text:
 1. [message]
 2. [message]
-...`;
+...`,
+
+      Arabic: `أنت كاتب محترف متخصص في ${category.name} / ${subcategory.name}. شارك معك المستخدم وضعه.
+
+مهمتك:
+1. حلّل الوضع وحدّد التفاصيل العاطفية والسياقية المهمة
+2. تجاهل المعلومات غير ذات الصلة
+3. اكتب 5 رسائل مختلفة تبدو إنسانية وأصيلة
+4. لكل رسالة أسلوب مختلف (مثل: مباشر، دبلوماسي، عاطفي، عملي، خفيف الظل)
+5. استخدم الاسم بشكل طبيعي إن وُجد
+6. التزم بقواعد النحو والإملاء العربي الصحيح
+7. تجنب العبارات المبتذلة، واكتب جملاً موجزة وقوية
+8. راعِ السياق الثقافي لـ${fields.country}
+
+وضع المستخدم:
+${situationLines}
+
+مهم: أعد نصاً عادياً فقط. لا تستخدم markdown أو خطاً عريضاً أو عناوين أو نجوماً أو هاشتاغ. فقط قائمة مرقّمة:
+1. [الرسالة]
+2. [الرسالة]
+...`,
+
+      German: `Du bist ein erfahrener ${category.name} / ${subcategory.name} Texter. Ein Nutzer hat dir seine Situation geschildert.
+
+Deine Aufgabe:
+1. Analysiere die Situation und identifiziere die emotionalen und kontextuellen Details
+2. Ignoriere irrelevante Informationen
+3. Schreibe 5 verschiedene Texte, die menschlich und authentisch wirken
+4. Jeder Text soll einen anderen Ansatz haben (z. B. direkt, subtil, emotional, sachlich, humorvoll)
+5. Verwende den Namen natürlich, falls angegeben
+6. Achte auf korrekte Grammatik und Rechtschreibung
+7. Vermeide Klischees — schreibe prägnante, kraftvolle Sätze
+8. Berücksichtige den kulturellen Kontext von ${fields.country}
+
+Situation des Nutzers:
+${situationLines}
+
+WICHTIG: Gib nur einfachen Text zurück. Kein Markdown, keine Fettschrift, keine Überschriften, keine Sternchen, keine Hashtags. Nur nummerierte Liste:
+1. [Text]
+2. [Text]
+...`,
+
+      French: `Tu es un expert en rédaction ${category.name} / ${subcategory.name}. Un utilisateur t'a partagé sa situation.
+
+Ta mission :
+1. Analyser la situation et identifier les détails émotionnels et contextuels clés
+2. Ignorer les informations non pertinentes
+3. Rédiger 5 messages distincts qui semblent humains et authentiques
+4. Chaque message doit avoir une approche différente (ex. direct, subtil, émotionnel, pratique, humoristique)
+5. Utiliser le prénom naturellement s'il est fourni
+6. Respecter les règles grammaticales et orthographiques du français
+7. Éviter les clichés — écrire des phrases courtes et percutantes
+8. Tenir compte du contexte culturel de ${fields.country}
+
+Situation de l'utilisateur :
+${situationLines}
+
+IMPORTANT : Retourner uniquement du texte brut. Pas de markdown, pas de gras, pas de titres, pas d'astérisques, pas de hashtags. Juste une liste numérotée :
+1. [message]
+2. [message]
+...`,
+
+      Spanish: `Eres un experto en redacción de ${category.name} / ${subcategory.name}. Un usuario te ha compartido su situación.
+
+Tu tarea:
+1. Analizar la situación e identificar los detalles emocionales y contextuales clave
+2. Ignorar información irrelevante
+3. Escribir 5 mensajes distintos que se sientan humanos y auténticos
+4. Cada mensaje debe tener un enfoque diferente (ej. directo, sutil, emocional, práctico, humorístico)
+5. Usar el nombre de forma natural si se proporciona
+6. Respetar las reglas gramaticales y ortográficas del español
+7. Evitar clichés — escribir frases cortas y poderosas
+8. Considerar el contexto cultural de ${fields.country}
+
+Situación del usuario:
+${situationLines}
+
+IMPORTANTE: Devuelve solo texto plano. Sin markdown, sin negrita, sin títulos, sin asteriscos, sin hashtags. Solo lista numerada:
+1. [mensaje]
+2. [mensaje]
+...`,
+
+      Italian: `Sei un esperto redattore di ${category.name} / ${subcategory.name}. Un utente ti ha condiviso la sua situazione.
+
+Il tuo compito:
+1. Analizzare la situazione e identificare i dettagli emotivi e contestuali chiave
+2. Ignorare le informazioni irrilevanti
+3. Scrivere 5 messaggi distinti che sembrino umani e autentici
+4. Ogni messaggio deve avere un approccio diverso (es. diretto, sottile, emotivo, pratico, umoristico)
+5. Usare il nome in modo naturale se fornito
+6. Rispettare le regole grammaticali e ortografiche dell'italiano
+7. Evitare i cliché — scrivere frasi brevi e incisive
+8. Considerare il contesto culturale di ${fields.country}
+
+Situazione dell'utente:
+${situationLines}
+
+IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestazioni, asterischi o hashtag. Solo lista numerata:
+1. [messaggio]
+2. [messaggio]
+...`
+    };
+
+    const prompt = systemPrompts[fields.language] || systemPrompts['English'];
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
