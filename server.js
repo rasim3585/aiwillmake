@@ -64,30 +64,40 @@ const sbHeaders = (token) => ({
 });
 
 async function getCredits(token, userId) {
-  const res = await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`, {
-    headers: sbHeaders(token)
-  });
+  const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
+  console.log('[credits] GET', url);
+  const res = await fetch(url, { headers: sbHeaders(token) });
+  console.log('[credits] GET status:', res.status);
   const rows = await res.json();
+  console.log('[credits] GET rows:', JSON.stringify(rows));
   return Array.isArray(rows) ? (rows[0]?.credits_used ?? 0) : 0;
 }
 
 async function incrementCredits(token, userId, current) {
-  await fetch(`${SUPABASE_REST}/user_credits`, {
+  const body = { user_id: userId, credits_used: current + 1 };
+  console.log('[credits] UPSERT body:', JSON.stringify(body));
+  const res = await fetch(`${SUPABASE_REST}/user_credits`, {
     method: 'POST',
     headers: { ...sbHeaders(token), 'Prefer': 'resolution=merge-duplicates' },
-    body: JSON.stringify({ user_id: userId, credits_used: current + 1 })
-  }).catch(() => {});
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  console.log('[credits] UPSERT status:', res.status, '| body:', text || '(empty)');
 }
 
 app.get('/api/credits', async (req, res) => {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
+  console.log('[/api/credits] token present:', !!token, '| supabase:', !!supabase);
   if (!supabase || !token) return res.json({ credits_used: 0, limit: 5, guest: !token });
   try {
-    const { data: { user } } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    console.log('[/api/credits] user:', user?.id, '| error:', error?.message);
     if (!user) return res.json({ credits_used: 0, limit: 5, guest: true });
     const credits_used = await getCredits(token, user.id);
+    console.log('[/api/credits] returning credits_used:', credits_used);
     res.json({ credits_used, limit: 5, guest: false });
-  } catch (_) {
+  } catch (e) {
+    console.error('[/api/credits] catch:', e.message);
     res.json({ credits_used: 0, limit: 5, guest: true });
   }
 });
@@ -103,10 +113,15 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
 
     let creditsUsed = 0;
     if (req.user) {
+      console.log('[generate] auth user:', req.user.id);
       creditsUsed = await getCredits(req.token, req.user.id);
+      console.log('[generate] creditsUsed:', creditsUsed);
       if (creditsUsed >= 5) {
+        console.log('[generate] limit reached, blocking');
         return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
       }
+    } else {
+      console.log('[generate] no auth user (guest)');
     }
 
     const category = categories.categories.find(c => c.id === categoryId);
@@ -344,6 +359,7 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
     }
 
     if (req.user) {
+      console.log('[generate] incrementing credits for user:', req.user.id, 'from', creditsUsed, 'to', creditsUsed + 1);
       await incrementCredits(req.token, req.user.id, creditsUsed);
     }
 
