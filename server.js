@@ -72,18 +72,10 @@ async function getCredits(token, userId) {
 }
 
 async function incrementCredits(token, userId, current) {
-  await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}`, {
-    method: 'PATCH',
-    headers: { ...sbHeaders(token), 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ credits_used: current + 1 })
-  }).then(async r => {
-    if (r.status === 404 || (await r.text()) === '') {
-      await fetch(`${SUPABASE_REST}/user_credits`, {
-        method: 'POST',
-        headers: sbHeaders(token),
-        body: JSON.stringify({ user_id: userId, credits_used: 1 })
-      });
-    }
+  await fetch(`${SUPABASE_REST}/user_credits`, {
+    method: 'POST',
+    headers: { ...sbHeaders(token), 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ user_id: userId, credits_used: current + 1 })
   }).catch(() => {});
 }
 
