@@ -53,6 +53,8 @@ app.post('/api/generate', limiter, async (req, res) => {
       prompt = prompt.split(`{{${field.key}}}`).join(replacement);
     }
 
+    prompt += `\n\nCRITICAL RULES:\n- Use ALL the information provided by the user\n- Never use generic phrases - be specific to their situation\n- Each of the 5 outputs must have a different approach/tone\n- If a name is provided, use it naturally\n- Reflect the emotional context accurately\n- Make it sound human, not AI-generated\n- Language: ${fields.language}, Country context: ${fields.country}`;
+
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
     const MAX_RETRIES = 3;
