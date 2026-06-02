@@ -40,20 +40,29 @@ app.post('/api/generate', limiter, async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
     }
 
-    let prompt = subcategory.prompt_template;
+    const situationLines = [...subcategory.required_fields, ...subcategory.optional_fields]
+      .map(f => {
+        const value = fields[f.key]?.trim();
+        const cleanLabel = f.label.replace(/ \(opsiyonel\)| \(optional\)/gi, '');
+        return value ? `${cleanLabel}: ${value}` : null;
+      })
+      .filter(Boolean)
+      .join('\n');
 
-    for (const field of [...categories.common_fields, ...subcategory.required_fields]) {
-      prompt = prompt.split(`{{${field.key}}}`).join(fields[field.key] || '');
-    }
+    const prompt = `You are an expert ${category.name} / ${subcategory.name} writer. A user has shared their situation with you.
 
-    for (const field of subcategory.optional_fields) {
-      const value = fields[field.key]?.trim() || '';
-      const cleanLabel = field.label.replace(/ \(opsiyonel\)| \(optional\)/gi, '');
-      const replacement = value ? `${cleanLabel}: ${value}. ` : '';
-      prompt = prompt.split(`{{${field.key}}}`).join(replacement);
-    }
+Your job:
+1. Analyze the situation and identify the key emotional/contextual details
+2. Ignore irrelevant information
+3. Write 5 distinct messages that feel human and authentic
+4. Each message should have a different approach (e.g. direct, subtle, emotional, practical, humorous)
+5. Use the person's name if provided
+6. Write in ${fields.language}, considering ${fields.country} cultural context
 
-    prompt += `\n\nCRITICAL RULES:\n- Use ALL the information provided by the user\n- Never use generic phrases - be specific to their situation\n- Each of the 5 outputs must have a different approach/tone\n- If a name is provided, use it naturally\n- Reflect the emotional context accurately\n- Make it sound human, not AI-generated\n- Language: ${fields.language}, Country context: ${fields.country}`;
+User's situation:
+${situationLines}
+
+Return only a numbered list of 5 messages.`;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 
