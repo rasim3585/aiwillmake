@@ -1,9 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
 
 const app = express();
+
+const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '');
+const supabase = supabaseUrl && process.env.SUPABASE_ANON_KEY
+  ? createClient(supabaseUrl, process.env.SUPABASE_ANON_KEY)
+  : null;
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -17,11 +23,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+  });
+});
+
 app.get('/api/categories', (req, res) => {
   res.json(categories);
 });
 
-app.post('/api/generate', limiter, async (req, res) => {
+async function requireAuth(req, res, next) {
+  if (!supabase) return next();
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Authentication required. Please sign in.' });
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return res.status(401).json({ error: 'Session expired. Please sign in again.' });
+  req.user = user;
+  next();
+}
+
+app.post('/api/generate', requireAuth, limiter, async (req, res) => {
   try {
     const { categoryId, subcategoryId, fields } = req.body;
 

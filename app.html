@@ -65,9 +65,36 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .nav { display: flex; gap: 24px; }
+    .nav { display: flex; gap: 16px; align-items: center; }
     .nav a { color: var(--text-sec); text-decoration: none; font-size: .9rem; transition: color .2s; }
     .nav a:hover { color: var(--text); }
+    .nav-user { color: var(--text-sec); font-size: .84rem; }
+    .btn-signout {
+      background: transparent; border: 1px solid var(--border); color: var(--text-sec);
+      padding: 6px 14px; border-radius: 99px; font: inherit; font-size: .82rem;
+      cursor: pointer; transition: border-color .2s, color .2s;
+    }
+    .btn-signout:hover { border-color: var(--border-med); color: var(--text); }
+    /* Auth gate */
+    .auth-gate {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(5,8,22,0.92); backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .auth-card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 28px; padding: 40px 36px; max-width: 420px; width: 100%; text-align: center;
+    }
+    .auth-card h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+    .auth-card p { color: var(--text-sec); font-size: .95rem; line-height: 1.6; margin-bottom: 28px; }
+    .btn-google {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text); padding: 14px 24px; border-radius: 14px;
+      font: inherit; font-size: .97rem; font-weight: 600; cursor: pointer;
+      transition: background .2s; margin-bottom: 14px;
+    }
+    .btn-google:hover { background: rgba(255,255,255,0.14); }
 
     /* ── Hero ── */
     .hero-title {
@@ -334,11 +361,24 @@
 <body>
   <div class="page">
 
+    <div id="authGate" class="auth-gate hidden">
+      <div class="auth-card">
+        <h2>Sign in to continue</h2>
+        <p>Create an account or sign in to start generating personalized texts with AI.</p>
+        <button class="btn-google" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+          Sign in with Google
+        </button>
+        <a href="index.html" style="color:var(--text-sec);font-size:.86rem;text-decoration:none">← Back to home</a>
+      </div>
+    </div>
+
     <header class="header">
       <div class="brand">aiwillmake</div>
       <nav class="nav">
         <a href="index.html">Home</a>
-        <a href="app.html">App</a>
+        <span class="nav-user" id="navUser"></span>
+        <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()">Sign out</button>
       </nav>
     </header>
 
@@ -389,7 +429,62 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
+    let sbClient = null;
+    let accessToken = null;
+
+    async function initAuth() {
+      try {
+        const cfg = await fetch('/api/config').then(r => r.json());
+        if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
+          document.getElementById('authGate').classList.add('hidden');
+          return;
+        }
+        sbClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+        const { data: { session } } = await sbClient.auth.getSession();
+        if (session) {
+          accessToken = session.access_token;
+          document.getElementById('navUser').textContent = session.user.email || '';
+          document.getElementById('signOutBtn').classList.remove('hidden');
+          document.getElementById('authGate').classList.add('hidden');
+        } else {
+          document.getElementById('authGate').classList.remove('hidden');
+        }
+
+        sbClient.auth.onAuthStateChange((_event, session) => {
+          if (session) {
+            accessToken = session.access_token;
+            document.getElementById('navUser').textContent = session.user.email || '';
+            document.getElementById('signOutBtn').classList.remove('hidden');
+            document.getElementById('authGate').classList.add('hidden');
+          } else {
+            accessToken = null;
+            document.getElementById('authGate').classList.remove('hidden');
+          }
+        });
+      } catch (e) {
+        console.warn('Auth init failed:', e);
+        document.getElementById('authGate').classList.add('hidden');
+      }
+    }
+
+    async function signInWithGoogle() {
+      if (!sbClient) return;
+      const { error } = await sbClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/app.html' }
+      });
+      if (error) alert(error.message);
+    }
+
+    async function signOut() {
+      if (!sbClient) return;
+      await sbClient.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
     const subcatIcons = {
       romantic_partner:'💕', ex_partner:'💔', crush:'✨', friend:'🤝',
       family:'🏠', apology:'🙏', rejection:'🚫', congratulations:'🎊',
@@ -553,9 +648,11 @@
       btn.textContent = 'Generating...';
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
         const res = await fetch('/api/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields })
         });
         if (!res.ok) {
@@ -611,7 +708,7 @@
     document.getElementById('generateBtn').addEventListener('click', generate);
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
 
-    init();
+    initAuth().then(() => init());
   </script>
 </body>
 </html>
