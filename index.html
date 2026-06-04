@@ -3,382 +3,733 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>aiwillmake — AI will write it</title>
-  <meta name="description" content="From love messages to legal complaints, social media to official letters — AI writes it all." />
+  <title>aiwillmake — AI writes it for you</title>
+  <meta name="description" content="Describe your situation. Get 5 personalized, ready-to-send texts in seconds. Personal messages, social media captions, legal letters — all written by AI." />
   <style>
     :root {
-      --bg1: #050816;
-      --bg2: #0b1428;
-      --surface: rgba(255,255,255,0.042);
-      --border: rgba(255,255,255,0.09);
-      --border-med: rgba(255,255,255,0.18);
-      --text: #eef4ff;
-      --text-sec: #9eb2d4;
-      --text-muted: #5d7299;
-      --accent: #6e81ff;
+      --bg:      #050816;
+      --bg2:     #07101f;
+      --surface: rgba(255,255,255,0.038);
+      --surf2:   rgba(255,255,255,0.065);
+      --border:  rgba(255,255,255,0.08);
+      --bord2:   rgba(255,255,255,0.16);
+      --text:    #eef4ff;
+      --sec:     #8da5cc;
+      --muted:   #46607e;
+      --accent:  #6e81ff;
       --accent2: #a360ff;
-      --glow: rgba(110,129,255,0.26);
+      --glow:    rgba(110,129,255,0.3);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
-      color: var(--text);
-      min-height: 100%;
-      -webkit-font-smoothing: antialiased;
-    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
     body {
-      background-image:
-        radial-gradient(ellipse 700px 500px at 5% -5%, rgba(110,129,255,0.11) 0%, transparent 65%),
-        radial-gradient(ellipse 500px 600px at 95% 90%, rgba(163,96,255,0.07) 0%, transparent 65%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    .page { max-width: 1080px; margin: 0 auto; padding: 36px 24px 80px; }
+    /* ambient light */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 700px at 15%  -5%, rgba(110,129,255,.10) 0%, transparent 60%),
+        radial-gradient(ellipse 600px 800px at 88%  95%, rgba(163,96,255,.07)  0%, transparent 60%),
+        radial-gradient(ellipse 500px 400px at 50%  55%, rgba(110,129,255,.04) 0%, transparent 70%);
+    }
 
-    /* ── Header ── */
-    .header {
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── gradient text ── */
+    .g { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ════════════════════════════════
+       HEADER
+    ════════════════════════════════ */
+    #hdr {
+      position: sticky; top: 0; z-index: 200;
+      padding: 0 24px;
+      transition: background .3s, backdrop-filter .3s, -webkit-backdrop-filter .3s;
+    }
+    #hdr.scrolled {
+      background: rgba(5,8,22,.84);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .hdr-inner {
+      max-width: 1100px; margin: 0 auto;
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 100px;
+      padding: 18px 0;
     }
-    .brand {
-      font-size: 1rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    .brand { font-size: .92rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+    .hdr-nav { display: flex; align-items: center; gap: 6px; }
+    .hdr-nav a {
+      color: var(--sec); text-decoration: none; font-size: .87rem;
+      padding: 8px 14px; border-radius: 99px;
+      transition: color .2s, background .2s;
     }
-    .nav-link {
-      color: var(--text-sec); text-decoration: none; font-size: .88rem;
-      border: 1px solid var(--border); padding: 8px 18px; border-radius: 99px;
-      transition: color .2s, border-color .2s;
+    .hdr-nav a:hover { color: var(--text); background: var(--surface); }
+    .hdr-nav .pill {
+      border: 1px solid var(--border); color: var(--text);
+      padding: 8px 20px;
+      transition: border-color .2s, background .2s;
     }
-    .nav-link:hover { color: var(--text); border-color: var(--border-med); }
+    .hdr-nav .pill:hover { border-color: var(--bord2); background: var(--surf2); }
 
-    /* ── Hero ── */
-    .hero { text-align: center; max-width: 740px; margin: 0 auto 96px; }
+    /* ════════════════════════════════
+       HERO
+    ════════════════════════════════ */
+    .hero { text-align: center; padding: 100px 0 80px; }
     .eyebrow {
-      display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px;
-      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
-      color: var(--accent); background: rgba(110,129,255,0.1);
-      border: 1px solid rgba(110,129,255,0.2); padding: 5px 14px; border-radius: 99px;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .71rem; font-weight: 700; text-transform: uppercase; letter-spacing: .16em;
+      color: var(--accent); border: 1px solid rgba(110,129,255,.22);
+      background: rgba(110,129,255,.08); padding: 6px 16px; border-radius: 99px;
+      margin-bottom: 28px;
     }
-    .hero-title {
-      font-size: clamp(2.6rem, 6vw, 4.2rem);
-      font-weight: 800; line-height: 1.05; letter-spacing: -.03em; margin-bottom: 20px;
+    .eyebrow-pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      animation: blink 2.4s ease-in-out infinite;
     }
-    .hero-title span {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 4.8rem);
+      font-weight: 900; line-height: 1.03; letter-spacing: -.04em;
+      margin-bottom: 24px;
     }
     .hero-sub {
-      color: var(--text-sec); font-size: 1.1rem; line-height: 1.7;
-      margin-bottom: 36px;
+      color: var(--sec); font-size: clamp(.98rem, 2vw, 1.13rem); line-height: 1.74;
+      max-width: 560px; margin: 0 auto 44px;
     }
-    .cta-group { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
+    .hero-sub strong { color: var(--text); }
+
+    .cta-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 56px;
+    }
+    .btn-main {
+      display: inline-flex; align-items: center; gap: 9px;
       background: linear-gradient(95deg, var(--accent), var(--accent2));
-      border: none; color: #fff; padding: 16px 32px; border-radius: 14px;
-      font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none;
-      box-shadow: 0 8px 30px var(--glow), inset 0 1px 0 rgba(255,255,255,0.14);
-      transition: transform .2s, box-shadow .2s;
+      border: none; color: #fff; padding: 15px 32px; border-radius: 14px;
+      font: inherit; font-size: .97rem; font-weight: 700; cursor: pointer;
+      text-decoration: none; letter-spacing: .01em;
+      box-shadow: 0 8px 32px var(--glow), inset 0 1px 0 rgba(255,255,255,.14);
+      transition: transform .22s, box-shadow .22s;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px var(--glow), inset 0 1px 0 rgba(255,255,255,0.14); }
-    .hero-note { color: var(--text-muted); font-size: .86rem; }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 16px 48px var(--glow), inset 0 1px 0 rgba(255,255,255,.14); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--surface); border: 1px solid var(--bord2);
+      color: var(--text); padding: 14px 28px; border-radius: 14px;
+      font: inherit; font-size: .97rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: background .2s, border-color .2s;
+    }
+    .btn-ghost:hover { background: var(--surf2); border-color: rgba(255,255,255,.26); }
 
-    /* ── Section titles ── */
-    .section-eyebrow {
-      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .13em;
-      color: var(--accent); margin-bottom: 10px;
+    /* stats */
+    .stats {
+      display: flex; align-items: stretch; justify-content: center;
+      border: 1px solid var(--border); border-radius: 16px;
+      background: var(--surface); overflow: hidden;
+      max-width: 540px; margin: 0 auto;
     }
-    .section-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 10px; }
-    .section-sub { color: var(--text-sec); font-size: .97rem; line-height: 1.6; margin-bottom: 44px; }
+    .stat {
+      flex: 1; padding: 18px 0;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-n { font-size: 1.45rem; font-weight: 800; letter-spacing: -.03em; }
+    .stat-l { font-size: .74rem; color: var(--muted); }
 
-    /* ── Feature section ── */
-    .features { margin-bottom: 96px; }
-    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-    .feature-col {
-      padding: 32px 28px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .feature-col:first-child { border-radius: 20px 0 0 20px; }
-    .feature-col:last-child { border-radius: 0 20px 20px 0; }
-    .feature-icon {
-      width: 48px; height: 48px; border-radius: 14px;
-      background: linear-gradient(135deg, rgba(110,129,255,0.18), rgba(163,96,255,0.12));
-      border: 1px solid rgba(110,129,255,0.18);
-      display: grid; place-items: center; font-size: 1.4rem;
-      margin-bottom: 18px;
-    }
-    .feature-name { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-    .feature-desc { color: var(--text-sec); font-size: .84rem; line-height: 1.55; margin-bottom: 20px; }
-    .feature-list { display: grid; gap: 9px; }
-    .feature-item {
-      display: flex; align-items: flex-start; gap: 9px;
-      font-size: .83rem; color: var(--text-sec); line-height: 1.4;
-    }
-    .bullet { color: var(--accent); font-size: .65rem; margin-top: 5px; flex-shrink: 0; }
+    /* ── divider ── */
+    .hr { border: none; border-top: 1px solid var(--border); }
 
-    /* ── How it works ── */
-    .how { margin-bottom: 96px; }
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .step {
+    /* ════════════════════════════════
+       SHARED SECTION HEADER
+    ════════════════════════════════ */
+    .sh { margin-bottom: 48px; }
+    .sh.c { text-align: center; }
+    .sh.c .sh-sub { margin: 0 auto; }
+    .sh-tag {
+      font-size: .71rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .15em; color: var(--accent); margin-bottom: 10px;
+    }
+    .sh-title {
+      font-size: clamp(1.7rem, 3.6vw, 2.3rem);
+      font-weight: 800; letter-spacing: -.028em; line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .sh-sub { color: var(--sec); font-size: .97rem; line-height: 1.68; max-width: 520px; }
+
+    section.s { padding: 80px 0; }
+
+    /* ════════════════════════════════
+       CATEGORIES
+    ════════════════════════════════ */
+    .cat-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+    }
+    .cat-card {
+      position: relative; overflow: hidden;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 28px;
+      border-radius: 24px; padding: 32px 26px 28px;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
     }
-    .step-num {
-      width: 34px; height: 34px; border-radius: 50%;
+    .cat-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+      background: linear-gradient(140deg, rgba(110,129,255,.07), rgba(163,96,255,.04));
+      transition: opacity .25s;
+    }
+    .cat-card:hover { transform: translateY(-5px); border-color: rgba(110,129,255,.28); box-shadow: 0 24px 64px rgba(0,0,0,.28), 0 0 0 1px rgba(110,129,255,.14); }
+    .cat-card:hover::after { opacity: 1; }
+    .cat-ic {
+      font-size: 1.9rem; width: 58px; height: 58px; border-radius: 17px;
+      background: linear-gradient(135deg, rgba(110,129,255,.15), rgba(163,96,255,.1));
+      border: 1px solid rgba(110,129,255,.2);
+      display: grid; place-items: center; margin-bottom: 20px;
+      position: relative; z-index: 1;
+    }
+    .cat-name { font-size: 1.06rem; font-weight: 700; margin-bottom: 8px; position: relative; z-index: 1; }
+    .cat-desc { color: var(--sec); font-size: .84rem; line-height: 1.6; margin-bottom: 20px; position: relative; z-index: 1; }
+    .cat-list { display: grid; gap: 9px; position: relative; z-index: 1; }
+    .cat-li { display: flex; align-items: center; gap: 9px; font-size: .81rem; color: var(--sec); }
+    .cat-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: .65; flex-shrink: 0; }
+
+    /* ════════════════════════════════
+       HOW IT WORKS
+    ════════════════════════════════ */
+    .how-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 0; border: 1px solid var(--border); border-radius: 24px; overflow: hidden;
+    }
+    .how-step {
+      padding: 36px 30px; background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .how-step:last-child { border-right: none; }
+    .how-num {
+      width: 38px; height: 38px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       display: grid; place-items: center;
       font-size: .78rem; font-weight: 800; color: #fff;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(110,129,255,.35);
     }
-    .step-title { font-size: .97rem; font-weight: 700; margin-bottom: 8px; }
-    .step-desc { color: var(--text-sec); font-size: .85rem; line-height: 1.55; }
+    .how-title { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .how-desc { color: var(--sec); font-size: .85rem; line-height: 1.64; margin-bottom: 16px; }
+    .how-badge {
+      display: inline-block; font-size: .7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .07em;
+      color: var(--accent); background: rgba(110,129,255,.1);
+      border: 1px solid rgba(110,129,255,.2); padding: 4px 10px; border-radius: 7px;
+    }
 
-    /* ── Pricing ── */
-    .pricing { margin-bottom: 96px; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    /* ════════════════════════════════
+       SAMPLE OUTPUTS
+    ════════════════════════════════ */
+    .ex-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .ex-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 22px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .ex-card:hover { border-color: var(--bord2); box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+    .ex-meta { display: flex; align-items: center; gap: 9px; }
+    .ex-ic {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: rgba(110,129,255,.12); border: 1px solid rgba(110,129,255,.18);
+      display: grid; place-items: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .ex-cat { font-size: .73rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
+    .ex-prompt {
+      font-size: .8rem; color: var(--muted); font-style: italic; line-height: 1.55;
+      padding: 10px 13px; background: rgba(255,255,255,.025);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .ex-sep {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted);
+    }
+    .ex-sep::before, .ex-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .ex-body { font-size: .85rem; line-height: 1.7; color: var(--sec); }
+
+    /* ════════════════════════════════
+       PRICING
+    ════════════════════════════════ */
+    .price-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 14px; align-items: start;
+    }
     .price-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 14px;
+      border-radius: 24px; padding: 30px;
+      display: flex; flex-direction: column;
+      transition: border-color .2s, box-shadow .2s;
     }
+    .price-card:hover { border-color: var(--bord2); box-shadow: 0 12px 44px rgba(0,0,0,.2); }
     .price-card.featured {
-      background: linear-gradient(160deg, rgba(110,129,255,0.11), rgba(163,96,255,0.07));
-      border-color: rgba(110,129,255,0.32);
+      background: linear-gradient(155deg, rgba(110,129,255,.1), rgba(163,96,255,.06));
+      border-color: rgba(110,129,255,.36);
+      box-shadow: 0 0 0 1px rgba(110,129,255,.15), 0 20px 60px rgba(110,129,255,.1);
     }
-    .plan-badge {
-      display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: .04em;
-      padding: 4px 12px; border-radius: 99px; width: fit-content;
-      background: rgba(110,129,255,0.1); color: var(--accent);
-      border: 1px solid rgba(110,129,255,0.18);
+    .price-card.featured:hover {
+      box-shadow: 0 0 0 1px rgba(110,129,255,.28), 0 28px 72px rgba(110,129,255,.18);
     }
-    .price-amount { font-size: 2.6rem; font-weight: 800; line-height: 1; }
-    .price-amount span { font-size: .95rem; font-weight: 500; color: var(--text-sec); }
-    .price-desc { color: var(--text-sec); font-size: .86rem; line-height: 1.55; }
-    .price-divider { border: none; border-top: 1px solid var(--border); }
-    .price-features { display: grid; gap: 9px; }
-    .price-feature { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--text-sec); }
-    .check { color: var(--accent); font-weight: 700; font-size: .8rem; }
+    .price-top {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+    }
+    .price-plan { font-size: .84rem; font-weight: 700; color: var(--sec); text-transform: uppercase; letter-spacing: .09em; }
+    .price-popular {
+      font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      padding: 3px 10px; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2)); color: #fff;
+    }
+    .price-amt {
+      font-size: 2.9rem; font-weight: 900; letter-spacing: -.04em; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .price-amt sup { font-size: 1rem; font-weight: 700; vertical-align: top; margin-top: 8px; margin-right: 1px; }
+    .price-amt small { font-size: .88rem; font-weight: 500; color: var(--muted); }
+    .price-tag { font-size: .84rem; color: var(--sec); line-height: 1.5; margin-bottom: 22px; }
+    .price-hr { border: none; border-top: 1px solid var(--border); margin-bottom: 20px; }
+    .price-feats { display: grid; gap: 10px; margin-bottom: 26px; }
+    .price-feat { display: flex; align-items: center; gap: 10px; font-size: .84rem; color: var(--sec); }
+    .price-chk {
+      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(110,129,255,.13); border: 1px solid rgba(110,129,255,.24);
+      display: grid; place-items: center; font-size: .64rem; color: var(--accent); font-weight: 800;
+    }
+    .btn-plan {
+      display: block; text-align: center; padding: 13px;
+      border-radius: 12px; font: inherit; font-size: .9rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      border: 1px solid var(--bord2); color: var(--sec); background: transparent;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .btn-plan:hover { background: var(--surf2); color: var(--text); border-color: rgba(255,255,255,.24); }
+    .btn-plan.hi {
+      background: linear-gradient(95deg, var(--accent), var(--accent2));
+      border-color: transparent; color: #fff;
+      box-shadow: 0 6px 24px var(--glow);
+    }
+    .btn-plan.hi:hover { transform: translateY(-1px); box-shadow: 0 12px 36px var(--glow); }
+    .free-note { text-align: center; margin-top: 22px; font-size: .83rem; color: var(--muted); }
+    .free-note a { color: var(--accent); text-decoration: none; }
+    .free-note a:hover { text-decoration: underline; }
 
-    /* ── Bottom CTA ── */
-    .bottom-cta {
-      text-align: center; padding: 56px 32px;
-      background: linear-gradient(160deg, rgba(110,129,255,0.08), rgba(163,96,255,0.05));
-      border: 1px solid rgba(110,129,255,0.18);
-      border-radius: 28px; margin-bottom: 56px;
+    /* ════════════════════════════════
+       BOTTOM CTA
+    ════════════════════════════════ */
+    .bcta {
+      text-align: center; padding: 80px 40px;
+      background: linear-gradient(155deg, rgba(110,129,255,.09), rgba(163,96,255,.06));
+      border: 1px solid rgba(110,129,255,.2); border-radius: 32px;
+      position: relative; overflow: hidden;
     }
-    .bottom-cta h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
-    .bottom-cta p { color: var(--text-sec); font-size: .97rem; margin-bottom: 28px; }
+    .bcta::before {
+      content: ''; position: absolute; pointer-events: none;
+      top: -100px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 350px;
+      background: radial-gradient(ellipse, rgba(110,129,255,.13) 0%, transparent 70%);
+    }
+    .bcta h2 {
+      font-size: clamp(1.9rem, 4.5vw, 2.8rem); font-weight: 900;
+      letter-spacing: -.035em; margin-bottom: 14px; position: relative;
+    }
+    .bcta p { color: var(--sec); font-size: 1rem; margin-bottom: 34px; position: relative; max-width: 460px; margin-left: auto; margin-right: auto; }
+    .bcta .btn-main { position: relative; }
 
-    footer { text-align: center; color: var(--text-muted); font-size: .86rem; padding-top: 32px; border-top: 1px solid var(--border); }
-
-    @media (max-width: 860px) {
-      .feature-grid { grid-template-columns: 1fr; gap: 12px; }
-      .feature-col { border-radius: 16px !important; }
-      .steps { grid-template-columns: 1fr; }
-      .pricing-grid { grid-template-columns: 1fr; }
-      .header { margin-bottom: 60px; }
-    }
-    @media (max-width: 540px) {
-      .page { padding: 20px 16px 60px; }
-      .hero { margin-bottom: 64px; }
-    }
-  </style>
-  <style>
+    /* ════════════════════════════════
+       AUTH button
+    ════════════════════════════════ */
     .btn-google {
       display: inline-flex; align-items: center; gap: 10px;
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18);
-      color: var(--text); padding: 14px 24px; border-radius: 14px;
-      font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; text-decoration: none;
-      transition: background .2s, border-color .2s;
+      background: var(--surface); border: 1px solid var(--bord2);
+      color: var(--text); padding: 14px 26px; border-radius: 14px;
+      font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: background .2s, border-color .2s;
     }
-    .btn-google:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); }
+    .btn-google:hover { background: var(--surf2); border-color: rgba(255,255,255,.28); }
     .btn-google svg { flex-shrink: 0; }
-    #authStatus { color: var(--text-sec); font-size: .86rem; }
+    #authStatus { color: var(--sec); font-size: .84rem; }
+
+    /* ════════════════════════════════
+       FOOTER
+    ════════════════════════════════ */
+    footer {
+      border-top: 1px solid var(--border); padding: 48px 24px 40px;
+    }
+    .ft-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 40px; flex-wrap: wrap;
+    }
+    .ft-brand-name { font-size: .9rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 8px; }
+    .ft-brand-desc { font-size: .82rem; color: var(--muted); line-height: 1.65; max-width: 260px; }
+    .ft-links { display: flex; gap: 20px; align-items: center; padding-top: 4px; }
+    .ft-link { font-size: .84rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .ft-link:hover { color: var(--sec); }
+    .ft-bottom {
+      max-width: 1100px; margin: 28px auto 0; padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap;
+      font-size: .79rem; color: var(--muted);
+    }
+
+    /* ════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════ */
+    @media (max-width: 880px) {
+      .cat-grid   { grid-template-columns: 1fr; gap: 12px; }
+      .how-grid   { grid-template-columns: 1fr; border-radius: 20px; }
+      .how-step   { border-right: none; border-bottom: 1px solid var(--border); }
+      .how-step:last-child { border-bottom: none; }
+      .ex-grid    { grid-template-columns: 1fr; }
+      .price-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 64px 0 56px; }
+      .stats { max-width: 100%; }
+      .stat { padding: 16px 0; }
+      .bcta { padding: 52px 24px; }
+      .hdr-nav a:not(.pill):not(:last-child) { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
 
-    <header class="header">
-      <div class="brand">aiwillmake</div>
-      <nav><a href="app.html" class="nav-link">Open App →</a></nav>
-    </header>
+<!-- ── Header ── -->
+<header id="hdr">
+  <div class="hdr-inner">
+    <div class="brand g">aiwillmake</div>
+    <nav class="hdr-nav">
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="app.html" class="pill" id="hdrCta">Open App →</a>
+    </nav>
+  </div>
+</header>
 
-    <!-- Hero -->
-    <section class="hero">
-      <div class="eyebrow">✦ AI Writing Studio</div>
-      <h1 class="hero-title">Whatever you need to say —<br><span>AI will write it.</span></h1>
-      <p class="hero-sub">From love messages to legal complaints, social media captions to official petitions — describe your situation and get 5 personalized, ready-to-send texts instantly.</p>
-      <div class="cta-group">
-        <a href="app.html" class="btn-primary" id="ctaBtn">Start Writing →</a>
+<!-- ── Hero ── -->
+<section>
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow"><span class="eyebrow-pulse"></span> AI Writing Studio</div>
+      <h1>Whatever you need to say —<br><span class="g">AI will write it.</span></h1>
+      <p class="hero-sub">
+        From heartfelt messages to legal complaints, Instagram captions to official petitions —
+        describe your situation and get <strong>5 personalized, ready-to-send texts</strong> in seconds.
+      </p>
+
+      <div class="cta-row">
+        <a href="app.html" class="btn-main" id="ctaBtn">
+          Start Writing
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
         <button class="btn-google" id="googleBtn" onclick="signInWithGoogle()" style="display:none">
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
           Sign in with Google
         </button>
         <span id="authStatus"></span>
       </div>
-    </section>
 
-    <!-- Features -->
-    <section class="features">
-      <div class="section-eyebrow">What you can write</div>
-      <h2 class="section-title">Three categories, endless use cases.</h2>
-      <p class="section-sub">Tell AI what you need. It handles the writing — you handle the sending.</p>
-
-      <div class="feature-grid">
-
-        <div class="feature-col">
-          <div class="feature-icon">💬</div>
-          <div class="feature-name">Kişisel Mesajlaşma</div>
-          <div class="feature-desc">Sevdiklerine, arkadaşlarına veya eski sevgiliye — her duruma uygun mesaj.</div>
-          <div class="feature-list">
-            <div class="feature-item"><span class="bullet">◆</span><span>Eski sevgiliye kapanış veya yeniden bağlanma mesajı</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>Beğendiğin birine ilk, doğal mesaj</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>İçten özür, tebrik veya aile mesajları</span></div>
-          </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-n g">5</span>
+          <span class="stat-l">texts per request</span>
         </div>
-
-        <div class="feature-col">
-          <div class="feature-icon">📱</div>
-          <div class="feature-name">Sosyal Medya</div>
-          <div class="feature-desc">Her platform için ton ve hedef kitleye uygun içerik.</div>
-          <div class="feature-list">
-            <div class="feature-item"><span class="bullet">◆</span><span>Instagram, Twitter, LinkedIn caption ve post metinleri</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>Ürün tanıtımı, kampanya ve motivasyon içerikleri</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>Spor kulübü duyuruları ve kişisel hikaye paylaşımları</span></div>
-          </div>
+        <div class="stat">
+          <span class="stat-n g">7</span>
+          <span class="stat-l">languages</span>
         </div>
-
-        <div class="feature-col">
-          <div class="feature-icon">⚖️</div>
-          <div class="feature-name">Resmi & Hukuki</div>
-          <div class="feature-desc">Kullanıma hazır, formatlanmış resmi belgeler.</div>
-          <div class="feature-list">
-            <div class="feature-item"><span class="bullet">◆</span><span>Devlet kurumuna dilekçe — "Sayın..." formatında</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>Ürün/hizmet şikayeti ve resmi talep mektupları</span></div>
-            <div class="feature-item"><span class="bullet">◆</span><span>Karara itiraz dilekçesi, 5 farklı ton ve uzunlukta</span></div>
-          </div>
+        <div class="stat">
+          <span class="stat-n g">15+</span>
+          <span class="stat-l">use cases</span>
         </div>
-
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="how">
-      <div class="section-eyebrow">How it works</div>
-      <h2 class="section-title">Three steps. Five results.</h2>
-      <p class="section-sub">No prompting skills required. Just answer the questions and let AI do the rest.</p>
-
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-title">Pick a category & type</div>
-          <div class="step-desc">Choose from messaging, social media, or legal. Then select the specific type — e.g. "ex partner" or "complaint letter".</div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-title">Describe your situation</div>
-          <div class="step-desc">Fill in the form fields. The more specific you are, the more personal and accurate the output will be.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-title">Copy and send</div>
-          <div class="step-desc">Get 5 different versions in your language. Pick the one that fits, copy it, and send. Done.</div>
+        <div class="stat">
+          <span class="stat-n g">~30s</span>
+          <span class="stat-l">to first result</span>
         </div>
       </div>
-    </section>
-
-    <!-- Pricing -->
-    <section class="pricing">
-      <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-title">Simple, honest pricing.</h2>
-      <p class="section-sub">Start free, upgrade when you need more.</p>
-
-      <div class="pricing-grid">
-        <div class="price-card">
-          <span class="plan-badge">Starter</span>
-          <div class="price-amount">$9 <span>/ month</span></div>
-          <div class="price-desc">For individuals and occasional writers.</div>
-          <hr class="price-divider" />
-          <div class="price-features">
-            <div class="price-feature"><span class="check">✓</span> 50 generations / month</div>
-            <div class="price-feature"><span class="check">✓</span> All 3 categories</div>
-            <div class="price-feature"><span class="check">✓</span> 7 languages</div>
-          </div>
-        </div>
-
-        <div class="price-card featured">
-          <span class="plan-badge">Pro</span>
-          <div class="price-amount">$14 <span>/ month</span></div>
-          <div class="price-desc">For creators, freelancers, and professionals.</div>
-          <hr class="price-divider" />
-          <div class="price-features">
-            <div class="price-feature"><span class="check">✓</span> 200 generations / month</div>
-            <div class="price-feature"><span class="check">✓</span> Priority speed</div>
-            <div class="price-feature"><span class="check">✓</span> Save & export texts</div>
-          </div>
-        </div>
-
-        <div class="price-card">
-          <span class="plan-badge">Business</span>
-          <div class="price-amount">$49 <span>/ month</span></div>
-          <div class="price-desc">For teams, agencies, and power users.</div>
-          <hr class="price-divider" />
-          <div class="price-features">
-            <div class="price-feature"><span class="check">✓</span> Unlimited generations</div>
-            <div class="price-feature"><span class="check">✓</span> Team seats</div>
-            <div class="price-feature"><span class="check">✓</span> API access</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bottom CTA -->
-    <section class="bottom-cta">
-      <h2>Ready to write something?</h2>
-      <p>Open the app, pick a category, and get your first text in under 30 seconds.</p>
-      <a href="app.html" class="btn-primary">Start Writing →</a>
-    </section>
-
-    <footer>© 2026 aiwillmake — AI writing for every need.</footer>
-
+    </div>
   </div>
+</section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    let sbClient = null;
+<hr class="hr" />
 
-    async function initAuth() {
-      try {
-        const cfg = await fetch('/api/config').then(r => r.json());
-        if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
-        sbClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+<!-- ── Categories ── -->
+<section class="s">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sh-tag">What you can write</div>
+      <h2 class="sh-title">Three categories, endless situations.</h2>
+      <p class="sh-sub">Tell AI what you need. It handles the writing — you handle the sending.</p>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card">
+        <div class="cat-ic">💬</div>
+        <div class="cat-name">Personal Messaging</div>
+        <p class="cat-desc">For your partner, friends, family, or ex — the right message for every situation.</p>
+        <div class="cat-list">
+          <div class="cat-li"><span class="cat-dot"></span>Closure or reconnect messages to an ex</div>
+          <div class="cat-li"><span class="cat-dot"></span>A natural first message to someone you like</div>
+          <div class="cat-li"><span class="cat-dot"></span>Heartfelt apologies, congrats, and family notes</div>
+        </div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-ic">📱</div>
+        <div class="cat-name">Social Media</div>
+        <p class="cat-desc">Platform-appropriate content tailored to your tone, audience, and goal.</p>
+        <div class="cat-list">
+          <div class="cat-li"><span class="cat-dot"></span>Instagram, X, LinkedIn captions and post copy</div>
+          <div class="cat-li"><span class="cat-dot"></span>Product promotions, campaigns, motivational posts</div>
+          <div class="cat-li"><span class="cat-dot"></span>Sports club announcements and personal stories</div>
+        </div>
+      </div>
+      <div class="cat-card">
+        <div class="cat-ic">⚖️</div>
+        <div class="cat-name">Official &amp; Legal</div>
+        <p class="cat-desc">Ready-to-use, properly formatted documents for any formal situation.</p>
+        <div class="cat-list">
+          <div class="cat-li"><span class="cat-dot"></span>Petitions to government authorities</div>
+          <div class="cat-li"><span class="cat-dot"></span>Complaint letters and official requests</div>
+          <div class="cat-li"><span class="cat-dot"></span>Legal objections in 5 different tones</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-        const { data: { session } } = await sbClient.auth.getSession();
-        if (session) {
-          document.getElementById('ctaBtn').textContent = 'Go to App →';
-          document.getElementById('authStatus').textContent = '✓ Signed in as ' + (session.user.email || 'user');
-        } else {
-          document.getElementById('googleBtn').style.display = 'inline-flex';
-          document.getElementById('ctaBtn').style.display = 'none';
-          document.getElementById('authStatus').textContent = 'Sign in to start writing.';
-        }
-      } catch (e) {
-        console.warn('Auth init failed:', e);
+<hr class="hr" />
+
+<!-- ── How it works ── -->
+<section class="s" id="how">
+  <div class="wrap">
+    <div class="sh c">
+      <div class="sh-tag">How it works</div>
+      <h2 class="sh-title">Three steps. Five results.</h2>
+      <p class="sh-sub">No prompt engineering required — just answer the questions and AI does the rest.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div class="how-title">Pick a category &amp; type</div>
+        <p class="how-desc">Choose from personal messaging, social media, or legal. Then select the specific type — "ex partner", "Instagram caption", "complaint letter", and more.</p>
+        <span class="how-badge">15+ types</span>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div class="how-title">Describe your situation</div>
+        <p class="how-desc">Fill in the guided form. The more specific you are, the more personal and on-point the AI output will be. No blank page, no guessing.</p>
+        <span class="how-badge">No prompting skill needed</span>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div class="how-title">Copy &amp; send</div>
+        <p class="how-desc">Get 5 unique versions in your chosen language. Pick the one that fits, copy it, and send. Need more? Regenerate with one click.</p>
+        <span class="how-badge">5 variations instantly</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr" />
+
+<!-- ── Sample Outputs ── -->
+<section class="s">
+  <div class="wrap">
+    <div class="sh c">
+      <div class="sh-tag">See it in action</div>
+      <h2 class="sh-title">Real inputs. Real AI output.</h2>
+      <p class="sh-sub">Here's what gets generated when you describe an actual situation — not generic templates, but genuinely personalized text.</p>
+    </div>
+    <div class="ex-grid">
+
+      <div class="ex-card">
+        <div class="ex-meta">
+          <div class="ex-ic">💬</div>
+          <span class="ex-cat">Personal · Ex Partner</span>
+        </div>
+        <div class="ex-prompt">"We broke up 4 months ago after a big fight. I want to reach out — not to pressure her, just to see how she's doing."</div>
+        <div class="ex-sep">AI Output · Version 1</div>
+        <div class="ex-body">Hey — I know it's been a while, and I've gone back and forth on whether to reach out. I'm not looking to reopen anything. I just realized I genuinely miss talking to you. Hope things have been good on your end.</div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-meta">
+          <div class="ex-ic">📱</div>
+          <span class="ex-cat">Social Media · Instagram</span>
+        </div>
+        <div class="ex-prompt">"Sunset photo from my rooftop. Mood: peaceful. I want something thoughtful, not basic. 3–5 hashtags."</div>
+        <div class="ex-sep">AI Output · Version 1</div>
+        <div class="ex-body">Some evenings the sky just decides to put everything into perspective. No plans, no noise — just this. 🌇<br><br>#goldenhour #quietmoments #rooftopviews #slowliving</div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-meta">
+          <div class="ex-ic">⚖️</div>
+          <span class="ex-cat">Official · Complaint Letter</span>
+        </div>
+        <div class="ex-prompt">"Faulty laptop, two failed repairs, online retailer. I want a full refund. Firm tone."</div>
+        <div class="ex-sep">AI Output · Version 1</div>
+        <div class="ex-body">Dear Customer Service Team,<br><br>I am writing to formally request a full refund for Order #XXXX. Despite two repair attempts, the device continues to exhibit the same fault. I expect a written response and resolution within 15 business days.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="hr" />
+
+<!-- ── Pricing ── -->
+<section class="s" id="pricing">
+  <div class="wrap">
+    <div class="sh c">
+      <div class="sh-tag">Pricing</div>
+      <h2 class="sh-title">Simple, transparent pricing.</h2>
+      <p class="sh-sub">Start free with 3 generations — no account needed. Upgrade whenever you need more.</p>
+    </div>
+    <div class="price-grid">
+
+      <div class="price-card">
+        <div class="price-top"><span class="price-plan">Starter</span></div>
+        <div class="price-amt"><sup>$</sup>9<small> / month</small></div>
+        <p class="price-tag">For individuals and occasional writers.</p>
+        <hr class="price-hr" />
+        <div class="price-feats">
+          <div class="price-feat"><span class="price-chk">✓</span>50 generations / month</div>
+          <div class="price-feat"><span class="price-chk">✓</span>All 3 categories</div>
+          <div class="price-feat"><span class="price-chk">✓</span>All 7 languages</div>
+          <div class="price-feat"><span class="price-chk">✓</span>5 variations per request</div>
+        </div>
+        <a href="app.html" class="btn-plan">Get started</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-top">
+          <span class="price-plan">Pro</span>
+          <span class="price-popular">Most popular</span>
+        </div>
+        <div class="price-amt"><sup>$</sup>14<small> / month</small></div>
+        <p class="price-tag">For creators, freelancers, and professionals.</p>
+        <hr class="price-hr" />
+        <div class="price-feats">
+          <div class="price-feat"><span class="price-chk">✓</span>200 generations / month</div>
+          <div class="price-feat"><span class="price-chk">✓</span>Priority speed</div>
+          <div class="price-feat"><span class="price-chk">✓</span>Save &amp; export texts</div>
+          <div class="price-feat"><span class="price-chk">✓</span>Everything in Starter</div>
+        </div>
+        <a href="app.html" class="btn-plan hi">Get Pro</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-top"><span class="price-plan">Business</span></div>
+        <div class="price-amt"><sup>$</sup>49<small> / month</small></div>
+        <p class="price-tag">For teams, agencies, and power users.</p>
+        <hr class="price-hr" />
+        <div class="price-feats">
+          <div class="price-feat"><span class="price-chk">✓</span>Unlimited generations</div>
+          <div class="price-feat"><span class="price-chk">✓</span>Team seats</div>
+          <div class="price-feat"><span class="price-chk">✓</span>API access</div>
+          <div class="price-feat"><span class="price-chk">✓</span>Everything in Pro</div>
+        </div>
+        <a href="app.html" class="btn-plan">Contact us</a>
+      </div>
+
+    </div>
+    <p class="free-note">Not ready? <a href="app.html">Try 3 free generations</a> — no sign-up required.</p>
+  </div>
+</section>
+
+<hr class="hr" />
+
+<!-- ── Bottom CTA ── -->
+<section class="s">
+  <div class="wrap">
+    <div class="bcta">
+      <h2>Stop staring at a blank screen.</h2>
+      <p>Pick a category, describe your situation, and get your first text in under 30 seconds.</p>
+      <a href="app.html" class="btn-main" id="ctaBottom">
+        Start Writing Free
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="ft-inner">
+    <div>
+      <div class="ft-brand-name g">aiwillmake</div>
+      <p class="ft-brand-desc">AI-powered writing for every situation — personal, professional, and official.</p>
+    </div>
+    <nav class="ft-links">
+      <a href="#how" class="ft-link">How it works</a>
+      <a href="#pricing" class="ft-link">Pricing</a>
+      <a href="app.html" class="ft-link">App</a>
+    </nav>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 aiwillmake. All rights reserved.</span>
+    <span>Powered by Claude AI</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  // Sticky header
+  const hdr = document.getElementById('hdr');
+  window.addEventListener('scroll', () => hdr.classList.toggle('scrolled', window.scrollY > 24), { passive: true });
+
+  // Auth
+  let sb = null;
+
+  async function initAuth() {
+    try {
+      const cfg = await fetch('/api/config').then(r => r.json());
+      if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+      sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const label = 'Go to App →';
+        document.getElementById('ctaBtn').textContent = label;
+        document.getElementById('hdrCta').textContent = label;
+        document.getElementById('ctaBottom').innerHTML = label;
+        document.getElementById('authStatus').textContent = '✓ Signed in as ' + (session.user.email || 'user');
+      } else {
+        document.getElementById('googleBtn').style.display = 'inline-flex';
+        document.getElementById('ctaBtn').style.display = 'none';
+        document.getElementById('authStatus').textContent = 'Sign in to start writing.';
       }
+    } catch (e) {
+      console.warn('Auth init failed:', e);
     }
+  }
 
-    async function signInWithGoogle() {
-      if (!sbClient) return;
-      const { error } = await sbClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin + '/app.html' }
-      });
-      if (error) alert(error.message);
-    }
+  async function signInWithGoogle() {
+    if (!sb) return;
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/app.html' }
+    });
+    if (error) alert(error.message);
+  }
 
-    initAuth();
-  </script>
+  initAuth();
+</script>
 </body>
 </html>

@@ -16,272 +16,272 @@
   "categories": [
     {
       "id": "messaging",
-      "name": "Kişisel Mesajlaşma",
+      "name": "Personal Messaging",
       "icon": "💬",
       "subcategories": [
         {
           "id": "romantic_partner",
-          "name": "Sevgili",
-          "description": "Sevgiliye gönderilecek romantik, duygusal veya gündelik mesajlar",
+          "name": "Romantic Partner",
+          "description": "Romantic, emotional, or everyday messages to send to your partner",
           "required_fields": [
             {
               "key": "situation",
-              "label": "Durum / Konu",
+              "label": "Situation / Topic",
               "type": "textarea",
-              "placeholder": "Ne söylemek istiyorsun? Örn: Özledim, kavga ettik, iyi geceler demek istiyorum..."
+              "placeholder": "What do you want to say? E.g.: I miss you, we had a fight, I want to say goodnight..."
             },
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Romantik", "Duygusal", "Şakacı", "Özür diler", "Özlemli", "Sıradan / Günlük"]
+              "options": ["Romantic", "Emotional", "Playful", "Apologetic", "Longing", "Casual / Everyday"]
             }
           ],
           "optional_fields": [
             {
               "key": "partner_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Sevgilinin adı"
+              "placeholder": "Partner's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri sevgilisine göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum: {{situation}}\nTon: {{tone}}\n{{partner_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu mesajın özüne yerleştir — o durumu yaşıyormuş gibi yaz, genel bir aşk/özlem mesajı yazma. İsim verilmişse uygun mesajlarda doğal şekilde kullan. Her mesaj farklı bir yaklaşım kullansın: biri kısa ve duygusal yoğun, biri daha uzun ve açıklayıcı, biri hafif mizahi (tona uygunsa), biri sade ve içten, biri beklenmedik bir açıdan. Klişe kalıplardan kaçın. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their romantic partner.\n\nSituation: {{situation}}\nTone: {{tone}}\n{{partner_name}}Cultural context: {{country}}\n\nInstructions: Ground the given situation at the core of the message — write as if living through that situation, not a generic love/longing message. If a name is given, use it naturally in appropriate messages. Each message should take a different approach: one short and emotionally intense, one longer and explanatory, one mildly humorous (if fitting the tone), one simple and sincere, one from an unexpected angle. Avoid clichés. Return only the numbered list, nothing else."
         },
         {
           "id": "ex_partner",
-          "name": "Eski Sevgili",
-          "description": "Eski sevgiliye yönelik mesajlar: yeniden bağlanma, kapanış, özür veya selamlama",
+          "name": "Ex Partner",
+          "description": "Messages to an ex: reconnecting, closure, apology, or a simple hello",
           "required_fields": [
             {
               "key": "relationship_end",
-              "label": "İlişki nasıl bitti?",
+              "label": "How did the relationship end?",
               "type": "select",
-              "options": ["Kavga", "Uzaklaşma", "Karşılıklı karar", "İhanet"]
+              "options": ["Argument", "Growing apart", "Mutual decision", "Betrayal"]
             },
             {
               "key": "time_passed",
-              "label": "Ne kadar zaman geçti?",
+              "label": "How long ago?",
               "type": "select",
-              "options": ["1 aydan az", "1-6 ay", "6 ay-1 yıl", "1 yıldan fazla"]
+              "options": ["Less than 1 month", "1–6 months", "6 months–1 year", "More than 1 year"]
             },
             {
               "key": "goal",
-              "label": "Amacın ne?",
+              "label": "What is your goal?",
               "type": "select",
-              "options": ["Yeniden başlamak", "Kapanış yaşamak", "Sadece hal hatır sormak", "Özür dilemek"]
+              "options": ["Get back together", "Find closure", "Just checking in", "Apologize"]
             },
             {
               "key": "situation",
-              "label": "Arka Plan",
+              "label": "Background",
               "type": "textarea",
-              "placeholder": "Ne oldu, nasıl bir ilişkiydi, eklemek istediğin detaylar..."
+              "placeholder": "What happened, what was the relationship like, any details you want to add..."
             }
           ],
           "optional_fields": [
             {
               "key": "ex_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Kişinin adı"
+              "placeholder": "Person's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri eski sevgilisine göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nİlişkinin sonu: {{relationship_end}}\nGeçen süre: {{time_passed}}\nAmaç: {{goal}}\nArka plan: {{situation}}\n{{ex_name}}Kültür bağlamı: {{country}}\n\nTalimatlar:\n- Geçen süreyi soyut bırakma: \"{{time_passed}}\" geçmiş — bunu mesajlarda hissettir, \"uzun zaman oldu\" deme, o sürenin ağırlığını yansıt\n- İlişki bitişini mesajın duygusal tonuna yansıt: ihanet varsa doğrudan söyleme ama bir kırılmışlık, temkinlilik hissi ver; kavgayla bittiyse hâlâ kalan bir gerilim olabilir; karşılıklı kararsa daha olgun ve sakin bir ton kullan\n- Amaç \"Yeniden başlamak\" ise umut içeren ama çaresiz veya baskıcı olmayan mesajlar yaz\n- Amaç \"Kapanış yaşamak\" ise kapıyı kapatan ama saygılı, acı içermeyen mesajlar yaz\n- Amaç \"Özür dilemek\" ise ne için özür dilendiğini arka plandan çıkar ve mesaja yansıt\n- İsim verilmişse uygun mesajlarda kullan\n- Her mesaj farklı uzunluk ve duygusal yoğunlukta olsun\nSadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their ex.\n\nHow the relationship ended: {{relationship_end}}\nTime passed: {{time_passed}}\nGoal: {{goal}}\nBackground: {{situation}}\n{{ex_name}}Cultural context: {{country}}\n\nInstructions:\n- Don't leave the time vague: \"{{time_passed}}\" has passed — make that felt in the messages, don't just say \"it's been a long time,\" reflect the weight of that duration\n- Let the way the relationship ended shape the emotional tone: if there was betrayal, don't name it directly but give a sense of hurt and caution; if it ended in an argument, there may still be residual tension; if it was mutual, use a more mature and calm tone\n- If the goal is \"Get back together,\" write messages that hold hope but aren't desperate or pressuring\n- If the goal is \"Find closure,\" write messages that close the door respectfully without bitterness\n- If the goal is \"Apologize,\" draw what's being apologized for from the background and reflect it in the message\n- Use the name in appropriate messages if given\n- Each message should vary in length and emotional intensity\nReturn only the numbered list, nothing else."
         },
         {
           "id": "crush",
-          "name": "Beğenilen Kişi",
-          "description": "İlgilenilen birine gönderilecek ilk mesaj veya konuşma başlatma metinleri",
+          "name": "Crush",
+          "description": "First message or conversation starters to send to someone you like",
           "required_fields": [
             {
               "key": "situation",
-              "label": "Nasıl Tanışıyorsunuz?",
+              "label": "How do you know them?",
               "type": "textarea",
-              "placeholder": "Okuldan tanıyorum, sosyal medyadan gördüm, ortak arkadaşımız var..."
+              "placeholder": "We go to the same school, I saw them on social media, we have a mutual friend..."
             },
             {
               "key": "approach",
-              "label": "Yaklaşım Tarzı",
+              "label": "Approach Style",
               "type": "select",
-              "options": ["Cesur ve doğrudan", "Çekingen ve nazik", "Flörtöz", "Arkadaşça / Casual", "Mizahi"]
+              "options": ["Bold and direct", "Shy and gentle", "Flirty", "Friendly / Casual", "Humorous"]
             }
           ],
           "optional_fields": [
             {
               "key": "crush_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Kişinin adı"
+              "placeholder": "Person's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri beğendiği kişiye ilk (veya yeniden) mesaj atmak için 5 farklı taslak istiyor. {{language}} dilinde yaz.\n\nTanışma bağlamı: {{situation}}\nYaklaşım tarzı: {{approach}}\n{{crush_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Tanışma bağlamını ({{situation}}) mesajın içine organik yerleştir — o bağlamdan doğan doğal bir konuşma başlangıcı gibi hissettir, genel \"merhaba\" mesajı yazma. İsim verilmişse uygun mesajlarda kullan. Her mesaj farklı bir kapı arasın: biri soruyla başlasın, biri ortak bağlama değinsin, biri doğrudan niyeti ima etsin, biri hafif ve casual olsun, biri merak uyandırsın. Yapay veya ezberlenmiş gibi hissettirme. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Someone wants 5 different drafts for a first (or renewed) message to someone they like. Write in {{language}}.\n\nHow they know each other: {{situation}}\nApproach style: {{approach}}\n{{crush_name}}Cultural context: {{country}}\n\nInstructions: Organically embed the context of how they know each other ({{situation}}) into the message — make it feel like a natural conversation starter born from that context, not a generic hello message. Use the name in appropriate messages if given. Each message should open a different door: one starts with a question, one references the shared context, one directly implies interest, one is light and casual, one sparks curiosity. Don't make it feel scripted or rehearsed. Return only the numbered list, nothing else."
         },
         {
           "id": "friend",
-          "name": "Arkadaş",
-          "description": "Arkadaşa gönderilecek mesajlar: hal hatır, özür, sitem, destek veya eğlenceli içerik",
+          "name": "Friend",
+          "description": "Messages to a friend: check-in, apology, grievance, support, or fun content",
           "required_fields": [
             {
               "key": "situation",
-              "label": "Durum / Konu",
+              "label": "Situation / Topic",
               "type": "textarea",
-              "placeholder": "Ne söylemek istiyorsun? Örn: Uzun süredir görüşemedik, kavga ettik, moralini yükseltmek istiyorum..."
+              "placeholder": "What do you want to say? E.g.: We haven't talked in a while, we had a fight, I want to cheer you up..."
             },
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Samimi / Sıcak", "Şakacı / Komik", "Ciddi", "Destekleyici", "Sitem içeren", "Rahat / Casual"]
+              "options": ["Sincere / Warm", "Playful / Funny", "Serious", "Supportive", "With a hint of grievance", "Relaxed / Casual"]
             }
           ],
           "optional_fields": [
             {
               "key": "friend_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Arkadaşın adı"
+              "placeholder": "Friend's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri arkadaşına göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum/Konu: {{situation}}\nTon: {{tone}}\n{{friend_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu ({{situation}}) mesajın merkezine koy — sanki o durumu bilen biri yazıyor gibi, formül değil. İsim verilmişse bazı mesajlarda doğal şekilde kullan. Her mesaj farklı bir yaklaşım kullansın: biri direkt ve kısa, biri uzun ve detaylı, biri espriyle açan (tona uygunsa), biri soru soran ve diyalog açan, biri duygusal ve içten. Arkadaşlar arasındaki samimi ve rahat dili yansıt. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their friend.\n\nSituation/Topic: {{situation}}\nTone: {{tone}}\n{{friend_name}}Cultural context: {{country}}\n\nInstructions: Put the given situation ({{situation}}) at the center of the message — write as if someone who knows that situation is writing, not a formula. Use the name naturally in some messages if given. Each message should take a different approach: one direct and short, one long and detailed, one opening with humor (if fitting the tone), one asking questions and opening a dialogue, one emotional and sincere. Reflect the candid and relaxed language between friends. Return only the numbered list, nothing else."
         },
         {
           "id": "family",
-          "name": "Aile",
-          "description": "Aile üyelerine gönderilecek mesajlar: anne, baba, kardeş, büyükanne/baba veya diğer akrabalar",
+          "name": "Family",
+          "description": "Messages to family members: mother, father, sibling, grandparent, or other relatives",
           "required_fields": [
             {
               "key": "family_member",
-              "label": "Kişi",
+              "label": "Person",
               "type": "select",
-              "options": ["Anne", "Baba", "Kardeş", "Büyükanne / Büyükbaba", "Eş / Hayat arkadaşı", "Diğer aile üyesi"]
+              "options": ["Mother", "Father", "Sibling", "Grandparent", "Spouse / Partner", "Other family member"]
             },
             {
               "key": "situation",
-              "label": "Durum / Konu",
+              "label": "Situation / Topic",
               "type": "textarea",
-              "placeholder": "Ne iletmek istiyorsun? Örn: Özledim, teşekkür etmek istiyorum, bir konuyu konuşmam lazım..."
+              "placeholder": "What do you want to say? E.g.: I miss you, I want to thank you, I need to talk about something..."
             },
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Sıcak / Sevgi dolu", "Saygılı", "Şakacı", "Ciddi", "Özür diler"]
+              "options": ["Warm / Loving", "Respectful", "Playful", "Serious", "Apologetic"]
             }
           ],
           "optional_fields": [],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{family_member}}'ına göndermek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum/Konu: {{situation}}\nTon: {{tone}}\nKültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu mesajın içine somut şekilde yerleştir, soyut kalmayan ifadeler kullan. {{family_member}} ile kurulan ilişkinin dinamiğini yansıt — anne ile konuşma dili, kardeş ile konuşma dili veya büyükanne ile konuşma dili birbirinden farklıdır. {{country}} kültürel bağlamına uygun bir aile iletişim tonu kullan. Her mesaj farklı uzunluk ve duygusal derinlikte olsun. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their {{family_member}}.\n\nSituation/Topic: {{situation}}\nTone: {{tone}}\nCultural context: {{country}}\n\nInstructions: Ground the given situation concretely in the message — use specific rather than vague expressions. Reflect the dynamics of the relationship with {{family_member}} — the language used with a mother, a sibling, or a grandparent differs. Use a family communication tone appropriate to the cultural context of {{country}}. Each message should vary in length and emotional depth. Return only the numbered list, nothing else."
         },
         {
           "id": "apology",
-          "name": "Özür",
-          "description": "Herhangi bir kişiye gönderilecek içten özür mesajları",
+          "name": "Apology",
+          "description": "Heartfelt apology messages to send to anyone",
           "required_fields": [
             {
               "key": "reason",
-              "label": "Özür Nedeni",
+              "label": "Reason for Apology",
               "type": "textarea",
-              "placeholder": "Ne için özür diliyorsun? Örn: Sözümü tutmadım, geç kaldım, kırıcı davrandım..."
+              "placeholder": "What are you apologizing for? E.g.: I broke my promise, I was late, I said something hurtful..."
             },
             {
               "key": "recipient",
-              "label": "Kime",
+              "label": "To Whom",
               "type": "select",
-              "options": ["Sevgili", "Arkadaş", "Aile üyesi", "İş arkadaşı / Yönetici", "Müşteri / İş ilişkisi"]
+              "options": ["Partner", "Friend", "Family member", "Colleague / Manager", "Customer / Business contact"]
             },
             {
               "key": "severity",
-              "label": "Ciddiyeti",
+              "label": "Severity",
               "type": "select",
-              "options": ["Hafif / Günlük", "Orta düzey", "Ciddi / Derin"]
+              "options": ["Light / Casual", "Moderate", "Serious / Deep"]
             }
           ],
           "optional_fields": [
             {
               "key": "recipient_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Kişinin adı"
+              "placeholder": "Person's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{recipient}}'a özür dilemek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nÖzür nedeni: {{reason}}\nCiddiyet: {{severity}}\n{{recipient_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: Özür nedenini ({{reason}}) mesajın içine direkt yansıt — \"yaptığım şey için özür dilerim\" değil, tam olarak ne için özür dilendiğini mesajda göster. Ciddiyet \"Ciddi / Derin\" ise sorumluluk tam olarak kabul eden, konuyu küçümsemeyen bir dil kullan; \"Hafif / Günlük\" ise daha rahat ve kısa olabilir. İsim verilmişse uygun mesajlarda kullan. Her mesaj farklı bir yaklaşım kullansın: biri özür + somut açıklama, biri kısa ve öz sadece özür, biri özür + telafi önerisi, biri duygusal ve uzun, biri özür + gelecekteki davranış taahhüdü. Savunmacı ton kullanma. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to apologize to their {{recipient}}.\n\nReason for apology: {{reason}}\nSeverity: {{severity}}\n{{recipient_name}}Cultural context: {{country}}\n\nInstructions: Directly reflect the reason for the apology ({{reason}}) in the message — don't say \"I'm sorry for what I did,\" show exactly what is being apologized for. If severity is \"Serious / Deep,\" use language that fully accepts responsibility and doesn't downplay the issue; \"Light / Casual\" can be more relaxed and brief. Use the name in appropriate messages if given. Each message should take a different approach: one apology + concrete explanation, one short and direct apology only, one apology + offer to make it right, one emotional and lengthy, one apology + commitment to future behavior. Avoid a defensive tone. Return only the numbered list, nothing else."
         },
         {
           "id": "rejection",
-          "name": "Ret",
-          "description": "Nazik veya net bir şekilde hayır demek için ret mesajları",
+          "name": "Rejection",
+          "description": "Rejection messages for saying no kindly or firmly",
           "required_fields": [
             {
               "key": "context",
-              "label": "Bağlam",
+              "label": "Context",
               "type": "select",
-              "options": ["Romantik ilgi", "Arkadaşlık teklifi", "Davet / Etkinlik", "İş / Proje teklifi", "Diğer talep"]
+              "options": ["Romantic interest", "Friendship offer", "Invitation / Event", "Work / Project offer", "Other request"]
             },
             {
               "key": "situation",
-              "label": "Durum",
+              "label": "Situation",
               "type": "textarea",
-              "placeholder": "Ne teklif edildi veya ne talep edildi? Kısaca açıkla..."
+              "placeholder": "What was offered or requested? Briefly explain..."
             },
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Nazik ve anlayışlı", "Açık ve net", "Kesin ve sınır koyucu"]
+              "options": ["Gentle and understanding", "Clear and direct", "Firm and boundary-setting"]
             }
           ],
           "optional_fields": [],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{context}} bağlamında aldığı bir teklifi/talebi reddetmek için 5 farklı mesaj taslağı {{language}} dilinde yaz.\n\nDurum: {{situation}}\nTon: {{tone}}\nKültür bağlamı: {{country}}\n\nTalimatlar: Verilen durumu ({{situation}}) mesajın içine yerleştir — o spesifik teklif veya talebe yanıt veriyor gibi yaz, jenerik bir ret mesajı değil. Ret kararı muğlak kalmasın, her mesajda açıkça belli olsun. Ton \"Kesin ve sınır koyucu\" ise tartışmaya yer bırakmayan bir dil kullan; \"Nazik ve anlayışlı\" ise karşı tarafın duygularını gözeten ama yine de net bir ret yaz. Her mesaj farklı bir yaklaşım kullansın: biri kısa ve net, biri açıklama içeren, biri empatiyle başlayıp reddeden, biri alternatif öneren (uygunsa), biri sınır koyucu. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to decline an offer/request in the context of {{context}}.\n\nSituation: {{situation}}\nTone: {{tone}}\nCultural context: {{country}}\n\nInstructions: Ground the given situation ({{situation}}) in the message — write as if responding to that specific offer or request, not a generic rejection. The decision to decline should be unambiguous in every message. If tone is \"Firm and boundary-setting,\" use language that leaves no room for debate; \"Gentle and understanding\" should still be a clear rejection while considering the other person's feelings. Each message should take a different approach: one short and clear, one with explanation, one starting with empathy then declining, one offering an alternative (if appropriate), one setting a boundary. Return only the numbered list, nothing else."
         },
         {
           "id": "congratulations",
-          "name": "Tebrik",
-          "description": "Özel günler ve başarılar için tebrik mesajları",
+          "name": "Congratulations",
+          "description": "Congratulation messages for special occasions and achievements",
           "required_fields": [
             {
               "key": "occasion",
-              "label": "Vesile",
+              "label": "Occasion",
               "type": "select",
-              "options": ["Doğum günü", "Mezuniyet", "Terfi / İş başarısı", "Evlilik / Nişan", "Yeni bebek", "Bayram / Tatil", "Diğer başarı"]
+              "options": ["Birthday", "Graduation", "Promotion / Career success", "Wedding / Engagement", "New baby", "Holiday / Festival", "Other achievement"]
             },
             {
               "key": "recipient",
-              "label": "Kime",
+              "label": "To Whom",
               "type": "select",
-              "options": ["Sevgili", "Yakın arkadaş", "Aile üyesi", "İş arkadaşı", "Tanıdık / Uzak ilişki"]
+              "options": ["Partner", "Close friend", "Family member", "Colleague", "Acquaintance / Distant relation"]
             },
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Sıcak ve duygusal", "Neşeli ve eğlenceli", "Resmi ve saygılı", "Kısa ve öz"]
+              "options": ["Warm and emotional", "Cheerful and fun", "Formal and respectful", "Short and sweet"]
             }
           ],
           "optional_fields": [
             {
               "key": "recipient_name",
-              "label": "İsim (opsiyonel)",
+              "label": "Name (optional)",
               "type": "text",
-              "placeholder": "Kişinin adı"
+              "placeholder": "Person's name"
             }
           ],
-          "prompt_template": "Sen bir mesaj yazma asistanısın. Biri {{recipient}}'ına {{occasion}} için 5 farklı tebrik mesajı taslağı {{language}} dilinde yazıyor.\n\nTon: {{tone}}\n{{recipient_name}}Kültür bağlamı: {{country}}\n\nTalimatlar: {{occasion}} vesilesiyle {{recipient}} ilişkisine özel bir dil kullan — yakın arkadaşa doğum günü mesajı ile iş arkadaşına terfi tebriki farklı bir ton gerektirir. İsim verilmişse mesajlarda doğal şekilde kullan. Her mesaj birbirinden farklı olsun: biri kısa ve güçlü, biri uzun ve duygusal, biri anı veya espri içeren (ilişkiye uygunsa), biri gelecek odaklı, biri sadece o anı kutlayan. \"Nice yıllara\", \"tebrikler\" gibi klişe kalıpların ötesine geç. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a message writing assistant. Someone is writing 5 different congratulation message drafts in {{language}} for their {{recipient}} on the occasion of {{occasion}}.\n\nTone: {{tone}}\n{{recipient_name}}Cultural context: {{country}}\n\nInstructions: Use language specific to the {{recipient}} relationship for the occasion of {{occasion}} — a birthday message to a close friend requires a different tone than a promotion congratulation to a colleague. Use the name naturally in messages if given. Each message should be distinct: one short and powerful, one long and emotional, one containing a memory or humor (if appropriate for the relationship), one future-focused, one celebrating only this moment. Go beyond clichés like \"Congrats\" or \"Many happy returns.\" Return only the numbered list, nothing else."
         }
       ]
     },
     {
       "id": "social_media",
-      "name": "Sosyal Medya",
+      "name": "Social Media",
       "icon": "📱",
       "subcategories": [
         {
           "id": "personal_photo",
-          "name": "Kişisel Fotoğraf",
-          "description": "Kişisel bir fotoğraf paylaşımı için açıklama metni ve hashtag'ler",
+          "name": "Personal Photo",
+          "description": "Caption text and hashtags for a personal photo post",
           "required_fields": [
             {
               "key": "photo_description",
-              "label": "Fotoğraf Ne Gösteriyor?",
+              "label": "What Does the Photo Show?",
               "type": "textarea",
-              "placeholder": "Örn: Tatilde çekilen gün batımı fotoğrafı, kahve içerken çalışma masası..."
+              "placeholder": "E.g.: Sunset photo taken on vacation, desk while drinking coffee..."
             },
             {
               "key": "platform",
@@ -291,31 +291,31 @@
             },
             {
               "key": "mood",
-              "label": "Ruh Hali / Duygu",
+              "label": "Mood / Feeling",
               "type": "select",
-              "options": ["Mutlu / Neşeli", "Nostaljik / Duygusal", "Huzurlu / Sakin", "Heyecanlı", "Düşünceli / Derin", "Komik / Eğlenceli"]
+              "options": ["Happy / Joyful", "Nostalgic / Emotional", "Peaceful / Calm", "Excited", "Thoughtful / Deep", "Funny / Playful"]
             }
           ],
           "optional_fields": [
             {
               "key": "hashtag_count",
-              "label": "Hashtag Sayısı",
+              "label": "Number of Hashtags",
               "type": "select",
-              "options": ["0 (yok)", "3-5", "5-10", "10+"]
+              "options": ["0 (none)", "3-5", "5-10", "10+"]
             }
           ],
-          "prompt_template": "Sen bir sosyal medya içerik yazarısın. {{platform}} için kişisel bir fotoğraf paylaşımına uygun 5 farklı caption taslağı {{language}} dilinde yaz. Fotoğraf: {{photo_description}}. Ruh hali: {{mood}}. Hashtag tercihi: {{hashtag_count}}. Ülke/kültür bağlamı: {{country}}. Her caption'ı platforma uygun uzunlukta tut. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a social media content writer. Write 5 different caption drafts in {{language}} for a personal photo post on {{platform}}. Photo: {{photo_description}}. Mood: {{mood}}. Hashtag preference: {{hashtag_count}}. Country/cultural context: {{country}}. Keep each caption at an appropriate length for the platform. Return only the numbered list, nothing else."
         },
         {
           "id": "personal_story",
-          "name": "Kişisel Hikaye",
-          "description": "Yaşanan bir deneyim, düşünce veya hayat hikayesi paylaşımı için metin",
+          "name": "Personal Story",
+          "description": "Post text for sharing an experience, thought, or life story",
           "required_fields": [
             {
               "key": "story_topic",
-              "label": "Hikaye / Konu",
+              "label": "Story / Topic",
               "type": "textarea",
-              "placeholder": "Ne paylaşmak istiyorsun? Örn: Bugün ilginç bir şey yaşadım, çocukluğumda öğrendiğim bir şey..."
+              "placeholder": "What do you want to share? E.g.: Something interesting happened today, something I learned in childhood..."
             },
             {
               "key": "platform",
@@ -325,43 +325,43 @@
             },
             {
               "key": "emotion",
-              "label": "Ana Duygu",
+              "label": "Primary Emotion",
               "type": "select",
-              "options": ["İlham verici", "Komik / Eğlenceli", "Düşündürücü", "Duygusal / Dokunucu", "Bilgilendirici", "Provokatif / Tartışmalı"]
+              "options": ["Inspiring", "Funny / Entertaining", "Thought-provoking", "Emotional / Touching", "Informative", "Provocative / Controversial"]
             }
           ],
           "optional_fields": [
             {
               "key": "call_to_action",
-              "label": "Sonu CTA (opsiyonel)",
+              "label": "Ending CTA (optional)",
               "type": "text",
-              "placeholder": "Örn: Siz ne düşünürsünüz?, Siz de yaşadınız mı?"
+              "placeholder": "E.g.: What do you think?, Has this happened to you?"
             }
           ],
-          "prompt_template": "Sen bir sosyal medya içerik yazarısın. {{platform}} için kişisel bir hikaye paylaşımına uygun 5 farklı metin taslağı {{language}} dilinde yaz. Konu: {{story_topic}}. Duygu/ton: {{emotion}}. {{call_to_action}}Ülke/kültür bağlamı: {{country}}. Platforma uygun uzunluk ve format kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a social media content writer. Write 5 different post text drafts in {{language}} for a personal story post on {{platform}}. Topic: {{story_topic}}. Emotion/tone: {{emotion}}. {{call_to_action}}Country/cultural context: {{country}}. Use appropriate length and format for the platform. Return only the numbered list, nothing else."
         },
         {
           "id": "business_product",
-          "name": "Ürün Tanıtımı",
-          "description": "Bir ürün veya hizmet için sosyal medya tanıtım metinleri",
+          "name": "Product Promotion",
+          "description": "Social media promotional copy for a product or service",
           "required_fields": [
             {
               "key": "product_name",
-              "label": "Ürün / Hizmet Adı",
+              "label": "Product / Service Name",
               "type": "text",
-              "placeholder": "Örn: Kahve dükkanı, yazılım uygulaması, el yapımı takı..."
+              "placeholder": "E.g.: Coffee shop, software app, handmade jewelry..."
             },
             {
               "key": "product_description",
-              "label": "Ürün Açıklaması",
+              "label": "Product Description",
               "type": "textarea",
-              "placeholder": "Ne işe yarıyor, ne sunuyor, ne farkı var?"
+              "placeholder": "What does it do, what does it offer, what makes it different?"
             },
             {
               "key": "target_audience",
-              "label": "Hedef Kitle",
+              "label": "Target Audience",
               "type": "text",
-              "placeholder": "Örn: 25-35 yaş arası profesyoneller, anne-babalar, öğrenciler..."
+              "placeholder": "E.g.: Professionals aged 25-35, parents, students..."
             },
             {
               "key": "platform",
@@ -373,35 +373,35 @@
           "optional_fields": [
             {
               "key": "offer",
-              "label": "Kampanya / İndirim (opsiyonel)",
+              "label": "Campaign / Discount (optional)",
               "type": "text",
-              "placeholder": "Örn: %20 indirim, ilk ay ücretsiz..."
+              "placeholder": "E.g.: 20% discount, first month free..."
             }
           ],
-          "prompt_template": "Sen bir sosyal medya pazarlama uzmanısın. {{platform}} için {{product_name}} adlı ürün/hizmetin tanıtımına yönelik 5 farklı post metni {{language}} dilinde yaz. Ürün: {{product_description}}. Hedef kitle: {{target_audience}}. {{offer}}Ülke/pazar bağlamı: {{country}}. Satış odaklı ama doğal ve özgün tut. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a social media marketing expert. Write 5 different post texts in {{language}} for promoting the product/service \"{{product_name}}\" on {{platform}}. Product: {{product_description}}. Target audience: {{target_audience}}. {{offer}}Country/market context: {{country}}. Keep it sales-focused but natural and authentic. Return only the numbered list, nothing else."
         },
         {
           "id": "business_campaign",
-          "name": "Kampanya",
-          "description": "Bir marka, ürün veya etkinlik için sosyal medya kampanya metinleri",
+          "name": "Campaign",
+          "description": "Social media campaign copy for a brand, product, or event",
           "required_fields": [
             {
               "key": "campaign_name",
-              "label": "Kampanya / Etkinlik Adı",
+              "label": "Campaign / Event Name",
               "type": "text",
-              "placeholder": "Örn: Yaz indirimi, yeni koleksiyon lansmanı, pop-up etkinlik..."
+              "placeholder": "E.g.: Summer sale, new collection launch, pop-up event..."
             },
             {
               "key": "campaign_description",
-              "label": "Kampanya Detayı",
+              "label": "Campaign Details",
               "type": "textarea",
-              "placeholder": "Ne sunuluyor, ne zaman, nerede, nasıl katılınır?"
+              "placeholder": "What's being offered, when, where, and how to participate?"
             },
             {
               "key": "target_audience",
-              "label": "Hedef Kitle",
+              "label": "Target Audience",
               "type": "text",
-              "placeholder": "Kim için?"
+              "placeholder": "Who is it for?"
             },
             {
               "key": "platform",
@@ -413,29 +413,29 @@
           "optional_fields": [
             {
               "key": "urgency",
-              "label": "Aciliyet / Son Tarih (opsiyonel)",
+              "label": "Urgency / Deadline (optional)",
               "type": "text",
-              "placeholder": "Örn: Sadece bu hafta sonu, stoklar sınırlı..."
+              "placeholder": "E.g.: This weekend only, limited stock..."
             }
           ],
-          "prompt_template": "Sen bir sosyal medya pazarlama uzmanısın. {{platform}} için {{campaign_name}} kampanyasına ait 5 farklı duyuru/post metni {{language}} dilinde yaz. Detay: {{campaign_description}}. Hedef kitle: {{target_audience}}. {{urgency}}Ülke/pazar bağlamı: {{country}}. Dikkat çekici ve harekete geçirici tut. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a social media marketing expert. Write 5 different announcement/post texts in {{language}} for the \"{{campaign_name}}\" campaign on {{platform}}. Details: {{campaign_description}}. Target audience: {{target_audience}}. {{urgency}}Country/market context: {{country}}. Keep it attention-grabbing and action-driving. Return only the numbered list, nothing else."
         },
         {
           "id": "sports_club",
-          "name": "Spor Kulübü",
-          "description": "Spor kulübü veya takımı için sosyal medya paylaşımları",
+          "name": "Sports Club",
+          "description": "Social media posts for a sports club or team",
           "required_fields": [
             {
               "key": "club_name",
-              "label": "Kulüp / Takım Adı",
+              "label": "Club / Team Name",
               "type": "text",
-              "placeholder": "Örn: Fenerbahçe, yerel futbol kulübü adı..."
+              "placeholder": "E.g.: Club name, local football team..."
             },
             {
               "key": "event",
-              "label": "Etkinlik / Konu",
+              "label": "Event / Topic",
               "type": "select",
-              "options": ["Maç öncesi", "Maç sonrası (galibiyet)", "Maç sonrası (mağlubiyet)", "Antrenman", "Şampiyonluk / Kupa", "Transfer / Yeni oyuncu", "Taraftar teşekkürü"]
+              "options": ["Pre-match", "Post-match (win)", "Post-match (loss)", "Training", "Championship / Trophy", "Transfer / New player", "Fan appreciation"]
             },
             {
               "key": "platform",
@@ -447,29 +447,29 @@
           "optional_fields": [
             {
               "key": "match_detail",
-              "label": "Maç Detayı (opsiyonel)",
+              "label": "Match Details (optional)",
               "type": "text",
-              "placeholder": "Rakip takım, skor, tarih..."
+              "placeholder": "Opponent, score, date..."
             }
           ],
-          "prompt_template": "Sen bir spor kulübü sosyal medya yöneticisisin. {{platform}} için {{club_name}} adına {{event}} konusunda 5 farklı post metni {{language}} dilinde yaz. {{match_detail}}Ülke/kültür bağlamı: {{country}}. Taraftara hitap eden, enerjik ve kulübün kimliğine uygun bir dil kullan. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a sports club social media manager. Write 5 different post texts in {{language}} on behalf of {{club_name}} on {{platform}} for the topic of {{event}}. {{match_detail}}Country/cultural context: {{country}}. Use language that speaks to fans, is energetic, and fits the club's identity. Return only the numbered list, nothing else."
         },
         {
           "id": "motivation",
-          "name": "Motivasyon",
-          "description": "İlham verici ve motive edici sosyal medya içerikleri",
+          "name": "Motivation",
+          "description": "Inspiring and motivational social media content",
           "required_fields": [
             {
               "key": "topic",
-              "label": "Konu / Tema",
+              "label": "Topic / Theme",
               "type": "text",
-              "placeholder": "Örn: Sabah rutini, başarısızlıktan ders çıkarma, hedef belirleme..."
+              "placeholder": "E.g.: Morning routine, learning from failure, goal setting..."
             },
             {
               "key": "style",
-              "label": "Stil",
+              "label": "Style",
               "type": "select",
-              "options": ["Kısa ve güçlü (1-2 cümle)", "Hikaye formatı", "Liste formatı", "Alıntı / Quote tarzı", "Soru sorar, düşündürür"]
+              "options": ["Short and powerful (1-2 sentences)", "Story format", "List format", "Quote style", "Question-based, thought-provoking"]
             },
             {
               "key": "platform",
@@ -481,173 +481,173 @@
           "optional_fields": [
             {
               "key": "audience",
-              "label": "Kime Hitap Ediyor (opsiyonel)",
+              "label": "Who Is It For (optional)",
               "type": "text",
-              "placeholder": "Örn: Girişimciler, öğrenciler, sporcular..."
+              "placeholder": "E.g.: Entrepreneurs, students, athletes..."
             }
           ],
-          "prompt_template": "Sen bir motivasyon içerik yazarısın. {{platform}} için {{topic}} temasında 5 farklı motivasyon içeriği {{language}} dilinde yaz. Stil: {{style}}. {{audience}}Ülke/kültür bağlamı: {{country}}. İçten ve gerçekçi tut, boş klişelerden kaçın. Sadece numaralı listeyi döndür, başka hiçbir şey yazma."
+          "prompt_template": "You are a motivational content writer. Write 5 different motivational content pieces in {{language}} on the theme of {{topic}} for {{platform}}. Style: {{style}}. {{audience}}Country/cultural context: {{country}}. Keep it genuine and realistic, avoid empty clichés. Return only the numbered list, nothing else."
         }
       ]
     },
     {
       "id": "official_legal",
-      "name": "Resmi & Hukuki",
+      "name": "Official & Legal",
       "icon": "⚖️",
       "subcategories": [
         {
           "id": "government_petition",
-          "name": "Dilekçe",
-          "description": "Devlet kurumlarına, belediyelere veya kamu makamlarına sunulacak dilekçe taslakları",
+          "name": "Petition",
+          "description": "Petition drafts to submit to government agencies, municipalities, or public authorities",
           "required_fields": [
             {
               "key": "subject",
-              "label": "Dilekçe Konusu",
+              "label": "Petition Subject",
               "type": "text",
-              "placeholder": "Örn: İzin talebi, hak ihlali bildirimi, başvuru..."
+              "placeholder": "E.g.: Leave request, rights violation report, application..."
             },
             {
               "key": "issue_description",
-              "label": "Durum Açıklaması",
+              "label": "Situation Description",
               "type": "textarea",
-              "placeholder": "Yaşanan sorunu veya talebi detaylıca anlat..."
+              "placeholder": "Describe the issue or request in detail..."
             },
             {
               "key": "desired_outcome",
-              "label": "Beklenen Sonuç",
+              "label": "Expected Outcome",
               "type": "text",
-              "placeholder": "Ne olmasını istiyorsunuz? Örn: İnceleme başlatılması, geri ödeme, düzeltme..."
+              "placeholder": "What do you want to happen? E.g.: Start an investigation, refund, correction..."
             },
             {
               "key": "authority",
-              "label": "Başvuru Makamı",
+              "label": "Authority to Apply To",
               "type": "text",
-              "placeholder": "Örn: Belediye Başkanlığı, Sağlık Bakanlığı, Emniyet Müdürlüğü..."
+              "placeholder": "E.g.: Mayor's Office, Ministry of Health, Police Department..."
             }
           ],
           "optional_fields": [
             {
               "key": "applicant_role",
-              "label": "Başvuranın Sıfatı (opsiyonel)",
+              "label": "Applicant's Role (optional)",
               "type": "text",
-              "placeholder": "Örn: Vatandaş, kiracı, öğrenci, işletme sahibi..."
+              "placeholder": "E.g.: Citizen, tenant, student, business owner..."
             }
           ],
-          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı dilekçe metni üret. Her biri doğrudan kullanılabilir, eksiksiz bir dilekçe olsun.\n\nMuhatap kurum: {{authority}}\nKonu: {{subject}}\nDurum: {{issue_description}}\nTalep: {{desired_outcome}}\n{{applicant_role}}Ülke: {{country}}\n\nHer dilekçe şu formatı izlesin:\n- \"Sayın [kurum/makam],\" ile başlasın\n- Konu satırı içersin\n- Durumu ve talebi içersin\n- \"Gereğini saygılarımla arz ederim.\" veya benzeri resmi kapanış\n- Alt kısımda imza bloğu (Ad Soyad / Tarih / İletişim)\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (yarım sayfa, sadece özü)\n2. Detaylı ve gerekçeli (tüm argümanlar, yasal dayanak atıfları)\n3. Sert ve kararlı (hakların ihlal edildiğini vurgular, acil işlem talep eder)\n4. Diplomatik (nazik ama net, işbirliğine açık ton)\n5. Resmi ve bürokratik (tam resmi dil, madde madde yapı)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir dilekçe metni döndür, numaralı liste halinde."
+          "prompt_template": "Based on the information below, generate 5 different petition texts in {{language}}. Each should be complete and ready to use as-is.\n\nRecipient authority: {{authority}}\nSubject: {{subject}}\nSituation: {{issue_description}}\nRequest: {{desired_outcome}}\n{{applicant_role}}Country: {{country}}\n\nEach petition should follow this format:\n- Begin with \"Dear [institution/authority],\"\n- Include a subject line\n- Include the situation and request\n- End with a formal closing such as \"Respectfully submitted\" or equivalent\n- Signature block at the bottom (Full Name / Date / Contact)\n\nThe 5 versions should be in these styles:\n1. Short and clear (half page, essentials only)\n2. Detailed and reasoned (all arguments, references to legal basis)\n3. Firm and assertive (emphasizes rights violation, requests urgent action)\n4. Diplomatic (polite but clear, open to cooperation)\n5. Formal and bureaucratic (full official language, point-by-point structure)\n\nDo not add advice, explanations, or commentary. Return only 5 usable petition texts in a numbered list."
         },
         {
           "id": "complaint_letter",
-          "name": "Şikayet Mektubu",
-          "description": "Bir ürün, hizmet veya kişi hakkında resmi şikayet mektubu taslakları",
+          "name": "Complaint Letter",
+          "description": "Formal complaint letter drafts about a product, service, or individual",
           "required_fields": [
             {
               "key": "subject",
-              "label": "Şikayet Konusu",
+              "label": "Subject of Complaint",
               "type": "text",
-              "placeholder": "Örn: Bozuk ürün, kötü hizmet, hak ihlali, gürültü şikayeti..."
+              "placeholder": "E.g.: Defective product, poor service, rights violation, noise complaint..."
             },
             {
               "key": "complaint_details",
-              "label": "Şikayet Detayları",
+              "label": "Complaint Details",
               "type": "textarea",
-              "placeholder": "Ne oldu, ne zaman, nasıl etkilendi, kanıtlar neler..."
+              "placeholder": "What happened, when, how it affected you, what evidence you have..."
             },
             {
               "key": "recipient",
-              "label": "Şikayet Edilen / Muhatabı",
+              "label": "Recipient / Party Complained About",
               "type": "text",
-              "placeholder": "Örn: Şirket adı, kurum, kişi sıfatı..."
+              "placeholder": "E.g.: Company name, institution, person's role..."
             },
             {
               "key": "desired_outcome",
-              "label": "Beklenen Çözüm",
+              "label": "Expected Resolution",
               "type": "text",
-              "placeholder": "Örn: Geri ödeme, özür, düzeltme, soruşturma başlatılması..."
+              "placeholder": "E.g.: Refund, apology, correction, launching an investigation..."
             }
           ],
           "optional_fields": [
             {
               "key": "tone",
-              "label": "Ton",
+              "label": "Tone",
               "type": "select",
-              "options": ["Resmi ve ölçülü", "Sert ve kararlı", "Son uyarı niteliğinde"]
+              "options": ["Formal and measured", "Firm and determined", "Final warning"]
             }
           ],
-          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı şikayet mektubu metni üret. Her biri doğrudan gönderilebilir, eksiksiz bir mektup olsun.\n\nMuhatap: {{recipient}}\nŞikayet konusu: {{subject}}\nDetaylar: {{complaint_details}}\nBeklenen çözüm: {{desired_outcome}}\nİstenen ton: {{tone}}\nÜlke: {{country}}\n\nHer mektup şu formatı izlesin:\n- \"Sayın [muhatap/kurum],\" ile başlasın\n- Şikayeti somut olay ve tarihlerle açıklasın\n- Beklenen çözümü açıkça talep etsin\n- Yanıt süresi belirtsin (örn. 15 iş günü)\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (sadece olay + talep)\n2. Detaylı ve belgeye dayalı (tüm olgular sıralı)\n3. Sert ve yaptırım odaklı (yasal yollara başvurulacağını ima eder)\n4. Diplomatik (çözüm odaklı, iyi niyetli ton)\n5. Resmi ve bürokratik (madde madde, referans numaralı yapı)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir mektup metni döndür, numaralı liste halinde."
+          "prompt_template": "Based on the information below, generate 5 different complaint letter texts in {{language}}. Each should be complete and ready to send as-is.\n\nRecipient: {{recipient}}\nSubject of complaint: {{subject}}\nDetails: {{complaint_details}}\nExpected resolution: {{desired_outcome}}\nRequested tone: {{tone}}\nCountry: {{country}}\n\nEach letter should follow this format:\n- Begin with \"Dear [recipient/institution],\"\n- Describe the complaint with specific events and dates\n- Clearly state the expected resolution\n- Specify a response timeframe (e.g. 15 business days)\n- Include a formal closing and signature block\n\nThe 5 versions should be in these styles:\n1. Short and clear (event + request only)\n2. Detailed and evidence-based (all facts in order)\n3. Firm and enforcement-focused (implies legal action may follow)\n4. Diplomatic (solution-focused, good-faith tone)\n5. Formal and bureaucratic (point-by-point, reference-numbered structure)\n\nDo not add advice, explanations, or commentary. Return only 5 usable letter texts in a numbered list."
         },
         {
           "id": "official_request",
-          "name": "Resmi Talep",
-          "description": "Bir kuruma veya kişiye yöneltilen resmi bilgi, belge veya işlem talep mektupları",
+          "name": "Official Request",
+          "description": "Official letters requesting information, documents, or action from an institution or individual",
           "required_fields": [
             {
               "key": "request_subject",
-              "label": "Talep Konusu",
+              "label": "Request Subject",
               "type": "text",
-              "placeholder": "Örn: Bilgi talebi, belge onayı, randevu, izin, erişim hakkı..."
+              "placeholder": "E.g.: Information request, document approval, appointment, permission, access rights..."
             },
             {
               "key": "reason",
-              "label": "Gerekçe",
+              "label": "Reason / Justification",
               "type": "textarea",
-              "placeholder": "Bu talebi neden yapıyorsunuz? Hangi hak veya ihtiyaç söz konusu?"
+              "placeholder": "Why are you making this request? What right or need is involved?"
             },
             {
               "key": "recipient_authority",
-              "label": "Talep Edilen Kurum / Kişi",
+              "label": "Institution / Person Being Requested",
               "type": "text",
-              "placeholder": "Örn: Banka, üniversite, devlet kurumu, şirket..."
+              "placeholder": "E.g.: Bank, university, government agency, company..."
             }
           ],
           "optional_fields": [
             {
               "key": "deadline",
-              "label": "Yanıt Süresi Talebi (opsiyonel)",
+              "label": "Response Deadline Request (optional)",
               "type": "text",
-              "placeholder": "Örn: 15 iş günü içinde, acil..."
+              "placeholder": "E.g.: Within 15 business days, urgent..."
             }
           ],
-          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı resmi talep mektubu metni üret. Her biri doğrudan gönderilebilir, eksiksiz bir mektup olsun.\n\nMuhatap kurum: {{recipient_authority}}\nTalep konusu: {{request_subject}}\nGerekçe: {{reason}}\n{{deadline}}Ülke: {{country}}\n\nHer mektup şu formatı izlesin:\n- \"Sayın [kurum/yetkili],\" ile başlasın\n- Talebin ne olduğunu ve gerekçesini açıklasın\n- Hukuki veya idari dayanak içersin (uygunsa)\n- Yanıt veya işlem için süre talep etsin\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (talebi doğrudan ifade eder)\n2. Detaylı ve gerekçeli (tüm argümanlar ve dayanak)\n3. Sert ve kararlı (gecikme ya da reddin kabul edilmeyeceğini ima eder)\n4. Diplomatik (nazik ve işbirliğine açık)\n5. Resmi ve bürokratik (madde madde, tam resmi yazışma dili)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir mektup metni döndür, numaralı liste halinde."
+          "prompt_template": "Based on the information below, generate 5 different official request letter texts in {{language}}. Each should be complete and ready to send as-is.\n\nRecipient institution: {{recipient_authority}}\nRequest subject: {{request_subject}}\nJustification: {{reason}}\n{{deadline}}Country: {{country}}\n\nEach letter should follow this format:\n- Begin with \"Dear [institution/official],\"\n- Explain what is being requested and why\n- Include legal or administrative basis where applicable\n- Request a timeframe for response or action\n- Include a formal closing and signature block\n\nThe 5 versions should be in these styles:\n1. Short and clear (states the request directly)\n2. Detailed and reasoned (all arguments and basis)\n3. Firm and determined (implies non-acceptance of delay or refusal)\n4. Diplomatic (polite and open to cooperation)\n5. Formal and bureaucratic (point-by-point, full official correspondence language)\n\nDo not add advice, explanations, or commentary. Return only 5 usable letter texts in a numbered list."
         },
         {
           "id": "legal_objection",
-          "name": "Hukuki İtiraz",
-          "description": "Bir karara, uygulamaya veya işleme karşı resmi itiraz ve itiraz dilekçesi taslakları",
+          "name": "Legal Objection",
+          "description": "Formal objection and appeal petition drafts against a decision, policy, or action",
           "required_fields": [
             {
               "key": "objection_type",
-              "label": "İtiraz Türü",
+              "label": "Type of Objection",
               "type": "select",
-              "options": ["İdari karara itiraz", "Vergi / Mali itiraz", "İş hukuku itirazı", "Sözleşme ihlali bildirimi", "Kira / Taşınmaz itirazı", "Diğer hukuki itiraz"]
+              "options": ["Administrative decision appeal", "Tax / Financial objection", "Labor law objection", "Contract breach notice", "Rent / Property objection", "Other legal objection"]
             },
             {
               "key": "subject",
-              "label": "İtiraz Konusu",
+              "label": "Subject of Objection",
               "type": "textarea",
-              "placeholder": "Hangi karar veya işleme itiraz ediyorsunuz? Detaylıca açıklayın..."
+              "placeholder": "Which decision or action are you objecting to? Explain in detail..."
             },
             {
               "key": "legal_basis",
-              "label": "Hukuki Dayanak / Gerekçe",
+              "label": "Legal Basis / Justification",
               "type": "textarea",
-              "placeholder": "Hangi hakkınız ihlal edildi? Hangi yasal düzenlemeye dayanıyorsunuz?"
+              "placeholder": "What right was violated? What legal regulation are you basing this on?"
             },
             {
               "key": "authority",
-              "label": "Başvurulan Makam",
+              "label": "Authority Being Petitioned",
               "type": "text",
-              "placeholder": "Örn: Mahkeme, üst kurul, arabulucu, idare..."
+              "placeholder": "E.g.: Court, appellate board, mediator, administration..."
             }
           ],
           "optional_fields": [
             {
               "key": "urgency",
-              "label": "Aciliyet / Süre (opsiyonel)",
+              "label": "Urgency / Deadline (optional)",
               "type": "text",
-              "placeholder": "Örn: Yürütmeyi durdurma talep ediyorum, 30 günlük itiraz süresi..."
+              "placeholder": "E.g.: I request a stay of execution, 30-day appeal period..."
             }
           ],
-          "prompt_template": "Aşağıdaki bilgilere dayanarak {{language}} dilinde 5 farklı itiraz dilekçesi metni üret. Her biri doğrudan kullanılabilir, eksiksiz bir dilekçe olsun.\n\nBaşvuru makamı: {{authority}}\nİtiraz türü: {{objection_type}}\nİtiraz konusu: {{subject}}\nHukuki dayanak: {{legal_basis}}\n{{urgency}}Ülke: {{country}}\n\nHer dilekçe şu formatı izlesin:\n- \"Sayın [makam/kurum],\" ile başlasın\n- İtiraz edilen karar veya işlemi açıkça tanımlasın\n- Hukuki dayanağı ve gerekçeyi somut olarak ifade etsin\n- Talep edilen sonucu (iptal, düzeltme, yeniden değerlendirme vb.) belirtsin\n- Resmi kapanış ve imza bloğu içersin\n\n5 versiyon şu tarzlarda olsun:\n1. Kısa ve net (itirazı ve talebi özlü biçimde ifade eder)\n2. Detaylı ve hukuki (tüm gerekçeler, yasal maddeler, emsal atıfları)\n3. Sert ve kararlı (hakkın açıkça ihlal edildiğini vurgular, yargı yoluna gidileceğini belirtir)\n4. Diplomatik (idarenin hatayı fark edeceğine dair güveni yansıtır)\n5. Resmi ve bürokratik (madde madde yapı, tam hukuki yazışma dili)\n\nTavsiye, açıklama veya yorum yapma. Sadece 5 adet kullanılabilir dilekçe metni döndür, numaralı liste halinde."
+          "prompt_template": "Based on the information below, generate 5 different objection petition texts in {{language}}. Each should be complete and ready to use as-is.\n\nAuthority petitioned: {{authority}}\nType of objection: {{objection_type}}\nSubject of objection: {{subject}}\nLegal basis: {{legal_basis}}\n{{urgency}}Country: {{country}}\n\nEach petition should follow this format:\n- Begin with \"Dear [authority/institution],\"\n- Clearly identify the decision or action being objected to\n- State the legal basis and justification concretely\n- Specify the desired outcome (cancellation, correction, reconsideration, etc.)\n- Include a formal closing and signature block\n\nThe 5 versions should be in these styles:\n1. Short and clear (states the objection and request concisely)\n2. Detailed and legal (all justifications, statutory articles, precedent references)\n3. Firm and determined (emphasizes clear rights violation, states judicial recourse will be pursued)\n4. Diplomatic (reflects confidence that the administration will recognize the error)\n5. Formal and bureaucratic (point-by-point structure, full legal correspondence language)\n\nDo not add advice, explanations, or commentary. Return only 5 usable petition texts in a numbered list."
         }
       ]
     }
