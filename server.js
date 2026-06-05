@@ -402,6 +402,78 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
   }
 });
 
+app.post('/api/detect-category', limiter, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: 'text is required' });
+
+    const prompt = `You are a text classification assistant. A user described what they want to write. Identify the best matching category and subcategory from the list below.
+
+Available options:
+messaging/romantic_partner – message to a romantic partner
+messaging/ex_partner – message to an ex
+messaging/crush – message to someone you like
+messaging/friend – message to a friend
+messaging/family – message to a family member
+messaging/apology – apology message
+messaging/rejection – rejection / saying no
+messaging/congratulations – congratulations message
+social_media/personal_photo – photo caption for Instagram/social media
+social_media/personal_story – personal story or experience post
+social_media/business_product – product or service promotion
+social_media/business_campaign – campaign or event announcement
+social_media/sports_club – sports club or team post
+social_media/motivation – motivational content
+official_legal/government_petition – petition to a government authority
+official_legal/complaint_letter – formal complaint letter
+official_legal/official_request – official request letter
+official_legal/legal_objection – legal objection or appeal
+
+User input: "${text.replace(/"/g, '\\"')}"
+
+Reply with ONLY a valid JSON object — no markdown, no explanation:
+{"categoryId":"…","subcategoryId":"…","confidence":"high|medium|low","explanation":"…"}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const apiData = await response.json();
+    if (!response.ok) throw new Error(apiData.error?.message || 'API error');
+
+    const raw = apiData.content[0].text.trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in AI response');
+
+    const result = JSON.parse(match[0]);
+
+    const valid = {
+      messaging: ['romantic_partner','ex_partner','crush','friend','family','apology','rejection','congratulations'],
+      social_media: ['personal_photo','personal_story','business_product','business_campaign','sports_club','motivation'],
+      official_legal: ['government_petition','complaint_letter','official_request','legal_objection']
+    };
+    if (!valid[result.categoryId]?.includes(result.subcategoryId)) {
+      throw new Error('AI returned an invalid category/subcategory pair');
+    }
+
+    console.log('[detect-category] result:', JSON.stringify(result));
+    res.json(result);
+  } catch (e) {
+    console.error('[detect-category] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));

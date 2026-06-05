@@ -380,6 +380,49 @@
       .page { padding: 20px 16px 60px; gap: 32px; }
       .form-card { padding: 20px; }
     }
+
+    /* ── Smart Start ── */
+    .smart-card {
+      background: linear-gradient(155deg, rgba(110,129,255,0.07), rgba(163,96,255,0.04));
+      border: 1px solid rgba(110,129,255,0.24);
+      border-radius: var(--r-xl);
+      padding: 26px 26px 22px;
+    }
+    .smart-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .smart-badge {
+      font-size: .71rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+      color: var(--accent); background: rgba(110,129,255,0.12);
+      border: 1px solid rgba(110,129,255,0.22); padding: 4px 12px; border-radius: 99px;
+    }
+    .smart-hint { font-size: .82rem; color: var(--text-muted); }
+    .smart-ta {
+      width: 100%; min-height: 84px;
+      padding: 13px 15px;
+      border-radius: var(--r-md); border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--text);
+      font: inherit; font-size: .94rem; line-height: 1.6;
+      outline: none; resize: vertical; margin-bottom: 14px;
+      transition: border-color .2s, background .2s;
+    }
+    .smart-ta:focus { border-color: var(--accent); background: rgba(110,129,255,0.05); }
+    .smart-ta::placeholder { color: rgba(158,178,212,0.32); }
+    .smart-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .btn-detect {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: linear-gradient(95deg, var(--accent), var(--accent2));
+      border: none; color: #fff; padding: 11px 22px;
+      border-radius: var(--r-md); font: inherit; font-size: .9rem; font-weight: 700;
+      cursor: pointer; letter-spacing: .01em;
+      box-shadow: 0 4px 20px var(--glow); transition: transform .2s, box-shadow .2s, opacity .2s;
+    }
+    .btn-detect:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
+    .btn-detect:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .smart-feedback { font-size: .83rem; line-height: 1.4; }
+    .smart-feedback.ok  { color: var(--success); }
+    .smart-feedback.err { color: #f87171; }
+    .smart-feedback.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -409,6 +452,27 @@
     <section>
       <h1 class="hero-title">Write anything with <span>AI</span>.</h1>
       <p class="hero-sub">Choose a category, describe your situation, and get 5 personalized messages instantly.</p>
+    </section>
+
+    <!-- Smart Start -->
+    <section>
+      <div class="smart-card">
+        <div class="smart-top">
+          <span class="smart-badge">✦ Smart Start</span>
+          <span class="smart-hint">Describe what you need — AI picks the right form for you</span>
+        </div>
+        <textarea
+          id="smartInput"
+          class="smart-ta"
+          placeholder="What do you need to write? (e.g. 'I need to message my ex', 'write a complaint to BIM', 'Instagram post for my cafe')"
+        ></textarea>
+        <div class="smart-row">
+          <button type="button" class="btn-detect" id="detectBtn" onclick="detectCategory()">
+            ✦ Detect Category →
+          </button>
+          <span class="smart-feedback hidden" id="smartFeedback"></span>
+        </div>
+      </div>
     </section>
 
     <section>
@@ -817,6 +881,50 @@
         setActionBtns(false);
         // Always refresh credit display from server (may re-disable if limit reached)
         if (accessToken) fetchAndShowCredits();
+      }
+    }
+
+    async function detectCategory() {
+      const input    = document.getElementById('smartInput');
+      const btn      = document.getElementById('detectBtn');
+      const feedback = document.getElementById('smartFeedback');
+      const text     = input.value.trim();
+
+      if (!text) { input.focus(); return; }
+      if (!appData) { feedback.textContent = 'App is still loading — please wait.'; feedback.className = 'smart-feedback err'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Detecting…';
+      feedback.className = 'smart-feedback hidden';
+
+      try {
+        const res = await fetch('/api/detect-category', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!res.ok) throw new Error('Detection failed');
+        const { categoryId, subcategoryId, explanation } = await res.json();
+
+        // Validate against loaded data
+        const cat = appData.categories.find(c => c.id === categoryId);
+        if (!cat) throw new Error('Unknown category returned');
+        const sub = cat.subcategories.find(s => s.id === subcategoryId);
+        if (!sub) throw new Error('Unknown subcategory returned');
+
+        feedback.textContent = '✓ ' + explanation;
+        feedback.className = 'smart-feedback ok';
+
+        // Select category (renders subcategory grid), then select subcategory
+        selectCategory(categoryId);
+        selectSubcategory(subcategoryId);
+
+      } catch (e) {
+        feedback.textContent = 'Could not detect — please select manually below.';
+        feedback.className = 'smart-feedback err';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✦ Detect Category →';
       }
     }
 
