@@ -74,25 +74,44 @@ async function getCredits(token, userId) {
   return Array.isArray(rows) ? (rows[0]?.credits_used ?? 0) : 0;
 }
 
-async function incrementCredits(token, userId, current) {
-  const body = { user_id: userId, credits_used: current + 1 };
-  console.log('[credits] UPSERT start — userId:', userId, 'new value:', current + 1);
-  console.log('[credits] UPSERT URL:', `${SUPABASE_REST}/user_credits`);
+async function incrementCredits(token, userId) {
+  console.log('[credits] increment start — userId:', userId);
   try {
-    const res = await fetch(`${SUPABASE_REST}/user_credits`, {
-      method: 'POST',
-      headers: { ...sbHeaders(token), 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify(body)
-    });
-    const text = await res.text();
-    console.log('[credits] UPSERT status:', res.status, '| response body:', text || '(empty)');
-    if (res.status >= 400) {
-      console.error('[credits] UPSERT FAILED — status:', res.status, '| detail:', text);
+    // Step 1: SELECT current value
+    const getUrl = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
+    const getRes = await fetch(getUrl, { headers: sbHeaders(token) });
+    const rows = await getRes.json();
+    console.log('[credits] SELECT rows:', JSON.stringify(rows));
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      // Step 2: No row — INSERT with credits_used = 1
+      console.log('[credits] no existing row — INSERT credits_used=1');
+      const insRes = await fetch(`${SUPABASE_REST}/user_credits`, {
+        method: 'POST',
+        headers: sbHeaders(token),
+        body: JSON.stringify({ user_id: userId, credits_used: 1 })
+      });
+      const insText = await insRes.text();
+      console.log('[credits] INSERT status:', insRes.status, '| body:', insText || '(empty)');
+      if (insRes.status >= 400) console.error('[credits] INSERT FAILED:', insText);
+      else console.log('[credits] INSERT SUCCESS — credits_used now: 1');
     } else {
-      console.log('[credits] UPSERT SUCCESS');
+      // Step 3: Row exists — UPDATE credits_used + 1
+      const current = rows[0]?.credits_used ?? 0;
+      const next = current + 1;
+      console.log('[credits] existing row — current:', current, '→ UPDATE to', next);
+      const updRes = await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: sbHeaders(token),
+        body: JSON.stringify({ credits_used: next })
+      });
+      const updText = await updRes.text();
+      console.log('[credits] UPDATE status:', updRes.status, '| body:', updText || '(empty)');
+      if (updRes.status >= 400) console.error('[credits] UPDATE FAILED:', updText);
+      else console.log('[credits] UPDATE SUCCESS — credits_used now:', next);
     }
   } catch (e) {
-    console.error('[credits] UPSERT EXCEPTION:', e.message);
+    console.error('[credits] increment EXCEPTION:', e.message);
   }
 }
 
@@ -372,8 +391,8 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
     }
 
     if (req.user) {
-      console.log('[generate] incrementing credits for user:', req.user.id, 'from', creditsUsed, 'to', creditsUsed + 1);
-      await incrementCredits(req.token, req.user.id, creditsUsed);
+      console.log('[generate] incrementing credits for user:', req.user.id);
+      await incrementCredits(req.token, req.user.id);
     }
 
     res.json({ captions, credits_used: req.user ? creditsUsed + 1 : null });
