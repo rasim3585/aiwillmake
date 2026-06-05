@@ -410,24 +410,50 @@ app.post('/api/detect-category', limiter, async (req, res) => {
     const prompt = `You are a text classification assistant. A user described what they want to write. Identify the best matching category and subcategory from the list below.
 
 Available options:
-messaging/romantic_partner – message to a romantic partner
-messaging/ex_partner – message to an ex
-messaging/crush – message to someone you like
-messaging/friend – message to a friend
-messaging/family – message to a family member
-messaging/apology – apology message
-messaging/rejection – rejection / saying no
-messaging/congratulations – congratulations message
-social_media/personal_photo – photo caption for Instagram/social media
+personal/romantic_partner – message to a romantic partner
+personal/ex_partner – message to an ex
+personal/crush – message to someone you like
+personal/friend – message to a friend
+personal/family – message to a family member
+personal/apology – apology message to someone
+personal/rejection – rejection / saying no to someone
+personal/congratulations – congratulations message
+social_media/personal_photo – photo caption for social media
 social_media/personal_story – personal story or experience post
-social_media/business_product – product or service promotion
+social_media/business_product – product or service promotion post
 social_media/business_campaign – campaign or event announcement
-social_media/sports_club – sports club or team post
-social_media/motivation – motivational content
-official_legal/government_petition – petition to a government authority
-official_legal/complaint_letter – formal complaint letter
-official_legal/official_request – official request letter
-official_legal/legal_objection – legal objection or appeal
+social_media/sports_club – sports club or team social media post
+social_media/motivation – motivational content post
+email/professional_email – professional workplace email
+email/follow_up – follow-up email after a meeting or application
+email/apology_email – professional apology email
+email/cold_outreach – cold outreach or sales email
+email/complaint_email – complaint email to a company
+email/thank_you_email – thank you email
+business/cover_letter – cover letter for a job
+business/job_application – job application message
+business/linkedin_message – LinkedIn connection or outreach message
+business/promotion_request – salary raise or promotion request
+business/business_proposal – business pitch or proposal
+business/client_email – email to a client
+business/contract_summary – contract or agreement summary
+business/payment_reminder – payment reminder or invoice follow-up
+academic/motivation_letter – university motivation letter or personal statement
+academic/scholarship_application – scholarship application letter
+academic/professor_email – email to a professor or academic
+academic/extension_request – assignment or deadline extension request
+academic/university_appeal – university appeal letter
+academic/internship_application – internship application message
+official/government_petition – petition to a government authority
+official/complaint_letter – formal complaint letter to institution
+official/official_request – official request letter
+official/legal_objection – legal objection or formal appeal
+official/consumer_complaint – consumer rights complaint
+medical/doctor_visit – request for a doctor appointment
+medical/hospital_request – request to a hospital or healthcare provider
+medical/second_opinion – request for a second medical opinion
+medical/prescription_query – query about a medication or prescription
+medical/insurance_claim – medical insurance claim or dispute
 
 User input: "${text.replace(/"/g, '\\"')}"
 
@@ -458,9 +484,13 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
     const result = JSON.parse(match[0]);
 
     const valid = {
-      messaging: ['romantic_partner','ex_partner','crush','friend','family','apology','rejection','congratulations'],
+      personal:     ['romantic_partner','ex_partner','crush','friend','family','apology','rejection','congratulations'],
       social_media: ['personal_photo','personal_story','business_product','business_campaign','sports_club','motivation'],
-      official_legal: ['government_petition','complaint_letter','official_request','legal_objection']
+      email:        ['professional_email','follow_up','apology_email','cold_outreach','complaint_email','thank_you_email'],
+      business:     ['cover_letter','job_application','linkedin_message','promotion_request','business_proposal','client_email','contract_summary','payment_reminder'],
+      academic:     ['motivation_letter','scholarship_application','professor_email','extension_request','university_appeal','internship_application'],
+      official:     ['government_petition','complaint_letter','official_request','legal_objection','consumer_complaint'],
+      medical:      ['doctor_visit','hospital_request','second_opinion','prescription_query','insurance_claim']
     };
     if (!valid[result.categoryId]?.includes(result.subcategoryId)) {
       throw new Error('AI returned an invalid category/subcategory pair');
