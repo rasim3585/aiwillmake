@@ -190,13 +190,23 @@
     }
 
     /* ════════ STEPS ════════ */
-    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; }
-    .step-num {
-      font-size: .72rem; font-weight: 700; letter-spacing: .12em;
-      color: var(--accent); margin-bottom: 16px;
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; }
+    .step-card {
+      background: var(--surf); border: 1px solid var(--bord);
+      border-radius: 20px; padding: 28px 26px; position: relative; overflow: hidden;
+      transition: border-color .22s, box-shadow .22s, transform .22s;
     }
-    .step-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .step-card:hover { border-color: var(--bord2); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.22); }
+    .step-num {
+      font-size: 3.2rem; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 14px; letter-spacing: -.04em;
+    }
+    .step-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
+    .step-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
     .step-desc  { color: var(--sec); font-size: .87rem; line-height: 1.65; }
+    .steps-cta  { text-align: center; margin-top: 36px; }
 
     /* ════════ SAMPLE OUTPUT ════════ */
     .samples { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
@@ -324,7 +334,7 @@
     /* ════════ RESPONSIVE ════════ */
     @media (max-width: 860px) {
       .feat-grid  { grid-template-columns: 1fr; }
-      .steps      { grid-template-columns: 1fr; gap: 28px; }
+      .steps      { grid-template-columns: 1fr; gap: 16px; }
       .samples    { grid-template-columns: 1fr; }
       .price-grid { grid-template-columns: 1fr; }
       .ft-inner   { flex-direction: column; gap: 24px; }
@@ -438,25 +448,31 @@
   <div class="wrap">
     <div class="s-head c">
       <div class="s-label">How it works</div>
-      <h2 class="s-title">Three steps. Five results.</h2>
-      <p class="s-sub">No prompt engineering. No blank page. Just answer the questions.</p>
+      <h2 class="s-title">Three steps to the right words.</h2>
+      <p class="s-sub">From the first message to knowing exactly what to do after they reply.</p>
     </div>
     <div class="steps">
-      <div>
+      <div class="step-card">
+        <span class="step-icon">✍️</span>
         <div class="step-num">01</div>
-        <div class="step-title">Pick a category & type</div>
-        <p class="step-desc">Choose from 9 categories and 88 specific types — from "ex partner message" to "resignation letter" to "wedding speech".</p>
+        <div class="step-title">Say what you need</div>
+        <p class="step-desc">Describe your situation in plain language. Who are you talking to? What's at stake? The more you share, the more personal the result.</p>
       </div>
-      <div>
+      <div class="step-card">
+        <span class="step-icon">🎯</span>
         <div class="step-num">02</div>
-        <div class="step-title">Describe your situation</div>
-        <p class="step-desc">Fill in a short guided form. The more specific you are, the more personal the output. Or use Smart Start — just type what you need in plain English.</p>
+        <div class="step-title">Get your strategies</div>
+        <p class="step-desc">Receive 6 communication approaches, each with a different strategy. Every option includes risk analysis, best timing, and a recommended pick for your situation.</p>
       </div>
-      <div>
+      <div class="step-card">
+        <span class="step-icon">💬</span>
         <div class="step-num">03</div>
-        <div class="step-title">Copy & send</div>
-        <p class="step-desc">Get 5 unique versions in your chosen language. Pick the one that feels right, copy it, and send. Need more? Generate again in one click.</p>
+        <div class="step-title">Handle their reply</div>
+        <p class="step-desc">Paste their response to get instant analysis — interest level, hidden signals, and what to do next. The conversation doesn't have to end there.</p>
       </div>
+    </div>
+    <div class="steps-cta">
+      <a href="app.html" class="hero-cta">Start with Step 1 →</a>
     </div>
   </div>
 </section>

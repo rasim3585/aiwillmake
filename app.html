@@ -398,14 +398,23 @@
     }
     .show-analysis-btn:hover { color: var(--text); }
     .caption-analysis {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 0;
       max-height: 0; overflow: hidden;
       transition: max-height .35s ease, padding-top .25s ease, border-top-color .25s;
       padding-top: 0; border-top: 1px solid transparent;
     }
     .caption-analysis.open {
-      max-height: 500px; padding-top: 10px; border-top-color: var(--bord);
+      max-height: 700px; padding-top: 12px; border-top-color: var(--bord);
     }
+    .analysis-row {
+      padding: 8px 0; border-bottom: 1px solid var(--bord);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .analysis-row:last-child { border-bottom: none; }
+    .analysis-row-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--sec); }
+    .analysis-row-label.green { color: #20d47a; }
+    .analysis-row-label.red   { color: #ef4444; }
+    .analysis-row-text { font-size: .85rem; line-height: 1.6; color: var(--text); }
 
     .caption-recommended {
       display: inline-flex; flex-direction: column; gap: 2px;
@@ -1282,11 +1291,11 @@
             ${hasAnalysis ? `
             <button type="button" class="show-analysis-btn">Show analysis ▾</button>
             <div class="caption-analysis">
-              ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
-              ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
-              ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}
-              ${reply_yes ? `<p class="reply-yes">💬 ${escHtml(reply_yes)}</p>` : ''}
-              ${reply_no  ? `<p class="reply-no">🚫 ${escHtml(reply_no)}</p>`  : ''}
+              ${why ? `<div class="analysis-row"><span class="analysis-row-label green">✦ Why this works</span><span class="analysis-row-text">${escHtml(why)}</span></div>` : ''}
+              ${best_used_when ? `<div class="analysis-row"><span class="analysis-row-label">When to use this</span><span class="analysis-row-text">${escHtml(best_used_when)}</span></div>` : ''}
+              ${what_could_go_wrong ? `<div class="analysis-row"><span class="analysis-row-label" style="color:#fb923c">Why it could fail</span><span class="analysis-row-text">${escHtml(what_could_go_wrong)}</span></div>` : ''}
+              ${reply_yes ? `<div class="analysis-row"><span class="analysis-row-label green">💬 Why they'll likely reply</span><span class="analysis-row-text">${escHtml(reply_yes)}</span></div>` : ''}
+              ${reply_no  ? `<div class="analysis-row"><span class="analysis-row-label red">🚫 Why they might not</span><span class="analysis-row-text">${escHtml(reply_no)}</span></div>`  : ''}
             </div>` : ''}`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
