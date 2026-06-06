@@ -1735,10 +1735,13 @@
       }
     }
     async function restoreConversation(convId) {
+      console.log('[restore] convId:', convId);
       hideConvPanel();
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
+        console.log('[restore] full response:', JSON.stringify(data));
+        console.log('[restore] data.fields:', JSON.stringify(data.fields));
         if (!r.ok) throw new Error(data.error);
 
         // Restore category + subcategory + form fields
