@@ -413,7 +413,8 @@
       padding: 6px 10px; border-radius: 6px; margin-bottom: 2px;
     }
     .rec-title  { font-size: .74rem; font-weight: 700; color: #20d47a; }
-    .rec-reason { font-size: .7rem; color: var(--sec); line-height: 1.4; }
+    .rec-reasons { margin: 4px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .rec-reasons li { font-size: .7rem; color: #20d47a; opacity: .85; line-height: 1.4; }
     .caption-metrics {
       display: flex; gap: 8px; flex-wrap: wrap; padding-left: 10px; margin-top: 2px;
     }
@@ -469,9 +470,20 @@
 
     /* ── Conversation Simulator ── */
     .simulator-section { margin-top: 8px; }
-    .sim-header { margin-bottom: 14px; }
-    .sim-title  { font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
-    .sim-note   { color: var(--sec); font-size: .8rem; margin: 0; }
+    .sim-card-outer {
+      background: linear-gradient(145deg, rgba(110,129,255,.06), rgba(163,96,255,.03));
+      border: 1px solid rgba(110,129,255,.22); border-radius: var(--r-xl);
+      padding: 28px 28px 24px;
+    }
+    .sim-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .sim-header-left { flex: 1; }
+    .sim-title  { font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+    .sim-note   { color: var(--sec); font-size: .83rem; margin: 0; line-height: 1.5; }
+    .pro-badge-lg {
+      font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em;
+      color: #f59e0b; background: rgba(245,158,11,.15); border: 1.5px solid rgba(245,158,11,.35);
+      padding: 5px 11px; border-radius: 6px; flex-shrink: 0; white-space: nowrap;
+    }
     .sim-sent-ctx {
       font-size: .76rem; color: var(--sec); padding: 7px 12px;
       background: rgba(255,255,255,.04); border: 1px solid var(--bord);
@@ -493,6 +505,12 @@
     }
     .sim-btn:hover { opacity: .88; }
     .sim-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .sim-btn-lg {
+      padding: 14px 28px; font-size: 1rem; border-radius: var(--r-lg);
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      color: #fff; align-self: stretch; text-align: center;
+    }
+    .sim-btn-lg:hover { opacity: .9; }
     .sim-grid { display: grid; gap: 12px; }
     .sim-card {
       background: rgba(255,255,255,.038); border: 1px solid var(--bord);
@@ -801,22 +819,27 @@
 
     <!-- Conversation Simulator -->
     <section id="simulatorSection" class="simulator-section hidden">
-      <div class="sim-header">
-        <h2 class="sim-title">They replied? <span class="pro-badge">PRO</span></h2>
-        <p class="sim-note">Paste their reply to get instant analysis and your next move.</p>
-      </div>
-      <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
-      <div class="sim-input-area">
-        <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..."></textarea>
-      </div>
-      <div id="replyAnalysis" class="reply-analysis hidden">
-        <div id="analysisLoading" class="hidden">
-          <div class="ns-skeleton skeleton" style="height:72px;border-radius:10px;margin-bottom:8px"></div>
+      <div class="sim-card-outer">
+        <div class="sim-header">
+          <div class="sim-header-left">
+            <h2 class="sim-title">They replied? Analyze their response.</h2>
+            <p class="sim-note">Paste their reply to understand what it really means and get your next move.</p>
+          </div>
+          <span class="pro-badge-lg">⭐ PRO</span>
         </div>
-        <div id="analysisContent"></div>
+        <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
+        <div class="sim-input-area">
+          <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
+        </div>
+        <div id="replyAnalysis" class="reply-analysis hidden">
+          <div id="analysisLoading" class="hidden">
+            <div class="ns-skeleton skeleton" style="height:72px;border-radius:10px;margin-bottom:8px"></div>
+          </div>
+          <div id="analysisContent"></div>
+        </div>
+        <button id="nextReplyBtn" class="sim-btn sim-btn-lg" type="button" style="margin-top:14px">Generate next message →</button>
+        <div id="simGrid" class="sim-grid hidden"></div>
       </div>
-      <button id="nextReplyBtn" class="sim-btn" type="button" style="margin-top:12px">Generate next message →</button>
-      <div id="simGrid" class="sim-grid hidden"></div>
     </section>
 
   </div><!-- /.page -->
@@ -1201,8 +1224,8 @@
           const emotional_pressure = isObj ? item.emotional_pressure : null;
           const best_used_when     = isObj ? item.best_used_when     : null;
           const what_could_go_wrong = isObj ? item.what_could_go_wrong : null;
-          const recommended        = isObj ? item.recommended        : false;
-          const recommended_reason = isObj ? item.recommended_reason : null;
+          const recommended         = isObj ? item.recommended         : false;
+          const recommended_reasons = isObj ? item.recommended_reasons : null;
           const displayText = escHtml(text).replace(/\n/g, '<br>');
 
           const card = document.createElement('div');
@@ -1210,7 +1233,10 @@
           card.style.animationDelay = `${i * 55}ms`;
           const hasAnalysis = !!(why || best_used_when || what_could_go_wrong);
           card.innerHTML = `
-            ${recommended ? `<div class="caption-recommended"><span class="rec-title">⭐ Best fit for your situation</span>${recommended_reason ? `<span class="rec-reason">${escHtml(recommended_reason)}</span>` : ''}</div>` : ''}
+            ${recommended ? `<div class="caption-recommended">
+              <span class="rec-title">⭐ Best fit for your situation</span>
+              ${recommended_reasons?.length ? `<ul class="rec-reasons">${recommended_reasons.map(r => `<li>${escHtml(r)}</li>`).join('')}</ul>` : ''}
+            </div>` : ''}
             <div class="caption-top">
               <div class="caption-top-left">
                 <span class="caption-num">${i + 1}</span>

@@ -194,9 +194,10 @@ BARRIER: Easy to reply / Some thought required / Emotionally demanding
 PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
-RECOMMENDED: yes - [one short specific reason why this is the best strategy for THIS situation] or no
+RECOMMENDED: yes or no
+RECOMMENDED_REASONS: ✓ [specific reason 1 for THIS situation] | ✓ [specific reason 2] | ✓ [specific reason 3] (only include this line if RECOMMENDED is yes)
 
-FORMAT REQUIREMENT: Every single message block MUST end with all 6 lines above (WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED). A block without these lines is incomplete and invalid. Do not skip any line even if the answer seems obvious.
+FORMAT REQUIREMENT: Every message block MUST end with WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED. If RECOMMENDED is yes, also add RECOMMENDED_REASONS on the next line. Never skip any line.
 
 CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
 CRITICAL: Do NOT use markdown. No headers (#), no bold (**), no dividers (---), no bullet points. Plain numbered list ONLY: 1. 2. 3. 4. 5. 6.
@@ -208,8 +209,20 @@ Rules: use specific details provided, no clichés, each message sounds like a re
     if (country) fieldLines.push(`Country context: ${country}`);
     const basePrompt = fieldLines.join('\n');
     let extraInstruction = '';
-    if (categoryId === 'personal' && subcategoryId === 'ex_partner' && !fields.message_length) {
-      extraInstruction = '\n\nGenerate messages in VARIED lengths: 2 should be ultra-short (1-2 sentences, text message style), 2 medium (3-4 sentences), 2 longer (5-6 sentences). Label each with its length style at the start (e.g. "[Short]", "[Medium]", "[Detailed]").';
+    if (categoryId === 'personal' && subcategoryId === 'ex_partner') {
+      const goalTone = {
+        'Reconnect romantically': 'GOAL TONE: Messages must feel hopeful, leave the door open, hint at wanting more — without being pushy or desperate.',
+        'Seek closure':           'GOAL TONE: Messages must be clear, emotionally mature, and bring a sense of finality — not cold, but clearly closing the chapter.',
+        'Apologize sincerely':    'GOAL TONE: Messages must take full accountability with genuine remorse — no excuses, no deflecting.',
+        'Rebuild friendship':     'GOAL TONE: Messages must be warm but clearly non-romantic — reference shared history, make it about friendship only.',
+        'Just check in':          'GOAL TONE: Messages must feel completely light and pressure-free — casual, like checking in on any old friend.'
+      };
+      if (fields.goal && goalTone[fields.goal]) {
+        extraInstruction += `\n\n${goalTone[fields.goal]}`;
+      }
+      if (!fields.message_length) {
+        extraInstruction += '\n\nGenerate messages in VARIED lengths: 2 should be ultra-short (1-2 sentences, text message style), 2 medium (3-4 sentences), 2 longer (5-6 sentences). Label each with its length style at the start (e.g. "[Short]", "[Medium]", "[Detailed]").';
+      }
     }
     const lengthMap = {
       'Ultra Short':    'ULTRA SHORT: 1-2 sentences maximum.',
@@ -284,9 +297,12 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         const emotional_pressure = meta(metaBlock, 'PRESSURE');
         const best_used_when     = meta(metaBlock, 'BEST_WHEN');
         const what_could_go_wrong = meta(metaBlock, 'RISK');
-        const recRaw             = meta(metaBlock, 'RECOMMENDED') || '';
-        const recommended        = recRaw.toLowerCase().startsWith('yes');
-        const recommended_reason = recommended ? recRaw.replace(/^yes\s*[-–]\s*/i, '').trim() : null;
+        const recRaw              = meta(metaBlock, 'RECOMMENDED') || '';
+        const recommended         = recRaw.toLowerCase().startsWith('yes');
+        const reasonsRaw          = recommended ? meta(metaBlock, 'RECOMMENDED_REASONS') : null;
+        const recommended_reasons = reasonsRaw
+          ? reasonsRaw.split('|').map(r => r.trim()).filter(Boolean)
+          : null;
 
         const blockIdx = rawBlocks.indexOf(block);
         const missing = [
@@ -308,11 +324,11 @@ Rules: use specific details provided, no clichés, each message sounds like a re
             && !/^Konu:/i.test(firstLine)
             && lines.length > 1;
           if (isTitle) {
-            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reasons };
           }
         }
 
-        return { badge: null, text: clean(msgText), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
+        return { badge: null, text: clean(msgText), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reasons };
       })
       .filter(Boolean)
       .slice(0, 6);

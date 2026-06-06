@@ -24,7 +24,7 @@
           "id": "ex_partner", "name": "Ex Partner",
           "description": "Reconnecting, closure, or apology messages to an ex",
           "required_fields": [
-            { "key": "goal", "label": "Your goal", "type": "select", "options": ["Reconnect", "Find closure", "Apologize", "Just check in"] },
+            { "key": "goal", "label": "What's your goal?", "type": "select", "options": ["Reconnect romantically", "Seek closure", "Apologize sincerely", "Rebuild friendship", "Just check in"] },
             { "key": "situation", "label": "Background", "type": "textarea", "placeholder": "What happened, how it ended, what you want to express..." },
             { "key": "time_since", "label": "Time since breakup", "type": "select", "options": ["Less than 1 month", "1–6 months", "6 months – 1 year", "Over 1 year"] }
           ],
