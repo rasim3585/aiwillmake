@@ -645,6 +645,50 @@ Their reply: ${theirReply}`;
   }
 });
 
+app.post('/api/likely-responses', limiter, async (req, res) => {
+  try {
+    const { categoryId, situation, selectedMessage, language } = req.body;
+    if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
+
+    const lang = language || 'English';
+    const systemPrompt = `Based on this message being sent, predict 5 most likely responses the recipient might give. Be realistic and varied — include both positive and negative possibilities. Write in ${lang}.
+
+Format exactly (no extra text):
+RESPONSE_1_TYPE: [one word: e.g. Warm, Curious, Neutral, Brief, Cold, Positive, Hesitant, Enthusiastic, Distant, Confused]
+RESPONSE_1_EXAMPLE: [one short realistic example reply, 1-2 sentences max]
+
+RESPONSE_2_TYPE: ...
+RESPONSE_2_EXAMPLE: ...
+
+(repeat for all 5)`;
+
+    const userPrompt = `Category: ${categoryId || 'general'}\nSituation: ${situation || 'Not provided'}\nMessage sent: ${selectedMessage}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => { const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
+
+    const responses = [1,2,3,4,5].map(n => ({
+      type:    extract(`RESPONSE_${n}_TYPE`),
+      example: extract(`RESPONSE_${n}_EXAMPLE`)
+    })).filter(r => r.type && r.example);
+
+    console.log('[likely-responses] count:', responses.length);
+    res.json({ responses });
+  } catch (e) {
+    console.error('[likely-responses]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/next-steps', limiter, async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, scenario, theirMessage } = req.body;

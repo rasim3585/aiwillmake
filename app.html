@@ -445,6 +445,35 @@
       border-radius: 7px; margin-top: 2px; line-height: 1.45;
     }
 
+    /* ── Likely Responses ── */
+    .likely-section { margin-top: 8px; }
+    .likely-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
+    .likely-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; margin-bottom: 12px; }
+    .likely-card {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-lg);
+      padding: 13px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 5px;
+      transition: border-color .2s, background .2s, transform .18s;
+      animation: fadeUp .3s ease both;
+    }
+    .likely-card:hover { border-color: var(--bord2); background: var(--surf2); transform: translateY(-2px); }
+    .likely-card.active { border-color: var(--borda); background: rgba(110,129,255,.09); }
+    .likely-type { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+    .likely-example { font-size: .78rem; color: var(--sec); line-height: 1.5; font-style: italic; }
+    .likely-panel {
+      background: rgba(255,255,255,.038); border: 1px solid var(--bord);
+      border-radius: var(--r-lg); padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .likely-panel-title { font-size: .78rem; color: var(--sec); font-style: italic; margin-bottom: 4px; }
+    .likely-reply-item {
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      animation: fadeUp .25s ease both;
+    }
+    .likely-reply-strategy { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+    .likely-reply-text { font-size: .87rem; line-height: 1.65; color: var(--text); }
+
     /* ── What Happens Next ── */
     .next-steps-section { margin-top: 8px; }
     .ns-header { margin-bottom: 14px; }
@@ -839,6 +868,19 @@
       </div>
     </section>
 
+    <!-- Likely Responses -->
+    <section id="likelySection" class="likely-section hidden">
+      <h2 class="likely-title">How might they respond?</h2>
+      <div class="likely-grid" id="likelyGrid">
+        <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
+        <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
+        <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
+        <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
+        <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
+      </div>
+      <div id="likelyPanel" class="likely-panel hidden"></div>
+    </section>
+
     <!-- What Happens Next -->
     <section id="nextStepsSection" class="next-steps-section hidden">
       <div class="ns-header">
@@ -1106,6 +1148,7 @@
       document.getElementById('formCard').classList.add('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('nextStepsSection').classList.add('hidden');
+      document.getElementById('likelySection').classList.add('hidden');
       document.getElementById('simulatorSection').classList.add('hidden');
       document.getElementById('subcatSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -1121,6 +1164,7 @@
       document.getElementById('formCard').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('nextStepsSection').classList.add('hidden');
+      document.getElementById('likelySection').classList.add('hidden');
       document.getElementById('simulatorSection').classList.add('hidden');
       document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -1330,6 +1374,7 @@
           || (typeof captions[0] === 'object' ? captions[0]?.text : captions[0])
           || '';
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
+        fetchLikelyResponses();
         fetchNextSteps();
       } catch (err) {
         console.error('Generate error:', err);
@@ -1484,6 +1529,88 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Generate next message →';
+      }
+    }
+
+    async function fetchLikelyResponses() {
+      const section = document.getElementById('likelySection');
+      const grid    = document.getElementById('likelyGrid');
+      const panel   = document.getElementById('likelyPanel');
+
+      section.classList.remove('hidden');
+      panel.classList.add('hidden');
+      panel.innerHTML = '';
+      grid.innerHTML = [0,1,2,3,4].map(() => `<div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>`).join('');
+
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k,v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([,v]) => v.trim()).join('. ');
+
+        const resp = await fetch('/api/likely-responses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoryId: selectedCatId, situation, selectedMessage: selectedMsgText, language: lastFields.language || 'English' })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+
+        grid.innerHTML = '';
+        const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        let activeCard = null;
+
+        data.responses.forEach((r, i) => {
+          const card = document.createElement('div');
+          card.className = 'likely-card';
+          card.style.animationDelay = `${i * 60}ms`;
+          card.innerHTML = `<div class="likely-type">${escH(r.type)}</div><div class="likely-example">"${escH(r.example)}"</div>`;
+
+          card.addEventListener('click', async () => {
+            if (activeCard === card) {
+              card.classList.remove('active');
+              panel.classList.add('hidden');
+              panel.innerHTML = '';
+              activeCard = null;
+              return;
+            }
+            if (activeCard) activeCard.classList.remove('active');
+            activeCard = card;
+            card.classList.add('active');
+            panel.classList.remove('hidden');
+            panel.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton" style="height:44px;border-radius:10px"></div>`).join('');
+
+            try {
+              const headers = { 'Content-Type': 'application/json' };
+              if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+              const r2 = await fetch('/api/next-reply', {
+                method: 'POST', headers,
+                body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English' })
+              });
+              const d2 = await r2.json();
+              if (r2.status === 403) { panel.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Sign in to see reply suggestions.</p>`; return; }
+              if (!r2.ok) throw new Error(d2.error);
+
+              panel.innerHTML = `<div class="likely-panel-title">If they say: <em>"${escH(r.example)}"</em></div>`;
+              d2.options.forEach((opt, idx) => {
+                const item = document.createElement('div');
+                item.className = 'likely-reply-item';
+                item.style.animationDelay = `${idx * 60}ms`;
+                item.innerHTML = `<div class="likely-reply-strategy">${escH(opt.strategy)}</div><p class="likely-reply-text">${escH(opt.message)}</p><button class="sim-copy-btn" type="button">Copy</button>`;
+                item.querySelector('.sim-copy-btn').addEventListener('click', async (e) => {
+                  await navigator.clipboard.writeText(opt.message);
+                  e.target.textContent = 'Copied ✓'; e.target.classList.add('copied');
+                  setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+                });
+                panel.appendChild(item);
+              });
+            } catch (e) {
+              panel.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Could not load reply suggestions. Try again.</p>`;
+            }
+          });
+          grid.appendChild(card);
+        });
+      } catch {
+        section.classList.add('hidden');
       }
     }
 
