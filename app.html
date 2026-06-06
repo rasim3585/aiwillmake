@@ -438,6 +438,14 @@
     .metric-h  { color: #20d47a; }
     .metric-m  { color: #f59e0b; }
     .metric-l  { color: #ef4444; }
+    .es-nostalgic  { color: #a78bfa; }
+    .es-cautious   { color: #f59e0b; }
+    .es-defensive  { color: #ef4444; }
+    .es-curious    { color: #60a5fa; }
+    .es-hopeful    { color: #20d47a; }
+    .es-hurt       { color: #fb923c; }
+    .es-indifferent{ color: #6b7280; }
+    .es-neutral    { color: #6b7280; }
     .metric-best-text { font-size: .75rem; color: var(--text); line-height: 1.4; }
     .caption-risk {
       font-size: .74rem; color: #fb923c; padding: 6px 10px;
@@ -1304,6 +1312,7 @@
           const emotional_pressure = isObj ? item.emotional_pressure : null;
           const best_used_when     = isObj ? item.best_used_when     : null;
           const what_could_go_wrong = isObj ? item.what_could_go_wrong : null;
+          const emotional_state     = isObj ? item.emotional_state     : null;
           const reply_yes           = isObj ? item.reply_yes           : null;
           const reply_no            = isObj ? item.reply_no            : null;
           const recommended         = isObj ? item.recommended         : false;
@@ -1327,10 +1336,11 @@
               <button type="button" class="copy-btn">Copy</button>
             </div>
             <p class="caption-text">${displayText}</p>
-            ${(reply_barrier || emotional_pressure) ? `
+            ${(reply_barrier || emotional_pressure || emotional_state) ? `
             <div class="caption-metrics">
               ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Ease of Reply</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
               ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
+              ${emotional_state ? `<div class="metric-item"><span class="metric-label">Recipient feels</span><span class="metric-value es-${escHtml(emotional_state).toLowerCase()}">${escHtml(emotional_state)}</span></div>` : ''}
             </div>` : ''}
             ${hasAnalysis ? `
             <button type="button" class="show-analysis-btn">Show analysis ▾</button>

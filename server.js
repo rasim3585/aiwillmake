@@ -194,12 +194,13 @@ BARRIER: Easy to reply / Some thought required / Emotionally demanding
 PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
+EMOTIONAL_STATE: [one of: Nostalgic / Cautious / Defensive / Curious / Indifferent / Hopeful / Hurt / Neutral] — the recipient's most likely emotional state when reading this message
 REPLY_YES: [one sentence why the recipient would reply to this message]
 REPLY_NO: [one sentence why they might not reply]
 RECOMMENDED: yes or no
 RECOMMENDED_REASONS: ✓ [specific reason 1 for THIS situation] | ✓ [specific reason 2] | ✓ [specific reason 3] (only include this line if RECOMMENDED is yes)
 
-FORMAT REQUIREMENT: Every message block MUST end with WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, REPLY_YES, REPLY_NO, RECOMMENDED in that order. If RECOMMENDED is yes, also add RECOMMENDED_REASONS on the next line. Never skip any line.
+FORMAT REQUIREMENT: Every message block MUST end with WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, EMOTIONAL_STATE, REPLY_YES, REPLY_NO, RECOMMENDED in that order. If RECOMMENDED is yes, also add RECOMMENDED_REASONS on the next line. Never skip any line.
 CRITICAL: Mark ONLY ONE message as RECOMMENDED: yes. The other 5 MUST be RECOMMENDED: no. If you mark more than one as yes, your output is invalid.
 When choosing which message to recommend, consider: which strategy is most likely to achieve the user's specific goal given their exact situation? Choose based on the goal, emotional context, and risk level - not just order.
 
@@ -302,6 +303,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         const emotional_pressure = meta(metaBlock, 'PRESSURE');
         const best_used_when     = meta(metaBlock, 'BEST_WHEN');
         const what_could_go_wrong = meta(metaBlock, 'RISK');
+        const emotional_state     = meta(metaBlock, 'EMOTIONAL_STATE');
         const reply_yes           = meta(metaBlock, 'REPLY_YES');
         const reply_no            = meta(metaBlock, 'REPLY_NO');
         const recRaw              = meta(metaBlock, 'RECOMMENDED') || '';
@@ -331,11 +333,11 @@ Rules: use specific details provided, no clichés, each message sounds like a re
             && !/^Konu:/i.test(firstLine)
             && lines.length > 1;
           if (isTitle) {
-            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, reply_yes, reply_no, recommended, recommended_reasons };
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, emotional_state, reply_yes, reply_no, recommended, recommended_reasons };
           }
         }
 
-        return { badge: null, text: clean(msgText), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, reply_yes, reply_no, recommended, recommended_reasons };
+        return { badge: null, text: clean(msgText), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, emotional_state, reply_yes, reply_no, recommended, recommended_reasons };
       })
       .filter(Boolean)
       .slice(0, 6);
