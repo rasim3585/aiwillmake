@@ -185,15 +185,6 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     const subcategory = category.subcategories.find(s => s.id === subcategoryId);
     if (!subcategory) return res.status(400).json({ error: 'Invalid subcategory' });
 
-    const requiredKeys = [
-      ...categories.common_fields.map(f => f.key),
-      ...subcategory.required_fields.map(f => f.key)
-    ];
-    const missing = requiredKeys.filter(key => !fields[key]?.trim());
-    if (missing.length) {
-      return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
-    }
-
     const language = fields.language || 'English';
     const country  = fields.country  || '';
     const strategies = STRATEGIES[categoryId] || STRATEGIES.personal;
