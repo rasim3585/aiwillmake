@@ -194,7 +194,10 @@ PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
 RECOMMENDED: yes - [one short specific reason why this is the best strategy for THIS situation] or no
-Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority.`;
+
+FORMAT REQUIREMENT: Every single message block MUST end with all 6 lines above (WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED). A block without these lines is incomplete and invalid. Do not skip any line even if the answer seems obvious.
+
+Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
       .map(f => { const v = (fields[f.key] || '').trim(); return v ? `${f.label}: ${v}` : null; })
@@ -263,6 +266,17 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         const recRaw             = meta(metaBlock, 'RECOMMENDED') || '';
         const recommended        = recRaw.toLowerCase().startsWith('yes');
         const recommended_reason = recommended ? recRaw.replace(/^yes\s*[-–]\s*/i, '').trim() : null;
+
+        const blockIdx = rawBlocks.indexOf(block);
+        const missing = [
+          !why && 'WHY', !reply_barrier && 'BARRIER', !emotional_pressure && 'PRESSURE',
+          !best_used_when && 'BEST_WHEN', !what_could_go_wrong && 'RISK', !recRaw && 'RECOMMENDED'
+        ].filter(Boolean);
+        if (missing.length) {
+          console.warn(`[parse] block #${blockIdx} missing: ${missing.join(', ')} | metaIdx=${metaIdx} | metaBlock snippet: ${metaBlock.slice(0,120).replace(/\n/g,'\\n')}`);
+        } else {
+          console.log(`[parse] block #${blockIdx} OK | WHY=${why?.slice(0,40)} | BARRIER=${reply_barrier}`);
+        }
 
         if (categoryId === 'official') {
           const lines = msgText.split('\n');
