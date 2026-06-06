@@ -193,7 +193,7 @@ SUCCESS: High/Medium/Low
 PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
-RECOMMENDED: yes/no (mark only the single best option as yes)
+RECOMMENDED: yes - [one short specific reason why this is the best strategy for THIS situation] or no
 Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}.`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
@@ -260,7 +260,9 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         const emotional_pressure = meta(metaBlock, 'PRESSURE');
         const best_used_when     = meta(metaBlock, 'BEST_WHEN');
         const what_could_go_wrong = meta(metaBlock, 'RISK');
-        const recommended        = meta(metaBlock, 'RECOMMENDED')?.toLowerCase() === 'yes';
+        const recRaw             = meta(metaBlock, 'RECOMMENDED') || '';
+        const recommended        = recRaw.toLowerCase().startsWith('yes');
+        const recommended_reason = recommended ? recRaw.replace(/^yes\s*[-–]\s*/i, '').trim() : null;
 
         if (categoryId === 'official') {
           const lines = msgText.split('\n');
@@ -271,11 +273,11 @@ Rules: use specific details provided, no clichés, each message sounds like a re
             && !/^Konu:/i.test(firstLine)
             && lines.length > 1;
           if (isTitle) {
-            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended };
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
           }
         }
 
-        return { badge: null, text: clean(msgText), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended };
+        return { badge: null, text: clean(msgText), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
       })
       .filter(Boolean)
       .slice(0, 6);
@@ -436,6 +438,69 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
     res.json(result);
   } catch (e) {
     console.error('[detect-category] error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/next-steps', limiter, async (req, res) => {
+  try {
+    const { categoryId, situation, selectedMessage, language } = req.body;
+    if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
+
+    const lang = language || 'English';
+    const systemPrompt = `You are a communication strategist. Based on the message sent and the situation, predict 3 possible responses and what to do next. Be specific and practical.
+
+Format exactly like this:
+SCENARIO_1_LABEL: [e.g. They respond positively]
+SCENARIO_1_ACTION: [What to do/say next - 2-3 sentences max]
+
+SCENARIO_2_LABEL: [e.g. They respond neutrally or briefly]
+SCENARIO_2_ACTION: [What to do/say next]
+
+SCENARIO_3_LABEL: [e.g. No response after X days]
+SCENARIO_3_ACTION: [What to do/say next]
+
+TIMING: [When to expect a response / how long to wait]
+
+Be realistic, not optimistic. Write in ${lang}.`;
+
+    const userPrompt = `Category: ${categoryId || 'general'}\nSituation: ${situation || 'Not provided'}\nMessage sent:\n${selectedMessage}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => {
+      const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    const scenarios = [
+      { label: extract('SCENARIO_1_LABEL'), action: extract('SCENARIO_1_ACTION'), type: 'positive' },
+      { label: extract('SCENARIO_2_LABEL'), action: extract('SCENARIO_2_ACTION'), type: 'neutral'  },
+      { label: extract('SCENARIO_3_LABEL'), action: extract('SCENARIO_3_ACTION'), type: 'negative' }
+    ].filter(s => s.label && s.action);
+
+    const timing = extract('TIMING');
+    console.log('[next-steps] scenarios:', scenarios.length, '| timing:', !!timing);
+    res.json({ scenarios, timing });
+  } catch (e) {
+    console.error('[next-steps]', e.message);
     res.status(500).json({ error: e.message });
   }
 });

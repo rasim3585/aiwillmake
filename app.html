@@ -393,9 +393,9 @@
 
     .caption-recommended {
       display: inline-flex; align-items: center; gap: 5px;
-      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      font-size: .74rem; font-weight: 600;
       color: #20d47a; background: rgba(32,212,122,.1); border: 1px solid rgba(32,212,122,.25);
-      padding: 3px 9px; border-radius: 5px; margin-bottom: 2px;
+      padding: 4px 10px; border-radius: 6px; margin-bottom: 2px; line-height: 1.4;
     }
     .caption-metrics {
       display: flex; gap: 8px; flex-wrap: wrap; padding-left: 10px; margin-top: 2px;
@@ -417,6 +417,32 @@
       background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
       border-radius: 7px; margin-top: 2px; line-height: 1.45;
     }
+
+    /* ── What Happens Next ── */
+    .next-steps-section { margin-top: 8px; }
+    .ns-header { margin-bottom: 14px; }
+    .ns-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+    .ns-note  { color: var(--sec); font-size: .8rem; margin: 0; }
+    .ns-timing {
+      font-size: .8rem; color: var(--sec); line-height: 1.5;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 8px; padding: 8px 14px; margin-bottom: 14px;
+    }
+    .ns-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .ns-skeleton { height: 110px; border-radius: 12px; }
+    .ns-card {
+      border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px;
+      animation: fadeUp .3s ease both;
+    }
+    .ns-card.ns-positive { background: rgba(32,212,122,.07);  border: 1px solid rgba(32,212,122,.22); }
+    .ns-card.ns-neutral  { background: rgba(245,158,11,.07);  border: 1px solid rgba(245,158,11,.22); }
+    .ns-card.ns-negative { background: rgba(239,68,68,.07);   border: 1px solid rgba(239,68,68,.22); }
+    .ns-card-label { font-size: .71rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    .ns-positive .ns-card-label { color: #20d47a; }
+    .ns-neutral  .ns-card-label { color: #f59e0b; }
+    .ns-negative .ns-card-label { color: #ef4444; }
+    .ns-card-action { font-size: .85rem; line-height: 1.6; color: var(--text); }
+    @media (max-width: 640px) { .ns-grid { grid-template-columns: 1fr; } }
 
     /* ── Action buttons ── */
     .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -638,6 +664,20 @@
       </div>
     </section>
 
+    <!-- What Happens Next -->
+    <section id="nextStepsSection" class="next-steps-section hidden">
+      <div class="ns-header">
+        <h2 class="ns-title">What happens next?</h2>
+        <p class="ns-note" id="nsNote">Based on the recommended message</p>
+      </div>
+      <div id="nsTimingBar" class="ns-timing hidden"></div>
+      <div class="ns-grid" id="nsGrid">
+        <div class="ns-skeleton skeleton"></div>
+        <div class="ns-skeleton skeleton"></div>
+        <div class="ns-skeleton skeleton"></div>
+      </div>
+    </section>
+
   </div><!-- /.page -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -797,6 +837,8 @@
     let appData = null;
     let selectedCatId = null;
     let selectedSubId = null;
+    let lastFields    = {};
+    let selectedMsgText = '';
 
     async function init() {
       try {
@@ -855,6 +897,7 @@
       document.getElementById('subcatSection').classList.remove('hidden');
       document.getElementById('formCard').classList.add('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('nextStepsSection').classList.add('hidden');
       document.getElementById('subcatSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -868,6 +911,7 @@
 
       document.getElementById('formCard').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('nextStepsSection').classList.add('hidden');
       document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -946,6 +990,7 @@
         const v = val(`df-${f.key}`);
         if (v) fields[f.key] = v;
       }
+      lastFields = { ...fields };
 
       if (!accessToken) {
         const guestUsed = getGuestUsed();
@@ -989,7 +1034,9 @@
 
         const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+        const rlMap   = { 'High':'Strong', 'Medium':'Moderate', 'Low':'Uncertain' };
         const scClass = v => ({ 'High':'metric-h','Medium':'metric-m','Low':'metric-l' }[v] || '');
+        const erMap   = { 'Low':'Low', 'Medium':'Moderate', 'High':'High' };
         const prClass = v => ({ 'Low':'metric-h','Medium':'metric-m','High':'metric-l' }[v] || '');
 
         captions.forEach((item, i) => {
@@ -1002,13 +1049,14 @@
           const best_used_when     = isObj ? item.best_used_when     : null;
           const what_could_go_wrong = isObj ? item.what_could_go_wrong : null;
           const recommended        = isObj ? item.recommended        : false;
+          const recommended_reason = isObj ? item.recommended_reason : null;
           const displayText = escHtml(text).replace(/\n/g, '<br>');
 
           const card = document.createElement('div');
           card.className = 'caption-card';
           card.style.animationDelay = `${i * 55}ms`;
           card.innerHTML = `
-            ${recommended ? '<div class="caption-recommended">⭐ Recommended</div>' : ''}
+            ${recommended ? `<div class="caption-recommended">⭐ ${recommended_reason ? escHtml(recommended_reason) : 'Recommended'}</div>` : ''}
             <div class="caption-top">
               <div class="caption-top-left">
                 <span class="caption-num">${i + 1}</span>
@@ -1020,8 +1068,8 @@
             ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
             ${(success_likelihood || emotional_pressure || best_used_when) ? `
             <div class="caption-metrics">
-              ${success_likelihood ? `<div class="metric-item"><span class="metric-label">Success</span><span class="metric-value ${scClass(success_likelihood)}">${escHtml(success_likelihood)}</span></div>` : ''}
-              ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Pressure</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(emotional_pressure)}</span></div>` : ''}
+              ${success_likelihood ? `<div class="metric-item"><span class="metric-label">Response Likelihood</span><span class="metric-value ${scClass(success_likelihood)}">${escHtml(rlMap[success_likelihood] || success_likelihood)}</span></div>` : ''}
+              ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
               ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
             </div>` : ''}
             ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}`;
@@ -1030,6 +1078,11 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            if (text !== selectedMsgText) {
+              selectedMsgText = text;
+              document.getElementById('nsNote').textContent = 'Updated for your selected message';
+              fetchNextSteps();
+            }
           });
           container.appendChild(card);
         });
@@ -1041,6 +1094,14 @@
 
         document.getElementById('resultsSection').classList.remove('hidden');
         document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Trigger next-steps with the recommended message (or first)
+        const recItem = captions.find(c => c && typeof c === 'object' && c.recommended);
+        selectedMsgText = recItem?.text
+          || (typeof captions[0] === 'object' ? captions[0]?.text : captions[0])
+          || '';
+        document.getElementById('nsNote').textContent = 'Based on the recommended message';
+        fetchNextSteps();
       } catch (err) {
         console.error('Generate error:', err);
         showToast('Something went wrong. Please try again.', 'error');
@@ -1050,6 +1111,54 @@
         btn.innerHTML = '<span class="btn-spin"></span>Generate ✦';
         setActionBtns(false);
         if (accessToken) fetchAndShowCredits();
+      }
+    }
+
+    async function fetchNextSteps() {
+      const section = document.getElementById('nextStepsSection');
+      const grid    = document.getElementById('nsGrid');
+      const timingEl = document.getElementById('nsTimingBar');
+
+      section.classList.remove('hidden');
+      timingEl.classList.add('hidden');
+      grid.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton"></div>`).join('');
+
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k, v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([, v]) => v.trim())
+          .join('. ');
+
+        const resp = await fetch('/api/next-steps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            categoryId: selectedCatId,
+            situation,
+            selectedMessage: selectedMsgText,
+            language: lastFields.language || 'English'
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+
+        grid.innerHTML = '';
+        const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const types = ['ns-positive','ns-neutral','ns-negative'];
+        data.scenarios.forEach((s, i) => {
+          const div = document.createElement('div');
+          div.className = `ns-card ${types[i] || types[2]}`;
+          div.style.animationDelay = `${i * 80}ms`;
+          div.innerHTML = `<div class="ns-card-label">${escH(s.label)}</div><div class="ns-card-action">${escH(s.action)}</div>`;
+          grid.appendChild(div);
+        });
+
+        if (data.timing) {
+          timingEl.textContent = '⏱ ' + data.timing;
+          timingEl.classList.remove('hidden');
+        }
+      } catch {
+        grid.innerHTML = `<p style="color:var(--sec);font-size:.85rem;grid-column:1/-1;padding:8px 0">Could not load next steps.</p>`;
       }
     }
 
