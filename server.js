@@ -37,6 +37,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+app.get('/api/debug', (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY || '';
+  res.json({
+    version: 'SERVER VERSION: 4.0 - STRATEGIES',
+    api_key_prefix: key ? key.slice(0, 10) + '...' : 'NOT SET',
+    api_key_length: key.length,
+    node_env: process.env.NODE_ENV || 'not set'
+  });
+});
+
 app.get('/api/config', (req, res) => {
   res.json({
     supabaseUrl,
