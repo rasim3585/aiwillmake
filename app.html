@@ -445,6 +445,72 @@
     .ns-card-action { font-size: .85rem; line-height: 1.6; color: var(--text); }
     @media (max-width: 640px) { .ns-grid { grid-template-columns: 1fr; } }
 
+    /* ── Conversation Simulator ── */
+    .simulator-section { margin-top: 8px; }
+    .sim-header { margin-bottom: 14px; }
+    .sim-title  { font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+    .sim-note   { color: var(--sec); font-size: .8rem; margin: 0; }
+    .sim-sent-ctx {
+      font-size: .76rem; color: var(--sec); padding: 7px 12px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 8px; margin-bottom: 12px;
+    }
+    .sim-input-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .sim-textarea {
+      width: 100%; box-sizing: border-box;
+      background: var(--surf); border: 1px solid var(--bord);
+      border-radius: var(--r-md); padding: 12px 14px; color: var(--text);
+      font: inherit; font-size: .9rem; resize: vertical; min-height: 80px;
+      transition: border-color .2s;
+    }
+    .sim-textarea:focus { outline: none; border-color: var(--borda); }
+    .sim-btn {
+      align-self: flex-start; padding: 10px 20px; border-radius: var(--r-md);
+      background: var(--text); color: var(--bg); font: inherit; font-size: .87rem;
+      font-weight: 700; cursor: pointer; border: none; transition: opacity .2s;
+    }
+    .sim-btn:hover { opacity: .88; }
+    .sim-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .sim-grid { display: grid; gap: 12px; }
+    .sim-card {
+      background: rgba(255,255,255,.038); border: 1px solid var(--bord);
+      border-radius: var(--r-lg); padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 10px;
+      animation: fadeUp .3s ease both;
+    }
+    .sim-card.sim-recommended {
+      background: rgba(110,129,255,.07); border-color: var(--borda);
+      box-shadow: 0 0 0 1px rgba(110,129,255,.12);
+    }
+    .sim-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .sim-strategy {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--accent); background: rgba(110,129,255,.12); border: 1px solid rgba(110,129,255,.2);
+      padding: 3px 8px; border-radius: 5px;
+    }
+    .sim-rec-badge {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: #20d47a; background: rgba(32,212,122,.1); border: 1px solid rgba(32,212,122,.25);
+      padding: 2px 7px; border-radius: 4px;
+    }
+    .sim-message { font-size: .9rem; line-height: 1.7; color: var(--text); }
+    .sim-why { font-size: .76rem; color: #a78bfa; font-style: italic; line-height: 1.5; }
+    .sim-card-btns { display: flex; gap: 8px; }
+    .sim-copy-btn, .sim-use-btn {
+      border-radius: var(--r-sm); padding: 5px 12px;
+      cursor: pointer; font: inherit; font-size: .77rem; font-weight: 600;
+      transition: background .18s, color .18s, border-color .18s;
+    }
+    .sim-copy-btn {
+      border: 1px solid var(--bord); background: transparent; color: var(--sec);
+    }
+    .sim-copy-btn:hover { background: var(--surf2); color: var(--text); border-color: var(--bord2); }
+    .sim-copy-btn.copied { background: rgba(32,212,122,.12); color: var(--ok); border-color: rgba(32,212,122,.28); }
+    .sim-use-btn {
+      border: 1px solid var(--borda); background: rgba(110,129,255,.1); color: var(--accent);
+    }
+    .sim-use-btn:hover { background: rgba(110,129,255,.2); }
+
     /* ── Action buttons ── */
     .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
     .btn-action {
@@ -679,6 +745,20 @@
       </div>
     </section>
 
+    <!-- Conversation Simulator -->
+    <section id="simulatorSection" class="simulator-section hidden">
+      <div class="sim-header">
+        <h2 class="sim-title">They replied?</h2>
+        <p class="sim-note">Paste their reply to get 3 strategic next messages.</p>
+      </div>
+      <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
+      <div class="sim-input-area">
+        <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..."></textarea>
+        <button id="nextReplyBtn" class="sim-btn" type="button">Generate next message →</button>
+      </div>
+      <div id="simGrid" class="sim-grid hidden"></div>
+    </section>
+
   </div><!-- /.page -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -899,6 +979,7 @@
       document.getElementById('formCard').classList.add('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('nextStepsSection').classList.add('hidden');
+      document.getElementById('simulatorSection').classList.add('hidden');
       document.getElementById('subcatSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -913,6 +994,7 @@
       document.getElementById('formCard').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('nextStepsSection').classList.add('hidden');
+      document.getElementById('simulatorSection').classList.add('hidden');
       document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -1115,6 +1197,88 @@
       }
     }
 
+    async function fetchNextReply() {
+      const textarea = document.getElementById('theirReplyInput');
+      const btn      = document.getElementById('nextReplyBtn');
+      const grid     = document.getElementById('simGrid');
+      const reply    = textarea.value.trim();
+
+      if (!reply) { textarea.focus(); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      grid.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton"></div>`).join('');
+      grid.classList.remove('hidden');
+
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k, v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([, v]) => v.trim())
+          .join('. ');
+
+        const resp = await fetch('/api/next-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            categoryId:      selectedCatId,
+            situation,
+            originalMessage: selectedMsgText,
+            theirReply:      reply,
+            language:        lastFields.language || 'English'
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+
+        grid.innerHTML = '';
+        const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        data.options.forEach((opt, i) => {
+          const card = document.createElement('div');
+          card.className = `sim-card${opt.recommended ? ' sim-recommended' : ''}`;
+          card.style.animationDelay = `${i * 70}ms`;
+          card.innerHTML = `
+            <div class="sim-card-top">
+              <span class="sim-strategy">${escH(opt.strategy)}</span>
+              ${opt.recommended ? '<span class="sim-rec-badge">⭐ Best pick</span>' : ''}
+            </div>
+            <p class="sim-message">${escH(opt.message).replace(/\n/g,'<br>')}</p>
+            ${opt.why ? `<p class="sim-why">${escH(opt.why)}</p>` : ''}
+            <div class="sim-card-btns">
+              <button class="sim-copy-btn" type="button">Copy</button>
+              <button class="sim-use-btn" type="button">Use this →</button>
+            </div>`;
+
+          card.querySelector('.sim-copy-btn').addEventListener('click', async (e) => {
+            await navigator.clipboard.writeText(opt.message);
+            e.target.textContent = 'Copied ✓';
+            e.target.classList.add('copied');
+            setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+          });
+
+          card.querySelector('.sim-use-btn').addEventListener('click', () => {
+            selectedMsgText = opt.message;
+            textarea.value = '';
+            grid.innerHTML = '';
+            grid.classList.add('hidden');
+            const ctx = document.getElementById('simSentCtx');
+            const preview = opt.message.length > 80 ? opt.message.slice(0, 80) + '…' : opt.message;
+            ctx.textContent = `Last sent: "${preview}"`;
+            ctx.classList.remove('hidden');
+            textarea.focus();
+          });
+
+          grid.appendChild(card);
+        });
+
+      } catch {
+        grid.innerHTML = `<p style="color:var(--sec);font-size:.85rem;padding:8px 0">Could not generate responses. Please try again.</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate next message →';
+      }
+    }
+
     async function fetchNextSteps() {
       const section = document.getElementById('nextStepsSection');
       const grid    = document.getElementById('nsGrid');
@@ -1123,6 +1287,14 @@
       section.classList.remove('hidden');
       timingEl.classList.add('hidden');
       grid.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton"></div>`).join('');
+
+      // Show simulator, reset state
+      const sim = document.getElementById('simulatorSection');
+      sim.classList.remove('hidden');
+      document.getElementById('theirReplyInput').value = '';
+      document.getElementById('simGrid').innerHTML = '';
+      document.getElementById('simGrid').classList.add('hidden');
+      document.getElementById('simSentCtx').classList.add('hidden');
 
       try {
         const situation = Object.entries(lastFields)
@@ -1234,6 +1406,10 @@
     document.getElementById('generateBtn').addEventListener('click', () => generate());
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
+    document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
+    document.getElementById('theirReplyInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fetchNextReply();
+    });
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
 
     initAuth().then(() => { init(); fetchAndShowCredits(); });

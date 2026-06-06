@@ -442,6 +442,76 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
   }
 });
 
+app.post('/api/next-reply', limiter, async (req, res) => {
+  try {
+    const { categoryId, situation, originalMessage, theirReply, language } = req.body;
+    if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
+
+    const lang = language || 'English';
+    const systemPrompt = `You are a communication strategist. The user sent a message and received a reply. Generate 3 possible next messages they could send, each with a different strategy.
+
+Format exactly:
+OPTION_1_STRATEGY: [strategy name]
+OPTION_1_MESSAGE: [the actual message to send]
+OPTION_1_WHY: [one sentence why this works]
+
+OPTION_2_STRATEGY: [strategy name]
+OPTION_2_MESSAGE: [the actual message]
+OPTION_2_WHY: [one sentence]
+
+OPTION_3_STRATEGY: [strategy name]
+OPTION_3_MESSAGE: [the actual message]
+OPTION_3_WHY: [one sentence]
+
+RECOMMENDED: 1/2/3
+
+Rules: Be specific to their actual reply. No generic responses. Write in ${lang}.`;
+
+    const userPrompt = `Category: ${categoryId || 'general'}
+Situation: ${situation || 'Not provided'}
+Message I sent: ${originalMessage || 'Not provided'}
+Their reply: ${theirReply}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = (t, key) => {
+      const m = t.match(new RegExp(`^${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][A-Z_0-9]+:|\\s*$)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    const recommended = parseInt(extract(text, 'RECOMMENDED') || '1', 10);
+    const options = [1, 2, 3].map(n => ({
+      strategy:    extract(text, `OPTION_${n}_STRATEGY`),
+      message:     extract(text, `OPTION_${n}_MESSAGE`),
+      why:         extract(text, `OPTION_${n}_WHY`),
+      recommended: n === recommended
+    })).filter(o => o.strategy && o.message);
+
+    console.log('[next-reply] options:', options.length);
+    res.json({ options });
+  } catch (e) {
+    console.error('[next-reply]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/next-steps', limiter, async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language } = req.body;
