@@ -758,7 +758,7 @@ Be realistic, not optimistic. Write in ${lang}.`;
 // ── Conversations ──────────────────────────────────────────────
 app.post('/api/conversations', requireAuth, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, situation } = req.body;
+    const { categoryId, subcategoryId, situation, fields } = req.body;
     const r = await fetch(`${SUPABASE_REST}/conversations`, {
       method: 'POST',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -766,7 +766,8 @@ app.post('/api/conversations', requireAuth, async (req, res) => {
         user_id: req.user.id,
         category_id: categoryId || '',
         subcategory_id: subcategoryId || '',
-        situation: (situation || '').slice(0, 600)
+        situation: (situation || '').slice(0, 600),
+        fields: fields || null
       })
     });
     const data = await r.json();
@@ -817,7 +818,7 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
 app.get('/api/conversations/:id', requireAuth, async (req, res) => {
   try {
     const r = await fetch(
-      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,created_at,conversation_messages(id,role,content,strategy,created_at)`,
+      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,conversation_messages(id,role,content,strategy,created_at)`,
       { headers: sbHeaders(req.token) }
     );
     const data = await r.json();

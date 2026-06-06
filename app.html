@@ -492,6 +492,20 @@
     .conv-item-cat { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
     .conv-item-situation { font-size: .83rem; color: var(--text); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .conv-item-date { font-size: .72rem; color: var(--sec); }
+    .conv-item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .conv-continue-btn {
+      font-size: .74rem; font-weight: 700; color: var(--accent);
+      background: rgba(110,129,255,.1); border: 1px solid rgba(110,129,255,.2);
+      border-radius: 5px; padding: 3px 10px; cursor: pointer; font: inherit;
+      font-size: .74rem; font-weight: 700; transition: background .18s;
+    }
+    .conv-continue-btn:hover { background: rgba(110,129,255,.22); }
+    .sim-restore-note {
+      font-size: .78rem; color: var(--sec); line-height: 1.5;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 8px; padding: 8px 12px; margin-bottom: 10px;
+    }
+    .sim-restore-note strong { color: var(--text); }
     .conv-detail { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
     .conv-msg {
       background: var(--surf); border: 1px solid var(--bord); border-radius: 10px;
@@ -975,6 +989,7 @@
           <span class="pro-badge-lg">⭐ PRO</span>
         </div>
         <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
+        <div id="simRestoreNote" class="sim-restore-note hidden"></div>
         <div class="sim-input-area">
           <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
         </div>
@@ -1449,6 +1464,7 @@
           || '';
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
         currentConvId = null;
+        document.getElementById('simRestoreNote').classList.add('hidden');
         createConversation();
         fetchLikelyResponses();
         fetchNextSteps();
@@ -1619,7 +1635,7 @@
         const r = await fetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, situation })
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, situation, fields: lastFields })
         });
         if (r.ok) { const d = await r.json(); currentConvId = d.id; }
       } catch (e) { console.warn('[conv create]', e.message); }
@@ -1670,7 +1686,14 @@
           item.innerHTML = `
             <div class="conv-item-cat">${escH(cat?.icon || '')} ${escH(cat?.name || c.category_id)} · ${escH(sub?.name || c.subcategory_id)}</div>
             <div class="conv-item-situation">${escH(c.situation || '—')}</div>
-            <div class="conv-item-date">${fmt(c.created_at)}</div>`;
+            <div class="conv-item-foot">
+              <span class="conv-item-date">${fmt(c.created_at)}</span>
+              <button class="conv-continue-btn" data-id="${escH(c.id)}" type="button">Continue →</button>
+            </div>`;
+          item.querySelector('.conv-continue-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            restoreConversation(c.id);
+          });
           item.addEventListener('click', () => loadConvDetail(c.id));
           listEl.appendChild(item);
         });
@@ -1708,6 +1731,55 @@
       } catch (e) {
         detailEl.innerHTML = `<button class="conv-back" id="convBackBtn2">← Back</button><p style="color:var(--sec);font-size:.84rem">Could not load.</p>`;
         detailEl.querySelector('#convBackBtn2').addEventListener('click', loadConvList);
+      }
+    }
+    async function restoreConversation(convId) {
+      hideConvPanel();
+      try {
+        const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+
+        // Restore category + subcategory + form fields
+        if (data.category_id) {
+          selectCategory(data.category_id);
+          if (data.subcategory_id) {
+            selectSubcategory(data.subcategory_id);
+            // Populate form fields from stored fields JSON
+            if (data.fields && appData) {
+              const cat = appData.categories.find(x => x.id === data.category_id);
+              const sub = cat?.subcategories.find(x => x.id === data.subcategory_id);
+              for (const f of appData.common_fields) {
+                const el = document.getElementById(`cf-${f.key}`);
+                if (el && data.fields[f.key]) el.value = data.fields[f.key];
+              }
+              for (const f of [...(sub?.required_fields||[]), ...(sub?.optional_fields||[])]) {
+                const el = document.getElementById(`df-${f.key}`);
+                if (el && data.fields[f.key]) el.value = data.fields[f.key];
+              }
+              lastFields = { ...data.fields };
+            }
+          }
+        }
+
+        // Find last sent message
+        const msgs = data.conversation_messages || [];
+        const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+        if (lastSent) {
+          selectedMsgText = lastSent.content;
+          const preview = lastSent.content.length > 80 ? lastSent.content.slice(0, 80) + '…' : lastSent.content;
+          const noteEl = document.getElementById('simRestoreNote');
+          noteEl.innerHTML = `Returning to this conversation? Paste their reply below.<br><strong>You sent:</strong> "${preview}"`;
+          noteEl.classList.remove('hidden');
+        }
+
+        // Set conversation ID and show simulator
+        currentConvId = convId;
+        document.getElementById('simulatorSection').classList.remove('hidden');
+        document.getElementById('simulatorSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('theirReplyInput').focus();
+      } catch (e) {
+        showToast('Could not restore conversation.', 'error');
       }
     }
     // ────────────────────────────────────────────────────────────
