@@ -422,8 +422,8 @@
     /* ── What Happens Next ── */
     .next-steps-section { margin-top: 8px; }
     .ns-header { margin-bottom: 14px; }
-    .ns-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
-    .ns-note  { color: var(--sec); font-size: .8rem; margin: 0; }
+    .ns-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 3px; }
+    .ns-note  { color: var(--sec); font-size: .82rem; margin: 0; }
     .ns-timing {
       font-size: .8rem; color: var(--sec); line-height: 1.5;
       background: rgba(255,255,255,.04); border: 1px solid var(--bord);
@@ -432,8 +432,14 @@
     .ns-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
     .ns-skeleton { height: 110px; border-radius: 12px; }
     .ns-card {
-      border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px;
+      border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;
       animation: fadeUp .3s ease both;
+    }
+    .pro-badge {
+      display: inline-block; font-size: .6rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .1em; color: #f59e0b; background: rgba(245,158,11,.12);
+      border: 1px solid rgba(245,158,11,.3); padding: 2px 7px; border-radius: 4px;
+      vertical-align: middle; margin-left: 6px;
     }
     .ns-card.ns-positive { background: rgba(32,212,122,.07);  border: 1px solid rgba(32,212,122,.22); }
     .ns-card.ns-neutral  { background: rgba(245,158,11,.07);  border: 1px solid rgba(245,158,11,.22); }
@@ -721,8 +727,8 @@
     <!-- Results -->
     <section id="resultsSection" class="results-section hidden">
       <div class="results-header">
-        <h2 class="results-title">Generated texts</h2>
-        <p class="results-note">Click any card to copy.</p>
+        <h2 class="results-title">Communication strategies</h2>
+        <p class="results-note">Select the approach that fits your situation</p>
       </div>
       <div class="cards-grid" id="captionsContainer"></div>
       <div class="action-btns">
@@ -735,7 +741,7 @@
     <section id="nextStepsSection" class="next-steps-section hidden">
       <div class="ns-header">
         <h2 class="ns-title">What happens next?</h2>
-        <p class="ns-note" id="nsNote">Based on the recommended message</p>
+        <p class="ns-note" id="nsNote">Your next move depends on their response</p>
       </div>
       <div id="nsTimingBar" class="ns-timing hidden"></div>
       <div class="ns-grid" id="nsGrid">
@@ -748,8 +754,8 @@
     <!-- Conversation Simulator -->
     <section id="simulatorSection" class="simulator-section hidden">
       <div class="sim-header">
-        <h2 class="sim-title">They replied?</h2>
-        <p class="sim-note">Paste their reply to get 3 strategic next messages.</p>
+        <h2 class="sim-title">They replied? <span class="pro-badge">PRO</span></h2>
+        <p class="sim-note">Upgrade to Pro to analyze their reply and get coached on your next move.</p>
       </div>
       <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
       <div class="sim-input-area">
@@ -1139,7 +1145,7 @@
           card.className = 'caption-card';
           card.style.animationDelay = `${i * 55}ms`;
           card.innerHTML = `
-            ${recommended ? `<div class="caption-recommended"><span class="rec-title">⭐ Recommended</span>${recommended_reason ? `<span class="rec-reason">${escHtml(recommended_reason)}</span>` : ''}</div>` : ''}
+            ${recommended ? `<div class="caption-recommended"><span class="rec-title">⭐ Best fit for your situation</span>${recommended_reason ? `<span class="rec-reason">${escHtml(recommended_reason)}</span>` : ''}</div>` : ''}
             <div class="caption-top">
               <div class="caption-top-left">
                 <span class="caption-num">${i + 1}</span>
@@ -1151,7 +1157,7 @@
             ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
             ${(reply_barrier || emotional_pressure || best_used_when) ? `
             <div class="caption-metrics">
-              ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Reply Barrier</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
+              ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Ease of Reply</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
               ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
               ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
             </div>` : ''}
@@ -1183,7 +1189,7 @@
         selectedMsgText = recItem?.text
           || (typeof captions[0] === 'object' ? captions[0]?.text : captions[0])
           || '';
-        document.getElementById('nsNote').textContent = 'Based on the recommended message';
+        document.getElementById('nsNote').textContent = 'Your next move depends on their response';
         fetchNextSteps();
       } catch (err) {
         console.error('Generate error:', err);
@@ -1204,6 +1210,11 @@
       const reply    = textarea.value.trim();
 
       if (!reply) { textarea.focus(); return; }
+
+      if (!accessToken) {
+        showToast('Sign in to use this feature', 'error');
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = 'Generating…';

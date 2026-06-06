@@ -457,8 +457,9 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
   }
 });
 
-app.post('/api/next-reply', limiter, async (req, res) => {
+app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
+    if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
     const { categoryId, situation, originalMessage, theirReply, language } = req.body;
     if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
 
