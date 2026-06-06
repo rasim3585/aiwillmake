@@ -250,6 +250,9 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       return m ? clean(m[1].trim()) : null;
     };
 
+    console.log(`[parse] raw text length=${text.length} | blocks found=${('\n'+text).split(/\n\d+[\.\)]\s*/).length - 1}`);
+    console.log(`[parse] text preview: ${text.slice(0, 300).replace(/\n/g,'\\n')}`);
+
     const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
     const captions = rawBlocks.slice(1)
       .map(block => {
