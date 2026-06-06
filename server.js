@@ -198,6 +198,7 @@ RECOMMENDED: yes or no
 RECOMMENDED_REASONS: ✓ [specific reason 1 for THIS situation] | ✓ [specific reason 2] | ✓ [specific reason 3] (only include this line if RECOMMENDED is yes)
 
 FORMAT REQUIREMENT: Every message block MUST end with WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED. If RECOMMENDED is yes, also add RECOMMENDED_REASONS on the next line. Never skip any line.
+CRITICAL: Mark ONLY ONE message as RECOMMENDED: yes. The other 5 MUST be RECOMMENDED: no. Choose the single best option for this specific situation. If you mark more than one as yes, your output is invalid.
 
 CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
 CRITICAL: Do NOT use markdown. No headers (#), no bold (**), no dividers (---), no bullet points. Plain numbered list ONLY: 1. 2. 3. 4. 5. 6.
@@ -332,6 +333,15 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       })
       .filter(Boolean)
       .slice(0, 6);
+
+    // Ensure only one recommended:true
+    let foundRec = false;
+    captions.forEach(c => {
+      if (c.recommended) {
+        if (foundRec) { c.recommended = false; c.recommended_reasons = null; }
+        else foundRec = true;
+      }
+    });
 
     if (req.user) {
       console.log('[generate] incrementing credits for user:', req.user.id);
