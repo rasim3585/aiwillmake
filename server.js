@@ -197,6 +197,7 @@ RECOMMENDED: yes - [one short specific reason why this is the best strategy for 
 
 FORMAT REQUIREMENT: Every single message block MUST end with all 6 lines above (WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED). A block without these lines is incomplete and invalid. Do not skip any line even if the answer seems obvious.
 
+CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
 Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
