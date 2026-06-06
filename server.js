@@ -199,6 +199,7 @@ RECOMMENDED: yes - [one short specific reason why this is the best strategy for 
 FORMAT REQUIREMENT: Every single message block MUST end with all 6 lines above (WHY, BARRIER, PRESSURE, BEST_WHEN, RISK, RECOMMENDED). A block without these lines is incomplete and invalid. Do not skip any line even if the answer seems obvious.
 
 CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
+CRITICAL: Do NOT use markdown. No headers (#), no bold (**), no dividers (---), no bullet points. Plain numbered list ONLY: 1. 2. 3. 4. 5. 6.
 Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
@@ -253,7 +254,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
     console.log(`[parse] raw text length=${text.length} | blocks found=${('\n'+text).split(/\n\d+[\.\)]\s*/).length - 1}`);
     console.log(`[parse] text preview: ${text.slice(0, 300).replace(/\n/g,'\\n')}`);
 
-    const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
+    const rawBlocks = ('\n' + text).split(/\n\*{0,2}\d+[\.\)]\*{0,2}\s*/);
     const captions = rawBlocks.slice(1)
       .map(block => {
         const trimmed = block.trim();
