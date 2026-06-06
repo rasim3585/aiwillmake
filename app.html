@@ -1746,16 +1746,14 @@
           if (data.subcategory_id) {
             selectSubcategory(data.subcategory_id);
             // Populate form fields from stored fields JSON
-            if (data.fields && appData) {
-              const cat = appData.categories.find(x => x.id === data.category_id);
-              const sub = cat?.subcategories.find(x => x.id === data.subcategory_id);
-              for (const f of appData.common_fields) {
-                const el = document.getElementById(`cf-${f.key}`);
-                if (el && data.fields[f.key]) el.value = data.fields[f.key];
-              }
-              for (const f of [...(sub?.required_fields||[]), ...(sub?.optional_fields||[])]) {
-                const el = document.getElementById(`df-${f.key}`);
-                if (el && data.fields[f.key]) el.value = data.fields[f.key];
+            // Iterate data.fields directly — covers input, textarea, and select equally
+            if (data.fields) {
+              for (const [key, val] of Object.entries(data.fields)) {
+                if (!val) continue;
+                const cfEl = document.getElementById(`cf-${key}`);
+                if (cfEl) cfEl.value = val;
+                const dfEl = document.getElementById(`df-${key}`);
+                if (dfEl) dfEl.value = val;
               }
               lastFields = { ...data.fields };
             }
