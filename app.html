@@ -419,9 +419,81 @@
       .action-btns   { flex-direction: column; }
       .btn-action    { min-width: unset; }
     }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      z-index: 500; max-width: 480px; width: calc(100% - 48px);
+      padding: 13px 16px; border-radius: 14px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: .88rem; font-weight: 500; line-height: 1.4;
+      opacity: 0; pointer-events: none;
+      transition: transform .32s cubic-bezier(.16,1,.3,1), opacity .32s;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+    .toast.t-error   { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.32);  color: #fca5a5; }
+    .toast.t-warning { background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.32); color: #fde68a; }
+    .toast.t-info    { background: rgba(110,129,255,.15);border: 1px solid rgba(110,129,255,.32);color: var(--sec); }
+    .toast-close {
+      margin-left: auto; cursor: pointer; opacity: .55;
+      background: none; border: none; color: inherit;
+      font-size: 1.15rem; line-height: 1; padding: 0; flex-shrink: 0;
+    }
+    .toast-close:hover { opacity: 1; }
+
+    /* ── Credits modal ── */
+    .credits-modal {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(5,8,22,.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .credits-card {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+      border-radius: 28px; padding: 48px 40px; max-width: 420px; width: 100%; text-align: center;
+    }
+    .credits-icon {
+      font-size: 2rem; margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      font-weight: 900;
+    }
+    .credits-card h2 { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
+    .credits-card p  { color: var(--sec); font-size: .93rem; line-height: 1.65; margin-bottom: 28px; }
+    .btn-upgrade {
+      display: block; padding: 14px; border-radius: 14px; margin-bottom: 12px;
+      background: linear-gradient(95deg, var(--accent), var(--acc2));
+      color: #fff; font: inherit; font-size: .97rem; font-weight: 700;
+      text-decoration: none; cursor: pointer; border: none;
+      box-shadow: 0 6px 24px var(--glow); transition: transform .2s, box-shadow .2s;
+    }
+    .btn-upgrade:hover { transform: translateY(-1px); box-shadow: 0 12px 36px var(--glow); }
+    .btn-later {
+      display: block; width: 100%; padding: 10px;
+      background: none; border: none; color: var(--muted);
+      font: inherit; font-size: .86rem; cursor: pointer; transition: color .2s;
+    }
+    .btn-later:hover { color: var(--sec); }
   </style>
 </head>
 <body>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" role="alert" aria-live="polite">
+    <span id="toastMsg"></span>
+    <button class="toast-close" onclick="closeToast()" aria-label="Dismiss">✕</button>
+  </div>
+
+  <!-- Credits exhausted modal -->
+  <div id="creditsModal" class="credits-modal hidden">
+    <div class="credits-card">
+      <div class="credits-icon">✦</div>
+      <h2>You've used all 5 free generations</h2>
+      <p>Upgrade to keep writing — more generations, all 9 categories, and faster results.</p>
+      <a href="index.html#pricing" class="btn-upgrade">Upgrade to continue →</a>
+      <button class="btn-later" onclick="closeCreditsModal()">Maybe later</button>
+    </div>
+  </div>
 
   <!-- Auth gate -->
   <div id="authGate" class="auth-gate hidden">
@@ -825,7 +897,7 @@
 
     async function generate(variation = '') {
       if (!selectedCatId || !selectedSubId) {
-        alert('Please select a category and subcategory.');
+        showToast('Please select a category and type first.', 'error');
         return;
       }
       const cat = appData.categories.find(c => c.id === selectedCatId);
@@ -834,12 +906,12 @@
 
       for (const f of appData.common_fields) {
         const v = val(`cf-${f.key}`);
-        if (!v) { alert(`${f.label} is required.`); return; }
+        if (!v) { showToast(`"${f.label}" is required.`, 'error'); return; }
         fields[f.key] = v;
       }
       for (const f of sub.required_fields) {
         const v = val(`df-${f.key}`);
-        if (!v) { alert(`${f.label} is required.`); return; }
+        if (!v) { showToast(`"${f.label}" is required.`, 'error'); return; }
         fields[f.key] = v;
       }
       for (const f of sub.optional_fields) {
@@ -849,7 +921,11 @@
 
       if (!accessToken) {
         const guestUsed = getGuestUsed();
-        if (guestUsed >= GUEST_LIMIT) { updateCreditUI(guestUsed, GUEST_LIMIT, true); return; }
+        if (guestUsed >= GUEST_LIMIT) {
+          updateCreditUI(guestUsed, GUEST_LIMIT, true);
+          showCreditsModal();
+          return;
+        }
       }
 
       const btn = document.getElementById('generateBtn');
@@ -866,9 +942,17 @@
           headers,
           body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, variation: variation || undefined })
         });
+        if (res.status === 429) {
+          showToast("You're going too fast! Wait a few seconds and try again.", 'warning');
+          return;
+        }
+        if (res.status === 403) {
+          showCreditsModal();
+          return;
+        }
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Generation failed');
+          showToast('Something went wrong. Please try again.', 'error');
+          return;
         }
         const data     = await res.json();
         const captions = data.captions || [];
@@ -912,7 +996,8 @@
         document.getElementById('resultsSection').classList.remove('hidden');
         document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        alert(`Error: ${err.message}`);
+        console.error('Generate error:', err);
+        showToast('Something went wrong. Please try again.', 'error');
       } finally {
         btn.disabled = false;
         btn.classList.remove('loading');
@@ -965,6 +1050,29 @@
         btn.disabled = false;
         btn.textContent = '✦ Detect Category →';
       }
+    }
+
+    // ── Toast ──
+    let _toastTimer = null;
+    function showToast(msg, type = 'error') {
+      const el = document.getElementById('toast');
+      el.className = `toast t-${type}`;
+      document.getElementById('toastMsg').textContent = msg;
+      el.offsetHeight; // force reflow
+      el.classList.add('visible');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(closeToast, 4500);
+    }
+    function closeToast() {
+      document.getElementById('toast').classList.remove('visible');
+    }
+
+    // ── Credits modal ──
+    function showCreditsModal() {
+      document.getElementById('creditsModal').classList.remove('hidden');
+    }
+    function closeCreditsModal() {
+      document.getElementById('creditsModal').classList.add('hidden');
     }
 
     document.getElementById('generateBtn').addEventListener('click', () => generate());
