@@ -208,8 +208,17 @@ Rules: use specific details provided, no clichés, each message sounds like a re
     if (country) fieldLines.push(`Country context: ${country}`);
     const basePrompt = fieldLines.join('\n');
     let extraInstruction = '';
-    if (categoryId === 'personal' && subcategoryId === 'ex_partner') {
+    if (categoryId === 'personal' && subcategoryId === 'ex_partner' && !fields.message_length) {
       extraInstruction = '\n\nGenerate messages in VARIED lengths: 2 should be ultra-short (1-2 sentences, text message style), 2 medium (3-4 sentences), 2 longer (5-6 sentences). Label each with its length style at the start (e.g. "[Short]", "[Medium]", "[Detailed]").';
+    }
+    const lengthMap = {
+      'Ultra Short':    'ULTRA SHORT: 1-2 sentences maximum.',
+      'Medium':         'MEDIUM: 3-4 sentences.',
+      'Detailed':       'DETAILED: 5-6 sentences.',
+      'WhatsApp style': 'WHATSAPP STYLE: casual, conversational, brief like a real text message.'
+    };
+    if (fields.message_length && fields.message_length !== 'Auto' && lengthMap[fields.message_length]) {
+      extraInstruction += `\n\nLENGTH REQUIREMENT: All 6 messages must follow this format — ${fields.message_length}. ${lengthMap[fields.message_length]}`;
     }
     const prompt = modifier
       ? `${basePrompt}${extraInstruction}\n\n${modifier}`

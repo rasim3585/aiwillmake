@@ -392,15 +392,20 @@
     .caption-why { font-size: .78rem; line-height: 1.55; color: #a78bfa; font-style: italic; padding-left: 10px; }
     .show-analysis-btn {
       background: none; border: none; color: var(--sec); cursor: pointer;
-      font: inherit; font-size: .74rem; padding: 2px 0; text-align: left;
-      transition: color .18s; align-self: flex-start;
+      font: inherit; font-size: .72rem; font-style: italic;
+      padding: 2px 0; text-align: left; align-self: flex-start;
+      transition: color .18s;
     }
     .show-analysis-btn:hover { color: var(--text); }
     .caption-analysis {
-      display: none; flex-direction: column; gap: 8px;
-      border-top: 1px solid var(--bord); padding-top: 10px;
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s ease, padding-top .25s ease, border-top-color .25s;
+      padding-top: 0; border-top: 1px solid transparent;
     }
-    .caption-analysis.open { display: flex; }
+    .caption-analysis.open {
+      max-height: 500px; padding-top: 10px; border-top-color: var(--bord);
+    }
 
     .caption-recommended {
       display: inline-flex; flex-direction: column; gap: 2px;
@@ -989,10 +994,18 @@
     }
 
     function renderCommonFields() {
-      document.getElementById('commonFields').innerHTML = appData.common_fields.map(f => {
+      const commonHtml = appData.common_fields.map(f => {
         const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
         return `<div><label for="cf-${f.key}">${f.label}<span class="field-req">*</span></label><select id="cf-${f.key}">${opts}</select></div>`;
       }).join('');
+      const lengthHtml = `<div><label for="cf-message_length">Message length</label><select id="cf-message_length">
+        <option value="Auto">Auto</option>
+        <option value="Ultra Short">Ultra Short (1-2 sentences)</option>
+        <option value="Medium">Medium (3-4 sentences)</option>
+        <option value="Detailed">Detailed (5-6 sentences)</option>
+        <option value="WhatsApp style">WhatsApp style (casual, brief)</option>
+      </select></div>`;
+      document.getElementById('commonFields').innerHTML = commonHtml + lengthHtml;
     }
 
     function renderCategories() {
@@ -1128,6 +1141,8 @@
         const v = val(`df-${f.key}`);
         if (v) fields[f.key] = v;
       }
+      const msgLen = val('cf-message_length');
+      if (msgLen && msgLen !== 'Auto') fields.message_length = msgLen;
       lastFields = { ...fields };
 
       if (!accessToken) {
