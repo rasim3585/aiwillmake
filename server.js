@@ -207,7 +207,13 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       .filter(Boolean);
     if (country) fieldLines.push(`Country context: ${country}`);
     const basePrompt = fieldLines.join('\n');
-    const prompt = modifier ? `${basePrompt}\n\n${modifier}` : basePrompt;
+    let extraInstruction = '';
+    if (categoryId === 'personal' && subcategoryId === 'ex_partner') {
+      extraInstruction = '\n\nGenerate messages in VARIED lengths: 2 should be ultra-short (1-2 sentences, text message style), 2 medium (3-4 sentences), 2 longer (5-6 sentences). Label each with its length style at the start (e.g. "[Short]", "[Medium]", "[Detailed]").';
+    }
+    const prompt = modifier
+      ? `${basePrompt}${extraInstruction}\n\n${modifier}`
+      : `${basePrompt}${extraInstruction}`;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
 

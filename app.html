@@ -389,7 +389,18 @@
     .copy-btn:hover { background: var(--surf2); color: var(--text); border-color: var(--bord2); }
     .copy-btn.copied { background: rgba(32,212,122,.12); color: var(--ok); border-color: rgba(32,212,122,.28); }
     .caption-text { font-size: .92rem; line-height: 1.7; color: var(--text); padding-left: 10px; }
-    .caption-why { font-size: .78rem; line-height: 1.55; color: #a78bfa; font-style: italic; padding-left: 10px; margin-top: -4px; }
+    .caption-why { font-size: .78rem; line-height: 1.55; color: #a78bfa; font-style: italic; padding-left: 10px; }
+    .show-analysis-btn {
+      background: none; border: none; color: var(--sec); cursor: pointer;
+      font: inherit; font-size: .74rem; padding: 2px 0; text-align: left;
+      transition: color .18s; align-self: flex-start;
+    }
+    .show-analysis-btn:hover { color: var(--text); }
+    .caption-analysis {
+      display: none; flex-direction: column; gap: 8px;
+      border-top: 1px solid var(--bord); padding-top: 10px;
+    }
+    .caption-analysis.open { display: flex; }
 
     .caption-recommended {
       display: inline-flex; flex-direction: column; gap: 2px;
@@ -1182,6 +1193,7 @@
           const card = document.createElement('div');
           card.className = 'caption-card';
           card.style.animationDelay = `${i * 55}ms`;
+          const hasAnalysis = !!(why || best_used_when || what_could_go_wrong);
           card.innerHTML = `
             ${recommended ? `<div class="caption-recommended"><span class="rec-title">⭐ Best fit for your situation</span>${recommended_reason ? `<span class="rec-reason">${escHtml(recommended_reason)}</span>` : ''}</div>` : ''}
             <div class="caption-top">
@@ -1192,14 +1204,18 @@
               <button type="button" class="copy-btn">Copy</button>
             </div>
             <p class="caption-text">${displayText}</p>
-            ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
-            ${(reply_barrier || emotional_pressure || best_used_when) ? `
+            ${(reply_barrier || emotional_pressure) ? `
             <div class="caption-metrics">
               ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Ease of Reply</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
               ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
-              ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
             </div>` : ''}
-            ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}`;
+            ${hasAnalysis ? `
+            <button type="button" class="show-analysis-btn">Show analysis ▾</button>
+            <div class="caption-analysis">
+              ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
+              ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
+              ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}
+            </div>` : ''}`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
             e.target.textContent = 'Copied ✓';
@@ -1210,6 +1226,11 @@
               document.getElementById('nsNote').textContent = 'Updated for your selected message';
               fetchNextSteps();
             }
+          });
+          card.querySelector('.show-analysis-btn')?.addEventListener('click', (e) => {
+            const panel = card.querySelector('.caption-analysis');
+            const open  = panel.classList.toggle('open');
+            e.target.textContent = open ? 'Hide analysis ▴' : 'Show analysis ▾';
           });
           container.appendChild(card);
         });
