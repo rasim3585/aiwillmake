@@ -391,6 +391,33 @@
     .caption-text { font-size: .92rem; line-height: 1.7; color: var(--text); padding-left: 10px; }
     .caption-why { font-size: .78rem; line-height: 1.55; color: #a78bfa; font-style: italic; padding-left: 10px; margin-top: -4px; }
 
+    .caption-recommended {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      color: #20d47a; background: rgba(32,212,122,.1); border: 1px solid rgba(32,212,122,.25);
+      padding: 3px 9px; border-radius: 5px; margin-bottom: 2px;
+    }
+    .caption-metrics {
+      display: flex; gap: 8px; flex-wrap: wrap; padding-left: 10px; margin-top: 2px;
+    }
+    .metric-item {
+      display: flex; flex-direction: column; gap: 2px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 8px; padding: 6px 10px; min-width: 64px;
+    }
+    .metric-item.metric-best { flex: 1; min-width: 120px; }
+    .metric-label { font-size: .64rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--sec); }
+    .metric-value { font-size: .78rem; font-weight: 700; }
+    .metric-h  { color: #20d47a; }
+    .metric-m  { color: #f59e0b; }
+    .metric-l  { color: #ef4444; }
+    .metric-best-text { font-size: .75rem; color: var(--text); line-height: 1.4; }
+    .caption-risk {
+      font-size: .74rem; color: #fb923c; padding: 6px 10px;
+      background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
+      border-radius: 7px; margin-top: 2px; line-height: 1.45;
+    }
+
     /* ── Action buttons ── */
     .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
     .btn-action {
@@ -962,17 +989,26 @@
 
         const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+        const scClass = v => ({ 'High':'metric-h','Medium':'metric-m','Low':'metric-l' }[v] || '');
+        const prClass = v => ({ 'Low':'metric-h','Medium':'metric-m','High':'metric-l' }[v] || '');
+
         captions.forEach((item, i) => {
           const isObj = item !== null && typeof item === 'object';
-          const text  = isObj ? item.text : item;
-          const badge = isObj ? item.badge : null;
-          const why   = isObj ? item.why  : null;
+          const text               = isObj ? item.text               : item;
+          const badge              = isObj ? item.badge              : null;
+          const why                = isObj ? item.why                : null;
+          const success_likelihood = isObj ? item.success_likelihood : null;
+          const emotional_pressure = isObj ? item.emotional_pressure : null;
+          const best_used_when     = isObj ? item.best_used_when     : null;
+          const what_could_go_wrong = isObj ? item.what_could_go_wrong : null;
+          const recommended        = isObj ? item.recommended        : false;
           const displayText = escHtml(text).replace(/\n/g, '<br>');
 
           const card = document.createElement('div');
           card.className = 'caption-card';
           card.style.animationDelay = `${i * 55}ms`;
           card.innerHTML = `
+            ${recommended ? '<div class="caption-recommended">⭐ Recommended</div>' : ''}
             <div class="caption-top">
               <div class="caption-top-left">
                 <span class="caption-num">${i + 1}</span>
@@ -981,7 +1017,14 @@
               <button type="button" class="copy-btn">Copy</button>
             </div>
             <p class="caption-text">${displayText}</p>
-            ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}`;
+            ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
+            ${(success_likelihood || emotional_pressure || best_used_when) ? `
+            <div class="caption-metrics">
+              ${success_likelihood ? `<div class="metric-item"><span class="metric-label">Success</span><span class="metric-value ${scClass(success_likelihood)}">${escHtml(success_likelihood)}</span></div>` : ''}
+              ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Pressure</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(emotional_pressure)}</span></div>` : ''}
+              ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
+            </div>` : ''}
+            ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
             e.target.textContent = 'Copied ✓';
