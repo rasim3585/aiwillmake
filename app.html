@@ -1628,6 +1628,7 @@
     // ── Conversation memory ─────────────────────────────────────
     async function createConversation() {
       if (!accessToken) return;
+      console.log('[conv create] lastFields:', JSON.stringify(lastFields));
       try {
         const situation = Object.entries(lastFields)
           .filter(([k,v]) => v?.trim() && !['language','country'].includes(k))
