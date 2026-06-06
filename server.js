@@ -755,6 +755,81 @@ Be realistic, not optimistic. Write in ${lang}.`;
   }
 });
 
+// ── Conversations ──────────────────────────────────────────────
+app.post('/api/conversations', requireAuth, async (req, res) => {
+  try {
+    const { categoryId, subcategoryId, situation } = req.body;
+    const r = await fetch(`${SUPABASE_REST}/conversations`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        user_id: req.user.id,
+        category_id: categoryId || '',
+        subcategory_id: subcategoryId || '',
+        situation: (situation || '').slice(0, 600)
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) {
+    console.error('[conv POST]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/conversations/:id/messages', requireAuth, async (req, res) => {
+  try {
+    const { role, content, strategy } = req.body;
+    const r = await fetch(`${SUPABASE_REST}/conversation_messages`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        conversation_id: req.params.id,
+        role: role || 'sent',
+        content: (content || '').slice(0, 2000),
+        strategy: strategy || ''
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) {
+    console.error('[conv msg POST]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/conversations', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at,updated_at`, {
+      headers: sbHeaders(req.token)
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(data);
+  } catch (e) {
+    console.error('[conv GET list]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(
+      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,created_at,conversation_messages(id,role,content,strategy,created_at)`,
+      { headers: sbHeaders(req.token) }
+    );
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    if (!data.length) return res.status(404).json({ error: 'Not found' });
+    res.json(data[0]);
+  } catch (e) {
+    console.error('[conv GET detail]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));

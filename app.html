@@ -453,6 +453,55 @@
       border-radius: 7px; margin-top: 2px; line-height: 1.45;
     }
 
+    /* ── Conversations panel ── */
+    .nav-conv-btn {
+      background: none; border: 1px solid var(--bord); border-radius: var(--r-sm);
+      color: var(--sec); cursor: pointer; font: inherit; font-size: .78rem;
+      padding: 4px 10px; transition: border-color .18s, color .18s;
+    }
+    .nav-conv-btn:hover { border-color: var(--bord2); color: var(--text); }
+    .conv-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 200; opacity: 0; transition: opacity .25s; pointer-events: none;
+    }
+    .conv-overlay.visible { opacity: 1; pointer-events: all; }
+    .conv-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(420px,100vw);
+      background: var(--bg2); border-left: 1px solid var(--bord);
+      z-index: 201; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .3s ease;
+    }
+    .conv-panel.open { transform: translateX(0); }
+    .conv-panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px; border-bottom: 1px solid var(--bord); flex-shrink: 0;
+    }
+    .conv-panel-head h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .conv-close {
+      background: none; border: none; color: var(--sec); cursor: pointer;
+      font-size: 1.1rem; padding: 4px 8px; transition: color .18s;
+    }
+    .conv-close:hover { color: var(--text); }
+    .conv-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .conv-item {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-lg);
+      padding: 14px 16px; cursor: pointer; transition: border-color .18s, background .18s;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .conv-item:hover { border-color: var(--bord2); background: var(--surf2); }
+    .conv-item-cat { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+    .conv-item-situation { font-size: .83rem; color: var(--text); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-item-date { font-size: .72rem; color: var(--sec); }
+    .conv-detail { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .conv-msg {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: 10px;
+      padding: 10px 13px; font-size: .84rem; line-height: 1.55;
+    }
+    .conv-msg.sent  { border-left: 2px solid var(--accent); }
+    .conv-msg.received { border-left: 2px solid #20d47a; }
+    .conv-msg-meta { font-size: .67rem; color: var(--sec); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+    .conv-back { background: none; border: none; color: var(--accent); cursor: pointer; font: inherit; font-size: .82rem; padding: 4px 0; }
+
     /* ── Likely Responses ── */
     .likely-section { margin-top: 8px; }
     .likely-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
@@ -781,10 +830,22 @@
       <div class="brand">aiwillmake</div>
       <nav class="nav">
         <a href="index.html">Home</a>
+        <button type="button" class="nav-conv-btn hidden" id="convBtn">💬 History</button>
         <span class="nav-user" id="navUser"></span>
         <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()">Sign out</button>
       </nav>
     </header>
+
+    <!-- Conversations Panel -->
+    <div class="conv-overlay" id="convOverlay"></div>
+    <div class="conv-panel" id="convPanel">
+      <div class="conv-panel-head">
+        <h2 id="convPanelTitle">My Conversations</h2>
+        <button class="conv-close" id="convClose">✕</button>
+      </div>
+      <div class="conv-list" id="convListEl"></div>
+      <div class="conv-detail hidden" id="convDetailEl"></div>
+    </div>
 
     <!-- Hero -->
     <section>
@@ -1005,6 +1066,7 @@
           accessToken = session.access_token;
           document.getElementById('navUser').textContent = session.user.email || '';
           document.getElementById('signOutBtn').classList.remove('hidden');
+          document.getElementById('convBtn').classList.remove('hidden');
           document.getElementById('authGate').classList.add('hidden');
         } else {
           document.getElementById('authGate').classList.remove('hidden');
@@ -1089,6 +1151,7 @@
     let selectedSubId = null;
     let lastFields    = {};
     let selectedMsgText = '';
+    let currentConvId   = null;
 
     async function init() {
       try {
@@ -1356,6 +1419,7 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            saveMessage('sent', text, badge || '');
             if (text !== selectedMsgText) {
               selectedMsgText = text;
               document.getElementById('nsNote').textContent = 'Updated for your selected message';
@@ -1384,6 +1448,8 @@
           || (typeof captions[0] === 'object' ? captions[0]?.text : captions[0])
           || '';
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
+        currentConvId = null;
+        createConversation();
         fetchLikelyResponses();
         fetchNextSteps();
       } catch (err) {
@@ -1462,6 +1528,7 @@
       const reply    = textarea.value.trim();
 
       if (!reply) { textarea.focus(); return; }
+      saveMessage('received', reply, '');
 
       if (!accessToken) {
         showToast('Sign in to use this feature', 'error');
@@ -1541,6 +1608,109 @@
         btn.textContent = 'Generate next message →';
       }
     }
+
+    // ── Conversation memory ─────────────────────────────────────
+    async function createConversation() {
+      if (!accessToken) return;
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k,v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([,v]) => v.trim()).join('. ');
+        const r = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, situation })
+        });
+        if (r.ok) { const d = await r.json(); currentConvId = d.id; }
+      } catch (e) { console.warn('[conv create]', e.message); }
+    }
+
+    function saveMessage(role, content, strategy) {
+      if (!accessToken || !currentConvId) return;
+      fetch(`/api/conversations/${currentConvId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ role, content, strategy: strategy || '' })
+      }).catch(() => {});
+    }
+
+    function showConvPanel() {
+      document.getElementById('convPanel').classList.add('open');
+      document.getElementById('convOverlay').classList.add('visible');
+      loadConvList();
+    }
+    function hideConvPanel() {
+      document.getElementById('convPanel').classList.remove('open');
+      document.getElementById('convOverlay').classList.remove('visible');
+    }
+
+    async function loadConvList() {
+      const listEl   = document.getElementById('convListEl');
+      const detailEl = document.getElementById('convDetailEl');
+      detailEl.classList.add('hidden');
+      listEl.classList.remove('hidden');
+      document.getElementById('convPanelTitle').textContent = 'My Conversations';
+      listEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:60px;border-radius:10px;margin-bottom:8px"></div>'.repeat(3);
+      try {
+        const r = await fetch('/api/conversations', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+        if (!data.length) {
+          listEl.innerHTML = '<p style="color:var(--sec);font-size:.85rem;text-align:center;padding:24px 0">No conversations yet.<br>Start writing to save your history.</p>';
+          return;
+        }
+        listEl.innerHTML = '';
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const fmt = d => new Date(d).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+        data.forEach(c => {
+          const cat = appData?.categories.find(x => x.id === c.category_id);
+          const sub = cat?.subcategories.find(x => x.id === c.subcategory_id);
+          const item = document.createElement('div');
+          item.className = 'conv-item';
+          item.innerHTML = `
+            <div class="conv-item-cat">${escH(cat?.icon || '')} ${escH(cat?.name || c.category_id)} · ${escH(sub?.name || c.subcategory_id)}</div>
+            <div class="conv-item-situation">${escH(c.situation || '—')}</div>
+            <div class="conv-item-date">${fmt(c.created_at)}</div>`;
+          item.addEventListener('click', () => loadConvDetail(c.id));
+          listEl.appendChild(item);
+        });
+      } catch (e) {
+        listEl.innerHTML = `<p style="color:var(--sec);font-size:.84rem">Could not load conversations.</p>`;
+      }
+    }
+
+    async function loadConvDetail(convId) {
+      const listEl   = document.getElementById('convListEl');
+      const detailEl = document.getElementById('convDetailEl');
+      listEl.classList.add('hidden');
+      detailEl.classList.remove('hidden');
+      detailEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:44px;border-radius:10px;margin-bottom:8px"></div>'.repeat(4);
+      document.getElementById('convPanelTitle').textContent = 'Conversation';
+      try {
+        const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        detailEl.innerHTML = `<button class="conv-back" id="convBackBtn">← All conversations</button>`;
+        detailEl.querySelector('#convBackBtn').addEventListener('click', loadConvList);
+        (data.conversation_messages || []).forEach(m => {
+          const div = document.createElement('div');
+          div.className = `conv-msg ${m.role}`;
+          div.innerHTML = `<div class="conv-msg-meta">${m.role === 'sent' ? '↑ Sent' : '↓ Received'}${m.strategy ? ` · ${escH(m.strategy)}` : ''}</div>${escH(m.content)}`;
+          detailEl.appendChild(div);
+        });
+        if (!data.conversation_messages?.length) {
+          const p = document.createElement('p');
+          p.style = 'color:var(--sec);font-size:.84rem;text-align:center;padding:16px 0';
+          p.textContent = 'No messages saved yet.';
+          detailEl.appendChild(p);
+        }
+      } catch (e) {
+        detailEl.innerHTML = `<button class="conv-back" id="convBackBtn2">← Back</button><p style="color:var(--sec);font-size:.84rem">Could not load.</p>`;
+        detailEl.querySelector('#convBackBtn2').addEventListener('click', loadConvList);
+      }
+    }
+    // ────────────────────────────────────────────────────────────
 
     async function fetchLikelyResponses() {
       const section = document.getElementById('likelySection');
@@ -1806,6 +1976,9 @@
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
+    document.getElementById('convBtn').addEventListener('click', showConvPanel);
+    document.getElementById('convClose').addEventListener('click', hideConvPanel);
+    document.getElementById('convOverlay').addEventListener('click', hideConvPanel);
     document.getElementById('theirReplyInput').addEventListener('input', scheduleAnalysis);
     document.getElementById('theirReplyInput').addEventListener('keydown', e => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fetchNextReply();
