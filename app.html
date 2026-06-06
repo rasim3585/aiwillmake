@@ -466,6 +466,33 @@
     .ns-neutral  .ns-card-label { color: #f59e0b; }
     .ns-negative .ns-card-label { color: #ef4444; }
     .ns-card-action { font-size: .85rem; line-height: 1.6; color: var(--text); }
+    .ns-they-said-btn {
+      background: none; border: none; color: var(--sec); cursor: pointer;
+      font: inherit; font-size: .72rem; font-style: italic;
+      padding: 2px 0; text-align: left; transition: color .18s;
+    }
+    .ns-they-said-btn:hover { color: var(--text); }
+    .ns-scenario-input { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+    .ns-scenario-msg {
+      flex: 1; background: rgba(255,255,255,.06); border: 1px solid var(--bord);
+      border-radius: var(--r-sm); padding: 6px 10px; color: var(--text);
+      font: inherit; font-size: .8rem; min-width: 0;
+    }
+    .ns-scenario-msg:focus { outline: none; border-color: var(--borda); }
+    .ns-scenario-submit {
+      border: 1px solid var(--borda); background: rgba(110,129,255,.1); color: var(--accent);
+      border-radius: var(--r-sm); padding: 6px 11px; cursor: pointer;
+      font: inherit; font-size: .77rem; font-weight: 600; white-space: nowrap;
+      transition: background .18s;
+    }
+    .ns-scenario-submit:hover { background: rgba(110,129,255,.2); }
+    .ns-scenario-advice {
+      font-size: .82rem; line-height: 1.6; color: var(--text);
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+      border-radius: 8px; padding: 8px 11px; margin-top: 4px;
+    }
+    .reply-yes { font-size: .76rem; color: #20d47a; line-height: 1.45; }
+    .reply-no  { font-size: .76rem; color: #ef4444; line-height: 1.45; }
     @media (max-width: 640px) { .ns-grid { grid-template-columns: 1fr; } }
 
     /* ── Conversation Simulator ── */
@@ -1224,6 +1251,8 @@
           const emotional_pressure = isObj ? item.emotional_pressure : null;
           const best_used_when     = isObj ? item.best_used_when     : null;
           const what_could_go_wrong = isObj ? item.what_could_go_wrong : null;
+          const reply_yes           = isObj ? item.reply_yes           : null;
+          const reply_no            = isObj ? item.reply_no            : null;
           const recommended         = isObj ? item.recommended         : false;
           const recommended_reasons = isObj ? item.recommended_reasons : null;
           const displayText = escHtml(text).replace(/\n/g, '<br>');
@@ -1231,7 +1260,7 @@
           const card = document.createElement('div');
           card.className = 'caption-card';
           card.style.animationDelay = `${i * 55}ms`;
-          const hasAnalysis = !!(why || best_used_when || what_could_go_wrong);
+          const hasAnalysis = !!(why || best_used_when || what_could_go_wrong || reply_yes || reply_no);
           card.innerHTML = `
             ${recommended ? `<div class="caption-recommended">
               <span class="rec-title">⭐ Best fit for your situation</span>
@@ -1256,6 +1285,8 @@
               ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}
               ${best_used_when ? `<div class="metric-item metric-best"><span class="metric-label">Best when</span><span class="metric-best-text">${escHtml(best_used_when)}</span></div>` : ''}
               ${what_could_go_wrong ? `<div class="caption-risk">⚠ ${escHtml(what_could_go_wrong)}</div>` : ''}
+              ${reply_yes ? `<p class="reply-yes">💬 ${escHtml(reply_yes)}</p>` : ''}
+              ${reply_no  ? `<p class="reply-no">🚫 ${escHtml(reply_no)}</p>`  : ''}
             </div>` : ''}`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
@@ -1447,6 +1478,39 @@
       }
     }
 
+    async function fetchScenarioAdvice(cardEl, scenario, theirMessage) {
+      const resultEl = cardEl.querySelector('.ns-scenario-result');
+      resultEl.classList.remove('hidden');
+      resultEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:44px;border-radius:8px"></div>';
+
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k, v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([, v]) => v.trim()).join('. ');
+
+        const resp = await fetch('/api/next-steps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            categoryId: selectedCatId, situation,
+            selectedMessage: selectedMsgText,
+            language: lastFields.language || 'English',
+            scenario, theirMessage
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+
+        const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const advice = data.scenarios?.[0]?.action || '';
+        resultEl.innerHTML = advice
+          ? `<div class="ns-scenario-advice">${escH(advice)}</div>`
+          : `<p style="color:var(--sec);font-size:.8rem">No specific advice available.</p>`;
+      } catch {
+        resultEl.innerHTML = `<p style="color:var(--sec);font-size:.8rem">Could not load advice. Try again.</p>`;
+      }
+    }
+
     async function fetchNextSteps() {
       const section = document.getElementById('nextStepsSection');
       const grid    = document.getElementById('nsGrid');
@@ -1490,7 +1554,28 @@
           const div = document.createElement('div');
           div.className = `ns-card ${types[i] || types[2]}`;
           div.style.animationDelay = `${i * 80}ms`;
-          div.innerHTML = `<div class="ns-card-label">${escH(s.label)}</div><div class="ns-card-action">${escH(s.action)}</div>`;
+          div.innerHTML = `
+            <div class="ns-card-label">${escH(s.label)}</div>
+            <div class="ns-card-action">${escH(s.action)}</div>
+            <button type="button" class="ns-they-said-btn">They said something like this →</button>
+            <div class="ns-scenario-input hidden">
+              <input type="text" class="ns-scenario-msg" placeholder="e.g. Hey, good hearing from you!">
+              <button type="button" class="ns-scenario-submit">Get advice →</button>
+            </div>
+            <div class="ns-scenario-result hidden"></div>`;
+
+          div.querySelector('.ns-they-said-btn').addEventListener('click', (e) => {
+            const inputDiv = div.querySelector('.ns-scenario-input');
+            const nowOpen = !inputDiv.classList.toggle('hidden');
+            e.target.textContent = nowOpen ? 'Cancel ✕' : 'They said something like this →';
+            if (nowOpen) div.querySelector('.ns-scenario-msg').focus();
+          });
+          const doFetch = () => {
+            const msg = div.querySelector('.ns-scenario-msg').value.trim();
+            if (msg) fetchScenarioAdvice(div, s.label, msg);
+          };
+          div.querySelector('.ns-scenario-submit').addEventListener('click', doFetch);
+          div.querySelector('.ns-scenario-msg').addEventListener('keydown', e => { if (e.key === 'Enter') doFetch(); });
           grid.appendChild(div);
         });
 
