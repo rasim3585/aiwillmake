@@ -517,6 +517,38 @@
     }
     .sim-use-btn:hover { background: rgba(110,129,255,.2); }
 
+    /* ── Reply Analysis ── */
+    .reply-analysis { margin-bottom: 16px; animation: fadeUp .3s ease both; }
+    .analysis-metrics { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
+    .analysis-badge {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 6px 11px; border-radius: 8px; min-width: 64px;
+    }
+    .analysis-badge.badge-high { background: rgba(32,212,122,.1);  border: 1px solid rgba(32,212,122,.25); }
+    .analysis-badge.badge-mid  { background: rgba(245,158,11,.1);  border: 1px solid rgba(245,158,11,.25); }
+    .analysis-badge.badge-low  { background: rgba(239,68,68,.1);   border: 1px solid rgba(239,68,68,.25); }
+    .analysis-badge.badge-tone { background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25); }
+    .abadge-label { font-size: .61rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--sec); }
+    .abadge-value { font-size: .8rem; font-weight: 700; }
+    .badge-high .abadge-value { color: #20d47a; }
+    .badge-mid  .abadge-value { color: #f59e0b; }
+    .badge-low  .abadge-value { color: #ef4444; }
+    .badge-tone .abadge-value { color: #a78bfa; }
+    .analysis-hidden-signal {
+      font-size: .82rem; color: var(--sec); font-style: italic;
+      margin-bottom: 8px; line-height: 1.55; padding-left: 2px;
+    }
+    .analysis-risk {
+      font-size: .78rem; color: #fb923c; padding: 7px 11px;
+      background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
+      border-radius: 8px; margin-bottom: 8px; line-height: 1.45;
+    }
+    .analysis-move {
+      font-size: .85rem; color: #60a5fa; padding: 10px 14px;
+      background: rgba(96,165,250,.08); border: 1px solid rgba(96,165,250,.2);
+      border-radius: 9px; font-weight: 500; line-height: 1.5; margin-bottom: 4px;
+    }
+
     /* ── Action buttons ── */
     .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
     .btn-action {
@@ -755,13 +787,19 @@
     <section id="simulatorSection" class="simulator-section hidden">
       <div class="sim-header">
         <h2 class="sim-title">They replied? <span class="pro-badge">PRO</span></h2>
-        <p class="sim-note">Upgrade to Pro to analyze their reply and get coached on your next move.</p>
+        <p class="sim-note">Paste their reply to get instant analysis and your next move.</p>
       </div>
       <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
       <div class="sim-input-area">
         <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..."></textarea>
-        <button id="nextReplyBtn" class="sim-btn" type="button">Generate next message →</button>
       </div>
+      <div id="replyAnalysis" class="reply-analysis hidden">
+        <div id="analysisLoading" class="hidden">
+          <div class="ns-skeleton skeleton" style="height:72px;border-radius:10px;margin-bottom:8px"></div>
+        </div>
+        <div id="analysisContent"></div>
+      </div>
+      <button id="nextReplyBtn" class="sim-btn" type="button" style="margin-top:12px">Generate next message →</button>
       <div id="simGrid" class="sim-grid hidden"></div>
     </section>
 
@@ -1203,6 +1241,63 @@
       }
     }
 
+    let analyzeTimer = null;
+
+    function scheduleAnalysis() {
+      clearTimeout(analyzeTimer);
+      const val = document.getElementById('theirReplyInput').value.trim();
+      if (!val || val.length < 15) {
+        document.getElementById('replyAnalysis').classList.add('hidden');
+        return;
+      }
+      analyzeTimer = setTimeout(analyzeReply, 1500);
+    }
+
+    async function analyzeReply() {
+      const reply = document.getElementById('theirReplyInput').value.trim();
+      if (!reply) return;
+
+      const section  = document.getElementById('replyAnalysis');
+      const loading  = document.getElementById('analysisLoading');
+      const content  = document.getElementById('analysisContent');
+
+      section.classList.remove('hidden');
+      loading.classList.remove('hidden');
+      content.innerHTML = '';
+
+      try {
+        const situation = Object.entries(lastFields)
+          .filter(([k, v]) => v?.trim() && !['language','country'].includes(k))
+          .map(([, v]) => v.trim()).join('. ');
+
+        const resp = await fetch('/api/analyze-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English' })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+
+        const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const lvl  = v => ({ 'High':'badge-high','Medium':'badge-mid','Low':'badge-low' }[v] || 'badge-mid');
+
+        content.innerHTML = `
+          <div class="analysis-metrics">
+            ${data.interest_level   ? `<div class="analysis-badge ${lvl(data.interest_level)}"><span class="abadge-label">Interest</span><span class="abadge-value">${escH(data.interest_level)}</span></div>` : ''}
+            ${data.emotional_warmth ? `<div class="analysis-badge ${lvl(data.emotional_warmth)}"><span class="abadge-label">Warmth</span><span class="abadge-value">${escH(data.emotional_warmth)}</span></div>` : ''}
+            ${data.openness         ? `<div class="analysis-badge ${lvl(data.openness)}"><span class="abadge-label">Openness</span><span class="abadge-value">${escH(data.openness)}</span></div>` : ''}
+            ${data.tone             ? `<div class="analysis-badge badge-tone"><span class="abadge-label">Tone</span><span class="abadge-value">${escH(data.tone)}</span></div>` : ''}
+          </div>
+          ${data.hidden_signal  ? `<p class="analysis-hidden-signal">"${escH(data.hidden_signal)}"</p>` : ''}
+          ${data.risk           ? `<div class="analysis-risk">⚠ ${escH(data.risk)}</div>` : ''}
+          ${data.suggested_move ? `<div class="analysis-move">→ ${escH(data.suggested_move)}</div>` : ''}`;
+      } catch {
+        content.innerHTML = `<p style="color:var(--sec);font-size:.82rem">Could not analyze reply.</p>`;
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
     async function fetchNextReply() {
       const textarea = document.getElementById('theirReplyInput');
       const btn      = document.getElementById('nextReplyBtn');
@@ -1418,6 +1513,7 @@
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
+    document.getElementById('theirReplyInput').addEventListener('input', scheduleAnalysis);
     document.getElementById('theirReplyInput').addEventListener('keydown', e => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fetchNextReply();
     });

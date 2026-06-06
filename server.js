@@ -462,6 +462,65 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
   }
 });
 
+app.post('/api/analyze-reply', limiter, async (req, res) => {
+  try {
+    const { reply, categoryId, situation, language } = req.body;
+    if (!reply?.trim()) return res.status(400).json({ error: 'reply is required' });
+
+    const lang = language || 'English';
+    const systemPrompt = `You are a communication analyst. Analyze the reply someone received and extract signals. Return ONLY this exact format:
+INTEREST_LEVEL: High/Medium/Low
+EMOTIONAL_WARMTH: High/Medium/Low
+OPENNESS: High/Medium/Low
+TONE: [one word - e.g. Friendly, Cautious, Distant, Enthusiastic]
+HIDDEN_SIGNAL: [one sentence about what they really mean]
+RISK: [one sentence about the main risk going forward]
+SUGGESTED_MOVE: [one concrete sentence about what to do next]
+No other text. No markdown. Write in ${lang}.`;
+
+    const userPrompt = `Category: ${categoryId || 'general'}
+Situation: ${situation || 'Not provided'}
+Reply to analyze: ${reply}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => {
+      const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    res.json({
+      interest_level:   extract('INTEREST_LEVEL'),
+      emotional_warmth: extract('EMOTIONAL_WARMTH'),
+      openness:         extract('OPENNESS'),
+      tone:             extract('TONE'),
+      hidden_signal:    extract('HIDDEN_SIGNAL'),
+      risk:             extract('RISK'),
+      suggested_move:   extract('SUGGESTED_MOVE')
+    });
+  } catch (e) {
+    console.error('[analyze-reply]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
     if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
