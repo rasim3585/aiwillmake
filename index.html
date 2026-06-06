@@ -178,6 +178,25 @@
     .reply-flow-cta   { margin-top: 36px; }
     @media (max-width: 860px) { .reply-flow { padding: 36px 24px; } .reply-flow-steps { grid-template-columns: 1fr; gap: 24px; } }
 
+    /* ════════ STORY FLOW ════════ */
+    .story-flow { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
+    .story-step { flex: 1; border-radius: 16px; padding: 20px 18px; border: 1px solid var(--bord); background: var(--surf); }
+    .story-step.story-strategy { background: rgba(110,129,255,.06); border-color: rgba(110,129,255,.2); }
+    .story-step.story-reply    { background: rgba(32,212,122,.05);  border-color: rgba(32,212,122,.2); }
+    .story-arrow { padding: 16px 10px; font-size: 1.3rem; color: var(--sec); align-self: center; flex-shrink: 0; }
+    .story-step-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .story-badge { background: rgba(110,129,255,.12); border: 1px solid rgba(110,129,255,.2); color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: .63rem; text-transform: none; letter-spacing: 0; }
+    .story-step-text { font-size: .86rem; line-height: 1.65; color: var(--text); font-style: italic; }
+    .story-meta { font-size: .72rem; color: var(--sec); margin-top: 8px; }
+    .story-next { background: rgba(110,129,255,.06); border: 1px solid rgba(110,129,255,.18); border-radius: 14px; padding: 16px 20px; margin-bottom: 22px; }
+    .story-next-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #20d47a; margin-bottom: 6px; }
+    .story-next-text { font-size: .9rem; line-height: 1.6; color: var(--text); }
+    .story-caption { text-align: center; color: var(--sec); font-size: .88rem; font-style: italic; margin-top: 4px; }
+    @media (max-width: 860px) {
+      .story-flow { flex-direction: column; gap: 0; }
+      .story-arrow { transform: rotate(90deg); align-self: center; padding: 6px 16px; }
+    }
+
     /* ════════ FEATURES ════════ */
     .feat-grid {
       display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
@@ -409,6 +428,40 @@
         <span class="trust-item">~30 seconds</span>
       </div>
     </div>
+  </div>
+</section>
+
+<hr class="hr" />
+
+<!-- Story Flow -->
+<section class="s">
+  <div class="wrap">
+    <div class="s-head c">
+      <div class="s-label">See it in action</div>
+      <h2 class="s-title">See how it works in real life.</h2>
+    </div>
+    <div class="story-flow">
+      <div class="story-step story-before">
+        <div class="story-step-label">You felt this</div>
+        <p class="story-step-text">"I want to reconnect with my ex but I don't know what to say without looking desperate..."</p>
+      </div>
+      <div class="story-arrow">→</div>
+      <div class="story-step story-strategy">
+        <div class="story-step-label">AI strategy <span class="story-badge">Warm &amp; Hopeful</span></div>
+        <p class="story-step-text">"I know it's been a while. I almost didn't send this — but I found myself thinking about that weekend in [city]. Hope you're doing well."</p>
+        <div class="story-meta">Low pressure · Opens a door · Easy to reply</div>
+      </div>
+      <div class="story-arrow">→</div>
+      <div class="story-step story-reply">
+        <div class="story-step-label">Their reply</div>
+        <p class="story-step-text">"Hey... wasn't expecting this. I've been thinking about you too, honestly."</p>
+      </div>
+    </div>
+    <div class="story-next">
+      <div class="story-next-label">⭐ Recommended next move</div>
+      <p class="story-next-text">"That makes me really glad to hear. Would you want to grab coffee sometime and actually talk? No pressure at all."</p>
+    </div>
+    <p class="story-caption">This is what communication coaching looks like.</p>
   </div>
 </section>
 
