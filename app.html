@@ -1746,6 +1746,7 @@
           if (data.subcategory_id) {
             selectSubcategory(data.subcategory_id);
             // Populate form fields from stored fields JSON
+            console.log('[restore] data.fields:', JSON.stringify(data.fields));
             // Iterate data.fields directly — covers input, textarea, and select equally
             if (data.fields) {
               for (const [key, val] of Object.entries(data.fields)) {
