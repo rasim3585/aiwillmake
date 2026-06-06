@@ -1628,7 +1628,6 @@
     // ── Conversation memory ─────────────────────────────────────
     async function createConversation() {
       if (!accessToken) return;
-      console.log('[conv create] lastFields:', JSON.stringify(lastFields));
       try {
         const situation = Object.entries(lastFields)
           .filter(([k,v]) => v?.trim() && !['language','country'].includes(k))
@@ -1735,13 +1734,10 @@
       }
     }
     async function restoreConversation(convId) {
-      console.log('[restore] convId:', convId);
       hideConvPanel();
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
-        console.log('[restore] full response:', JSON.stringify(data));
-        console.log('[restore] data.fields:', JSON.stringify(data.fields));
         if (!r.ok) throw new Error(data.error);
 
         // Restore category + subcategory + form fields
@@ -1750,7 +1746,6 @@
           if (data.subcategory_id) {
             selectSubcategory(data.subcategory_id);
             // Populate form fields from stored fields JSON
-            console.log('[restore] data.fields:', JSON.stringify(data.fields));
             // Iterate data.fields directly — covers input, textarea, and select equally
             if (data.fields) {
               for (const [key, val] of Object.entries(data.fields)) {
