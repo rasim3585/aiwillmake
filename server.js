@@ -1,4 +1,17 @@
-console.log('SERVER VERSION: 2.0 - NEW CODE');
+console.log('SERVER VERSION: 4.0 - STRATEGIES');
+
+const STRATEGIES = {
+  personal:     ['Vulnerable & honest','Mature & composed','Direct & confident','Warm & hopeful','Light & casual','Strategic'],
+  email:        ['Formal','Assertive','Diplomatic','Concise','Detailed','Persuasive'],
+  business:     ['Professional','Confident','Collaborative','Strategic','Firm','Relationship-focused'],
+  official:     ['Formal','Assertive','Evidence-based','Diplomatic','Urgent','Rights-focused'],
+  medical:      ['Detailed & Clinical','Simple & Clear','Concerned','Chronological','Question-focused','Advocacy'],
+  academic:     ['Respectful','Confident','Detailed','Concise','Personal','Formal'],
+  social_media: ['Authentic','Engaging','Inspirational','Playful','Informative','Conversational'],
+  listings:     ['Descriptive','Benefit-focused','Emotional','Factual','Urgent','Story-based'],
+  creative:     ['Emotional','Poetic','Humorous','Minimalist','Bold','Classical']
+};
+
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -171,16 +184,16 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
     }
 
-    // Build prompt from subcategory template
-    let basePrompt = subcategory.prompt_template || '';
-    // Replace all {{key}} placeholders with field values
-    basePrompt = basePrompt.replace(/\{\{(\w+)\}\}/g, (_, key) => fields[key] || '');
-    // Clean up artifacts from empty optional fields
-    basePrompt = basePrompt
-      .replace(/,\s*,/g, ',').replace(/:\s*,/g, ':')
-      .replace(/,\s*\./g, '.').replace(/:\s*\./g, '.')
-      .replace(/\s{2,}/g, ' ').trim();
+    const language = fields.language || 'English';
+    const country  = fields.country  || '';
+    const strategies = STRATEGIES[categoryId] || STRATEGIES.personal;
+    const systemPrompt = `You are a communication strategist and expert writer. Analyze the situation silently, then write 6 messages using these exact strategies: ${strategies.map((s, i) => `${i + 1}. ${s}`).join(', ')}. After each message, add one line starting with 'WHY:' explaining why this approach is likely to work. Example: WHY: This version creates low pressure and gives the recipient space to respond naturally. Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}.`;
 
+    const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
+      .map(f => { const v = (fields[f.key] || '').trim(); return v ? `${f.label}: ${v}` : null; })
+      .filter(Boolean);
+    if (country) fieldLines.push(`Country context: ${country}`);
+    const basePrompt = fieldLines.join('\n');
     const prompt = modifier ? `${basePrompt}\n\n${modifier}` : basePrompt;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
@@ -198,8 +211,9 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: categoryId === 'official' ? 5120 : 1280,
+          model: 'claude-sonnet-4-6',
+          max_tokens: categoryId === 'official' ? 5120 : 2048,
+          system: systemPrompt,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -219,15 +233,18 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     const text = data.content[0].text;
     const clean = s => s.replace(/\*\*/g, '').replace(/#+\s?/g, '').replace(/\*/g, '');
 
-    let captions;
+    const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
+    const captions = rawBlocks.slice(1)
+      .map(block => {
+        const trimmed = block.trim();
+        if (trimmed.length < 10) return null;
 
-    if (categoryId === 'official') {
-      const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
-      captions = rawBlocks.slice(1)
-        .map(block => {
-          const trimmed = block.trim();
-          if (trimmed.length < 20) return null;
-          const lines = trimmed.split('\n');
+        const whyMatch = trimmed.match(/\nWHY:\s*(.+)$/im);
+        const why = whyMatch ? clean(whyMatch[1].trim()) : null;
+        const msgText = whyMatch ? trimmed.slice(0, whyMatch.index).trim() : trimmed;
+
+        if (categoryId === 'official') {
+          const lines = msgText.split('\n');
           const firstLine = lines[0].trim();
           const isTitle = firstLine.length < 60
             && !firstLine.startsWith('Sayın')
@@ -235,18 +252,14 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
             && !/^Konu:/i.test(firstLine)
             && lines.length > 1;
           if (isTitle) {
-            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()) };
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why };
           }
-          return { badge: null, text: clean(trimmed) };
-        })
-        .filter(Boolean)
-        .slice(0, 6);
-    } else {
-      captions = text.split('\n')
-        .map(l => clean(l).replace(/^\d+[\.\)]\s*/, '').trim())
-        .filter(l => l.length > 5)
-        .slice(0, 6);
-    }
+        }
+
+        return { badge: null, text: clean(msgText), why };
+      })
+      .filter(Boolean)
+      .slice(0, 6);
 
     if (req.user) {
       console.log('[generate] incrementing credits for user:', req.user.id);

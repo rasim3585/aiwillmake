@@ -389,6 +389,7 @@
     .copy-btn:hover { background: var(--surf2); color: var(--text); border-color: var(--bord2); }
     .copy-btn.copied { background: rgba(32,212,122,.12); color: var(--ok); border-color: rgba(32,212,122,.28); }
     .caption-text { font-size: .92rem; line-height: 1.7; color: var(--text); padding-left: 10px; }
+    .caption-why { font-size: .78rem; line-height: 1.55; color: #a78bfa; font-style: italic; padding-left: 10px; margin-top: -4px; }
 
     /* ── Action buttons ── */
     .action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -965,6 +966,7 @@
           const isObj = item !== null && typeof item === 'object';
           const text  = isObj ? item.text : item;
           const badge = isObj ? item.badge : null;
+          const why   = isObj ? item.why  : null;
           const displayText = escHtml(text).replace(/\n/g, '<br>');
 
           const card = document.createElement('div');
@@ -978,7 +980,8 @@
               </div>
               <button type="button" class="copy-btn">Copy</button>
             </div>
-            <p class="caption-text">${displayText}</p>`;
+            <p class="caption-text">${displayText}</p>
+            ${why ? `<p class="caption-why">${escHtml(why)}</p>` : ''}`;
           card.querySelector('.copy-btn').addEventListener('click', async (e) => {
             await navigator.clipboard.writeText(text);
             e.target.textContent = 'Copied ✓';
