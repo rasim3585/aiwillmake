@@ -189,12 +189,12 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     const strategies = STRATEGIES[categoryId] || STRATEGIES.personal;
     const systemPrompt = `You are a communication strategist and expert writer. Analyze the situation silently, then write 6 messages using these exact strategies: ${strategies.map((s, i) => `${i + 1}. ${s}`).join(', ')}. After each message, add exactly these lines:
 WHY: [one sentence explaining why this approach works]
-SUCCESS: High/Medium/Low
+BARRIER: Easy to reply / Some thought required / Emotionally demanding
 PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
 RECOMMENDED: yes - [one short specific reason why this is the best strategy for THIS situation] or no
-Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}.`;
+Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority.`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
       .map(f => { const v = (fields[f.key] || '').trim(); return v ? `${f.label}: ${v}` : null; })
@@ -256,7 +256,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         const metaBlock = metaIdx > 0 ? trimmed.slice(metaIdx) : '';
 
         const why                = meta(metaBlock, 'WHY');
-        const success_likelihood = meta(metaBlock, 'SUCCESS');
+        const reply_barrier      = meta(metaBlock, 'BARRIER');
         const emotional_pressure = meta(metaBlock, 'PRESSURE');
         const best_used_when     = meta(metaBlock, 'BEST_WHEN');
         const what_could_go_wrong = meta(metaBlock, 'RISK');
@@ -273,11 +273,11 @@ Rules: use specific details provided, no clichés, each message sounds like a re
             && !/^Konu:/i.test(firstLine)
             && lines.length > 1;
           if (isTitle) {
-            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
+            return { badge: clean(firstLine), text: clean(lines.slice(1).join('\n').trim()), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
           }
         }
 
-        return { badge: null, text: clean(msgText), why, success_likelihood, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
+        return { badge: null, text: clean(msgText), why, reply_barrier, emotional_pressure, best_used_when, what_could_go_wrong, recommended, recommended_reason };
       })
       .filter(Boolean)
       .slice(0, 6);
