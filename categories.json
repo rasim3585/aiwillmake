@@ -1,692 +1,1186 @@
 {
   "common_fields": [
-    {
-      "key": "language",
-      "label": "Language",
-      "type": "select",
-      "options": ["English", "Turkish", "Arabic", "German", "French", "Spanish", "Italian"]
-    },
-    {
-      "key": "country",
-      "label": "Country",
-      "type": "select",
-      "options": ["Turkey", "USA", "UK", "Germany", "Qatar", "UAE", "France", "Other"]
-    }
+    { "key": "language", "label": "Language", "type": "select", "options": ["English", "Turkish", "Arabic", "German", "French", "Spanish", "Italian"] },
+    { "key": "country",  "label": "Country",  "type": "select", "options": ["Turkey", "USA", "UK", "Germany", "Qatar", "UAE", "France", "Other"] }
   ],
   "categories": [
 
     {
-      "id": "personal",
-      "name": "Personal",
-      "icon": "💬",
+      "id": "personal", "name": "Personal", "icon": "💬",
       "subcategories": [
         {
-          "id": "romantic_partner",
-          "name": "Romantic Partner",
-          "description": "Romantic, emotional, or everyday messages to send to your partner",
+          "id": "romantic_partner", "name": "Romantic Partner",
+          "description": "Messages for your partner — love, daily check-ins, missing you",
           "required_fields": [
-            { "key": "situation", "label": "Situation / Topic", "type": "textarea", "placeholder": "What do you want to say? E.g.: I miss you, we had a fight, I want to say goodnight..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Romantic", "Emotional", "Playful", "Apologetic", "Longing", "Casual"] }
+            { "key": "situation", "label": "What do you want to say?", "type": "textarea", "placeholder": "E.g.: I miss you, we had a fight, just want to say goodnight..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Romantic", "Playful", "Missing you", "Apologetic", "Sweet & casual"] }
           ],
           "optional_fields": [
-            { "key": "partner_name", "label": "Partner's name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "partner_name", "label": "Partner's name", "type": "text", "placeholder": "Their name (optional)" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their romantic partner.\n\nSituation: {{situation}}\nTone: {{tone}}\n{{partner_name}}Cultural context: {{country}}\n\nInstructions: Ground the situation at the core of each message — write as if living through it, not a generic love message. Use the name naturally if given. Each message should differ: one short and intense, one longer and explanatory, one mildly humorous (if tone fits), one simple and sincere, one from an unexpected angle. Avoid clichés. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct messages in {{language}} for someone in {{country}} to send to their romantic partner. Each message must differ in length, tone, and approach — avoid repetition. User's details: Situation: {{situation}}, Tone: {{tone}}, Partner's name: {{partner_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "ex_partner",
-          "name": "Ex Partner",
-          "description": "Messages to an ex: reconnecting, closure, apology, or a simple hello",
+          "id": "ex_partner", "name": "Ex Partner",
+          "description": "Reconnecting, closure, or apology messages to an ex",
           "required_fields": [
-            { "key": "relationship_end", "label": "How did it end?", "type": "select", "options": ["Argument", "Growing apart", "Mutual decision", "Betrayal"] },
-            { "key": "time_passed", "label": "How long ago?", "type": "select", "options": ["Less than 1 month", "1–6 months", "6 months–1 year", "More than 1 year"] },
-            { "key": "goal", "label": "Your goal", "type": "select", "options": ["Get back together", "Find closure", "Just checking in", "Apologize"] },
-            { "key": "situation", "label": "Background", "type": "textarea", "placeholder": "What happened, what was the relationship like, any details you want to add..." }
+            { "key": "goal", "label": "Your goal", "type": "select", "options": ["Reconnect", "Find closure", "Apologize", "Just check in"] },
+            { "key": "situation", "label": "Background", "type": "textarea", "placeholder": "What happened, how it ended, what you want to express..." },
+            { "key": "time_since", "label": "Time since breakup", "type": "select", "options": ["Less than 1 month", "1–6 months", "6 months – 1 year", "Over 1 year"] }
           ],
           "optional_fields": [
-            { "key": "ex_name", "label": "Their name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "ex_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their ex.\n\nHow it ended: {{relationship_end}}\nTime passed: {{time_passed}}\nGoal: {{goal}}\nBackground: {{situation}}\n{{ex_name}}Cultural context: {{country}}\n\nInstructions: Reflect the time passed — make its weight felt. Let the breakup cause shape the tone. If goal is reconnect, write hopeful but not desperate messages. If closure, close the door respectfully. If apology, draw the reason from the background. Vary length and emotional intensity across the 5. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct messages in {{language}} for someone in {{country}} to send to their ex. Reflect the goal and the time that has passed — do not ignore either. User's details: Goal: {{goal}}, Background: {{situation}}, Time since: {{time_since}}, Name: {{ex_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "crush",
-          "name": "Crush",
-          "description": "First messages or conversation starters to send to someone you like",
+          "id": "crush", "name": "Crush / Someone You Like",
+          "description": "First message, confession, or asking someone out",
           "required_fields": [
-            { "key": "situation", "label": "How do you know them?", "type": "textarea", "placeholder": "Same school, saw them on social media, mutual friend..." },
-            { "key": "approach", "label": "Approach style", "type": "select", "options": ["Bold and direct", "Shy and gentle", "Flirty", "Friendly / Casual", "Humorous"] }
+            { "key": "approach", "label": "Approach style", "type": "select", "options": ["Bold & direct", "Shy & gentle", "Flirty", "Casual & friendly", "Funny"] },
+            { "key": "context", "label": "How do you know them?", "type": "textarea", "placeholder": "Same school, met at an event, mutual friend, social media..." }
           ],
           "optional_fields": [
-            { "key": "crush_name", "label": "Their name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "their_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different opening message drafts in {{language}} for someone to send to their crush.\n\nHow they know each other: {{situation}}\nApproach style: {{approach}}\n{{crush_name}}Cultural context: {{country}}\n\nInstructions: Organically embed how they know each other — make it feel like a natural conversation starter from that context, not a generic hello. Each message should open a different door: one starts with a question, one references shared context, one implies interest directly, one is light and casual, one sparks curiosity. Don't make it feel scripted. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct opening messages in {{language}} for someone in {{country}} to send to their crush. Each should feel natural and unscripted — not like a pickup line. User's details: Approach: {{approach}}, Context: {{context}}, Name: {{their_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "friend",
-          "name": "Friend",
-          "description": "Messages to a friend: check-in, apology, support, or just catching up",
+          "id": "friend", "name": "Friend",
+          "description": "Support, fun, catching up, or venting to a friend",
           "required_fields": [
-            { "key": "situation", "label": "Situation / Topic", "type": "textarea", "placeholder": "What do you want to say? E.g.: Haven't talked in a while, we had a fight, I want to cheer you up..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Sincere / Warm", "Playful / Funny", "Serious", "Supportive", "Casual"] }
+            { "key": "situation", "label": "What's going on?", "type": "textarea", "placeholder": "E.g.: Haven't talked in weeks, want to cheer them up, had a fight..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm & supportive", "Funny & playful", "Casual catch-up", "Serious", "Heartfelt"] }
           ],
           "optional_fields": [
-            { "key": "friend_name", "label": "Their name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "friend_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their friend.\n\nSituation: {{situation}}\nTone: {{tone}}\n{{friend_name}}Cultural context: {{country}}\n\nInstructions: Put the situation at the center — write as if someone who knows this situation is writing, not a formula. Use the name naturally in some messages. Vary the approach: direct and short, long and detailed, opening with humor (if tone fits), question-based, emotional and sincere. Reflect the candid language between friends. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct messages in {{language}} for someone in {{country}} to send to a friend. Sound like a real person, not a greeting card. User's details: Situation: {{situation}}, Tone: {{tone}}, Name: {{friend_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "family",
-          "name": "Family",
-          "description": "Messages to family members: parent, sibling, grandparent, or other relatives",
+          "id": "family", "name": "Family",
+          "description": "Messages to parents, siblings, or other relatives",
           "required_fields": [
-            { "key": "family_member", "label": "Family member", "type": "select", "options": ["Mother", "Father", "Sibling", "Grandparent", "Spouse / Partner", "Other family member"] },
-            { "key": "situation", "label": "Situation / Topic", "type": "textarea", "placeholder": "What do you want to say? E.g.: I miss you, I want to thank you, I need to talk about something..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm / Loving", "Respectful", "Playful", "Serious", "Apologetic"] }
-          ],
-          "optional_fields": [],
-          "prompt_template": "You are a message writing assistant. Write 5 different message drafts in {{language}} for someone to send to their {{family_member}}.\n\nSituation: {{situation}}\nTone: {{tone}}\nCultural context: {{country}}\n\nInstructions: Ground the situation concretely. Reflect the relationship dynamic — tone with a mother differs from tone with a sibling or grandparent. Use family communication norms appropriate to {{country}}. Vary length and emotional depth. Return only the numbered list, nothing else."
-        },
-        {
-          "id": "apology",
-          "name": "Apology",
-          "description": "Heartfelt apology messages to send to anyone",
-          "required_fields": [
-            { "key": "reason", "label": "Reason for apology", "type": "textarea", "placeholder": "What are you apologizing for? E.g.: I broke a promise, I was late, I said something hurtful..." },
-            { "key": "recipient", "label": "To whom", "type": "select", "options": ["Partner", "Friend", "Family member", "Colleague / Manager", "Customer / Business contact"] },
-            { "key": "severity", "label": "Severity", "type": "select", "options": ["Light / Casual", "Moderate", "Serious / Deep"] }
+            { "key": "recipient", "label": "Who is it for?", "type": "select", "options": ["Mother", "Father", "Sibling", "Grandparent", "Spouse / Partner", "Other relative"] },
+            { "key": "situation", "label": "What do you want to say?", "type": "textarea", "placeholder": "E.g.: Miss you, want to thank them, need to talk about something..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm & loving", "Serious", "Funny", "Apologetic", "Grateful"] }
           ],
           "optional_fields": [
-            { "key": "recipient_name", "label": "Their name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "recipient_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different apology message drafts in {{language}} for someone to send to their {{recipient}}.\n\nReason: {{reason}}\nSeverity: {{severity}}\n{{recipient_name}}Cultural context: {{country}}\n\nInstructions: Show exactly what is being apologized for — don't use vague language like 'for what I did.' If severity is Serious, fully accept responsibility without downplaying. Vary: one apology + explanation, one brief direct apology, one apology + offer to make it right, one emotional and long, one apology + future commitment. Avoid a defensive tone. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct messages in {{language}} for someone in {{country}} to send to their {{recipient}}. Reflect the family relationship dynamic. User's details: Situation: {{situation}}, Tone: {{tone}}, Name: {{recipient_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "rejection",
-          "name": "Rejection",
-          "description": "Polite or firm rejection messages for any situation",
+          "id": "apology", "name": "Apology",
+          "description": "A sincere apology message to anyone",
           "required_fields": [
-            { "key": "context", "label": "Context", "type": "select", "options": ["Romantic interest", "Friendship offer", "Invitation / Event", "Work / Project offer", "Other request"] },
-            { "key": "situation", "label": "What was offered or requested?", "type": "textarea", "placeholder": "Briefly describe what you're declining..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Gentle and understanding", "Clear and direct", "Firm and boundary-setting"] }
-          ],
-          "optional_fields": [],
-          "prompt_template": "You are a message writing assistant. Write 5 different rejection message drafts in {{language}} for someone to decline an offer in the context of {{context}}.\n\nSituation: {{situation}}\nTone: {{tone}}\nCultural context: {{country}}\n\nInstructions: Make the decline unambiguous in every message. If tone is firm, leave no room for debate. If gentle, be clear but considerate. Vary: one short and clear, one with explanation, one empathetic then declining, one offering an alternative if appropriate, one setting a boundary. Return only the numbered list, nothing else."
-        },
-        {
-          "id": "congratulations",
-          "name": "Congratulations",
-          "description": "Congratulation messages for special occasions and achievements",
-          "required_fields": [
-            { "key": "occasion", "label": "Occasion", "type": "select", "options": ["Birthday", "Graduation", "Promotion / Career success", "Wedding / Engagement", "New baby", "Holiday / Festival", "Other achievement"] },
-            { "key": "recipient", "label": "To whom", "type": "select", "options": ["Partner", "Close friend", "Family member", "Colleague", "Acquaintance"] },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm and emotional", "Cheerful and fun", "Formal and respectful", "Short and sweet"] }
+            { "key": "reason", "label": "What are you apologizing for?", "type": "textarea", "placeholder": "E.g.: I broke a promise, said something hurtful, let them down..." },
+            { "key": "recipient", "label": "Who is it to?", "type": "select", "options": ["Partner", "Friend", "Family member", "Colleague", "Other"] },
+            { "key": "severity", "label": "How serious is it?", "type": "select", "options": ["Minor / casual", "Moderate", "Serious / deep"] }
           ],
           "optional_fields": [
-            { "key": "recipient_name", "label": "Their name (optional)", "type": "text", "placeholder": "Their name" }
+            { "key": "recipient_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a message writing assistant. Write 5 different congratulations message drafts in {{language}} for a {{recipient}} on the occasion of {{occasion}}.\n\nTone: {{tone}}\n{{recipient_name}}Cultural context: {{country}}\n\nInstructions: Match the language to the relationship — a birthday for a close friend differs from a promotion congrats to a colleague. Use the name naturally if given. Vary: one short and powerful, one long and emotional, one with a memory or humor (if appropriate), one future-focused, one celebrating just this moment. Go beyond clichés. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct apology messages in {{language}} for someone in {{country}}. Show genuine remorse — be specific about what went wrong. User's details: Reason: {{reason}}, To: {{recipient}}, Severity: {{severity}}, Name: {{recipient_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "difficult_news", "name": "Difficult News",
+          "description": "Breaking bad news, ending something, or delivering a rejection",
+          "required_fields": [
+            { "key": "news_type", "label": "Type of news", "type": "select", "options": ["Ending a relationship", "Declining an offer", "Death / loss", "Health issue", "Bad news / disappointment", "Ending a friendship"] },
+            { "key": "situation", "label": "Details", "type": "textarea", "placeholder": "What happened and what needs to be communicated..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Gentle & empathetic", "Direct & clear", "Brief & honest", "Warm but firm"] }
+          ],
+          "optional_fields": [
+            { "key": "recipient_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
+          ],
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct messages in {{language}} for someone in {{country}} to deliver difficult news. Balance honesty with compassion. User's details: Type: {{news_type}}, Details: {{situation}}, Tone: {{tone}}, Name: {{recipient_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "congratulations", "name": "Congratulations",
+          "description": "Celebrating someone's achievement or milestone",
+          "required_fields": [
+            { "key": "occasion", "label": "Occasion", "type": "select", "options": ["Birthday", "Graduation", "New job / Promotion", "Wedding / Engagement", "New baby", "Personal achievement", "Other milestone"] },
+            { "key": "recipient", "label": "Who is it for?", "type": "select", "options": ["Close friend", "Partner", "Family member", "Colleague", "Acquaintance"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm & heartfelt", "Funny & playful", "Formal & respectful", "Short & punchy"] }
+          ],
+          "optional_fields": [
+            { "key": "recipient_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
+          ],
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct congratulations messages in {{language}} for someone in {{country}} to send to their {{recipient}} on the occasion of {{occasion}}. Go beyond generic phrases. User's details: Tone: {{tone}}, Name: {{recipient_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "gratitude", "name": "Gratitude",
+          "description": "Thanking someone genuinely and meaningfully",
+          "required_fields": [
+            { "key": "reason", "label": "What are you thankful for?", "type": "textarea", "placeholder": "E.g.: They helped me through a hard time, gave great advice, showed up for me..." },
+            { "key": "recipient", "label": "Who is it to?", "type": "select", "options": ["Friend", "Family member", "Colleague / Mentor", "Partner", "Stranger / Acquaintance"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Deep & sincere", "Warm & casual", "Brief & genuine", "Emotional"] }
+          ],
+          "optional_fields": [
+            { "key": "recipient_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
+          ],
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct gratitude messages in {{language}} for someone in {{country}}. Be specific about what you're grateful for — avoid generic thanks. User's details: Reason: {{reason}}, To: {{recipient}}, Tone: {{tone}}, Name: {{recipient_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "checking_in", "name": "Checking In",
+          "description": "Casual hello, welfare check, or reaching out after a while",
+          "required_fields": [
+            { "key": "context", "label": "Why are you reaching out?", "type": "textarea", "placeholder": "E.g.: Haven't spoken in a while, heard they've been going through something, just thinking of them..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Casual & light", "Caring & warm", "Fun & playful", "Brief & easy"] }
+          ],
+          "optional_fields": [
+            { "key": "name", "label": "Their name", "type": "text", "placeholder": "Optional" },
+            { "key": "time_since", "label": "Time since last contact", "type": "select", "options": ["A few days", "1 week", "1 month", "Several months"] }
+          ],
+          "prompt_template": "You are an expert personal message writer. Write 5 distinct check-in messages in {{language}} for someone in {{country}}. Keep them natural — not guilt-tripping or pressuring. User's details: Context: {{context}}, Tone: {{tone}}, Name: {{name}}, Time since contact: {{time_since}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "social_media",
-      "name": "Social Media",
-      "icon": "📱",
+      "id": "social_media", "name": "Social Media", "icon": "📱",
       "subcategories": [
         {
-          "id": "personal_photo",
-          "name": "Personal Photo",
-          "description": "Caption text and hashtags for a personal photo post",
+          "id": "personal_photo", "name": "Personal Photo Caption",
+          "description": "Captions for your own photos and personal moments",
           "required_fields": [
-            { "key": "photo_description", "label": "What does the photo show?", "type": "textarea", "placeholder": "E.g.: Sunset photo from my rooftop, coffee and laptop on my desk..." },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "TikTok", "LinkedIn", "Threads"] },
-            { "key": "mood", "label": "Mood / Feeling", "type": "select", "options": ["Happy / Joyful", "Nostalgic / Emotional", "Peaceful / Calm", "Excited", "Thoughtful / Deep", "Funny / Playful"] }
+            { "key": "photo_description", "label": "What does the photo show?", "type": "textarea", "placeholder": "E.g.: Sunset from my rooftop, beach day with friends, morning coffee..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "TikTok", "Threads", "LinkedIn"] },
+            { "key": "mood", "label": "Mood", "type": "select", "options": ["Happy & upbeat", "Nostalgic", "Peaceful", "Excited", "Thoughtful", "Funny"] }
           ],
           "optional_fields": [
-            { "key": "hashtag_count", "label": "Hashtags (optional)", "type": "select", "options": ["0 (none)", "3-5", "5-10", "10+"] }
+            { "key": "hashtags", "label": "Include hashtags?", "type": "select", "options": ["No hashtags", "3–5 hashtags", "5–10 hashtags", "10+ hashtags"] }
           ],
-          "prompt_template": "You are a social media content writer. Write 5 different caption drafts in {{language}} for a personal photo post on {{platform}}.\n\nPhoto: {{photo_description}}\nMood: {{mood}}\nHashtags: {{hashtag_count}}\nCountry/cultural context: {{country}}\n\nInstructions: Each caption should feel authentic to the mood and platform. Vary the style: one poetic and reflective, one witty and short, one storytelling, one minimal, one with a question to engage. Match length to platform norms. Add hashtags per the preference. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert social media writer. Write 5 distinct photo captions in {{language}} for someone in {{country}} posting on {{platform}}. Match the mood and platform style. User's details: Photo: {{photo_description}}, Mood: {{mood}}, Hashtags: {{hashtags}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "personal_story",
-          "name": "Personal Story",
-          "description": "Post text for sharing a personal experience or thought",
+          "id": "lifestyle", "name": "Lifestyle & Daily Life",
+          "description": "Food, travel, mood, and everyday moments",
           "required_fields": [
-            { "key": "story_topic", "label": "Story / Topic", "type": "textarea", "placeholder": "What do you want to share? E.g.: Something surprising happened today, a lesson I learned..." },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "LinkedIn", "Threads", "Blog"] },
-            { "key": "emotion", "label": "Primary emotion", "type": "select", "options": ["Inspiring", "Funny / Entertaining", "Thought-provoking", "Emotional / Touching", "Informative", "Provocative"] }
+            { "key": "topic", "label": "What's the post about?", "type": "textarea", "placeholder": "E.g.: My morning routine, a meal I made, a place I visited..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "TikTok", "Threads", "Facebook"] },
+            { "key": "vibe", "label": "Vibe", "type": "select", "options": ["Aesthetic & polished", "Real & raw", "Funny", "Minimal", "Inspirational"] }
           ],
           "optional_fields": [
-            { "key": "call_to_action", "label": "Ending CTA (optional)", "type": "text", "placeholder": "E.g.: What do you think? Has this happened to you?" }
+            { "key": "hashtags", "label": "Include hashtags?", "type": "select", "options": ["No hashtags", "3–5 hashtags", "5–10 hashtags"] }
           ],
-          "prompt_template": "You are a social media content writer. Write 5 different personal story post drafts in {{language}} for {{platform}}.\n\nTopic: {{story_topic}}\nEmotion: {{emotion}}\n{{call_to_action}}Country/cultural context: {{country}}\n\nInstructions: Each post should feel human and genuine, not like an ad. Vary format: one narrative arc, one reflection-style, one list format, one starting with a hook question, one brief and punchy. Use appropriate length for the platform. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert social media writer. Write 5 distinct lifestyle posts in {{language}} for someone in {{country}} on {{platform}}. Reflect the vibe authentically. User's details: Topic: {{topic}}, Vibe: {{vibe}}, Hashtags: {{hashtags}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "business_product",
-          "name": "Product Promotion",
-          "description": "Social media promotional copy for a product or service",
+          "id": "business_page", "name": "Business Page Post",
+          "description": "Posts for a brand or business social media account",
           "required_fields": [
-            { "key": "product_name", "label": "Product / Service name", "type": "text", "placeholder": "E.g.: Coffee shop, software app, handmade jewelry..." },
-            { "key": "product_description", "label": "Product description", "type": "textarea", "placeholder": "What does it do, what makes it different?" },
-            { "key": "target_audience", "label": "Target audience", "type": "text", "placeholder": "E.g.: Professionals 25-35, parents, students..." },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "LinkedIn", "TikTok", "Threads"] }
+            { "key": "business_name", "label": "Business / brand name", "type": "text", "placeholder": "E.g.: Brew & Co, Nexus Studio..." },
+            { "key": "post_topic", "label": "What is the post about?", "type": "textarea", "placeholder": "E.g.: New product launch, a tip for customers, behind the scenes..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Facebook", "LinkedIn", "Twitter / X", "Threads"] }
           ],
           "optional_fields": [
-            { "key": "offer", "label": "Campaign / Discount (optional)", "type": "text", "placeholder": "E.g.: 20% off, first month free..." }
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Professional", "Friendly & warm", "Bold & confident", "Inspiring"] }
           ],
-          "prompt_template": "You are a social media marketing expert. Write 5 different product promotion post drafts in {{language}} for {{platform}}.\n\nProduct: {{product_name}}\nDescription: {{product_description}}\nTarget audience: {{target_audience}}\n{{offer}}Country/market context: {{country}}\n\nInstructions: Keep it sales-focused but natural and authentic. Vary: one benefit-led, one story-driven, one social proof focused, one urgency/offer-led, one question-based. Avoid corporate-speak. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert social media marketing writer. Write 5 distinct business page posts in {{language}} for {{business_name}} in {{country}} on {{platform}}. Sound like a real brand. User's details: Topic: {{post_topic}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "business_campaign",
-          "name": "Campaign",
-          "description": "Social media campaign copy for a brand, product, or event",
+          "id": "product_showcase", "name": "Product Showcase",
+          "description": "Highlighting a product or service on social media",
           "required_fields": [
-            { "key": "campaign_name", "label": "Campaign / Event name", "type": "text", "placeholder": "E.g.: Summer sale, new collection launch, pop-up event..." },
-            { "key": "campaign_description", "label": "Campaign details", "type": "textarea", "placeholder": "What's being offered, when, where, how to participate?" },
-            { "key": "target_audience", "label": "Target audience", "type": "text", "placeholder": "Who is it for?" },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "LinkedIn", "TikTok", "Threads"] }
+            { "key": "product_name", "label": "Product / service name", "type": "text", "placeholder": "E.g.: Handmade soy candles, online fitness program..." },
+            { "key": "product_description", "label": "What makes it special?", "type": "textarea", "placeholder": "Key features, benefits, what sets it apart..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Facebook", "TikTok", "LinkedIn", "Twitter / X"] }
           ],
           "optional_fields": [
-            { "key": "urgency", "label": "Urgency / Deadline (optional)", "type": "text", "placeholder": "E.g.: This weekend only, limited stock..." }
+            { "key": "offer", "label": "Current offer / discount", "type": "text", "placeholder": "E.g.: 20% off, free shipping this week..." }
           ],
-          "prompt_template": "You are a social media marketing expert. Write 5 different campaign announcement drafts in {{language}} for {{platform}}.\n\nCampaign: {{campaign_name}}\nDetails: {{campaign_description}}\nTarget audience: {{target_audience}}\n{{urgency}}Country/market context: {{country}}\n\nInstructions: Each post must be attention-grabbing and action-driving. Vary approach: one FOMO-driven, one story-led, one benefit-focused, one conversational, one bold and minimal. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert product copywriter. Write 5 distinct product showcase posts in {{language}} for someone selling in {{country}} on {{platform}}. Balance promotion with authenticity. User's details: Product: {{product_name}}, Details: {{product_description}}, Offer: {{offer}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "sports_club",
-          "name": "Sports Club",
-          "description": "Social media posts for a sports club or team",
+          "id": "sports_club", "name": "Sports Team / Club",
+          "description": "Match announcements, results, and highlights for a sports team",
           "required_fields": [
-            { "key": "club_name", "label": "Club / Team name", "type": "text", "placeholder": "E.g.: Club name or team..." },
-            { "key": "event", "label": "Event / Topic", "type": "select", "options": ["Pre-match", "Post-match (win)", "Post-match (loss)", "Training", "Championship / Trophy", "Transfer / New player", "Fan appreciation"] },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "TikTok", "Threads"] }
+            { "key": "club_name", "label": "Club / team name", "type": "text", "placeholder": "E.g.: FC Riverside, the local basketball club..." },
+            { "key": "event", "label": "Event type", "type": "select", "options": ["Pre-match hype", "Post-match (win)", "Post-match (loss)", "Training update", "Trophy / championship", "Transfer / new player", "Fan appreciation"] },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "Facebook", "TikTok"] }
           ],
           "optional_fields": [
-            { "key": "match_detail", "label": "Match details (optional)", "type": "text", "placeholder": "Opponent, score, date..." }
+            { "key": "match_details", "label": "Match details", "type": "text", "placeholder": "Opponent, score, scorers, date..." }
           ],
-          "prompt_template": "You are a sports club social media manager. Write 5 different post drafts in {{language}} for {{club_name}} on {{platform}}.\n\nEvent: {{event}}\n{{match_detail}}Country/cultural context: {{country}}\n\nInstructions: Use language that speaks directly to fans — energetic, passionate, and true to the club's identity. Vary tone and format: one rally cry, one factual update, one emotional, one with fan engagement question, one bold and short. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert sports social media writer. Write 5 distinct posts in {{language}} for {{club_name}} supporters in {{country}} on {{platform}} about: {{event}}. Capture fan passion and energy. User's details: Match details: {{match_details}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "motivation",
-          "name": "Motivation",
-          "description": "Inspiring and motivational social media content",
+          "id": "motivation", "name": "Motivational Post",
+          "description": "Inspirational quotes and thoughts to share online",
           "required_fields": [
-            { "key": "topic", "label": "Topic / Theme", "type": "text", "placeholder": "E.g.: Morning routine, learning from failure, goal setting..." },
-            { "key": "style", "label": "Style", "type": "select", "options": ["Short and powerful (1-2 sentences)", "Story format", "List format", "Quote style", "Question-based"] },
-            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Twitter / X", "LinkedIn", "Facebook", "Threads"] }
+            { "key": "theme", "label": "Theme / topic", "type": "text", "placeholder": "E.g.: Overcoming failure, morning mindset, chasing goals..." },
+            { "key": "style", "label": "Style", "type": "select", "options": ["Short & punchy", "Story format", "List format", "Quote style", "Question-based"] },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "LinkedIn", "Twitter / X", "Facebook", "Threads"] }
           ],
           "optional_fields": [
-            { "key": "audience", "label": "Who is it for? (optional)", "type": "text", "placeholder": "E.g.: Entrepreneurs, students, athletes..." }
+            { "key": "audience", "label": "Who is it for?", "type": "text", "placeholder": "E.g.: entrepreneurs, students, athletes..." }
           ],
-          "prompt_template": "You are a motivational content writer. Write 5 different motivational post drafts in {{language}} on the theme of {{topic}} for {{platform}}.\n\nStyle: {{style}}\n{{audience}}Country/cultural context: {{country}}\n\nInstructions: Keep it genuine and realistic — avoid hollow affirmations. Each post should feel like it was written by a real person, not a bot. Vary format and angle while staying true to the style. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert motivational content writer. Write 5 distinct motivational posts in {{language}} for someone in {{country}} on {{platform}}. Be genuine — avoid hollow affirmations. User's details: Theme: {{theme}}, Style: {{style}}, Audience: {{audience}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "event_announcement", "name": "Event Announcement",
+          "description": "Promoting an upcoming event on social media",
+          "required_fields": [
+            { "key": "event_name", "label": "Event name", "type": "text", "placeholder": "E.g.: Pop-up market, workshop, concert, webinar..." },
+            { "key": "event_details", "label": "Event details", "type": "textarea", "placeholder": "Date, time, location, what to expect, how to sign up..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Facebook", "LinkedIn", "Twitter / X", "TikTok"] }
+          ],
+          "optional_fields": [
+            { "key": "urgency", "label": "Urgency note", "type": "text", "placeholder": "E.g.: Limited seats, early bird ends Friday..." }
+          ],
+          "prompt_template": "You are an expert event marketing writer. Write 5 distinct event announcement posts in {{language}} for someone in {{country}} on {{platform}}. Create excitement and a clear call to action. User's details: Event: {{event_name}}, Details: {{event_details}}, Urgency: {{urgency}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "behind_the_scenes", "name": "Behind the Scenes",
+          "description": "Showing your process, workspace, or the real side of your work",
+          "required_fields": [
+            { "key": "what_to_show", "label": "What are you showing?", "type": "textarea", "placeholder": "E.g.: How I make my products, a day in my studio, the team prepping..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "TikTok", "LinkedIn", "YouTube", "Threads"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Authentic & raw", "Educational", "Casual & fun", "Inspiring"] }
+          ],
+          "optional_fields": [
+            { "key": "cta", "label": "Call to action", "type": "text", "placeholder": "E.g.: Follow for more, link in bio, DM to order..." }
+          ],
+          "prompt_template": "You are an expert social media storytelling writer. Write 5 distinct behind-the-scenes posts in {{language}} for someone in {{country}} on {{platform}}. Give followers a genuine look inside. User's details: What to show: {{what_to_show}}, Tone: {{tone}}, CTA: {{cta}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "testimonial", "name": "Customer Testimonial",
+          "description": "Sharing a customer review or feedback as a social media post",
+          "required_fields": [
+            { "key": "customer_feedback", "label": "Customer's feedback / review", "type": "textarea", "placeholder": "Paste or summarize what the customer said..." },
+            { "key": "product_or_service", "label": "Product or service reviewed", "type": "text", "placeholder": "E.g.: My skincare kit, coaching program, design service..." },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Facebook", "LinkedIn", "Google", "Website"] }
+          ],
+          "optional_fields": [
+            { "key": "customer_name", "label": "Customer name / first name", "type": "text", "placeholder": "E.g.: Sarah M. (optional)" }
+          ],
+          "prompt_template": "You are an expert social media copywriter. Write 5 distinct testimonial post formats in {{language}} for a business in {{country}} to share on {{platform}}. Make the feedback compelling and credible. User's details: Review: {{customer_feedback}}, About: {{product_or_service}}, Customer: {{customer_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "campaign", "name": "Campaign / Promotion",
+          "description": "Sales, discount, or special offer social media posts",
+          "required_fields": [
+            { "key": "campaign_name", "label": "Campaign / offer name", "type": "text", "placeholder": "E.g.: Summer Sale, Black Friday, 2-for-1 Weekend..." },
+            { "key": "offer_details", "label": "Offer details", "type": "textarea", "placeholder": "What's the deal? What do customers get, when does it end?" },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Facebook", "Twitter / X", "LinkedIn", "TikTok"] }
+          ],
+          "optional_fields": [
+            { "key": "deadline", "label": "Deadline / urgency", "type": "text", "placeholder": "E.g.: Ends Sunday midnight, only 20 spots left..." }
+          ],
+          "prompt_template": "You are an expert promotional copywriter. Write 5 distinct campaign posts in {{language}} for someone in {{country}} on {{platform}}. Drive urgency and conversions without sounding spammy. User's details: Campaign: {{campaign_name}}, Offer: {{offer_details}}, Deadline: {{deadline}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "email",
-      "name": "Email",
-      "icon": "📧",
+      "id": "email", "name": "Email", "icon": "📧",
       "subcategories": [
         {
-          "id": "professional_email",
-          "name": "Professional Email",
-          "description": "Clear, well-structured professional emails for any workplace situation",
+          "id": "professional", "name": "Professional Email",
+          "description": "Formal workplace communication for any situation",
           "required_fields": [
-            { "key": "purpose", "label": "Purpose / What do you need to say?", "type": "textarea", "placeholder": "E.g.: Requesting a meeting, sharing an update, asking for feedback..." },
-            { "key": "recipient_role", "label": "Recipient's role", "type": "text", "placeholder": "E.g.: My manager, a client, a colleague, HR department..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Formal", "Professional but friendly", "Direct and brief"] }
+            { "key": "purpose", "label": "What does this email need to do?", "type": "textarea", "placeholder": "E.g.: Request a meeting, share an update, ask for feedback on a project..." },
+            { "key": "recipient_role", "label": "Who are you emailing?", "type": "text", "placeholder": "E.g.: My manager, a client, HR department..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Formal", "Professional but friendly", "Direct & brief"] }
           ],
           "optional_fields": [
-            { "key": "subject_line", "label": "Preferred subject line (optional)", "type": "text", "placeholder": "Leave blank to let AI suggest one" }
+            { "key": "subject_hint", "label": "Subject line idea", "type": "text", "placeholder": "Leave blank to let AI suggest" }
           ],
-          "prompt_template": "You are a professional email writing assistant. Write 5 different complete email drafts in {{language}}.\n\nPurpose: {{purpose}}\nRecipient: {{recipient_role}}\nTone: {{tone}}\n{{subject_line}}Cultural context: {{country}}\n\nInstructions: Each draft must include a Subject line and a complete email body with appropriate salutation and sign-off. Vary approach: one direct and brief, one detailed and thorough, one relationship-focused, one action-oriented, one formal and structured. Return only the numbered list of complete emails, nothing else."
+          "prompt_template": "You are an expert professional email writer. Write 5 distinct complete emails in {{language}} for someone in {{country}}. Each must have a Subject line, greeting, body, and sign-off. User's details: Purpose: {{purpose}}, Recipient: {{recipient_role}}, Tone: {{tone}}, Subject idea: {{subject_hint}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "follow_up",
-          "name": "Follow-Up",
-          "description": "Follow-up emails after meetings, applications, proposals, or unanswered messages",
+          "id": "boss", "name": "Email to Boss / Manager",
+          "description": "Requests, updates, or sensitive topics addressed to a manager",
           "required_fields": [
-            { "key": "context", "label": "What are you following up on?", "type": "textarea", "placeholder": "E.g.: Job interview last week, proposal I sent, meeting we had..." },
-            { "key": "days_since", "label": "Time since last contact", "type": "select", "options": ["1 day", "3 days", "1 week", "2 weeks", "1 month+"] },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Polite and patient", "Professionally direct", "Urgent"] }
+            { "key": "topic", "label": "What is this email about?", "type": "textarea", "placeholder": "E.g.: Requesting time off, flagging a problem, sharing a project update..." },
+            { "key": "request_type", "label": "Type of email", "type": "select", "options": ["Time off request", "Raise / promotion ask", "Project update", "Problem escalation", "Feedback request", "Sensitive conversation"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Respectful & professional", "Confident & direct", "Collaborative"] }
           ],
           "optional_fields": [
-            { "key": "original_subject", "label": "Original subject / reference (optional)", "type": "text", "placeholder": "E.g.: Re: Product Proposal — Oct 15" }
+            { "key": "urgency", "label": "Urgency", "type": "select", "options": ["Not urgent", "Within a week", "Urgent — needs quick response"] }
           ],
-          "prompt_template": "You are a professional email writer. Write 5 different follow-up email drafts in {{language}}.\n\nContext: {{context}}\nTime elapsed: {{days_since}}\nTone: {{tone}}\n{{original_subject}}Cultural context: {{country}}\n\nInstructions: Each email must include Subject and Body. Reflect the time elapsed — a 1-day follow-up differs from a 2-week one. Vary approach: one brief reminder, one adding new value, one asking for a specific response, one showing continued interest, one setting a deadline. Never sound desperate or aggressive. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert professional email writer. Write 5 distinct emails (Subject + Body) in {{language}} from an employee to their boss in {{country}}. Be professional and assertive without being aggressive. User's details: Topic: {{topic}}, Type: {{request_type}}, Tone: {{tone}}, Urgency: {{urgency}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "apology_email",
-          "name": "Apology Email",
-          "description": "Professional apology emails for workplace or business situations",
+          "id": "colleague", "name": "Email to Colleague",
+          "description": "Collaboration, follow-ups, and updates with coworkers",
           "required_fields": [
-            { "key": "reason", "label": "What happened?", "type": "textarea", "placeholder": "E.g.: Missed a deadline, sent incorrect information, was late to a meeting..." },
-            { "key": "recipient_role", "label": "Recipient's role", "type": "text", "placeholder": "E.g.: My client, my manager, a colleague..." },
-            { "key": "severity", "label": "Severity", "type": "select", "options": ["Minor / Routine", "Moderate", "Serious / Impactful"] }
+            { "key": "purpose", "label": "What is this email about?", "type": "textarea", "placeholder": "E.g.: Asking for help on a task, sharing an update, coordinating on a project..." },
+            { "key": "relationship", "label": "Relationship", "type": "select", "options": ["Close teammate", "Another department", "Someone I just met", "Someone senior to me"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Casual & friendly", "Professional", "Warm & collaborative", "Direct"] }
           ],
           "optional_fields": [
-            { "key": "solution_offered", "label": "Solution or remedy offered (optional)", "type": "text", "placeholder": "E.g.: I've already corrected the report, I can reschedule..." }
+            { "key": "colleague_name", "label": "Their name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are a professional email writer. Write 5 different apology email drafts in {{language}} for a professional situation.\n\nWhat happened: {{reason}}\nRecipient: {{recipient_role}}\nSeverity: {{severity}}\n{{solution_offered}}Cultural context: {{country}}\n\nInstructions: Each email must include Subject and Body. Be specific about what went wrong — avoid vague apologies. For serious issues, take full responsibility without excuses. Vary: one brief and direct, one with full explanation, one with concrete remedy, one empathy-first, one formal and structured. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert professional email writer. Write 5 distinct emails (Subject + Body) in {{language}} from one colleague to another in {{country}}. Match the workplace relationship. User's details: Purpose: {{purpose}}, Relationship: {{relationship}}, Tone: {{tone}}, Name: {{colleague_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "cold_outreach",
-          "name": "Cold Outreach",
-          "description": "Cold emails to potential clients, partners, or collaborators",
+          "id": "client", "name": "Client Email",
+          "description": "Communication with customers or clients",
           "required_fields": [
-            { "key": "purpose", "label": "What do you want from this person?", "type": "textarea", "placeholder": "E.g.: Pitch my services, explore a partnership, get a meeting..." },
-            { "key": "recipient_type", "label": "Who are you reaching out to?", "type": "text", "placeholder": "E.g.: Startup founder, marketing director, agency owner..." },
-            { "key": "value_proposition", "label": "What value do you offer?", "type": "text", "placeholder": "E.g.: I help SaaS companies reduce churn by 30%..." }
+            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Project update", "Delivering bad news / problem", "New proposal", "Invoice / payment", "Follow-up", "Feedback request"] },
+            { "key": "context", "label": "Details", "type": "textarea", "placeholder": "Describe the situation and what needs to be communicated..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Professional", "Warm & personal", "Formal"] }
           ],
           "optional_fields": [
-            { "key": "mutual_connection", "label": "Mutual connection or trigger (optional)", "type": "text", "placeholder": "E.g.: We met at XConf, I read your recent article..." }
+            { "key": "client_name", "label": "Client name", "type": "text", "placeholder": "Optional" }
           ],
-          "prompt_template": "You are an expert cold email writer. Write 5 different cold outreach email drafts in {{language}}.\n\nGoal: {{purpose}}\nTarget: {{recipient_type}}\nValue proposition: {{value_proposition}}\n{{mutual_connection}}Country/market context: {{country}}\n\nInstructions: Each email must include Subject and Body. The subject should be compelling enough to open. Each draft must be concise (under 150 words body), specific, and end with a clear CTA. Vary approach: one personalised opener, one insight-led, one direct pitch, one question-first, one social proof anchor. Never sound spammy. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert client communications writer. Write 5 distinct emails (Subject + Body) in {{language}} to a client in {{country}}. Maintain trust and professionalism throughout. User's details: Purpose: {{purpose}}, Context: {{context}}, Tone: {{tone}}, Client: {{client_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "complaint_email",
-          "name": "Complaint Email",
-          "description": "Formal complaint emails to companies, service providers, or businesses",
+          "id": "cold_outreach", "name": "Cold Outreach",
+          "description": "First contact with someone you don't know",
           "required_fields": [
-            { "key": "subject", "label": "Subject of complaint", "type": "text", "placeholder": "E.g.: Defective product, poor service, billing error..." },
-            { "key": "complaint_details", "label": "What happened?", "type": "textarea", "placeholder": "Describe the issue, when it occurred, how it affected you..." },
-            { "key": "desired_outcome", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Full refund, replacement, apology, investigation..." }
+            { "key": "goal", "label": "What do you want from this email?", "type": "textarea", "placeholder": "E.g.: Get a meeting, pitch my services, explore a collaboration..." },
+            { "key": "target_person", "label": "Who are you reaching out to?", "type": "text", "placeholder": "E.g.: Startup founder, marketing director, agency owner..." },
+            { "key": "value_offer", "label": "What value do you offer them?", "type": "text", "placeholder": "E.g.: I help e-commerce brands reduce ad spend by 30%..." }
           ],
           "optional_fields": [
-            { "key": "reference_number", "label": "Order / reference number (optional)", "type": "text", "placeholder": "E.g.: Order #12345" }
+            { "key": "hook", "label": "Personal hook / trigger", "type": "text", "placeholder": "E.g.: I read your article on X, we met at Y, mutual connection..." }
           ],
-          "prompt_template": "You are a professional complaint email writer. Write 5 different complaint email drafts in {{language}}.\n\nComplaint: {{subject}}\nDetails: {{complaint_details}}\nDesired outcome: {{desired_outcome}}\n{{reference_number}}Country context: {{country}}\n\nInstructions: Each email must include Subject and Body with formal opening and closing. Be specific and factual, not emotional. Vary tone: one polite and measured, one firm and assertive, one detailed with timeline, one brief and direct, one implying escalation if not resolved. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert cold email writer. Write 5 distinct cold outreach emails (Subject + Body) in {{language}} targeting {{target_person}} in {{country}}. Be specific, brief (under 150 words body), and end with a clear CTA. User's details: Goal: {{goal}}, Value: {{value_offer}}, Hook: {{hook}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "thank_you_email",
-          "name": "Thank You Email",
-          "description": "Warm, professional thank you emails for any context",
+          "id": "follow_up", "name": "Follow-Up Email",
+          "description": "Following up after a meeting, application, or unanswered message",
           "required_fields": [
-            { "key": "reason", "label": "What are you thanking them for?", "type": "textarea", "placeholder": "E.g.: Job interview, helping with a project, a gift, a referral..." },
+            { "key": "context", "label": "What are you following up on?", "type": "textarea", "placeholder": "E.g.: A job interview last week, a proposal I sent, a meeting we had..." },
+            { "key": "time_elapsed", "label": "Time since last contact", "type": "select", "options": ["1 day", "3 days", "1 week", "2 weeks", "1 month+"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Polite & patient", "Professionally direct", "Friendly nudge", "Urgent"] }
+          ],
+          "optional_fields": [
+            { "key": "original_subject", "label": "Original subject / reference", "type": "text", "placeholder": "E.g.: Re: Marketing Proposal — May 12" }
+          ],
+          "prompt_template": "You are an expert follow-up email writer. Write 5 distinct follow-up emails (Subject + Body) in {{language}} for someone in {{country}}. Vary persistence appropriately — never sound desperate. User's details: Context: {{context}}, Time elapsed: {{time_elapsed}}, Tone: {{tone}}, Reference: {{original_subject}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "apology_email", "name": "Apology Email",
+          "description": "A professional or personal apology sent via email",
+          "required_fields": [
+            { "key": "reason", "label": "What happened?", "type": "textarea", "placeholder": "E.g.: Missed a deadline, sent wrong information, was late to a meeting..." },
+            { "key": "recipient_role", "label": "Who are you apologizing to?", "type": "text", "placeholder": "E.g.: My client, my manager, a colleague..." },
+            { "key": "severity", "label": "How serious is it?", "type": "select", "options": ["Minor / routine", "Moderate", "Serious / impactful"] }
+          ],
+          "optional_fields": [
+            { "key": "remedy", "label": "Remedy or solution offered", "type": "text", "placeholder": "E.g.: I've already corrected the file, I can reschedule at your convenience..." }
+          ],
+          "prompt_template": "You are an expert professional apology email writer. Write 5 distinct apology emails (Subject + Body) in {{language}} for someone in {{country}}. Take clear responsibility — avoid vague apologies. User's details: What happened: {{reason}}, Recipient: {{recipient_role}}, Severity: {{severity}}, Remedy: {{remedy}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "complaint_email", "name": "Complaint Email",
+          "description": "Formal complaint to a company or person via email",
+          "required_fields": [
+            { "key": "complaint", "label": "What is the complaint?", "type": "textarea", "placeholder": "Describe what happened, when, and how it affected you..." },
+            { "key": "company_or_person", "label": "Who are you complaining to / about?", "type": "text", "placeholder": "E.g.: Customer service at XYZ, HR department, a specific supplier..." },
+            { "key": "desired_outcome", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Full refund, apology, investigation, replacement..." }
+          ],
+          "optional_fields": [
+            { "key": "reference", "label": "Order / reference number", "type": "text", "placeholder": "E.g.: Order #12345 (optional)" }
+          ],
+          "prompt_template": "You are an expert complaint email writer. Write 5 distinct complaint emails (Subject + Body) in {{language}} for someone in {{country}}. Be firm, factual, and clear — not emotional. User's details: Complaint: {{complaint}}, About: {{company_or_person}}, Desired outcome: {{desired_outcome}}, Reference: {{reference}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "thank_you_email", "name": "Thank You Email",
+          "description": "Expressing gratitude professionally or personally via email",
+          "required_fields": [
+            { "key": "reason", "label": "What are you thankful for?", "type": "textarea", "placeholder": "E.g.: They gave me a job interview, helped on a project, sent a referral..." },
             { "key": "recipient_role", "label": "Who are you thanking?", "type": "text", "placeholder": "E.g.: Interviewer, mentor, colleague, client..." },
-            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm and genuine", "Formal and professional", "Brief and efficient"] }
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Warm & genuine", "Formal & professional", "Brief & efficient", "Heartfelt"] }
           ],
           "optional_fields": [
-            { "key": "specific_mention", "label": "Something specific to mention (optional)", "type": "text", "placeholder": "E.g.: The advice about X really stood out..." }
+            { "key": "specific_detail", "label": "Something specific to mention", "type": "text", "placeholder": "E.g.: The advice about X really stood out to me..." }
           ],
-          "prompt_template": "You are a professional email writer. Write 5 different thank you email drafts in {{language}}.\n\nReason: {{reason}}\nRecipient: {{recipient_role}}\nTone: {{tone}}\n{{specific_mention}}Cultural context: {{country}}\n\nInstructions: Each email must include Subject and Body. Be specific about what you're grateful for — avoid generic thanks. If a specific detail is provided, weave it naturally. Vary: one brief and sincere, one detailed and personal, one forward-looking, one relationship-building, one that reinforces a next step. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert email writer. Write 5 distinct thank-you emails (Subject + Body) in {{language}} for someone in {{country}}. Be specific — generic thanks feel hollow. User's details: Reason: {{reason}}, Recipient: {{recipient_role}}, Tone: {{tone}}, Detail: {{specific_detail}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "introduction", "name": "Introduction Email",
+          "description": "Introducing yourself or someone else via email",
+          "required_fields": [
+            { "key": "who_you_are", "label": "Who are you?", "type": "text", "placeholder": "E.g.: A freelance designer, a new team member, a startup founder..." },
+            { "key": "reason", "label": "Why are you reaching out?", "type": "textarea", "placeholder": "E.g.: Joining the team, want to connect professionally, introducing a colleague..." },
+            { "key": "recipient_role", "label": "Who are you introducing yourself to?", "type": "text", "placeholder": "E.g.: New manager, potential partner, conference contact..." }
+          ],
+          "optional_fields": [
+            { "key": "mutual_connection", "label": "Mutual connection or context", "type": "text", "placeholder": "E.g.: We met at X, referred by Y..." }
+          ],
+          "prompt_template": "You are an expert professional email writer. Write 5 distinct introduction emails (Subject + Body) in {{language}} for someone in {{country}}. Make a memorable first impression. User's details: Who: {{who_you_are}}, Purpose: {{reason}}, Recipient: {{recipient_role}}, Connection: {{mutual_connection}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "business",
-      "name": "Business",
-      "icon": "🏢",
+      "id": "business", "name": "Business", "icon": "🏢",
       "subcategories": [
         {
-          "id": "cover_letter",
-          "name": "Cover Letter",
-          "description": "Compelling cover letters for job applications",
+          "id": "cover_letter", "name": "Cover Letter",
+          "description": "A compelling cover letter for a job application",
           "required_fields": [
             { "key": "job_title", "label": "Job title", "type": "text", "placeholder": "E.g.: Senior Product Designer, Marketing Manager..." },
-            { "key": "company_name", "label": "Company name", "type": "text", "placeholder": "Company you're applying to" },
-            { "key": "key_skills", "label": "Your key skills / strengths", "type": "textarea", "placeholder": "E.g.: 5 years in UX design, led teams of 10, expertise in Figma and research..." },
-            { "key": "experience_summary", "label": "Relevant experience", "type": "textarea", "placeholder": "What makes you a strong candidate for this role?" }
+            { "key": "company", "label": "Company name", "type": "text", "placeholder": "The company you're applying to" },
+            { "key": "key_strengths", "label": "Your key strengths & experience", "type": "textarea", "placeholder": "Most relevant skills, achievements, and why you're a great fit..." }
           ],
           "optional_fields": [
-            { "key": "referral", "label": "Referral or how you found the role (optional)", "type": "text", "placeholder": "E.g.: Referred by Jane Smith, found on LinkedIn..." }
+            { "key": "referral", "label": "How you found the role / referral", "type": "text", "placeholder": "E.g.: Referred by Jane Smith, found on LinkedIn..." }
           ],
-          "prompt_template": "You are a professional cover letter writer. Write 5 different cover letter drafts in {{language}} for a {{job_title}} position at {{company_name}}.\n\nKey skills: {{key_skills}}\nExperience: {{experience_summary}}\n{{referral}}Country context: {{country}}\n\nInstructions: Each cover letter should be complete — opening, body, and closing paragraph. Vary approach: one achievement-led, one passion-for-company-led, one skills-focused, one story-driven, one concise and punchy. Avoid clichés like 'I am writing to express my interest.' Make each feel fresh. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert cover letter writer. Write 5 distinct cover letters in {{language}} for someone applying for {{job_title}} at {{company}} in {{country}}. Each must have a compelling opening, strong body, and clear close. Avoid clichés like 'I am writing to express my interest.' User's details: Strengths: {{key_strengths}}, Referral: {{referral}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "job_application",
-          "name": "Job Application",
-          "description": "Short job application messages for forms, LinkedIn, or direct outreach",
+          "id": "cv_summary", "name": "CV / Resume Summary",
+          "description": "A professional summary paragraph for your CV or resume",
           "required_fields": [
-            { "key": "position", "label": "Position applying for", "type": "text", "placeholder": "E.g.: Frontend Developer, Sales Executive..." },
-            { "key": "company", "label": "Company name", "type": "text", "placeholder": "Company name" },
-            { "key": "background", "label": "Your background", "type": "textarea", "placeholder": "Your experience, skills, and why you're a fit for this role..." }
+            { "key": "profession", "label": "Your profession / field", "type": "text", "placeholder": "E.g.: Software engineer, marketing manager, UX designer..." },
+            { "key": "years_experience", "label": "Years of experience", "type": "select", "options": ["0–2 years", "3–5 years", "6–10 years", "10+ years"] },
+            { "key": "key_skills", "label": "Key skills & achievements", "type": "textarea", "placeholder": "What you're best at, tools you use, notable achievements..." }
           ],
           "optional_fields": [
-            { "key": "salary_expectation", "label": "Salary expectation (optional)", "type": "text", "placeholder": "E.g.: $80k–$100k, open to discussion..." }
+            { "key": "career_goal", "label": "Career goal / direction", "type": "text", "placeholder": "E.g.: Seeking a leadership role in fintech..." }
           ],
-          "prompt_template": "You are a job application writing expert. Write 5 different job application message drafts in {{language}} for a {{position}} role at {{company}}.\n\nBackground: {{background}}\n{{salary_expectation}}Country context: {{country}}\n\nInstructions: These should be concise application messages (not full cover letters) suitable for online forms or direct email. Each should show genuine interest and relevant fit. Vary: one summary-focused, one achievement-led, one culture-fit angle, one direct and brief, one relationship-building. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert CV writer. Write 5 distinct professional summary paragraphs in {{language}} for a {{profession}} with {{years_experience}} experience in {{country}}. Each should be 3–5 lines, punchy, and tailored. User's details: Skills: {{key_skills}}, Goal: {{career_goal}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "linkedin_message",
-          "name": "LinkedIn Message",
-          "description": "LinkedIn connection requests and direct messages",
+          "id": "linkedin_message", "name": "LinkedIn Message",
+          "description": "Outreach or networking messages on LinkedIn",
           "required_fields": [
-            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Connect and network", "Explore a job opportunity", "Ask for advice", "Pitch a collaboration", "Recruit a candidate"] },
-            { "key": "context", "label": "Context / what makes this relevant?", "type": "textarea", "placeholder": "E.g.: I admire their work, we share a mutual connection, I read their article on X..." }
+            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Connect & network", "Explore a job opportunity", "Ask for career advice", "Pitch a collaboration", "Recruit a candidate"] },
+            { "key": "context", "label": "Why are you reaching out?", "type": "textarea", "placeholder": "Why this specific person, what's the connection or reason..." }
           ],
           "optional_fields": [
-            { "key": "mutual_connection", "label": "Mutual connection or trigger (optional)", "type": "text", "placeholder": "E.g.: We both worked at X, attended Y event..." }
+            { "key": "mutual_connection", "label": "Mutual connection or trigger", "type": "text", "placeholder": "E.g.: We both attended X, I read your post about Y..." }
           ],
-          "prompt_template": "You are a LinkedIn outreach expert. Write 5 different LinkedIn message drafts in {{language}} with the purpose of: {{purpose}}.\n\nContext: {{context}}\n{{mutual_connection}}Country context: {{country}}\n\nInstructions: LinkedIn messages must be short (under 300 characters for connection notes, or 3–5 lines for InMail). Be specific, not generic. Vary: one personalised opener, one mutual-connection angle, one value-first, one direct ask, one conversation-starting question. Never sound like a copy-paste template. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert LinkedIn outreach writer. Write 5 distinct LinkedIn messages in {{language}} for someone in {{country}} with the goal: {{purpose}}. Be human and specific — not a copy-paste template. User's details: Context: {{context}}, Hook: {{mutual_connection}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "promotion_request",
-          "name": "Promotion Request",
-          "description": "Messages or emails to request a promotion or salary raise",
+          "id": "job_application", "name": "Job Application Email",
+          "description": "Applying for a position via email",
+          "required_fields": [
+            { "key": "position", "label": "Position applying for", "type": "text", "placeholder": "E.g.: Frontend Developer, Account Manager..." },
+            { "key": "company", "label": "Company name", "type": "text", "placeholder": "The company you're applying to" },
+            { "key": "background", "label": "Your background & fit", "type": "textarea", "placeholder": "Relevant experience, skills, and why you're right for this role..." }
+          ],
+          "optional_fields": [
+            { "key": "salary_note", "label": "Salary note", "type": "text", "placeholder": "E.g.: Open to discussion / Expecting $X range..." }
+          ],
+          "prompt_template": "You are an expert job application writer. Write 5 distinct application emails (Subject + Body) in {{language}} for someone applying for {{position}} at {{company}} in {{country}}. Show genuine fit, not just enthusiasm. User's details: Background: {{background}}, Salary: {{salary_note}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "promotion_request", "name": "Promotion Request",
+          "description": "Asking for a raise or promotion professionally",
           "required_fields": [
             { "key": "current_role", "label": "Current role / title", "type": "text", "placeholder": "E.g.: Junior Developer, Account Manager..." },
-            { "key": "target_role", "label": "Desired role / title", "type": "text", "placeholder": "E.g.: Senior Developer, Head of Accounts..." },
-            { "key": "achievements", "label": "Key achievements since last review", "type": "textarea", "placeholder": "E.g.: Led 3 major projects, grew revenue by 20%, mentored 2 junior staff..." },
-            { "key": "duration", "label": "Time in current role", "type": "select", "options": ["6 months", "1 year", "2 years", "3+ years"] }
+            { "key": "target_role", "label": "Desired role / raise amount", "type": "text", "placeholder": "E.g.: Senior Developer, 15% raise..." },
+            { "key": "achievements", "label": "Your key achievements", "type": "textarea", "placeholder": "What have you delivered since your last review? Impact, metrics, projects..." }
           ],
           "optional_fields": [
-            { "key": "market_comparison", "label": "Market rate reference (optional)", "type": "text", "placeholder": "E.g.: Market rate for this role is $X according to Glassdoor..." }
+            { "key": "time_in_role", "label": "Time in current role", "type": "select", "options": ["6 months", "1 year", "2 years", "3+ years"] }
           ],
-          "prompt_template": "You are a career communication expert. Write 5 different promotion request message/email drafts in {{language}} for someone seeking to move from {{current_role}} to {{target_role}}.\n\nAchievements: {{achievements}}\nTime in role: {{duration}}\n{{market_comparison}}Country context: {{country}}\n\nInstructions: Each should make a business case, not just a personal ask. Lead with value delivered. Vary approach: one achievement-summary-led, one growth-trajectory-led, one market-rate-anchored (if provided), one relationship-forward, one brief and direct. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert business communication writer. Write 5 distinct promotion request messages in {{language}} for someone in {{country}} making a case to move from {{current_role}} to {{target_role}}. Lead with business impact, not personal want. User's details: Achievements: {{achievements}}, Time in role: {{time_in_role}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "business_proposal",
-          "name": "Business Proposal",
-          "description": "Concise business proposals and pitches to potential clients or partners",
+          "id": "resignation", "name": "Resignation Letter",
+          "description": "Leaving a job professionally and gracefully",
           "required_fields": [
-            { "key": "service_or_product", "label": "Your service or product", "type": "text", "placeholder": "E.g.: Web development agency, SaaS tool, consulting service..." },
-            { "key": "target_client", "label": "Who you're pitching to", "type": "text", "placeholder": "E.g.: E-commerce brands, law firms, restaurants..." },
-            { "key": "value_proposition", "label": "Core value proposition", "type": "textarea", "placeholder": "What problem do you solve and what results do you deliver?" }
+            { "key": "reason", "label": "Reason for leaving", "type": "select", "options": ["New opportunity", "Career change", "Personal reasons", "Relocation", "Retirement", "Unhappy at work"] },
+            { "key": "notice_period", "label": "Notice period", "type": "text", "placeholder": "E.g.: 2 weeks, 1 month, immediate..." },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Professional & warm", "Neutral & formal", "Brief & direct", "Grateful & positive"] }
           ],
           "optional_fields": [
-            { "key": "pricing_hint", "label": "Pricing or package hint (optional)", "type": "text", "placeholder": "E.g.: Starting from $2,000/month, fixed project fee..." }
+            { "key": "gratitude_note", "label": "Something you want to thank them for", "type": "text", "placeholder": "E.g.: The opportunities, the team, mentorship..." }
           ],
-          "prompt_template": "You are a business proposal writing expert. Write 5 different business proposal pitch drafts in {{language}} for {{service_or_product}} targeting {{target_client}}.\n\nValue proposition: {{value_proposition}}\n{{pricing_hint}}Country/market context: {{country}}\n\nInstructions: Each proposal should be concise (email-length), lead with client pain points, show the solution, and end with a clear call to action. Vary: one problem-first, one result-first, one story-driven, one data/ROI-focused, one relationship-building. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert business communication writer. Write 5 distinct resignation letters in {{language}} for someone in {{country}} leaving a job. Leave on good terms — be professional and gracious. User's details: Reason: {{reason}}, Notice period: {{notice_period}}, Tone: {{tone}}, Gratitude: {{gratitude_note}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "client_email",
-          "name": "Client Email",
-          "description": "Professional emails for managing client relationships",
+          "id": "business_proposal", "name": "Business Proposal",
+          "description": "Pitching an idea, service, or partnership to a business",
           "required_fields": [
-            { "key": "purpose", "label": "Email purpose", "type": "select", "options": ["Project update", "Problem / Bad news", "New proposal", "Follow-up", "Invoice / Payment"] },
-            { "key": "context", "label": "Details", "type": "textarea", "placeholder": "Describe the situation and what needs to be communicated..." }
+            { "key": "what_you_offer", "label": "What you're offering", "type": "text", "placeholder": "E.g.: Web development services, SaaS tool, consulting..." },
+            { "key": "target", "label": "Who you're pitching to", "type": "text", "placeholder": "E.g.: E-commerce brands, law firms, restaurant owners..." },
+            { "key": "value_proposition", "label": "Core value / what problem you solve", "type": "textarea", "placeholder": "What makes your offer valuable and different?" }
           ],
           "optional_fields": [
-            { "key": "client_name", "label": "Client name (optional)", "type": "text", "placeholder": "Client or company name" }
+            { "key": "pricing_note", "label": "Pricing note", "type": "text", "placeholder": "E.g.: Starting from $2k/month, fixed project fee..." }
           ],
-          "prompt_template": "You are a professional client communications expert. Write 5 different client email drafts in {{language}} for the purpose of: {{purpose}}.\n\nDetails: {{context}}\n{{client_name}}Country context: {{country}}\n\nInstructions: Each email must include Subject and Body with professional salutation and closing. Maintain a client-first tone — always consider their perspective. Vary approach: one direct and efficient, one relationship-maintaining, one solution-focused, one transparent and empathetic, one structured and formal. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert business proposal writer. Write 5 distinct proposal pitches in {{language}} for someone in {{country}}. Lead with the client's problem — then the solution. User's details: Offering: {{what_you_offer}}, Target: {{target}}, Value: {{value_proposition}}, Pricing: {{pricing_note}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "contract_summary",
-          "name": "Contract Summary",
-          "description": "Plain-language summaries of contract terms for clients or stakeholders",
+          "id": "client_proposal", "name": "Client Proposal",
+          "description": "Offering your services to a potential client",
           "required_fields": [
-            { "key": "contract_type", "label": "Contract type", "type": "text", "placeholder": "E.g.: Service agreement, NDA, freelance contract, lease..." },
-            { "key": "key_terms", "label": "Key terms and conditions", "type": "textarea", "placeholder": "Paste or describe the main points: scope, payment, duration, termination, IP..." },
+            { "key": "service", "label": "Your service", "type": "text", "placeholder": "E.g.: Brand identity design, SEO consulting, video production..." },
+            { "key": "client_context", "label": "About the client / their need", "type": "textarea", "placeholder": "What do you know about them? What problem are they facing?" },
+            { "key": "key_benefit", "label": "Your key differentiator", "type": "text", "placeholder": "What makes your offer better or different for this client?" }
+          ],
+          "optional_fields": [
+            { "key": "price_range", "label": "Price range / package", "type": "text", "placeholder": "E.g.: From €1,500, 3 package options available..." }
+          ],
+          "prompt_template": "You are an expert client proposal writer. Write 5 distinct client proposal emails (Subject + Body) in {{language}} for someone in {{country}}. Speak to the client's needs, not your features. User's details: Service: {{service}}, Client: {{client_context}}, Differentiator: {{key_benefit}}, Pricing: {{price_range}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "payment_reminder", "name": "Payment Reminder",
+          "description": "Following up on unpaid invoices professionally",
+          "required_fields": [
+            { "key": "amount", "label": "Amount due", "type": "text", "placeholder": "E.g.: $1,500 / £800 / ₺25,000..." },
+            { "key": "invoice_ref", "label": "Invoice reference", "type": "text", "placeholder": "E.g.: Invoice #INV-2024-089" },
+            { "key": "reminder_stage", "label": "Reminder stage", "type": "select", "options": ["1st reminder (polite)", "2nd reminder (firmer)", "3rd reminder (urgent)", "Final notice (legal warning)"] }
+          ],
+          "optional_fields": [
+            { "key": "client_name", "label": "Client name", "type": "text", "placeholder": "Optional" }
+          ],
+          "prompt_template": "You are an expert business communication writer. Write 5 distinct payment reminder messages in {{language}} for someone in {{country}}. Escalate tone based on the stage. User's details: Amount: {{amount}}, Invoice: {{invoice_ref}}, Stage: {{reminder_stage}}, Client: {{client_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "contract_summary", "name": "Contract / Agreement Summary",
+          "description": "Summarizing contract terms clearly for clients or stakeholders",
+          "required_fields": [
+            { "key": "contract_type", "label": "Contract type", "type": "text", "placeholder": "E.g.: Freelance service agreement, NDA, lease, partnership MOU..." },
+            { "key": "key_terms", "label": "Key terms and conditions", "type": "textarea", "placeholder": "Scope, payment, duration, termination, IP, liabilities..." },
             { "key": "parties", "label": "Parties involved", "type": "text", "placeholder": "E.g.: My agency (Provider) and Acme Corp (Client)" }
           ],
           "optional_fields": [
-            { "key": "deadline", "label": "Signing deadline (optional)", "type": "text", "placeholder": "E.g.: Please sign by Friday 20th June" }
+            { "key": "deadline", "label": "Signing deadline", "type": "text", "placeholder": "E.g.: Please sign by Friday 20th June" }
           ],
-          "prompt_template": "You are a business communications expert. Write 5 different contract summary message drafts in {{language}} to communicate the key terms of a {{contract_type}} to the relevant party.\n\nParties: {{parties}}\nKey terms: {{key_terms}}\n{{deadline}}Country context: {{country}}\n\nInstructions: Each summary should be clear, jargon-free, and cover the most important points. Vary format and tone: one bullet-point summary, one narrative paragraph, one Q&A format, one executive summary style, one brief email summary. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert business communication writer. Write 5 distinct contract summary messages in {{language}} for someone in {{country}}. Be clear, jargon-free, and hit the key points. User's details: Contract: {{contract_type}}, Terms: {{key_terms}}, Parties: {{parties}}, Deadline: {{deadline}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "payment_reminder",
-          "name": "Payment Reminder",
-          "description": "Professional payment reminder messages and emails",
+          "id": "partnership_request", "name": "Partnership Request",
+          "description": "Proposing a collaboration or strategic partnership",
           "required_fields": [
-            { "key": "amount", "label": "Amount due", "type": "text", "placeholder": "E.g.: $1,500 / £800..." },
-            { "key": "due_date", "label": "Due date", "type": "text", "placeholder": "E.g.: June 15th, already overdue..." },
-            { "key": "invoice_ref", "label": "Invoice reference", "type": "text", "placeholder": "E.g.: Invoice #INV-2024-089" },
-            { "key": "reminder_number", "label": "Reminder number", "type": "select", "options": ["1st reminder", "2nd reminder", "3rd reminder", "Final notice"] }
+            { "key": "your_business", "label": "Your business / role", "type": "text", "placeholder": "E.g.: A boutique marketing agency, an independent consultant..." },
+            { "key": "proposed_partner", "label": "Who you want to partner with", "type": "text", "placeholder": "E.g.: A complementary SaaS tool, a local restaurant chain..." },
+            { "key": "collaboration_idea", "label": "What you're proposing", "type": "textarea", "placeholder": "The collaboration idea, what each side brings, the mutual benefit..." }
           ],
           "optional_fields": [
-            { "key": "client_name", "label": "Client name (optional)", "type": "text", "placeholder": "Client or company name" }
+            { "key": "mutual_benefit", "label": "Key mutual benefit summary", "type": "text", "placeholder": "E.g.: We each reach 10k+ of the other's ideal customers..." }
           ],
-          "prompt_template": "You are a professional business communications expert. Write 5 different payment reminder message drafts in {{language}}. This is a {{reminder_number}}.\n\nAmount: {{amount}}\nDue date: {{due_date}}\nInvoice: {{invoice_ref}}\n{{client_name}}Country context: {{country}}\n\nInstructions: Escalate appropriately based on reminder number — 1st is polite, final notice is firm. Each must include invoice reference and amount. Vary: one very brief and friendly, one formal with payment details, one with late fee mention, one asking to confirm receipt, one firm with next steps. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert business communication writer. Write 5 distinct partnership request messages in {{language}} for someone in {{country}}. Show what's in it for both parties — not just a one-sided ask. User's details: Your business: {{your_business}}, Partner: {{proposed_partner}}, Idea: {{collaboration_idea}}, Benefit: {{mutual_benefit}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "reference_letter", "name": "Reference Letter",
+          "description": "Writing a recommendation for someone you know professionally",
+          "required_fields": [
+            { "key": "candidate_name", "label": "Candidate's name", "type": "text", "placeholder": "Full name of the person you're recommending" },
+            { "key": "relationship", "label": "Your relationship to them", "type": "select", "options": ["I was their manager", "I was their colleague", "I was their professor", "I was their mentor", "They were my client"] },
+            { "key": "qualities", "label": "Key qualities and examples", "type": "textarea", "placeholder": "What stood out about their work, skills, character — with specific examples..." }
+          ],
+          "optional_fields": [
+            { "key": "role_applying_for", "label": "Role or program they're applying for", "type": "text", "placeholder": "E.g.: Senior product role at a tech startup, MBA program..." }
+          ],
+          "prompt_template": "You are an expert reference letter writer. Write 5 distinct reference letters in {{language}} for {{candidate_name}} in {{country}}. Be specific and credible — generic praise doesn't work. User's details: Relationship: {{relationship}}, Qualities: {{qualities}}, Applying for: {{role_applying_for}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "academic",
-      "name": "Academic",
-      "icon": "🎓",
+      "id": "academic", "name": "Academic", "icon": "🎓",
       "subcategories": [
         {
-          "id": "motivation_letter",
-          "name": "Motivation Letter",
-          "description": "Personal statements and motivation letters for university or program applications",
+          "id": "motivation_letter", "name": "Motivation Letter",
+          "description": "Personal statement for university or program applications",
           "required_fields": [
-            { "key": "program", "label": "Program / Field", "type": "text", "placeholder": "E.g.: MSc Computer Science, MBA, LLB Law..." },
-            { "key": "university", "label": "University / Institution", "type": "text", "placeholder": "University or institution name" },
-            { "key": "why_this_program", "label": "Why this program?", "type": "textarea", "placeholder": "Your motivation, what drew you to this field..." },
-            { "key": "background", "label": "Academic and professional background", "type": "textarea", "placeholder": "Relevant degrees, work experience, projects, achievements..." }
+            { "key": "program", "label": "Program / field", "type": "text", "placeholder": "E.g.: MSc Computer Science, MBA, LLB Law..." },
+            { "key": "university", "label": "University / institution", "type": "text", "placeholder": "The institution you're applying to" },
+            { "key": "why_this_program", "label": "Why this program and what you bring", "type": "textarea", "placeholder": "Your motivation, background, relevant experience, and future goals..." }
           ],
           "optional_fields": [
-            { "key": "career_goal", "label": "Career goal (optional)", "type": "text", "placeholder": "Where do you want this degree to take you?" }
+            { "key": "career_goal", "label": "Long-term career goal", "type": "text", "placeholder": "E.g.: Become a policy researcher, build a health-tech startup..." }
           ],
-          "prompt_template": "You are an expert academic writer. Write 5 different motivation letter drafts in {{language}} for a {{program}} program at {{university}}.\n\nMotivation: {{why_this_program}}\nBackground: {{background}}\n{{career_goal}}Country context: {{country}}\n\nInstructions: Each letter should be complete — compelling opening, body showcasing fit and motivation, strong closing. Vary narrative approach: one opening with a personal story, one opening with a professional achievement, one opening with a bold statement, one chronological background, one vision-first. Avoid clichés like 'since childhood I have been passionate about...' Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert motivation letter writer. Write 5 distinct motivation letters in {{language}} for someone applying to {{program}} at {{university}} in {{country}}. Each must have a compelling opening, strong body, and clear conclusion. Avoid clichés. User's details: Motivation & background: {{why_this_program}}, Career goal: {{career_goal}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "scholarship_application",
-          "name": "Scholarship Application",
-          "description": "Scholarship application letters and personal statements",
+          "id": "scholarship_application", "name": "Scholarship Application",
+          "description": "Applying for a scholarship or financial support",
           "required_fields": [
-            { "key": "scholarship_name", "label": "Scholarship name / type", "type": "text", "placeholder": "E.g.: Chevening, Fulbright, merit-based departmental grant..." },
-            { "key": "why_deserving", "label": "Why do you deserve this scholarship?", "type": "textarea", "placeholder": "Your merits, achievements, impact you aim to make..." },
-            { "key": "academic_background", "label": "Academic background", "type": "textarea", "placeholder": "Degrees, GPA, research, publications, awards..." }
+            { "key": "scholarship_name", "label": "Scholarship name / type", "type": "text", "placeholder": "E.g.: Chevening, Fulbright, departmental merit grant..." },
+            { "key": "why_deserving", "label": "Why do you deserve this scholarship?", "type": "textarea", "placeholder": "Your merits, achievements, circumstances, and impact you aim to make..." },
+            { "key": "academic_background", "label": "Academic background", "type": "text", "placeholder": "E.g.: First-class BSc Physics, 3.9 GPA, published research paper..." }
           ],
           "optional_fields": [
-            { "key": "financial_need", "label": "Financial need context (optional)", "type": "text", "placeholder": "E.g.: First-generation student, limited family income..." }
+            { "key": "financial_need", "label": "Financial need context", "type": "text", "placeholder": "E.g.: First-generation student, limited family income... (optional)" }
           ],
-          "prompt_template": "You are an expert scholarship application writer. Write 5 different scholarship application letter drafts in {{language}} for the {{scholarship_name}}.\n\nWhy deserving: {{why_deserving}}\nAcademic background: {{academic_background}}\n{{financial_need}}Country context: {{country}}\n\nInstructions: Each letter should make a compelling case — show academic merit, future impact, and alignment with the scholarship's values. Vary approach: one achievement-focused, one impact/vision-focused, one narrative personal story, one community contribution angle, one combining all aspects concisely. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert scholarship application writer. Write 5 distinct application letters in {{language}} for someone applying for {{scholarship_name}} in {{country}}. Show merit, need, and future impact compellingly. User's details: Why deserving: {{why_deserving}}, Background: {{academic_background}}, Financial need: {{financial_need}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "professor_email",
-          "name": "Professor Email",
-          "description": "Emails to professors for academic requests and questions",
+          "id": "professor_email", "name": "Email to Professor",
+          "description": "Academic requests, questions, or issues addressed to a professor",
           "required_fields": [
-            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Research opportunity / supervision", "Question about coursework", "Grade inquiry", "Request a meeting", "Reference letter request", "General academic question"] },
-            { "key": "context", "label": "Context / details", "type": "textarea", "placeholder": "Explain your situation, what you need, and any relevant background..." }
+            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Research supervision inquiry", "Coursework question", "Grade inquiry", "Request a meeting", "Reference letter request"] },
+            { "key": "context", "label": "Details", "type": "textarea", "placeholder": "Explain your situation, what you need, and relevant background..." }
           ],
           "optional_fields": [
-            { "key": "course_name", "label": "Course / subject name (optional)", "type": "text", "placeholder": "E.g.: Advanced Statistics, History of Art..." }
+            { "key": "course_name", "label": "Course / subject name", "type": "text", "placeholder": "E.g.: Advanced Econometrics, History of Architecture..." }
           ],
-          "prompt_template": "You are an academic email writing expert. Write 5 different email drafts in {{language}} from a student to their professor regarding: {{purpose}}.\n\nContext: {{context}}\n{{course_name}}Country/academic context: {{country}}\n\nInstructions: Each email must include Subject and Body. Use appropriate academic salutation (Dear Prof. X / Dear Dr. X). Be respectful, specific, and concise. Vary: one brief and direct, one with full context, one leading with appreciation, one clearly structured with request, one relationship-building. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert academic email writer. Write 5 distinct student-to-professor emails (Subject + Body) in {{language}} from a student in {{country}} regarding: {{purpose}}. Be respectful, specific, and concise. User's details: Context: {{context}}, Course: {{course_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "extension_request",
-          "name": "Extension Request",
-          "description": "Requests for deadline extensions on assignments or exams",
+          "id": "extension_request", "name": "Extension Request",
+          "description": "Asking for a deadline extension on an assignment or exam",
           "required_fields": [
-            { "key": "assignment_name", "label": "Assignment / exam name", "type": "text", "placeholder": "E.g.: Final essay, midterm paper, group project..." },
-            { "key": "original_deadline", "label": "Original deadline", "type": "text", "placeholder": "E.g.: June 20th" },
-            { "key": "reason", "label": "Reason for requesting extension", "type": "textarea", "placeholder": "E.g.: Medical issue, family emergency, unexpected workload..." },
-            { "key": "new_deadline", "label": "Requested new deadline", "type": "text", "placeholder": "E.g.: June 27th, one week extension" }
+            { "key": "assignment", "label": "Assignment / exam name", "type": "text", "placeholder": "E.g.: Final essay, midterm paper, group project..." },
+            { "key": "reason", "label": "Reason for the request", "type": "textarea", "placeholder": "E.g.: Medical issue, family emergency, unexpected workload..." },
+            { "key": "new_deadline", "label": "Requested new deadline", "type": "text", "placeholder": "E.g.: One week extension, by June 27th..." }
           ],
           "optional_fields": [
-            { "key": "course_name", "label": "Course name (optional)", "type": "text", "placeholder": "E.g.: ECON301 — Macroeconomics" }
+            { "key": "course_name", "label": "Course name", "type": "text", "placeholder": "E.g.: ECON301 — Macroeconomics" }
           ],
-          "prompt_template": "You are an academic email writing expert. Write 5 different extension request email drafts in {{language}} from a student to their professor or academic administrator.\n\nAssignment: {{assignment_name}}\nOriginal deadline: {{original_deadline}}\nReason: {{reason}}\nRequested extension: {{new_deadline}}\n{{course_name}}Country/academic context: {{country}}\n\nInstructions: Each email must include Subject and Body. Be honest, respectful, and specific. Avoid over-explaining. Vary: one brief and direct, one with full context and explanation, one empathetic and apologetic, one solution-focused (what you'll deliver), one that offers partial submission or alternative. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert academic email writer. Write 5 distinct extension request emails (Subject + Body) in {{language}} for a student in {{country}}. Be honest, brief, and professional — don't over-explain. User's details: Assignment: {{assignment}}, Reason: {{reason}}, Requested deadline: {{new_deadline}}, Course: {{course_name}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "university_appeal",
-          "name": "University Appeal",
-          "description": "Formal appeal letters to universities for academic decisions",
+          "id": "university_appeal", "name": "University Appeal",
+          "description": "Appealing an academic decision or grade",
           "required_fields": [
-            { "key": "appeal_type", "label": "Appeal type", "type": "select", "options": ["Grade appeal", "Admission decision", "Academic suspension", "Financial aid", "Exam / Assessment appeal", "Other"] },
-            { "key": "situation", "label": "Your situation", "type": "textarea", "placeholder": "What decision are you appealing and why? Include relevant facts and circumstances..." },
+            { "key": "appeal_type", "label": "Type of appeal", "type": "select", "options": ["Grade appeal", "Admission decision", "Academic suspension", "Financial aid", "Exam / assessment appeal"] },
+            { "key": "situation", "label": "Your situation", "type": "textarea", "placeholder": "What decision are you appealing? What are the facts and your grounds?" },
             { "key": "desired_outcome", "label": "What outcome are you requesting?", "type": "text", "placeholder": "E.g.: Reassessment of my grade, reinstatement to program..." }
           ],
           "optional_fields": [
-            { "key": "supporting_evidence", "label": "Supporting evidence (optional)", "type": "text", "placeholder": "E.g.: Medical certificate, extenuating circumstances letter..." }
+            { "key": "evidence", "label": "Supporting evidence you have", "type": "text", "placeholder": "E.g.: Medical certificate, email correspondence, extenuating circumstances..." }
           ],
-          "prompt_template": "You are an expert academic appeals letter writer. Write 5 different formal appeal letter drafts in {{language}} for a {{appeal_type}}.\n\nSituation: {{situation}}\nRequested outcome: {{desired_outcome}}\n{{supporting_evidence}}Country/academic context: {{country}}\n\nInstructions: Each letter must be formal, factual, and professionally structured with a clear request. Vary tone and structure: one focused on facts and process, one on extenuating circumstances, one on procedural fairness, one brief and direct, one comprehensive with all arguments. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert academic appeals writer. Write 5 distinct formal appeal letters in {{language}} for a student in {{country}} for a {{appeal_type}}. Be factual, respectful, and persuasive. User's details: Situation: {{situation}}, Desired outcome: {{desired_outcome}}, Evidence: {{evidence}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "internship_application",
-          "name": "Internship Application",
-          "description": "Application messages and emails for internship positions",
+          "id": "internship_application", "name": "Internship Application",
+          "description": "Applying for an internship position",
           "required_fields": [
-            { "key": "company", "label": "Company name", "type": "text", "placeholder": "Company you're applying to" },
+            { "key": "company", "label": "Company name", "type": "text", "placeholder": "The company you're applying to" },
             { "key": "role", "label": "Internship role", "type": "text", "placeholder": "E.g.: Marketing intern, software engineering intern..." },
-            { "key": "background", "label": "Your background", "type": "textarea", "placeholder": "Relevant studies, skills, projects, previous experience..." },
-            { "key": "motivation", "label": "Why this company/role?", "type": "textarea", "placeholder": "What excites you about this opportunity?" }
+            { "key": "background", "label": "Your background & motivation", "type": "textarea", "placeholder": "Relevant studies, skills, projects, and why this company..." }
           ],
           "optional_fields": [
-            { "key": "start_date", "label": "Available from (optional)", "type": "text", "placeholder": "E.g.: July 1st, immediately..." }
+            { "key": "start_date", "label": "Available from", "type": "text", "placeholder": "E.g.: July 1st, immediately, flexible..." }
           ],
-          "prompt_template": "You are a career communications expert. Write 5 different internship application message drafts in {{language}} for a {{role}} position at {{company}}.\n\nBackground: {{background}}\nMotivation: {{motivation}}\n{{start_date}}Country context: {{country}}\n\nInstructions: Each message should be energetic, specific to the company, and clearly show what the student brings. Vary: one achievement-led, one passion-and-curiosity-led, one skills-matching, one company-specific research angle, one concise and direct. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert internship application writer. Write 5 distinct application messages in {{language}} for someone applying for a {{role}} internship at {{company}} in {{country}}. Show enthusiasm and specific skills. User's details: Background: {{background}}, Available: {{start_date}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "study_group", "name": "Study Group Message",
+          "description": "Coordinating with classmates for studying or group work",
+          "required_fields": [
+            { "key": "purpose", "label": "Purpose", "type": "select", "options": ["Form a study group", "Schedule a session", "Share notes or resources", "Ask to join a group", "Coordinate a group project"] },
+            { "key": "context", "label": "Details", "type": "textarea", "placeholder": "What subject, what's the goal, when you're thinking of meeting..." },
+            { "key": "platform", "label": "Where to send it", "type": "select", "options": ["WhatsApp", "Discord", "Email", "Slack", "In person / class chat"] }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are an expert academic communication writer. Write 5 distinct study group messages in {{language}} for a student in {{country}} to send via {{platform}} for the purpose of: {{purpose}}. Be friendly, clear, and practical. User's details: Context: {{context}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "research_inquiry", "name": "Research Inquiry",
+          "description": "Contacting researchers, professors, or institutions about research",
+          "required_fields": [
+            { "key": "research_interest", "label": "Your research interest", "type": "textarea", "placeholder": "What topic or research area are you interested in and why?" },
+            { "key": "who_contacting", "label": "Who are you contacting?", "type": "text", "placeholder": "E.g.: A professor at MIT, a research lab, a think tank..." },
+            { "key": "your_background", "label": "Your background", "type": "text", "placeholder": "E.g.: PhD student in neuroscience, BSc graduate in economics..." }
+          ],
+          "optional_fields": [
+            { "key": "specific_question", "label": "Specific question or ask", "type": "text", "placeholder": "E.g.: Would you consider supervising my thesis? Could I visit your lab?" }
+          ],
+          "prompt_template": "You are an expert academic outreach writer. Write 5 distinct research inquiry emails (Subject + Body) in {{language}} for someone in {{country}} reaching out to {{who_contacting}}. Show genuine interest and competence. User's details: Research interest: {{research_interest}}, Background: {{your_background}}, Ask: {{specific_question}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "course_feedback", "name": "Course Feedback",
+          "description": "Providing feedback on a course or academic program",
+          "required_fields": [
+            { "key": "course_name", "label": "Course name", "type": "text", "placeholder": "E.g.: Introduction to Machine Learning, HIST202..." },
+            { "key": "feedback_type", "label": "Type of feedback", "type": "select", "options": ["Positive — praising the course", "Constructive — suggesting improvements", "Mixed — both positive and critical", "Formal complaint"] },
+            { "key": "key_points", "label": "Main points to include", "type": "textarea", "placeholder": "What specifically worked or didn't work? Any examples?" }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are an expert academic communication writer. Write 5 distinct course feedback messages in {{language}} for a student in {{country}} about {{course_name}}. Be honest, specific, and constructive. User's details: Type: {{feedback_type}}, Key points: {{key_points}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "student_complaint", "name": "Student Complaint",
+          "description": "Formal complaint about an academic issue or institution",
+          "required_fields": [
+            { "key": "complaint_subject", "label": "Subject of complaint", "type": "text", "placeholder": "E.g.: Unfair marking, discrimination, poor teaching quality, admin failure..." },
+            { "key": "details", "label": "Full details", "type": "textarea", "placeholder": "What happened, when, who was involved, what impact it had on you..." },
+            { "key": "desired_outcome", "label": "What outcome do you want?", "type": "text", "placeholder": "E.g.: Formal investigation, grade review, written apology..." }
+          ],
+          "optional_fields": [
+            { "key": "evidence", "label": "Evidence you have", "type": "text", "placeholder": "E.g.: Email trail, witness names, written feedback..." }
+          ],
+          "prompt_template": "You are an expert academic complaint writer. Write 5 distinct formal student complaint letters in {{language}} for a student in {{country}}. Be assertive, factual, and professional — not emotional. User's details: Subject: {{complaint_subject}}, Details: {{details}}, Desired outcome: {{desired_outcome}}, Evidence: {{evidence}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "official",
-      "name": "Official",
-      "icon": "🏛️",
+      "id": "official", "name": "Official", "icon": "🏛️",
       "subcategories": [
         {
-          "id": "government_petition",
-          "name": "Petition",
-          "description": "Petition drafts to submit to government agencies, municipalities, or public authorities",
+          "id": "government_petition", "name": "Government Petition",
+          "description": "Formal request to a government body or public authority",
           "required_fields": [
-            { "key": "subject", "label": "Petition subject", "type": "text", "placeholder": "E.g.: Leave request, rights violation report, permit application..." },
-            { "key": "issue_description", "label": "Situation description", "type": "textarea", "placeholder": "Describe the issue or request in detail..." },
-            { "key": "desired_outcome", "label": "Expected outcome", "type": "text", "placeholder": "E.g.: Start an investigation, issue a permit, correct a record..." },
-            { "key": "authority", "label": "Authority to address", "type": "text", "placeholder": "E.g.: Mayor's Office, Ministry of Health, Police Department..." }
+            { "key": "subject", "label": "Petition subject", "type": "text", "placeholder": "E.g.: Request for street repair, rights violation report, permit application..." },
+            { "key": "details", "label": "Full details", "type": "textarea", "placeholder": "Describe the issue or request in full..." },
+            { "key": "authority", "label": "Who is this addressed to?", "type": "text", "placeholder": "E.g.: Mayor's Office, Ministry of Transport, Local Council..." }
           ],
           "optional_fields": [
-            { "key": "applicant_role", "label": "Your role / status (optional)", "type": "text", "placeholder": "E.g.: Citizen, tenant, student, business owner..." }
+            { "key": "desired_outcome", "label": "Desired outcome", "type": "text", "placeholder": "E.g.: Start an investigation, issue a permit, fix the road..." }
           ],
-          "prompt_template": "You are a formal document writer. Generate 5 different petition texts in {{language}} based on the information below. Each must be complete and ready to submit.\n\nRecipient authority: {{authority}}\nSubject: {{subject}}\nSituation: {{issue_description}}\nRequest: {{desired_outcome}}\n{{applicant_role}}Country: {{country}}\n\nEach petition must follow this format: begin with 'Dear [institution/authority],' include a subject line, state the situation and request, end with a formal closing, and include a signature block. The 5 versions should be: 1. Short and clear, 2. Detailed and reasoned, 3. Firm and assertive, 4. Diplomatic, 5. Formal and bureaucratic. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert formal petition writer. Write 5 distinct government petition texts in {{language}} addressed to {{authority}} in {{country}}. Each must have Subject, body, formal closing, and signature block. User's details: Subject: {{subject}}, Details: {{details}}, Desired outcome: {{desired_outcome}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "complaint_letter",
-          "name": "Complaint Letter",
-          "description": "Formal complaint letters about a product, service, or individual",
+          "id": "consumer_complaint", "name": "Consumer Complaint",
+          "description": "Complaint about a product or service to a company or regulator",
           "required_fields": [
-            { "key": "subject", "label": "Subject of complaint", "type": "text", "placeholder": "E.g.: Defective product, poor service, noise complaint..." },
-            { "key": "complaint_details", "label": "Complaint details", "type": "textarea", "placeholder": "What happened, when, how it affected you, what evidence you have..." },
-            { "key": "recipient", "label": "Recipient / party complained about", "type": "text", "placeholder": "E.g.: Company name, institution, person's role..." },
-            { "key": "desired_outcome", "label": "Expected resolution", "type": "text", "placeholder": "E.g.: Refund, apology, investigation, correction..." }
+            { "key": "company", "label": "Company / provider name", "type": "text", "placeholder": "E.g.: BIM, Turkcell, Amazon, British Gas..." },
+            { "key": "complaint", "label": "What happened?", "type": "textarea", "placeholder": "Describe the issue, when it occurred, what you experienced, any steps taken..." },
+            { "key": "desired_resolution", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Full refund, replacement, apology, account cancellation..." }
           ],
           "optional_fields": [
-            { "key": "tone", "label": "Tone preference (optional)", "type": "select", "options": ["Formal and measured", "Firm and determined", "Final warning"] }
+            { "key": "order_number", "label": "Order / reference number", "type": "text", "placeholder": "E.g.: Order #12345 (optional)" }
           ],
-          "prompt_template": "You are a formal letter writer. Generate 5 different complaint letter texts in {{language}}. Each must be complete and ready to send.\n\nRecipient: {{recipient}}\nSubject: {{subject}}\nDetails: {{complaint_details}}\nExpected resolution: {{desired_outcome}}\nTone preference: {{tone}}\nCountry: {{country}}\n\nEach letter must: begin with 'Dear [recipient/institution],' describe the complaint with specific facts, clearly state the expected resolution, specify a response timeframe, include formal closing and signature block. The 5 versions: 1. Short and clear, 2. Detailed and evidence-based, 3. Firm with legal implications, 4. Diplomatic and solution-focused, 5. Formal and bureaucratic. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert consumer rights letter writer. Write 5 distinct consumer complaint letters in {{language}} to {{company}} in {{country}}. Be factual, firm, and clear about what you want. User's details: Complaint: {{complaint}}, Desired resolution: {{desired_resolution}}, Reference: {{order_number}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "official_request",
-          "name": "Official Request",
-          "description": "Official letters requesting information, documents, or action from an institution",
+          "id": "legal_objection", "name": "Legal Objection",
+          "description": "Formal objection to a decision, ruling, or official action",
           "required_fields": [
-            { "key": "request_subject", "label": "Request subject", "type": "text", "placeholder": "E.g.: Information request, document approval, access rights, permit..." },
-            { "key": "reason", "label": "Reason / justification", "type": "textarea", "placeholder": "Why are you making this request? What right or need is involved?" },
-            { "key": "recipient_authority", "label": "Institution / person being requested", "type": "text", "placeholder": "E.g.: Bank, university, government agency, company..." }
+            { "key": "decision_challenged", "label": "What decision are you objecting to?", "type": "textarea", "placeholder": "Describe the decision, ruling, or action you're challenging..." },
+            { "key": "legal_basis", "label": "Legal basis for your objection", "type": "text", "placeholder": "E.g.: Violation of consumer rights, procedural error, unlawful dismissal..." },
+            { "key": "authority", "label": "Who is this addressed to?", "type": "text", "placeholder": "E.g.: Court, appellate board, HR tribunal, arbitration..." }
           ],
           "optional_fields": [
-            { "key": "deadline", "label": "Response deadline request (optional)", "type": "text", "placeholder": "E.g.: Within 15 business days, urgent..." }
+            { "key": "urgency", "label": "Urgency or deadline", "type": "text", "placeholder": "E.g.: 30-day statutory window, requesting stay of execution..." }
           ],
-          "prompt_template": "You are a formal letter writer. Generate 5 different official request letter texts in {{language}}. Each must be complete and ready to send.\n\nRecipient: {{recipient_authority}}\nRequest: {{request_subject}}\nJustification: {{reason}}\n{{deadline}}Country: {{country}}\n\nEach letter must: begin with 'Dear [institution/official],' explain the request and justification, include applicable legal or administrative basis, request a response timeframe, include formal closing and signature block. The 5 versions: 1. Short and direct, 2. Detailed and reasoned, 3. Firm and determined, 4. Diplomatic, 5. Formal bureaucratic language. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert legal objection writer. Write 5 distinct formal legal objection letters in {{language}} addressed to {{authority}} in {{country}}. Be precise, cite rights, and state the remedy sought. User's details: Decision: {{decision_challenged}}, Legal basis: {{legal_basis}}, Urgency: {{urgency}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "legal_objection",
-          "name": "Legal Objection",
-          "description": "Formal objection and appeal petitions against a decision, policy, or action",
+          "id": "visa_application", "name": "Visa Application Letter",
+          "description": "Supporting letter for a visa or travel permit application",
           "required_fields": [
-            { "key": "objection_type", "label": "Type of objection", "type": "select", "options": ["Administrative decision appeal", "Tax / Financial objection", "Labor law objection", "Contract breach notice", "Rent / Property objection", "Other legal objection"] },
-            { "key": "subject", "label": "Subject of objection", "type": "textarea", "placeholder": "Which decision or action are you objecting to? Explain in detail..." },
-            { "key": "legal_basis", "label": "Legal basis / justification", "type": "textarea", "placeholder": "What right was violated? What legal regulation are you basing this on?" },
-            { "key": "authority", "label": "Authority being petitioned", "type": "text", "placeholder": "E.g.: Court, appellate board, mediator, administration..." }
+            { "key": "visa_type", "label": "Visa type", "type": "select", "options": ["Tourist / visitor", "Student", "Work", "Family reunion", "Medical treatment", "Transit"] },
+            { "key": "purpose", "label": "Purpose of travel / application", "type": "textarea", "placeholder": "Why are you applying, what you'll do, your ties to home country..." },
+            { "key": "destination", "label": "Destination country", "type": "text", "placeholder": "E.g.: Germany, USA, UK, Schengen area..." }
           ],
           "optional_fields": [
-            { "key": "urgency", "label": "Urgency / deadline (optional)", "type": "text", "placeholder": "E.g.: I request a stay of execution, 30-day appeal period..." }
+            { "key": "supporting_info", "label": "Supporting information", "type": "text", "placeholder": "E.g.: Property ownership, family in home country, return ticket..." }
           ],
-          "prompt_template": "You are a formal legal document writer. Generate 5 different objection petition texts in {{language}}. Each must be complete and ready to submit.\n\nAuthority: {{authority}}\nType: {{objection_type}}\nSubject: {{subject}}\nLegal basis: {{legal_basis}}\n{{urgency}}Country: {{country}}\n\nEach petition must: begin with 'Dear [authority/institution],' clearly identify the decision being objected to, state the legal basis concretely, specify the desired outcome, include formal closing and signature block. The 5 versions: 1. Short and concise, 2. Detailed and legal (statutory references), 3. Firm (states judicial recourse), 4. Diplomatic, 5. Formal bureaucratic structure. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert visa support letter writer. Write 5 distinct visa application support letters in {{language}} for someone from {{country}} applying for a {{visa_type}} visa to {{destination}}. Be credible, specific, and organized. User's details: Purpose: {{purpose}}, Supporting info: {{supporting_info}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "consumer_complaint",
-          "name": "Consumer Complaint",
-          "description": "Consumer rights complaints to companies, regulators, or ombudsmen",
+          "id": "insurance_claim", "name": "Insurance Claim",
+          "description": "Filing or following up on an insurance claim",
           "required_fields": [
-            { "key": "product_service", "label": "Product or service", "type": "text", "placeholder": "E.g.: Laptop, electricity provider, airline, insurance policy..." },
-            { "key": "complaint", "label": "What went wrong?", "type": "textarea", "placeholder": "Describe the issue, dates, how it affected you, what steps you've already taken..." },
-            { "key": "company", "label": "Company / provider name", "type": "text", "placeholder": "Company or provider name" },
-            { "key": "desired_resolution", "label": "Desired resolution", "type": "text", "placeholder": "E.g.: Full refund, replacement, compensation, account cancellation..." }
+            { "key": "claim_type", "label": "Claim type", "type": "select", "options": ["Medical / health", "Property / home", "Car / vehicle", "Travel", "Life", "Other"] },
+            { "key": "incident_details", "label": "Incident / claim details", "type": "textarea", "placeholder": "What happened, when, what was affected, estimated amount..." },
+            { "key": "desired_outcome", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Full reimbursement, partial coverage, appeal denial..." }
           ],
           "optional_fields": [
-            { "key": "purchase_date", "label": "Purchase / contract date (optional)", "type": "text", "placeholder": "E.g.: Purchased on March 12, 2024" },
-            { "key": "order_number", "label": "Order / account number (optional)", "type": "text", "placeholder": "E.g.: Order #ORD-9876" }
+            { "key": "policy_number", "label": "Policy number", "type": "text", "placeholder": "E.g.: Policy #POL-123456 (optional)" }
           ],
-          "prompt_template": "You are a consumer rights communication expert. Generate 5 different consumer complaint letter texts in {{language}}. Each must be complete and ready to send.\n\nCompany: {{company}}\nProduct/Service: {{product_service}}\nComplaint: {{complaint}}\nDesired resolution: {{desired_resolution}}\n{{purchase_date}}{{order_number}}Country: {{country}}\n\nEach letter must: address the company's customer service or complaints department, state the issue factually with dates, reference consumer rights where applicable, clearly demand the resolution, set a response deadline. The 5 versions: 1. Polite first contact, 2. Firm with consumer rights cited, 3. Escalation threat (regulator / ombudsman), 4. Brief and direct, 5. Detailed and documented. Return only the numbered list, nothing else."
+          "prompt_template": "You are an expert insurance claim letter writer. Write 5 distinct insurance claim letters in {{language}} for someone in {{country}} for a {{claim_type}} claim. Be factual, organized, and assertive. User's details: Incident: {{incident_details}}, Desired outcome: {{desired_outcome}}, Policy: {{policy_number}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "landlord_tenant", "name": "Landlord / Tenant Letter",
+          "description": "Rental disputes, requests, or notices between landlord and tenant",
+          "required_fields": [
+            { "key": "sender_role", "label": "You are", "type": "select", "options": ["Tenant writing to landlord", "Landlord writing to tenant"] },
+            { "key": "issue_type", "label": "Issue type", "type": "select", "options": ["Repairs needed", "Rent dispute", "Deposit return", "Notice to vacate", "Noise / disturbance", "Privacy violation", "Lease renewal"] },
+            { "key": "details", "label": "Details", "type": "textarea", "placeholder": "Describe the situation and what needs to be communicated..." }
+          ],
+          "optional_fields": [
+            { "key": "deadline", "label": "Response / action deadline", "type": "text", "placeholder": "E.g.: Please respond within 14 days..." }
+          ],
+          "prompt_template": "You are an expert tenancy communication writer. Write 5 distinct letters in {{language}} in {{country}} written by a {{sender_role}} about: {{issue_type}}. Be firm but professional. User's details: Details: {{details}}, Deadline: {{deadline}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "neighborhood_complaint", "name": "Neighborhood Complaint",
+          "description": "Issues with neighbors, local area, or building management",
+          "required_fields": [
+            { "key": "issue", "label": "What is the issue?", "type": "textarea", "placeholder": "E.g.: Noise at night, parking violations, building maintenance, littering..." },
+            { "key": "complaint_target", "label": "Who are you writing to?", "type": "select", "options": ["Directly to the neighbor", "Building / property manager", "Local council / municipality", "Homeowners association"] },
+            { "key": "desired_action", "label": "What action do you want?", "type": "text", "placeholder": "E.g.: Stop the noise by 10pm, repair the shared fence, issue a formal warning..." }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are an expert formal complaint writer. Write 5 distinct neighborhood complaint letters in {{language}} in {{country}} addressed to {{complaint_target}}. Be specific and request concrete action. User's details: Issue: {{issue}}, Desired action: {{desired_action}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "official_request", "name": "Official Request",
+          "description": "Formal request letter to any institution or authority",
+          "required_fields": [
+            { "key": "request", "label": "What are you requesting?", "type": "text", "placeholder": "E.g.: Access to records, document certification, appointment..." },
+            { "key": "justification", "label": "Justification for your request", "type": "textarea", "placeholder": "Why you need this, what right or need is involved..." },
+            { "key": "recipient_institution", "label": "Who are you requesting from?", "type": "text", "placeholder": "E.g.: Bank, university, government registry, court..." }
+          ],
+          "optional_fields": [
+            { "key": "deadline", "label": "Response deadline requested", "type": "text", "placeholder": "E.g.: Within 15 business days, urgent..." }
+          ],
+          "prompt_template": "You are an expert formal letter writer. Write 5 distinct official request letters in {{language}} to {{recipient_institution}} in {{country}}. Each must have Subject, body, and formal closing. User's details: Request: {{request}}, Justification: {{justification}}, Deadline: {{deadline}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "appeal_letter", "name": "Appeal Letter",
+          "description": "Appealing any official decision in a formal, professional letter",
+          "required_fields": [
+            { "key": "appeal_against", "label": "What are you appealing?", "type": "text", "placeholder": "E.g.: A parking fine, a benefit denial, a planning refusal..." },
+            { "key": "grounds", "label": "Grounds for your appeal", "type": "textarea", "placeholder": "Why the decision was wrong — facts, mitigating factors, procedural errors..." },
+            { "key": "desired_outcome", "label": "What outcome do you want?", "type": "text", "placeholder": "E.g.: Overturn the decision, reduce the penalty, grant a hearing..." }
+          ],
+          "optional_fields": [
+            { "key": "evidence", "label": "Supporting evidence", "type": "text", "placeholder": "E.g.: Medical certificate, receipts, photos, witness statements..." }
+          ],
+          "prompt_template": "You are an expert appeals letter writer. Write 5 distinct appeal letters in {{language}} in {{country}}. Be logical, respectful, and persuasive. User's details: Appealing: {{appeal_against}}, Grounds: {{grounds}}, Desired outcome: {{desired_outcome}}, Evidence: {{evidence}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "freedom_of_information", "name": "Information Request",
+          "description": "Requesting official documents or data under freedom of information laws",
+          "required_fields": [
+            { "key": "information_requested", "label": "What information are you requesting?", "type": "textarea", "placeholder": "Be specific about what records, documents, or data you want..." },
+            { "key": "institution", "label": "Which institution holds this information?", "type": "text", "placeholder": "E.g.: Local council, government ministry, NHS trust, police..." },
+            { "key": "reason", "label": "Reason for the request", "type": "text", "placeholder": "E.g.: Research, personal record, public interest, journalism..." }
+          ],
+          "optional_fields": [
+            { "key": "deadline", "label": "Response deadline note", "type": "text", "placeholder": "E.g.: Statutory 20 working days, urgent due to legal proceedings..." }
+          ],
+          "prompt_template": "You are an expert FOI / information request writer. Write 5 distinct freedom of information request letters in {{language}} to {{institution}} in {{country}}. Reference relevant legal frameworks where applicable. User's details: Information requested: {{information_requested}}, Reason: {{reason}}, Deadline: {{deadline}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     },
 
     {
-      "id": "medical",
-      "name": "Medical",
-      "icon": "🏥",
+      "id": "medical", "name": "Medical", "icon": "🏥",
       "subcategories": [
         {
-          "id": "doctor_visit",
-          "name": "Doctor Visit Request",
-          "description": "Messages to book or request an urgent or routine doctor's appointment",
+          "id": "doctor_visit", "name": "Doctor Visit Preparation",
+          "description": "Describing symptoms clearly to a doctor before or during a visit",
           "required_fields": [
-            { "key": "symptoms", "label": "Symptoms or reason for visit", "type": "textarea", "placeholder": "Describe your symptoms or the reason you need to see a doctor..." },
-            { "key": "duration", "label": "How long have you had these symptoms?", "type": "select", "options": ["A few days", "About 1 week", "2 weeks", "About 1 month", "Several months"] },
-            { "key": "urgency", "label": "Urgency", "type": "select", "options": ["Routine / Non-urgent", "Would like to be seen soon", "Urgent"] }
+            { "key": "symptoms", "label": "Your symptoms", "type": "textarea", "placeholder": "Describe what you're experiencing — location, severity, what makes it better or worse..." },
+            { "key": "duration", "label": "How long have you had these symptoms?", "type": "select", "options": ["A few days", "About 1 week", "2 weeks", "About 1 month", "Several months or longer"] },
+            { "key": "urgency", "label": "How urgent is this?", "type": "select", "options": ["Routine / non-urgent", "Would like to be seen soon", "Urgent"] }
           ],
           "optional_fields": [
-            { "key": "existing_conditions", "label": "Existing conditions / medications (optional)", "type": "text", "placeholder": "E.g.: Diabetic, on blood pressure medication, asthma..." }
+            { "key": "existing_conditions", "label": "Existing conditions / medications", "type": "text", "placeholder": "E.g.: Diabetic, on blood pressure meds, asthma... (optional)" }
           ],
-          "prompt_template": "You are a medical communication assistant. Write 5 different appointment request message drafts in {{language}} to send to a doctor's office or clinic.\n\nSymptoms/reason: {{symptoms}}\nDuration: {{duration}}\nUrgency: {{urgency}}\n{{existing_conditions}}Country context: {{country}}\n\nInstructions: These are patient-to-clinic messages requesting an appointment — not medical advice. Each must clearly state the reason for the visit, duration, and urgency. Vary: one brief and factual, one with full symptom description, one emphasising urgency, one requesting a specific type of appointment (phone/in-person), one polite and formal. Return only the numbered list, nothing else."
+          "prompt_template": "You are a medical communication assistant. Write 5 distinct appointment request messages in {{language}} for a patient in {{country}} to send to their doctor or clinic. Describe symptoms clearly — these are communication aids, not medical diagnoses. User's details: Symptoms: {{symptoms}}, Duration: {{duration}}, Urgency: {{urgency}}, Existing conditions: {{existing_conditions}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "hospital_request",
-          "name": "Hospital Request",
-          "description": "Formal requests to hospitals or healthcare institutions",
+          "id": "specialist_referral", "name": "Specialist Referral Request",
+          "description": "Asking to be referred to a specialist",
           "required_fields": [
-            { "key": "request_type", "label": "Type of request", "type": "select", "options": ["Appointment booking", "Medical records request", "Referral request", "Patient transfer", "Procedure inquiry", "Second specialist opinion"] },
-            { "key": "details", "label": "Details of your request", "type": "textarea", "placeholder": "Describe your situation and exactly what you need from the hospital..." }
+            { "key": "reason", "label": "Why do you need a specialist?", "type": "textarea", "placeholder": "Describe your condition or symptoms that require specialist care..." },
+            { "key": "specialist_type", "label": "Type of specialist needed", "type": "text", "placeholder": "E.g.: Cardiologist, dermatologist, orthopedic surgeon, neurologist..." },
+            { "key": "context", "label": "Current situation", "type": "select", "options": ["GP hasn't resolved it", "Condition is worsening", "Second opinion needed", "Insurance requires referral"] }
           ],
           "optional_fields": [
-            { "key": "patient_name", "label": "Patient name (optional)", "type": "text", "placeholder": "Patient's full name if writing on behalf of someone" }
+            { "key": "existing_diagnosis", "label": "Existing diagnosis", "type": "text", "placeholder": "E.g.: Currently diagnosed with X, on Y medication..." }
           ],
-          "prompt_template": "You are a medical communication assistant. Write 5 different hospital request message/letter drafts in {{language}} for: {{request_type}}.\n\nDetails: {{details}}\n{{patient_name}}Country context: {{country}}\n\nInstructions: These are formal communications to a hospital or healthcare institution. Be clear, factual, and professional. Vary: one brief and direct, one detailed with full context, one formal letter format, one polite and patient-forward, one with clear timeline/urgency. Note: these are communication drafts, not medical advice. Return only the numbered list, nothing else."
+          "prompt_template": "You are a medical communication assistant. Write 5 distinct specialist referral request messages in {{language}} for a patient in {{country}}. Be clear about symptoms and the need for specialist care. User's details: Reason: {{reason}}, Specialist: {{specialist_type}}, Context: {{context}}, Current diagnosis: {{existing_diagnosis}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "second_opinion",
-          "name": "Second Opinion Request",
-          "description": "Messages to request a second medical opinion from another doctor or specialist",
+          "id": "second_opinion", "name": "Second Opinion Request",
+          "description": "Seeking another doctor's view on a diagnosis or treatment",
           "required_fields": [
-            { "key": "diagnosis", "label": "Current diagnosis or condition", "type": "text", "placeholder": "E.g.: Type 2 diabetes, herniated disc, suspected appendicitis..." },
-            { "key": "current_treatment", "label": "Recommended or current treatment", "type": "text", "placeholder": "E.g.: Surgery recommended, prescribed metformin, watchful waiting..." },
-            { "key": "reason_for_second_opinion", "label": "Why do you want a second opinion?", "type": "textarea", "placeholder": "E.g.: Uncertain about surgery, side effects concern me, diagnosis feels unclear..." }
+            { "key": "current_diagnosis", "label": "Current diagnosis or condition", "type": "text", "placeholder": "E.g.: Type 2 diabetes, herniated disc, suspected appendicitis..." },
+            { "key": "current_treatment", "label": "Current or recommended treatment", "type": "text", "placeholder": "E.g.: Surgery recommended, prescribed metformin, watchful waiting..." },
+            { "key": "reason", "label": "Why do you want a second opinion?", "type": "textarea", "placeholder": "E.g.: Unsure about the surgery, side effects concern me, diagnosis feels unclear..." }
           ],
           "optional_fields": [
-            { "key": "specialist_type", "label": "Type of specialist (optional)", "type": "text", "placeholder": "E.g.: Cardiologist, oncologist, orthopedic surgeon..." }
+            { "key": "specialist_type", "label": "Type of specialist", "type": "text", "placeholder": "E.g.: Oncologist, cardiologist... (optional)" }
           ],
-          "prompt_template": "You are a medical communication assistant. Write 5 different second opinion request message drafts in {{language}} to send to a doctor or specialist.\n\nDiagnosis: {{diagnosis}}\nCurrent treatment: {{current_treatment}}\nReason: {{reason_for_second_opinion}}\n{{specialist_type}}Country context: {{country}}\n\nInstructions: These are patient communication drafts — not medical advice. Each message should clearly and respectfully request a second opinion without undermining the original doctor. Vary: one brief and direct, one explaining full context, one emphasising patient rights, one framing it as seeking reassurance, one asking for a referral. Return only the numbered list, nothing else."
+          "prompt_template": "You are a medical communication assistant. Write 5 distinct second opinion request messages in {{language}} for a patient in {{country}}. Be respectful of the original doctor while clearly asserting the patient's right to a second opinion. User's details: Diagnosis: {{current_diagnosis}}, Treatment: {{current_treatment}}, Reason: {{reason}}, Specialist: {{specialist_type}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "prescription_query",
-          "name": "Prescription Query",
-          "description": "Messages to doctors or pharmacists about medications and prescriptions",
+          "id": "prescription_query", "name": "Medication Query",
+          "description": "Questions about a medication, dosage, or prescription",
           "required_fields": [
             { "key": "medication", "label": "Medication name", "type": "text", "placeholder": "E.g.: Amoxicillin, metformin, omeprazole..." },
-            { "key": "query_type", "label": "Type of query", "type": "select", "options": ["Refill request", "Side effects concern", "Dosage question", "Drug interaction", "Cost / generic alternative", "Missed dose"] },
-            { "key": "details", "label": "Details", "type": "textarea", "placeholder": "Describe your specific question or concern about the medication..." }
+            { "key": "query_type", "label": "Type of query", "type": "select", "options": ["Refill request", "Side effects concern", "Dosage question", "Drug interaction", "Cost / generic alternative", "Missed dose guidance"] },
+            { "key": "details", "label": "Details of your concern", "type": "textarea", "placeholder": "Describe your specific question or concern in more detail..." }
           ],
           "optional_fields": [
-            { "key": "pharmacy", "label": "Pharmacy name (optional)", "type": "text", "placeholder": "E.g.: Boots, CVS, local pharmacy..." }
+            { "key": "pharmacy", "label": "Pharmacy name", "type": "text", "placeholder": "E.g.: Boots, CVS, local pharmacy... (optional)" }
           ],
-          "prompt_template": "You are a medical communication assistant. Write 5 different prescription query message drafts in {{language}} to send to a doctor or pharmacist.\n\nMedication: {{medication}}\nQuery type: {{query_type}}\nDetails: {{details}}\n{{pharmacy}}Country context: {{country}}\n\nInstructions: These are patient communication drafts — not medical advice. Each must clearly state the query and what response is needed. Vary: one brief and specific, one with full context, one asking for a callback/appointment, one listing specific concerns, one requesting written guidance. Return only the numbered list, nothing else."
+          "prompt_template": "You are a medical communication assistant. Write 5 distinct medication query messages in {{language}} for a patient in {{country}} to send to their doctor or pharmacist. Be specific about the query. User's details: Medication: {{medication}}, Query: {{query_type}}, Details: {{details}}, Pharmacy: {{pharmacy}}. Rules: plain text only, no markdown, numbered list."
         },
         {
-          "id": "insurance_claim",
-          "name": "Insurance Claim",
-          "description": "Messages and letters for medical insurance claims and disputes",
+          "id": "hospital_complaint", "name": "Hospital Complaint",
+          "description": "Formal complaint about medical care or treatment received",
           "required_fields": [
-            { "key": "claim_type", "label": "Claim type", "type": "select", "options": ["Medical treatment", "Dental", "Vision / Optical", "Mental health", "Emergency treatment", "Chronic condition", "Claim dispute / denial appeal"] },
-            { "key": "incident_details", "label": "Incident / treatment details", "type": "textarea", "placeholder": "What treatment or procedure are you claiming for? When did it occur? What was the cost?" },
-            { "key": "desired_outcome", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Full reimbursement, partial coverage, denial appeal, explanation of decision..." }
+            { "key": "complaint", "label": "What happened?", "type": "textarea", "placeholder": "Describe the incident — what occurred, when, who was involved, how it affected you..." },
+            { "key": "department_or_staff", "label": "Department or staff involved", "type": "text", "placeholder": "E.g.: A&E department, Dr. Smith, ward 4B nursing staff..." },
+            { "key": "desired_outcome", "label": "What do you want?", "type": "text", "placeholder": "E.g.: Formal apology, investigation, change in procedure, compensation..." }
           ],
           "optional_fields": [
-            { "key": "policy_number", "label": "Policy number (optional)", "type": "text", "placeholder": "E.g.: Policy #POL-123456" },
-            { "key": "claim_date", "label": "Date of treatment / claim (optional)", "type": "text", "placeholder": "E.g.: April 3, 2024" }
+            { "key": "incident_date", "label": "Date of incident", "type": "text", "placeholder": "E.g.: April 3, 2024 (optional)" }
           ],
-          "prompt_template": "You are a healthcare insurance communication expert. Write 5 different insurance claim message/letter drafts in {{language}} for a {{claim_type}} claim.\n\nDetails: {{incident_details}}\nDesired outcome: {{desired_outcome}}\n{{policy_number}}{{claim_date}}Country context: {{country}}\n\nInstructions: Each communication must be factual, specific, and professional. Reference policy numbers and dates where provided. Vary: one straightforward claim submission, one detailed with full documentation list, one appeal against a denial, one requesting clarification on coverage, one formal with policy rights cited. Return only the numbered list, nothing else."
+          "prompt_template": "You are a medical complaint communication expert. Write 5 distinct formal hospital complaint letters in {{language}} for a patient in {{country}}. Be factual, firm, and professional. User's details: Complaint: {{complaint}}, About: {{department_or_staff}}, Desired outcome: {{desired_outcome}}, Date: {{incident_date}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "insurance_medical", "name": "Medical Insurance Claim",
+          "description": "Claiming medical expenses or appealing an insurance decision",
+          "required_fields": [
+            { "key": "treatment", "label": "Treatment or procedure", "type": "text", "placeholder": "E.g.: Emergency surgery, dental treatment, physiotherapy sessions..." },
+            { "key": "claim_amount", "label": "Amount being claimed", "type": "text", "placeholder": "E.g.: $2,400 / £1,800 / ₺45,000..." },
+            { "key": "incident_details", "label": "Details of the treatment / incident", "type": "textarea", "placeholder": "When, where, what happened, medical necessity, any prior approvals..." }
+          ],
+          "optional_fields": [
+            { "key": "policy_number", "label": "Policy number", "type": "text", "placeholder": "E.g.: Policy #POL-123456 (optional)" }
+          ],
+          "prompt_template": "You are a medical insurance communication expert. Write 5 distinct medical insurance claim letters in {{language}} for someone in {{country}}. Be organized, factual, and thorough. User's details: Treatment: {{treatment}}, Amount: {{claim_amount}}, Details: {{incident_details}}, Policy: {{policy_number}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "caregiver_update", "name": "Caregiver Update",
+          "description": "Updating family or medical team about a patient's condition",
+          "required_fields": [
+            { "key": "patient_condition", "label": "Patient's condition / update", "type": "textarea", "placeholder": "Describe the current state, recent changes, treatment being received..." },
+            { "key": "update_type", "label": "Type of update", "type": "select", "options": ["Progress / improving", "Stable — no change", "Decline / worsening", "Urgent situation", "General check-in"] },
+            { "key": "recipient", "label": "Who are you updating?", "type": "select", "options": ["Family members", "Doctor / medical team", "Social worker", "Care home staff", "Other caregivers"] }
+          ],
+          "optional_fields": [
+            { "key": "patient_name", "label": "Patient's name", "type": "text", "placeholder": "Optional" }
+          ],
+          "prompt_template": "You are a medical communication assistant. Write 5 distinct caregiver update messages in {{language}} for someone in {{country}} updating {{recipient}} about a patient. Be clear, compassionate, and informative. User's details: Condition: {{patient_condition}}, Update type: {{update_type}}, Patient: {{patient_name}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "mental_health", "name": "Mental Health Communication",
+          "description": "Describing mental health concerns to a professional, friend, or support line",
+          "required_fields": [
+            { "key": "situation", "label": "What are you experiencing?", "type": "textarea", "placeholder": "Describe what you've been going through — feelings, thoughts, how it's affecting you..." },
+            { "key": "message_type", "label": "Who is this message for?", "type": "select", "options": ["A therapist or counsellor", "A GP / doctor", "A trusted friend or family member", "A mental health support line", "Personal journaling / self-reflection"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Honest & open", "Calm & measured", "Urgent — I need help soon", "Hopeful & forward-looking"] }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are a compassionate mental health communication writer. Write 5 distinct messages in {{language}} for someone in {{country}}. Be honest, gentle, and supportive — this is a safe space. User's details: Situation: {{situation}}, Message for: {{message_type}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
+        }
+      ]
+    },
+
+    {
+      "id": "listings", "name": "Listings", "icon": "🏠",
+      "subcategories": [
+        {
+          "id": "property_sale", "name": "Property for Sale",
+          "description": "Listing description for a house, apartment, or land for sale",
+          "required_fields": [
+            { "key": "property_type", "label": "Property type", "type": "select", "options": ["House", "Apartment / Flat", "Villa", "Land / Plot", "Commercial property"] },
+            { "key": "description", "label": "Property details", "type": "textarea", "placeholder": "Size, rooms, features, condition, standout points, what's nearby..." },
+            { "key": "location", "label": "Location", "type": "text", "placeholder": "E.g.: Kadıköy, Istanbul / South London / Manhattan, NYC..." }
+          ],
+          "optional_fields": [
+            { "key": "price", "label": "Asking price", "type": "text", "placeholder": "E.g.: $320,000 / £450k / ₺8.5M (optional)" }
+          ],
+          "prompt_template": "You are an expert real estate copywriter. Write 5 distinct property sale listing descriptions in {{language}} for a {{property_type}} in {{location}}, {{country}}. Highlight key features and create buyer appeal. User's details: Description: {{description}}, Price: {{price}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "property_rent", "name": "Property for Rent",
+          "description": "Rental listing description to attract the right tenants",
+          "required_fields": [
+            { "key": "property_type", "label": "Property type", "type": "select", "options": ["Apartment / Flat", "House", "Room in shared house", "Studio", "Office space", "Commercial"] },
+            { "key": "description", "label": "Property details", "type": "textarea", "placeholder": "Size, rooms, furnished or not, condition, amenities, transport links..." },
+            { "key": "location", "label": "Location", "type": "text", "placeholder": "E.g.: Şişli, Istanbul / Central Manchester / Brooklyn, NY..." }
+          ],
+          "optional_fields": [
+            { "key": "monthly_rent", "label": "Monthly rent", "type": "text", "placeholder": "E.g.: $1,800/month / £1,200 pcm (optional)" }
+          ],
+          "prompt_template": "You are an expert real estate copywriter. Write 5 distinct rental listing descriptions in {{language}} for a {{property_type}} in {{location}}, {{country}}. Appeal to the right tenants clearly and attractively. User's details: Description: {{description}}, Rent: {{monthly_rent}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "car_sale", "name": "Car for Sale",
+          "description": "Vehicle listing with all the details a buyer needs",
+          "required_fields": [
+            { "key": "car_details", "label": "Car details", "type": "text", "placeholder": "E.g.: 2019 Toyota Corolla, 1.6L, 45,000 km, white..." },
+            { "key": "condition", "label": "Condition", "type": "select", "options": ["Excellent — like new", "Good — minor wear", "Average — some issues", "Needs work / for parts"] },
+            { "key": "description", "label": "Additional details", "type": "textarea", "placeholder": "Service history, extras, any faults, reason for selling..." }
+          ],
+          "optional_fields": [
+            { "key": "price", "label": "Asking price", "type": "text", "placeholder": "E.g.: $12,500 / ₺650,000 (optional)" }
+          ],
+          "prompt_template": "You are an expert automotive listing writer. Write 5 distinct car sale listings in {{language}} for someone selling in {{country}}. Be specific, honest, and compelling. User's details: Car: {{car_details}}, Condition: {{condition}}, Details: {{description}}, Price: {{price}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "item_sale", "name": "Item for Sale",
+          "description": "Selling furniture, electronics, clothing, or general items",
+          "required_fields": [
+            { "key": "item_name", "label": "Item name", "type": "text", "placeholder": "E.g.: IKEA dining table, iPhone 14, vintage leather jacket..." },
+            { "key": "condition", "label": "Condition", "type": "select", "options": ["Like new / barely used", "Good condition", "Used — some wear", "As-is / for parts"] },
+            { "key": "description", "label": "Description & details", "type": "textarea", "placeholder": "Dimensions, color, age, why you're selling, any defects..." }
+          ],
+          "optional_fields": [
+            { "key": "price", "label": "Asking price", "type": "text", "placeholder": "E.g.: $80 / open to offers (optional)" }
+          ],
+          "prompt_template": "You are an expert classified ad writer. Write 5 distinct item sale listings in {{language}} for someone selling in {{country}}. Be clear, honest, and persuasive. User's details: Item: {{item_name}}, Condition: {{condition}}, Details: {{description}}, Price: {{price}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "wanted_ad", "name": "Wanted Ad",
+          "description": "Looking for something to buy, rent, or borrow",
+          "required_fields": [
+            { "key": "what_you_want", "label": "What are you looking for?", "type": "text", "placeholder": "E.g.: A second-hand bicycle, a 2-bed flat to rent, a web developer..." },
+            { "key": "budget", "label": "Your budget", "type": "text", "placeholder": "E.g.: Up to $500, £800/month, flexible for the right offer..." },
+            { "key": "requirements", "label": "Specific requirements", "type": "textarea", "placeholder": "Location, condition, size, features — what's non-negotiable?" }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are an expert classified ad writer. Write 5 distinct 'wanted' ads in {{language}} for someone in {{country}}. Be specific about what you need and your budget. User's details: Looking for: {{what_you_want}}, Budget: {{budget}}, Requirements: {{requirements}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "business_for_sale", "name": "Business for Sale",
+          "description": "Selling a business, franchise, or going concern",
+          "required_fields": [
+            { "key": "business_type", "label": "Type of business", "type": "text", "placeholder": "E.g.: Café, e-commerce store, cleaning franchise, consulting firm..." },
+            { "key": "description", "label": "Business details", "type": "textarea", "placeholder": "Revenue, staff, established since, assets included, location, what makes it valuable..." },
+            { "key": "reason_for_selling", "label": "Reason for selling", "type": "text", "placeholder": "E.g.: Relocating, retirement, new venture, lifestyle change..." }
+          ],
+          "optional_fields": [
+            { "key": "asking_price", "label": "Asking price", "type": "text", "placeholder": "E.g.: $150,000 / open to offers (optional)" }
+          ],
+          "prompt_template": "You are an expert business sale listing writer. Write 5 distinct business-for-sale listings in {{language}} for someone in {{country}}. Be transparent and highlight the opportunity clearly. User's details: Business: {{business_type}}, Details: {{description}}, Reason: {{reason_for_selling}}, Price: {{asking_price}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "service_listing", "name": "Service Listing",
+          "description": "Advertising a service you offer — freelance, local, or professional",
+          "required_fields": [
+            { "key": "service_name", "label": "Service name", "type": "text", "placeholder": "E.g.: Private math tutoring, home cleaning, logo design, plumbing..." },
+            { "key": "description", "label": "What you offer", "type": "textarea", "placeholder": "What's included, your experience, turnaround time, what makes you different..." },
+            { "key": "target_customers", "label": "Who is this for?", "type": "text", "placeholder": "E.g.: Students aged 12–18, busy families, small businesses..." }
+          ],
+          "optional_fields": [
+            { "key": "pricing", "label": "Pricing", "type": "text", "placeholder": "E.g.: From $50/hr, packages start at $200... (optional)" }
+          ],
+          "prompt_template": "You are an expert service advertisement writer. Write 5 distinct service listing descriptions in {{language}} for someone offering services in {{country}}. Highlight benefits and include a call to action. User's details: Service: {{service_name}}, Description: {{description}}, Target: {{target_customers}}, Pricing: {{pricing}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "roommate_search", "name": "Roommate Search",
+          "description": "Finding a flatmate or shared accommodation",
+          "required_fields": [
+            { "key": "location", "label": "Location", "type": "text", "placeholder": "E.g.: Beşiktaş, Istanbul / North London / Austin, TX..." },
+            { "key": "about_you", "label": "About you", "type": "textarea", "placeholder": "Your lifestyle, work/study schedule, habits, personality, what you're like as a flatmate..." },
+            { "key": "what_you_want", "label": "What you're looking for", "type": "text", "placeholder": "E.g.: A quiet professional, non-smoker, someone tidy, flexible on gender..." }
+          ],
+          "optional_fields": [
+            { "key": "budget", "label": "Your budget", "type": "text", "placeholder": "E.g.: Up to £600/month (optional)" }
+          ],
+          "prompt_template": "You are an expert roommate search ad writer. Write 5 distinct flatmate / roommate search posts in {{language}} for someone in {{location}}, {{country}}. Be genuine, friendly, and specific. User's details: About me: {{about_you}}, Looking for: {{what_you_want}}, Budget: {{budget}}. Rules: plain text only, no markdown, numbered list."
+        }
+      ]
+    },
+
+    {
+      "id": "creative", "name": "Creative", "icon": "✍️",
+      "subcategories": [
+        {
+          "id": "song_lyrics", "name": "Song Lyrics",
+          "description": "Writing lyrics for a song in any genre",
+          "required_fields": [
+            { "key": "theme", "label": "Theme / story", "type": "textarea", "placeholder": "What is the song about? A feeling, a story, a person, a moment..." },
+            { "key": "genre", "label": "Genre", "type": "select", "options": ["Pop", "R&B / Soul", "Hip-hop / Rap", "Rock", "Folk / Acoustic", "Country", "Electronic / Dance", "Other"] },
+            { "key": "structure", "label": "Structure", "type": "select", "options": ["Full song (verse, chorus, bridge)", "Just the chorus", "Just the verse", "Verse + Chorus only"] }
+          ],
+          "optional_fields": [
+            { "key": "mood", "label": "Mood", "type": "select", "options": ["Happy / uplifting", "Sad / heartbreak", "Angry / intense", "Romantic", "Nostalgic", "Empowering"] }
+          ],
+          "prompt_template": "You are an expert lyricist. Write 5 distinct song lyric drafts in {{language}} for someone in {{country}}. Each should have a distinct voice and feel. User's details: Theme: {{theme}}, Genre: {{genre}}, Structure: {{structure}}, Mood: {{mood}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "poem", "name": "Poem",
+          "description": "Any style of poem for any occasion or feeling",
+          "required_fields": [
+            { "key": "theme", "label": "Theme or subject", "type": "textarea", "placeholder": "What should the poem be about? A person, a feeling, a moment, nature..." },
+            { "key": "style", "label": "Poetry style", "type": "select", "options": ["Free verse", "Rhyming", "Haiku", "Sonnet", "Ode", "Limerick / humorous"] },
+            { "key": "occasion", "label": "Occasion or purpose", "type": "text", "placeholder": "E.g.: Wedding, birthday, personal, just for fun, gift..." }
+          ],
+          "optional_fields": [
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Romantic", "Funny / lighthearted", "Melancholic", "Uplifting", "Philosophical"] }
+          ],
+          "prompt_template": "You are an expert poet. Write 5 distinct poems in {{language}} for someone in {{country}}. Each should have a unique angle and voice. User's details: Theme: {{theme}}, Style: {{style}}, Occasion: {{occasion}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "biography", "name": "Biography / About Me",
+          "description": "A personal or professional bio for any context",
+          "required_fields": [
+            { "key": "about_the_person", "label": "About the person", "type": "textarea", "placeholder": "Who they are, what they do, experience, achievements, personality..." },
+            { "key": "context", "label": "Where will this bio be used?", "type": "select", "options": ["LinkedIn profile", "Personal website", "Conference / event speaker bio", "Book author bio", "Social media profile", "Press / media kit"] },
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Professional & formal", "Personal & human", "Inspiring & aspirational", "Humble & understated", "Bold & confident"] }
+          ],
+          "optional_fields": [
+            { "key": "highlights", "label": "Key highlights to include", "type": "text", "placeholder": "E.g.: Specific award, company name, notable achievement..." }
+          ],
+          "prompt_template": "You are an expert biography writer. Write 5 distinct bio versions in {{language}} for someone in {{country}} for {{context}}. Vary length and focus across the 5. User's details: About: {{about_the_person}}, Tone: {{tone}}, Highlights: {{highlights}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "slogan", "name": "Slogan / Tagline",
+          "description": "A catchy phrase for a brand, campaign, or product",
+          "required_fields": [
+            { "key": "brand_or_product", "label": "Brand or product name", "type": "text", "placeholder": "E.g.: BrewCo coffee, FitCore gym, Luma skincare..." },
+            { "key": "what_it_does", "label": "What does it do?", "type": "text", "placeholder": "E.g.: Specialty coffee subscription, 24/7 gym, natural skincare for sensitive skin..." },
+            { "key": "feeling_to_evoke", "label": "Feeling to evoke", "type": "select", "options": ["Trust & reliability", "Energy & excitement", "Fun & playfulness", "Luxury & premium", "Simplicity & clarity", "Power & ambition"] }
+          ],
+          "optional_fields": [],
+          "prompt_template": "You are an expert brand copywriter. Write 5 distinct slogans or taglines in {{language}} for {{brand_or_product}} in {{country}}. Each must be memorable, short, and punchy. User's details: What it does: {{what_it_does}}, Feeling to evoke: {{feeling_to_evoke}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "speech", "name": "Speech",
+          "description": "Wedding, graduation, retirement, or event speech",
+          "required_fields": [
+            { "key": "occasion", "label": "Occasion", "type": "select", "options": ["Wedding toast", "Graduation ceremony", "Birthday tribute", "Retirement send-off", "Business / award event", "Farewell / goodbye"] },
+            { "key": "speaker_relationship", "label": "Speaker's relationship to the subject", "type": "text", "placeholder": "E.g.: Best man, proud parent, long-time colleague, team manager..." },
+            { "key": "key_message", "label": "Key message or story", "type": "textarea", "placeholder": "What do you most want to say? Any specific memories, qualities, or moments to include..." }
+          ],
+          "optional_fields": [
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Emotional & heartfelt", "Funny & warm", "Inspiring", "Formal & dignified", "Casual & personal"] }
+          ],
+          "prompt_template": "You are an expert speechwriter. Write 5 distinct speech drafts in {{language}} for a {{occasion}} in {{country}}. Each must have a strong opening, main body, and memorable close. User's details: Relationship: {{speaker_relationship}}, Key message: {{key_message}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "story_opening", "name": "Story Opening",
+          "description": "The first paragraph of a story or novel — designed to hook the reader",
+          "required_fields": [
+            { "key": "genre", "label": "Genre", "type": "select", "options": ["Romance", "Thriller / Crime", "Fantasy", "Sci-fi", "Drama / Literary", "Mystery", "Horror", "Humor"] },
+            { "key": "premise", "label": "Premise / setup", "type": "textarea", "placeholder": "What is the story about? Who is the main character? What situation are they in?" }
+          ],
+          "optional_fields": [
+            { "key": "pov", "label": "Point of view", "type": "select", "options": ["First person (I)", "Third person (he/she/they)", "Second person (you)"] }
+          ],
+          "prompt_template": "You are an expert fiction writer. Write 5 distinct story opening paragraphs in {{language}} for a {{genre}} story in {{country}}. Each must immediately hook the reader — no slow starts. User's details: Premise: {{premise}}, POV: {{pov}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "toast", "name": "Toast / Tribute",
+          "description": "Raising a glass or honoring someone at a special event",
+          "required_fields": [
+            { "key": "occasion", "label": "Occasion", "type": "select", "options": ["Wedding", "Birthday (milestone)", "Retirement", "Farewell / leaving do", "New Year / celebration", "Personal achievement"] },
+            { "key": "relationship", "label": "Your relationship to the honoree", "type": "text", "placeholder": "E.g.: Best friend of 15 years, father of the groom, team lead for 3 years..." },
+            { "key": "key_traits", "label": "Key traits, memories, or inside stories", "type": "textarea", "placeholder": "What makes this person special? Any memorable stories or qualities to mention?" }
+          ],
+          "optional_fields": [
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Funny & warm", "Heartfelt & emotional", "Short & sharp", "Poetic", "Storytelling"] }
+          ],
+          "prompt_template": "You are an expert toast and tribute writer. Write 5 distinct toast speeches in {{language}} for a {{occasion}} in {{country}}. Be warm, specific, and memorable — not generic. User's details: Relationship: {{relationship}}, Traits & memories: {{key_traits}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "brand_voice", "name": "Brand Voice Statement",
+          "description": "Defining how a brand communicates — its tone, style, and personality",
+          "required_fields": [
+            { "key": "brand_name", "label": "Brand name", "type": "text", "placeholder": "E.g.: Vela Studio, Greenify, PulseHealth..." },
+            { "key": "what_brand_does", "label": "What does the brand do?", "type": "text", "placeholder": "E.g.: Sustainable fashion brand, B2B fintech platform, local bakery chain..." },
+            { "key": "target_audience", "label": "Target audience", "type": "text", "placeholder": "E.g.: Millennial professionals, eco-conscious parents, startup founders..." }
+          ],
+          "optional_fields": [
+            { "key": "personality_words", "label": "3 personality words", "type": "text", "placeholder": "E.g.: Bold, warm, witty / Trustworthy, calm, expert..." }
+          ],
+          "prompt_template": "You are an expert brand strategist and copywriter. Write 5 distinct brand voice statement drafts in {{language}} for {{brand_name}} in {{country}}. Each should define tone, style, and communication approach. User's details: What it does: {{what_brand_does}}, Audience: {{target_audience}}, Personality: {{personality_words}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "caption_creative", "name": "Creative Caption",
+          "description": "An artistic or poetic caption for any image or artwork",
+          "required_fields": [
+            { "key": "image_description", "label": "Describe the image", "type": "textarea", "placeholder": "What does the image show? What feeling does it evoke? What's the context?" },
+            { "key": "style", "label": "Caption style", "type": "select", "options": ["Poetic & lyrical", "Witty & clever", "Minimalist", "Storytelling", "Abstract & philosophical"] },
+            { "key": "platform", "label": "Platform", "type": "select", "options": ["Instagram", "Pinterest", "Tumblr", "Behance / Portfolio", "Personal blog"] }
+          ],
+          "optional_fields": [
+            { "key": "mood", "label": "Mood or atmosphere", "type": "text", "placeholder": "E.g.: Melancholic, serene, electric, nostalgic..." }
+          ],
+          "prompt_template": "You are an expert creative writer. Write 5 distinct creative captions in {{language}} for an image on {{platform}} for someone in {{country}}. Go beyond the obvious — be artistic and surprising. User's details: Image: {{image_description}}, Style: {{style}}, Mood: {{mood}}. Rules: plain text only, no markdown, numbered list."
+        },
+        {
+          "id": "eulogy", "name": "Eulogy",
+          "description": "Honoring someone who has passed with dignity and love",
+          "required_fields": [
+            { "key": "person_name", "label": "Person's name", "type": "text", "placeholder": "The name of the person being honored" },
+            { "key": "relationship", "label": "Your relationship to them", "type": "text", "placeholder": "E.g.: Their daughter, closest friend of 30 years, former colleague..." },
+            { "key": "memories_and_qualities", "label": "Memories and qualities", "type": "textarea", "placeholder": "What made them special? Specific memories, stories, personality traits, their impact on you and others..." }
+          ],
+          "optional_fields": [
+            { "key": "tone", "label": "Tone", "type": "select", "options": ["Heartfelt & emotional", "Uplifting & celebratory", "Spiritual / faith-based", "Poetic", "Simple & sincere"] }
+          ],
+          "prompt_template": "You are a compassionate eulogy writer. Write 5 distinct eulogy drafts in {{language}} for {{person_name}} in {{country}}. Honor their life with dignity, warmth, and authenticity — not generic phrases. User's details: Relationship: {{relationship}}, Memories: {{memories_and_qualities}}, Tone: {{tone}}. Rules: plain text only, no markdown, numbered list."
         }
       ]
     }

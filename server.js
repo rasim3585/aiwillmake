@@ -171,158 +171,16 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
     }
 
-    const situationLines = [...subcategory.required_fields, ...subcategory.optional_fields]
-      .map(f => {
-        const value = fields[f.key]?.trim();
-        const cleanLabel = f.label.replace(/ \(opsiyonel\)| \(optional\)/gi, '');
-        return value ? `${cleanLabel}: ${value}` : null;
-      })
-      .filter(Boolean)
-      .join('\n');
+    // Build prompt from subcategory template
+    let basePrompt = subcategory.prompt_template || '';
+    // Replace all {{key}} placeholders with field values
+    basePrompt = basePrompt.replace(/\{\{(\w+)\}\}/g, (_, key) => fields[key] || '');
+    // Clean up artifacts from empty optional fields
+    basePrompt = basePrompt
+      .replace(/,\s*,/g, ',').replace(/:\s*,/g, ':')
+      .replace(/,\s*\./g, '.').replace(/:\s*\./g, '.')
+      .replace(/\s{2,}/g, ' ').trim();
 
-    const systemPrompts = {
-      Turkish: `Sen deneyimli bir ${category.name} / ${subcategory.name} yazarısın. Bir kullanıcı sana durumunu anlattı.
-
-Görevin:
-1. Kullanıcının durumunu analiz et, duygusal ve bağlamsal detayları belirle
-2. Alakasız bilgileri görmezden gel
-3. İnsan gibi hissettiren, özgün 6 farklı metin yaz
-4. Her metin farklı bir yaklaşım kullansın (örn. doğrudan, dolaylı, duygusal, pratik, mizahi)
-5. İsim verilmişse doğal şekilde kullan
-6. Dilbilgisi kurallarına tam uy, özne-yüklem uyumuna dikkat et
-7. Klişe ifadeler kullanma, kısa ve güçlü cümleler yaz
-8. Türkiye / ${fields.country} kültür bağlamını yansıt
-
-Kullanıcının durumu:
-${situationLines}
-
-ÖNEMLİ: Sadece düz metin döndür. Markdown, kalın yazı, başlık, yıldız işareti veya hashtag kullanma. Sadece numaralı liste:
-1. [metin]
-2. [metin]
-...`,
-
-      English: `You are an expert ${category.name} / ${subcategory.name} writer. A user has shared their situation with you.
-
-Your job:
-1. Analyze the situation and identify the key emotional/contextual details
-2. Ignore irrelevant information
-3. Write 6 distinct messages that feel human and authentic
-4. Each message should have a different approach (e.g. direct, subtle, emotional, practical, humorous)
-5. Use the person's name if provided
-6. Use proper grammar and punctuation throughout
-7. Avoid clichés — write concise, powerful sentences that feel genuine
-8. Reflect ${fields.country} cultural context where appropriate
-
-User's situation:
-${situationLines}
-
-IMPORTANT: Return only plain text. No markdown, no bold, no headers, no asterisks, no hashtags. Just numbered plain text:
-1. [message]
-2. [message]
-...`,
-
-      Arabic: `أنت كاتب محترف متخصص في ${category.name} / ${subcategory.name}. شارك معك المستخدم وضعه.
-
-مهمتك:
-1. حلّل الوضع وحدّد التفاصيل العاطفية والسياقية المهمة
-2. تجاهل المعلومات غير ذات الصلة
-3. اكتب 6 رسائل مختلفة تبدو إنسانية وأصيلة
-4. لكل رسالة أسلوب مختلف (مثل: مباشر، دبلوماسي، عاطفي، عملي، خفيف الظل)
-5. استخدم الاسم بشكل طبيعي إن وُجد
-6. التزم بقواعد النحو والإملاء العربي الصحيح
-7. تجنب العبارات المبتذلة، واكتب جملاً موجزة وقوية
-8. راعِ السياق الثقافي لـ${fields.country}
-
-وضع المستخدم:
-${situationLines}
-
-مهم: أعد نصاً عادياً فقط. لا تستخدم markdown أو خطاً عريضاً أو عناوين أو نجوماً أو هاشتاغ. فقط قائمة مرقّمة:
-1. [الرسالة]
-2. [الرسالة]
-...`,
-
-      German: `Du bist ein erfahrener ${category.name} / ${subcategory.name} Texter. Ein Nutzer hat dir seine Situation geschildert.
-
-Deine Aufgabe:
-1. Analysiere die Situation und identifiziere die emotionalen und kontextuellen Details
-2. Ignoriere irrelevante Informationen
-3. Schreibe 6 verschiedene Texte, die menschlich und authentisch wirken
-4. Jeder Text soll einen anderen Ansatz haben (z. B. direkt, subtil, emotional, sachlich, humorvoll)
-5. Verwende den Namen natürlich, falls angegeben
-6. Achte auf korrekte Grammatik und Rechtschreibung
-7. Vermeide Klischees — schreibe prägnante, kraftvolle Sätze
-8. Berücksichtige den kulturellen Kontext von ${fields.country}
-
-Situation des Nutzers:
-${situationLines}
-
-WICHTIG: Gib nur einfachen Text zurück. Kein Markdown, keine Fettschrift, keine Überschriften, keine Sternchen, keine Hashtags. Nur nummerierte Liste:
-1. [Text]
-2. [Text]
-...`,
-
-      French: `Tu es un expert en rédaction ${category.name} / ${subcategory.name}. Un utilisateur t'a partagé sa situation.
-
-Ta mission :
-1. Analyser la situation et identifier les détails émotionnels et contextuels clés
-2. Ignorer les informations non pertinentes
-3. Rédiger 6 messages distincts qui semblent humains et authentiques
-4. Chaque message doit avoir une approche différente (ex. direct, subtil, émotionnel, pratique, humoristique)
-5. Utiliser le prénom naturellement s'il est fourni
-6. Respecter les règles grammaticales et orthographiques du français
-7. Éviter les clichés — écrire des phrases courtes et percutantes
-8. Tenir compte du contexte culturel de ${fields.country}
-
-Situation de l'utilisateur :
-${situationLines}
-
-IMPORTANT : Retourner uniquement du texte brut. Pas de markdown, pas de gras, pas de titres, pas d'astérisques, pas de hashtags. Juste une liste numérotée :
-1. [message]
-2. [message]
-...`,
-
-      Spanish: `Eres un experto en redacción de ${category.name} / ${subcategory.name}. Un usuario te ha compartido su situación.
-
-Tu tarea:
-1. Analizar la situación e identificar los detalles emocionales y contextuales clave
-2. Ignorar información irrelevante
-3. Escribir 6 mensajes distintos que se sientan humanos y auténticos
-4. Cada mensaje debe tener un enfoque diferente (ej. directo, sutil, emocional, práctico, humorístico)
-5. Usar el nombre de forma natural si se proporciona
-6. Respetar las reglas gramaticales y ortográficas del español
-7. Evitar clichés — escribir frases cortas y poderosas
-8. Considerar el contexto cultural de ${fields.country}
-
-Situación del usuario:
-${situationLines}
-
-IMPORTANTE: Devuelve solo texto plano. Sin markdown, sin negrita, sin títulos, sin asteriscos, sin hashtags. Solo lista numerada:
-1. [mensaje]
-2. [mensaje]
-...`,
-
-      Italian: `Sei un esperto redattore di ${category.name} / ${subcategory.name}. Un utente ti ha condiviso la sua situazione.
-
-Il tuo compito:
-1. Analizzare la situazione e identificare i dettagli emotivi e contestuali chiave
-2. Ignorare le informazioni irrilevanti
-3. Scrivere 6 messaggi distinti che sembrino umani e autentici
-4. Ogni messaggio deve avere un approccio diverso (es. diretto, sottile, emotivo, pratico, umoristico)
-5. Usare il nome in modo naturale se fornito
-6. Rispettare le regole grammaticali e ortografiche dell'italiano
-7. Evitare i cliché — scrivere frasi brevi e incisive
-8. Considerare il contesto culturale di ${fields.country}
-
-Situazione dell'utente:
-${situationLines}
-
-IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestazioni, asterischi o hashtag. Solo lista numerata:
-1. [messaggio]
-2. [messaggio]
-...`
-    };
-
-    const basePrompt = systemPrompts[fields.language] || systemPrompts['English'];
     const prompt = modifier ? `${basePrompt}\n\n${modifier}` : basePrompt;
 
     console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
@@ -341,7 +199,7 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: categoryId === 'official_legal' ? 5120 : 1280,
+          max_tokens: categoryId === 'official' ? 5120 : 1280,
           messages: [{ role: 'user', content: prompt }]
         })
       });
@@ -363,7 +221,7 @@ IMPORTANTE: Restituisci solo testo normale. Niente markdown, grassetto, intestaz
 
     let captions;
 
-    if (categoryId === 'official_legal') {
+    if (categoryId === 'official') {
       const rawBlocks = ('\n' + text).split(/\n\d+[\.\)]\s*/);
       captions = rawBlocks.slice(1)
         .map(block => {
@@ -412,48 +270,92 @@ app.post('/api/detect-category', limiter, async (req, res) => {
 Available options:
 personal/romantic_partner – message to a romantic partner
 personal/ex_partner – message to an ex
-personal/crush – message to someone you like
+personal/crush – first message to someone you like
 personal/friend – message to a friend
 personal/family – message to a family member
-personal/apology – apology message to someone
-personal/rejection – rejection / saying no to someone
+personal/apology – apology message
+personal/difficult_news – breaking bad news or a difficult message
 personal/congratulations – congratulations message
-social_media/personal_photo – photo caption for social media
-social_media/personal_story – personal story or experience post
-social_media/business_product – product or service promotion post
-social_media/business_campaign – campaign or event announcement
-social_media/sports_club – sports club or team social media post
-social_media/motivation – motivational content post
-email/professional_email – professional workplace email
-email/follow_up – follow-up email after a meeting or application
-email/apology_email – professional apology email
-email/cold_outreach – cold outreach or sales email
+personal/gratitude – thank you message to someone
+personal/checking_in – casual check-in or hello
+social_media/personal_photo – photo caption
+social_media/lifestyle – lifestyle or daily life post
+social_media/business_page – business account post
+social_media/product_showcase – product or service showcase post
+social_media/sports_club – sports team or club post
+social_media/motivation – motivational content
+social_media/event_announcement – event announcement post
+social_media/behind_the_scenes – behind the scenes content
+social_media/testimonial – customer review or testimonial post
+social_media/campaign – promotion or sale campaign post
+email/professional – professional workplace email
+email/boss – email to a manager or boss
+email/colleague – email to a coworker
+email/client – email to a client or customer
+email/cold_outreach – cold email to a new contact
+email/follow_up – follow-up email
+email/apology_email – apology via email
 email/complaint_email – complaint email to a company
 email/thank_you_email – thank you email
-business/cover_letter – cover letter for a job
-business/job_application – job application message
-business/linkedin_message – LinkedIn connection or outreach message
-business/promotion_request – salary raise or promotion request
+email/introduction – introduction email
+business/cover_letter – job application cover letter
+business/cv_summary – CV or resume summary
+business/linkedin_message – LinkedIn outreach message
+business/job_application – job application email
+business/promotion_request – raise or promotion request
+business/resignation – resignation letter
 business/business_proposal – business pitch or proposal
-business/client_email – email to a client
+business/client_proposal – proposal to a potential client
+business/payment_reminder – payment or invoice reminder
 business/contract_summary – contract or agreement summary
-business/payment_reminder – payment reminder or invoice follow-up
-academic/motivation_letter – university motivation letter or personal statement
-academic/scholarship_application – scholarship application letter
-academic/professor_email – email to a professor or academic
-academic/extension_request – assignment or deadline extension request
+business/partnership_request – collaboration or partnership proposal
+business/reference_letter – recommendation or reference letter
+academic/motivation_letter – university motivation letter
+academic/scholarship_application – scholarship application
+academic/professor_email – email to a professor
+academic/extension_request – deadline extension request
 academic/university_appeal – university appeal letter
-academic/internship_application – internship application message
-official/government_petition – petition to a government authority
-official/complaint_letter – formal complaint letter to institution
-official/official_request – official request letter
-official/legal_objection – legal objection or formal appeal
-official/consumer_complaint – consumer rights complaint
-medical/doctor_visit – request for a doctor appointment
-medical/hospital_request – request to a hospital or healthcare provider
-medical/second_opinion – request for a second medical opinion
-medical/prescription_query – query about a medication or prescription
-medical/insurance_claim – medical insurance claim or dispute
+academic/internship_application – internship application
+academic/study_group – study group message
+academic/research_inquiry – research inquiry email
+academic/course_feedback – course feedback
+academic/student_complaint – formal student complaint
+official/government_petition – petition to a government body
+official/consumer_complaint – consumer complaint
+official/legal_objection – legal objection letter
+official/visa_application – visa application support letter
+official/insurance_claim – insurance claim letter
+official/landlord_tenant – landlord or tenant letter
+official/neighborhood_complaint – neighborhood complaint
+official/official_request – formal request to an institution
+official/appeal_letter – appeal against an official decision
+official/freedom_of_information – freedom of information request
+medical/doctor_visit – doctor appointment request
+medical/specialist_referral – specialist referral request
+medical/second_opinion – second medical opinion request
+medical/prescription_query – medication or prescription query
+medical/hospital_complaint – hospital complaint
+medical/insurance_medical – medical insurance claim
+medical/caregiver_update – caregiver update message
+medical/mental_health – mental health communication
+listings/property_sale – property for sale listing
+listings/property_rent – rental property listing
+listings/car_sale – car for sale listing
+listings/item_sale – item for sale listing
+listings/wanted_ad – wanted / looking for ad
+listings/business_for_sale – business for sale listing
+listings/service_listing – service advertisement
+listings/roommate_search – roommate or flatmate search
+creative/song_lyrics – song lyrics
+creative/poem – poem
+creative/biography – biography or about me text
+creative/slogan – slogan or tagline
+creative/speech – wedding, graduation, or event speech
+creative/story_opening – story or novel opening paragraph
+creative/toast – toast or tribute speech
+creative/brand_voice – brand voice statement
+creative/caption_creative – artistic or creative caption
+creative/eulogy – eulogy
 
 User input: "${text.replace(/"/g, '\\"')}"
 
@@ -484,13 +386,15 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
     const result = JSON.parse(match[0]);
 
     const valid = {
-      personal:     ['romantic_partner','ex_partner','crush','friend','family','apology','rejection','congratulations'],
-      social_media: ['personal_photo','personal_story','business_product','business_campaign','sports_club','motivation'],
-      email:        ['professional_email','follow_up','apology_email','cold_outreach','complaint_email','thank_you_email'],
-      business:     ['cover_letter','job_application','linkedin_message','promotion_request','business_proposal','client_email','contract_summary','payment_reminder'],
-      academic:     ['motivation_letter','scholarship_application','professor_email','extension_request','university_appeal','internship_application'],
-      official:     ['government_petition','complaint_letter','official_request','legal_objection','consumer_complaint'],
-      medical:      ['doctor_visit','hospital_request','second_opinion','prescription_query','insurance_claim']
+      personal:     ['romantic_partner','ex_partner','crush','friend','family','apology','difficult_news','congratulations','gratitude','checking_in'],
+      social_media: ['personal_photo','lifestyle','business_page','product_showcase','sports_club','motivation','event_announcement','behind_the_scenes','testimonial','campaign'],
+      email:        ['professional','boss','colleague','client','cold_outreach','follow_up','apology_email','complaint_email','thank_you_email','introduction'],
+      business:     ['cover_letter','cv_summary','linkedin_message','job_application','promotion_request','resignation','business_proposal','client_proposal','payment_reminder','contract_summary','partnership_request','reference_letter'],
+      academic:     ['motivation_letter','scholarship_application','professor_email','extension_request','university_appeal','internship_application','study_group','research_inquiry','course_feedback','student_complaint'],
+      official:     ['government_petition','consumer_complaint','legal_objection','visa_application','insurance_claim','landlord_tenant','neighborhood_complaint','official_request','appeal_letter','freedom_of_information'],
+      medical:      ['doctor_visit','specialist_referral','second_opinion','prescription_query','hospital_complaint','insurance_medical','caregiver_update','mental_health'],
+      listings:     ['property_sale','property_rent','car_sale','item_sale','wanted_ad','business_for_sale','service_listing','roommate_search'],
+      creative:     ['song_lyrics','poem','biography','slogan','speech','story_opening','toast','brand_voice','caption_creative','eulogy']
     };
     if (!valid[result.categoryId]?.includes(result.subcategoryId)) {
       throw new Error('AI returned an invalid category/subcategory pair');
