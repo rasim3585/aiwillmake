@@ -754,33 +754,47 @@
     }
 
     /* ── Mode Selector ── */
+    .what-heading {
+      font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+      font-weight: 900; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 28px;
+    }
+    .what-heading span {
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
     .mode-grid {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 14px;
     }
     .mode-card {
-      background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-xl);
-      padding: 20px 18px; cursor: pointer; text-align: left;
-      display: flex; align-items: flex-start; gap: 14px;
+      background: var(--surf); border: 1px solid var(--bord); border-radius: 22px;
+      padding: 28px 22px 24px; cursor: pointer; text-align: left;
+      display: flex; flex-direction: column; gap: 12px;
       font: inherit; color: var(--text); position: relative; overflow: hidden;
       transition: transform .22s, border-color .22s, box-shadow .22s, background .22s;
     }
     .mode-card::after {
       content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
-      background: linear-gradient(140deg, rgba(110,129,255,.07), rgba(163,96,255,.04));
+      background: linear-gradient(145deg, rgba(110,129,255,.08), rgba(163,96,255,.05));
       transition: opacity .22s;
     }
-    .mode-card:hover { background: var(--surf2); border-color: var(--bord2); transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,.22); }
+    .mode-card:hover { background: var(--surf2); border-color: var(--bord2); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,.28); }
     .mode-card:hover::after { opacity: 1; }
     .mode-card.active {
-      background: var(--surfa); border-color: var(--borda);
-      box-shadow: 0 0 0 1px rgba(110,129,255,.22), 0 16px 44px rgba(110,129,255,.13);
-      transform: translateY(-3px);
+      background: linear-gradient(155deg, rgba(110,129,255,.09), rgba(163,96,255,.05));
+      border-color: var(--borda);
+      box-shadow: 0 0 0 1px rgba(110,129,255,.22), 0 20px 56px rgba(110,129,255,.16);
+      transform: translateY(-4px);
     }
     .mode-card.active::after { opacity: 1; }
-    .mode-icon { font-size: 1.45rem; line-height: 1; padding-top: 2px; flex-shrink: 0; position: relative; z-index: 1; }
-    .mode-body { position: relative; z-index: 1; }
-    .mode-title { font-size: .9rem; font-weight: 700; margin-bottom: 5px; }
-    .mode-desc  { font-size: .77rem; line-height: 1.48; color: var(--sec); }
+    .mode-card-icon  { font-size: 2.2rem; line-height: 1; position: relative; z-index: 1; }
+    .mode-card-title { font-size: 1rem; font-weight: 800; letter-spacing: -.01em; position: relative; z-index: 1; }
+    .mode-card-desc  { font-size: .8rem; line-height: 1.5; color: var(--sec); position: relative; z-index: 1; flex: 1; }
+    .mode-card-arrow {
+      font-size: .84rem; color: var(--accent); position: relative; z-index: 1; margin-top: 4px;
+      opacity: 0; transform: translateX(-5px); transition: opacity .2s, transform .2s;
+    }
+    .mode-card:hover .mode-card-arrow,
+    .mode-card.active .mode-card-arrow { opacity: 1; transform: translateX(0); }
 
     /* ── Continue Section ── */
     .continue-card {
@@ -851,7 +865,7 @@
     .btn-review-analyze:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
     .btn-review-analyze:disabled { opacity: .42; cursor: not-allowed; }
 
-    @media (max-width: 640px) {
+    @media (max-width: 680px) {
       .mode-grid     { grid-template-columns: 1fr; }
       .continue-opts { grid-template-columns: 1fr; }
     }
@@ -1086,7 +1100,6 @@
       <div class="brand">aiwillmake</div>
       <nav class="nav">
         <a href="index.html">Home</a>
-        <button type="button" class="nav-conv-btn hidden" id="convBtn">💬 History</button>
         <span class="nav-user" id="navUser"></span>
         <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()">Sign out</button>
       </nav>
@@ -1103,41 +1116,33 @@
       <div class="conv-detail hidden" id="convDetailEl"></div>
     </div>
 
-    <!-- Hero -->
+    <!-- What do you need help with? -->
     <section>
-      <h1 class="hero-title">Say the <span>right thing.</span></h1>
-      <p class="hero-sub">AI communication coach for difficult conversations.</p>
-    </section>
-
-    <!-- Mode Selector -->
-    <section>
+      <h1 class="what-heading">What do you need <span>help with?</span></h1>
       <div class="mode-grid">
-        <button type="button" class="mode-card active" data-mode="1" onclick="selectMode(1)">
-          <div class="mode-icon">✏️</div>
-          <div class="mode-body">
-            <div class="mode-title">Start a Conversation</div>
-            <div class="mode-desc">Need help writing the first message.</div>
-          </div>
+        <button type="button" class="mode-card" data-mode="1" onclick="selectMode(1)">
+          <div class="mode-card-icon">✍️</div>
+          <div class="mode-card-title">Start a Conversation</div>
+          <div class="mode-card-desc">Need help writing the first message.</div>
+          <div class="mode-card-arrow">→</div>
         </button>
         <button type="button" class="mode-card" data-mode="2" onclick="selectMode(2)">
-          <div class="mode-icon">💬</div>
-          <div class="mode-body">
-            <div class="mode-title">Continue a Conversation</div>
-            <div class="mode-desc">Paste a reply, import a chat, or open a saved conversation.</div>
-          </div>
+          <div class="mode-card-icon">💬</div>
+          <div class="mode-card-title">Continue a Conversation</div>
+          <div class="mode-card-desc">Paste a reply, import a chat, or open a saved conversation.</div>
+          <div class="mode-card-arrow">→</div>
         </button>
         <button type="button" class="mode-card" data-mode="3" onclick="selectMode(3)">
-          <div class="mode-icon">🔍</div>
-          <div class="mode-body">
-            <div class="mode-title">Review Before Sending</div>
-            <div class="mode-desc">Check tone, clarity, risk, and likely reactions before you hit send.</div>
-          </div>
+          <div class="mode-card-icon">🔍</div>
+          <div class="mode-card-title">Review Before Sending</div>
+          <div class="mode-card-desc">Check tone, risk, and likely reactions before you hit send.</div>
+          <div class="mode-card-arrow">→</div>
         </button>
       </div>
     </section>
 
     <!-- Smart Start (Mode 1) -->
-    <section id="smartStartSection">
+    <section id="smartStartSection" class="hidden">
       <div class="smart-card">
         <div class="smart-top">
           <span class="smart-badge">✦ Smart Start</span>
@@ -1166,26 +1171,19 @@
         <div class="continue-opts">
           <button type="button" class="continue-opt" id="contPasteOpt">
             <span class="co-icon">💬</span>
-            <span class="co-title">They replied</span>
-            <span class="co-desc">Paste their message and understand what it really means</span>
+            <span class="co-title">Paste their reply →</span>
+            <span class="co-desc">Analyze what they really mean and get your next move</span>
           </button>
           <button type="button" class="continue-opt" id="contImportOpt">
             <span class="co-icon">📂</span>
-            <span class="co-title">Import a chat</span>
-            <span class="co-desc">Upload a WhatsApp export (.txt) for full conversation analysis</span>
+            <span class="co-title">Import WhatsApp chat →</span>
+            <span class="co-desc">Upload a chat export (.txt) for full conversation analysis</span>
           </button>
           <button type="button" class="continue-opt" id="contHistoryOpt">
             <span class="co-icon">🕐</span>
-            <span class="co-title">Saved conversation</span>
-            <span class="co-desc">Continue from where you left off</span>
+            <span class="co-title">Open saved conversation →</span>
+            <span class="co-desc">Return to a conversation you started earlier</span>
           </button>
-        </div>
-        <div id="contPasteArea" class="cont-paste-area hidden">
-          <textarea id="contReplyInput" class="smart-ta" placeholder="Paste their reply here…" style="min-height:100px"></textarea>
-          <div class="smart-row">
-            <button type="button" class="btn-detect" id="contAnalyzeBtn">Analyze reply →</button>
-          </div>
-          <div id="contAnalysisResult"></div>
         </div>
       </div>
     </section>
@@ -1193,21 +1191,15 @@
     <!-- Mode 3: Review Before Sending -->
     <section id="reviewSection" class="hidden">
       <div class="review-card">
-        <div>
-          <div class="review-field-label">Paste the message you're about to send</div>
-          <textarea id="reviewMessageInput" class="smart-ta" placeholder="Your draft message…" style="min-height:130px"></textarea>
-        </div>
-        <div>
-          <div class="review-field-label">Context <span style="font-weight:400;color:var(--muted)">(optional)</span></div>
-          <textarea id="reviewContextInput" class="smart-ta" placeholder="Who are you writing to and why? e.g. My ex, we broke up 3 months ago, I want to reconnect…" style="min-height:72px"></textarea>
-        </div>
+        <div class="review-field-label">Paste your message here…</div>
+        <textarea id="reviewMessageInput" class="smart-ta" placeholder="The message you're about to send…" style="min-height:140px"></textarea>
         <button type="button" class="btn-review-analyze" id="reviewAnalyzeBtn">Check this message →</button>
         <div id="reviewResults" class="review-results hidden"></div>
       </div>
     </section>
 
     <!-- Step 1: Category -->
-    <section id="catSection">
+    <section id="catSection" class="hidden">
       <div class="step-header">
         <div class="step-num">1</div>
         <div class="step-text">Choose a <strong>category</strong></div>
@@ -1405,7 +1397,6 @@
           accessToken = session.access_token;
           document.getElementById('navUser').textContent = session.user.email || '';
           document.getElementById('signOutBtn').classList.remove('hidden');
-          document.getElementById('convBtn').classList.remove('hidden');
           document.getElementById('authGate').classList.add('hidden');
         } else {
           document.getElementById('authGate').classList.remove('hidden');
@@ -2468,41 +2459,46 @@
 
     // ── Continue Section ─────────────────────────────────────────
     document.getElementById('contPasteOpt').addEventListener('click', () => {
-      const area = document.getElementById('contPasteArea');
-      const isOpen = !area.classList.contains('hidden');
       document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
-      if (!isOpen) {
-        document.getElementById('contPasteOpt').classList.add('active');
-        area.classList.remove('hidden');
-        document.getElementById('contReplyInput').focus();
-      } else {
-        area.classList.add('hidden');
-      }
+      document.getElementById('contPasteOpt').classList.add('active');
+      const sim = document.getElementById('simulatorSection');
+      sim.classList.remove('hidden');
+      document.getElementById('replyAnalysis').classList.add('hidden');
+      document.getElementById('simGrid').innerHTML = '';
+      document.getElementById('simGrid').classList.add('hidden');
+      sim.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => document.getElementById('theirReplyInput').focus(), 400);
     });
 
     document.getElementById('contImportOpt').addEventListener('click', () => {
+      document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
+      document.getElementById('contImportOpt').classList.add('active');
       document.getElementById('convFileInput').click();
     });
 
     document.getElementById('contHistoryOpt').addEventListener('click', () => {
+      document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
+      document.getElementById('contHistoryOpt').classList.add('active');
       if (accessToken) showConvPanel();
       else showToast('Sign in to view your saved conversations.', 'info');
     });
 
-    document.getElementById('contAnalyzeBtn').addEventListener('click', async () => {
-      const reply = document.getElementById('contReplyInput').value.trim();
-      if (!reply) { document.getElementById('contReplyInput').focus(); return; }
+    // ── Review Section ───────────────────────────────────────────
+    document.getElementById('reviewAnalyzeBtn').addEventListener('click', async () => {
+      const message = document.getElementById('reviewMessageInput').value.trim();
+      if (!message) { document.getElementById('reviewMessageInput').focus(); return; }
 
-      const resultEl = document.getElementById('contAnalysisResult');
-      const btn      = document.getElementById('contAnalyzeBtn');
-      btn.disabled = true; btn.textContent = 'Analyzing…';
-      resultEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:72px;border-radius:10px;margin-top:12px"></div>';
+      const btn      = document.getElementById('reviewAnalyzeBtn');
+      const resultEl = document.getElementById('reviewResults');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-spin" style="display:block"></span>Analyzing…';
+      resultEl.classList.add('hidden');
 
       try {
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply, categoryId: selectedCatId || 'general', situation: '', language: lastFields.language || 'English' })
+          body: JSON.stringify({ reply: message, categoryId: selectedCatId || 'general', situation: '', language: lastFields.language || 'English' })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -2511,74 +2507,17 @@
         const lvl  = v => ({ 'High':'rb-high','Medium':'rb-mid','Low':'rb-low' }[v] || 'rb-mid');
 
         resultEl.innerHTML = `
-          <div style="margin-top:12px;display:grid;gap:10px;animation:fadeUp .3s ease">
-            <div class="review-badges">
-              ${data.interest_level   ? `<div class="review-badge ${lvl(data.interest_level)}"><span class="review-badge-lbl">Interest</span><span class="review-badge-val">${escH(data.interest_level)}</span></div>` : ''}
-              ${data.emotional_warmth ? `<div class="review-badge ${lvl(data.emotional_warmth)}"><span class="review-badge-lbl">Warmth</span><span class="review-badge-val">${escH(data.emotional_warmth)}</span></div>` : ''}
-              ${data.openness         ? `<div class="review-badge ${lvl(data.openness)}"><span class="review-badge-lbl">Openness</span><span class="review-badge-val">${escH(data.openness)}</span></div>` : ''}
-              ${data.tone             ? `<div class="review-badge rb-tone"><span class="review-badge-lbl">Tone</span><span class="review-badge-val">${escH(data.tone)}</span></div>` : ''}
-            </div>
-            ${data.hidden_signal  ? `<p style="font-size:.82rem;color:var(--sec);font-style:italic">"${escH(data.hidden_signal)}"</p>` : ''}
-            ${data.risk           ? `<div class="conv-risk">${escH(data.risk)}</div>` : ''}
-            ${data.suggested_move ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Suggested move</div><div class="conv-rec-text">${escH(data.suggested_move)}</div></div>` : ''}
-            <button type="button" class="btn-conv-generate" id="contWriteReplyBtn">Write a reply to this →</button>
-          </div>`;
-
-        document.getElementById('contWriteReplyBtn').addEventListener('click', () => {
-          selectMode(1);
-          document.getElementById('smartInput').value = `I received this reply and need to respond: "${reply.slice(0, 120)}"`;
-          detectCategory();
-        });
-      } catch {
-        resultEl.innerHTML = `<p style="color:#f87171;font-size:.83rem;margin-top:10px">Could not analyze. Please try again.</p>`;
-      } finally {
-        btn.disabled = false; btn.textContent = 'Analyze reply →';
-      }
-    });
-
-    // ── Review Section ───────────────────────────────────────────
-    document.getElementById('reviewAnalyzeBtn').addEventListener('click', async () => {
-      const message = document.getElementById('reviewMessageInput').value.trim();
-      const context = document.getElementById('reviewContextInput').value.trim();
-      if (!message) { document.getElementById('reviewMessageInput').focus(); return; }
-
-      const btn      = document.getElementById('reviewAnalyzeBtn');
-      const resultEl = document.getElementById('reviewResults');
-      btn.disabled = true;
-      btn.innerHTML = '<span style="display:inline-block;width:15px;height:15px;border-radius:50%;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .7s linear infinite;flex-shrink:0"></span>Analyzing…';
-      resultEl.classList.add('hidden');
-
-      try {
-        const resp = await fetch('/api/review-message', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, context, language: lastFields.language || 'English' })
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error);
-
-        const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const lvl     = v => ({ 'High':'rb-high','Medium':'rb-mid','Low':'rb-low' }[v] || 'rb-mid');
-        const riskLvl = v => ({ 'High':'rb-low', 'Medium':'rb-mid','Low':'rb-high' }[v] || 'rb-mid');
-
-        resultEl.innerHTML = `
           <div class="review-badges">
-            ${data.tone       ? `<div class="review-badge rb-tone"><span class="review-badge-lbl">Tone</span><span class="review-badge-val">${escH(data.tone)}</span></div>` : ''}
-            ${data.clarity    ? `<div class="review-badge ${lvl(data.clarity)}"><span class="review-badge-lbl">Clarity</span><span class="review-badge-val">${escH(data.clarity)}</span></div>` : ''}
-            ${data.risk_level ? `<div class="review-badge ${riskLvl(data.risk_level)}"><span class="review-badge-lbl">Risk</span><span class="review-badge-val">${escH(data.risk_level)}</span></div>` : ''}
+            ${data.interest_level   ? `<div class="review-badge ${lvl(data.interest_level)}"><span class="review-badge-lbl">Interest Level</span><span class="review-badge-val">${escH(data.interest_level)}</span></div>` : ''}
+            ${data.emotional_warmth ? `<div class="review-badge ${lvl(data.emotional_warmth)}"><span class="review-badge-lbl">Emotional Risk</span><span class="review-badge-val">${escH(data.emotional_warmth)}</span></div>` : ''}
+            ${data.tone             ? `<div class="review-badge rb-tone"><span class="review-badge-lbl">Tone</span><span class="review-badge-val">${escH(data.tone)}</span></div>` : ''}
           </div>
-          ${data.clarity_note ? `<p style="font-size:.82rem;color:var(--sec);line-height:1.6">${escH(data.clarity_note)}</p>` : ''}
-          ${data.risk_note    ? `<div class="conv-risk">${escH(data.risk_note)}</div>` : ''}
-          ${data.reactions?.length ? `
-            <div>
-              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px">Likely reactions</div>
-              <div class="review-reactions">${data.reactions.map(r => `<div class="review-reaction-item">${escH(r)}</div>`).join('')}</div>
-            </div>` : ''}
-          ${data.suggestion && !data.suggestion.toLowerCase().startsWith('none') ? `<div class="review-suggestion">💡 ${escH(data.suggestion)}</div>` : ''}
-          ${data.verdict ? `<div class="review-verdict">→ ${escH(data.verdict)}</div>` : ''}`;
+          ${data.hidden_signal  ? `<div class="conv-key-moment">${escH(data.hidden_signal)}</div>` : ''}
+          ${data.risk           ? `<div class="conv-risk">${escH(data.risk)}</div>` : ''}
+          ${data.suggested_move ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Suggested move</div><div class="conv-rec-text">${escH(data.suggested_move)}</div></div>` : ''}`;
         resultEl.classList.remove('hidden');
       } catch {
-        resultEl.innerHTML = `<p style="color:#f87171;font-size:.84rem">Could not review. Please try again.</p>`;
+        resultEl.innerHTML = `<p style="color:#f87171;font-size:.84rem">Could not analyze. Please try again.</p>`;
         resultEl.classList.remove('hidden');
       } finally {
         btn.disabled = false;
@@ -2728,7 +2667,6 @@
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
-    document.getElementById('convBtn').addEventListener('click', showConvPanel);
     document.getElementById('convClose').addEventListener('click', hideConvPanel);
     document.getElementById('convOverlay').addEventListener('click', hideConvPanel);
     document.getElementById('theirReplyInput').addEventListener('input', scheduleAnalysis);
