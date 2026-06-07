@@ -142,6 +142,26 @@
     /* ════════ DIVIDER ════════ */
     .hr { border: none; border-top: 1px solid var(--bord); }
 
+    /* ════════ CONVERSATION FOCUS ════════ */
+    .conv-focus { text-align: center; padding: 100px 0 88px; }
+    .conv-focus h2 {
+      font-size: clamp(2rem, 5.5vw, 4rem);
+      font-weight: 800; line-height: 1.05; letter-spacing: -.04em;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .conv-focus-gradient {
+      display: block;
+      font-size: clamp(2rem, 5.5vw, 4rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -.04em;
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 28px;
+    }
+    .conv-focus-desc {
+      color: var(--sec); font-size: clamp(.93rem, 1.8vw, 1.05rem);
+      line-height: 1.78; max-width: 480px; margin: 0 auto;
+    }
+
     /* ════════ SECTIONS ════════ */
     .s { padding: 96px 0; }
 
@@ -427,6 +447,19 @@
         <span class="trust-item">7 languages</span>
         <span class="trust-item">~30 seconds</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr" />
+
+<!-- Conversation Focus -->
+<section>
+  <div class="wrap">
+    <div class="conv-focus">
+      <h2>Don't just write better messages.</h2>
+      <span class="conv-focus-gradient">Have better conversations.</span>
+      <p class="conv-focus-desc">From the first message to their reply to your next move — manage the whole conversation, not just one text.</p>
     </div>
   </div>
 </section>

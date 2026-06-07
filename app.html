@@ -1130,7 +1130,10 @@
     <div class="conv-overlay" id="convOverlay"></div>
     <div class="conv-panel" id="convPanel">
       <div class="conv-panel-head">
-        <h2 id="convPanelTitle">My Conversations</h2>
+        <div>
+          <h2 id="convPanelTitle" style="margin-bottom:2px">Your Conversations</h2>
+          <p id="convPanelDesc" style="font-size:.74rem;color:var(--muted);margin:0">Every message, reply, and analysis — saved in one place.</p>
+        </div>
         <button class="conv-close" id="convClose">✕</button>
       </div>
       <div class="conv-list" id="convListEl"></div>
@@ -1207,7 +1210,7 @@
           <button type="button" class="continue-opt co-tertiary" id="contHistoryOpt">
             <span class="co-icon">🕐</span>
             <div class="co-body">
-              <span class="co-title">Open saved conversation →</span>
+              <span class="co-title">Open a conversation →</span>
             </div>
           </button>
         </div>
@@ -2132,14 +2135,15 @@
       const detailEl = document.getElementById('convDetailEl');
       detailEl.classList.add('hidden');
       listEl.classList.remove('hidden');
-      document.getElementById('convPanelTitle').textContent = 'My Conversations';
+      document.getElementById('convPanelTitle').textContent = 'Your Conversations';
+      document.getElementById('convPanelDesc').style.display = '';
       listEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:60px;border-radius:10px;margin-bottom:8px"></div>'.repeat(3);
       try {
         const r = await fetch('/api/conversations', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
         if (!data.length) {
-          listEl.innerHTML = '<p style="color:var(--sec);font-size:.85rem;text-align:center;padding:24px 0">No conversations yet.<br>Start writing to save your history.</p>';
+          listEl.innerHTML = '<p style="color:var(--sec);font-size:.85rem;text-align:center;padding:24px 0">No conversations yet.<br>Start one above →</p>';
           return;
         }
         listEl.innerHTML = '';
@@ -2190,6 +2194,7 @@
       detailEl.classList.remove('hidden');
       detailEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:44px;border-radius:10px;margin-bottom:8px"></div>'.repeat(4);
       document.getElementById('convPanelTitle').textContent = 'Conversation';
+      document.getElementById('convPanelDesc').style.display = 'none';
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
