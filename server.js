@@ -1090,6 +1090,96 @@ app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, asy
   }
 });
 
+// ── Contacts ───────────────────────────────────────────────────
+// SQL to run in Supabase SQL Editor before using these endpoints:
+//   CREATE TABLE IF NOT EXISTS contacts (
+//     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//     user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+//     name text NOT NULL, type text, relationship_summary text,
+//     relationship_state text, observed_patterns jsonb DEFAULT NULL,
+//     source text DEFAULT 'manual',
+//     created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now()
+//   );
+//   ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+//   CREATE POLICY "contacts_owner" ON contacts FOR ALL USING (auth.uid() = user_id);
+//   ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_id uuid REFERENCES contacts(id) ON DELETE SET NULL;
+
+app.post('/api/contacts', requireAuth, async (req, res) => {
+  try {
+    const { name, type, relationship_summary, relationship_state } = req.body;
+    if (!name?.trim()) return res.status(400).json({ error: 'name is required' });
+    const r = await fetch(`${SUPABASE_REST}/contacts`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        user_id: req.user.id, name: name.trim(),
+        type: type || null, relationship_summary: relationship_summary || null,
+        relationship_state: relationship_state || null, source: 'manual'
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    console.log('[contacts POST]', data[0]?.id);
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) { console.error('[contacts POST]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/contacts', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(
+      `${SUPABASE_REST}/contacts?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,name,type,relationship_state,relationship_summary,source,created_at,updated_at`,
+      { headers: sbHeaders(req.token) }
+    );
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(data);
+  } catch (e) { console.error('[contacts GET list]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/contacts/:id', requireAuth, async (req, res) => {
+  try {
+    const [cr, convr] = await Promise.all([
+      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,source,created_at,updated_at`,
+        { headers: sbHeaders(req.token) }),
+      fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at`,
+        { headers: sbHeaders(req.token) })
+    ]);
+    const [contacts, convs] = await Promise.all([cr.json(), convr.json()]);
+    if (!cr.ok) throw new Error(JSON.stringify(contacts));
+    if (!contacts.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ ...contacts[0], conversations: Array.isArray(convs) ? convs : [] });
+  } catch (e) { console.error('[contacts GET :id]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
+  try {
+    const { name, type, relationship_summary, relationship_state } = req.body;
+    const updates = { updated_at: new Date().toISOString() };
+    if (name !== undefined) updates.name = name;
+    if (type !== undefined) updates.type = type;
+    if (relationship_summary !== undefined) updates.relationship_summary = relationship_summary;
+    if (relationship_state !== undefined) updates.relationship_state = relationship_state;
+    const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify(updates)
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) { console.error('[contacts PATCH]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`,
+      { method: 'DELETE', headers: sbHeaders(req.token) });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(JSON.stringify(d)); }
+    console.log('[contacts DELETE]', req.params.id);
+    res.json({ deleted: true });
+  } catch (e) { console.error('[contacts DELETE]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));

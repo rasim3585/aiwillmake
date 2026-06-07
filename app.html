@@ -1175,6 +1175,78 @@
     }
     [data-tooltip]:hover::after { opacity: 1; }
 
+    /* ── Contacts Panel ── */
+    .contact-card {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-lg);
+      padding: 14px 16px; cursor: pointer; transition: border-color .18s, background .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .contact-card:hover { border-color: var(--bord2); background: var(--surf2); }
+    .contact-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .contact-name  { font-size: .9rem; font-weight: 700; color: var(--text); }
+    .ctype-badge {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; padding: 2px 8px; border-radius: 5px;
+    }
+    .ctype-ex        { background: rgba(239,68,68,.12);   color: #ef4444; }
+    .ctype-partner   { background: rgba(32,212,122,.12);  color: #20d47a; }
+    .ctype-crush     { background: rgba(245,158,11,.12);  color: #f59e0b; }
+    .ctype-friend    { background: rgba(96,165,250,.12);  color: #60a5fa; }
+    .ctype-family    { background: rgba(167,139,250,.12); color: #a78bfa; }
+    .ctype-boss      { background: rgba(251,146,60,.12);  color: #fb923c; }
+    .ctype-colleague { background: rgba(148,163,184,.12); color: #94a3b8; }
+    .ctype-client    { background: rgba(52,211,153,.12);  color: #34d399; }
+    .cstate-warm     { color: #20d47a; }
+    .cstate-cold     { color: #60a5fa; }
+    .cstate-tense    { color: #ef4444; }
+    .cstate-flirty   { color: #f59e0b; }
+    .cstate-distant, .cstate-neutral { color: var(--muted); }
+    .contact-state { font-size: .76rem; }
+    .contact-meta  { font-size: .72rem; color: var(--muted); }
+    .contact-detail-head {
+      padding-bottom: 12px; border-bottom: 1px solid var(--bord); margin-bottom: 12px;
+    }
+    .contact-detail-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+    .contacts-section-label {
+      font-size: .69rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
+    }
+    .contact-patterns-empty {
+      font-size: .8rem; color: var(--muted); font-style: italic;
+      padding: 11px 13px; border-radius: 9px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord); line-height: 1.55;
+    }
+    .btn-add-contact {
+      display: flex; align-items: center; gap: 7px; width: 100%;
+      background: rgba(110,129,255,.08); border: 1px solid rgba(110,129,255,.22);
+      color: var(--accent); border-radius: var(--r-md); padding: 10px 16px;
+      font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
+      transition: background .18s;
+    }
+    .btn-add-contact:hover { background: rgba(110,129,255,.16); }
+    .contacts-form { display: grid; gap: 12px; }
+    .contacts-form-label { font-size: .82rem; font-weight: 600; color: var(--sec); margin-bottom: 5px; display: block; }
+    .btn-save-contact {
+      width: 100%; padding: 12px; border: none; border-radius: var(--r-lg);
+      background: linear-gradient(95deg, var(--accent), var(--acc2));
+      color: #fff; font: inherit; font-size: .87rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 18px var(--glow); transition: opacity .2s;
+    }
+    .btn-save-contact:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-start-conv-contact {
+      width: 100%; padding: 12px; border: none; border-radius: var(--r-lg);
+      background: linear-gradient(95deg, var(--accent), var(--acc2));
+      color: #fff; font: inherit; font-size: .87rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 18px var(--glow); transition: opacity .2s;
+    }
+    .btn-del-contact {
+      width: 100%; background: none; border: 1px solid rgba(239,68,68,.25);
+      color: #ef4444; border-radius: var(--r-sm); padding: 7px 12px;
+      font: inherit; font-size: .77rem; cursor: pointer; transition: background .18s;
+    }
+    .btn-del-contact:hover { background: rgba(239,68,68,.08); }
+
     /* ── Toast ── */
     .toast {
       position: fixed; bottom: 28px; left: 50%;
@@ -1291,6 +1363,20 @@
       <div class="conv-detail hidden" id="convDetailEl"></div>
     </div>
 
+    <!-- Contacts Panel -->
+    <div class="conv-panel" id="contactsPanel">
+      <div class="conv-panel-head">
+        <div>
+          <h2 id="contactsPanelTitle" style="margin-bottom:2px">Your People</h2>
+          <p id="contactsPanelDesc" style="font-size:.74rem;color:var(--muted);margin:0">People you communicate with — track patterns over time.</p>
+        </div>
+        <button class="conv-close" id="contactsClose">✕</button>
+      </div>
+      <div id="contactsListEl" class="conv-list"></div>
+      <div id="contactsDetailEl" class="conv-detail hidden"></div>
+      <div id="contactsAddFormEl" class="conv-list hidden"></div>
+    </div>
+
     <!-- What do you need help with? -->
     <section>
       <h1 class="what-heading">What do you need <span>help with?</span></h1>
@@ -1344,7 +1430,14 @@
     <section id="continueSection" class="hidden">
       <div class="continue-card">
         <div class="continue-opts">
-          <button type="button" class="continue-opt co-primary" id="contPasteOpt">
+          <button type="button" class="continue-opt co-primary" id="contPeopleOpt">
+            <span class="co-icon">👥</span>
+            <div class="co-body">
+              <span class="co-title">Your people →</span>
+              <span class="co-desc">People you write to — track patterns and context over time.</span>
+            </div>
+          </button>
+          <button type="button" class="continue-opt" id="contPasteOpt" style="padding:16px 18px">
             <span class="co-icon">💬</span>
             <div class="co-body">
               <span class="co-title">Paste their reply →</span>
@@ -2709,6 +2802,13 @@
     }
 
     // ── Continue Section ─────────────────────────────────────────
+    document.getElementById('contPeopleOpt').addEventListener('click', () => {
+      document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
+      document.getElementById('contPeopleOpt').classList.add('active');
+      if (accessToken) showContactsPanel();
+      else showToast('Sign in to manage your people.', 'info');
+    });
+
     document.getElementById('contPasteOpt').addEventListener('click', () => {
       document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
       document.getElementById('contPasteOpt').classList.add('active');
@@ -2783,6 +2883,184 @@
         btn.innerHTML = 'Check this message →';
       }
     });
+    // ────────────────────────────────────────────────────────────
+
+    // ── Contacts Panel ──────────────────────────────────────────
+    function showContactsPanel() {
+      document.getElementById('contactsPanel').classList.add('open');
+      document.getElementById('convOverlay').classList.add('visible');
+      loadContactsList();
+    }
+    function hideContactsPanel() {
+      document.getElementById('contactsPanel').classList.remove('open');
+      document.getElementById('convOverlay').classList.remove('visible');
+    }
+
+    const _typeClass  = t => 'ctype-' + (t || '').toLowerCase();
+    const _stateClass = s => 'cstate-' + (s || 'neutral').toLowerCase();
+
+    async function loadContactsList() {
+      const listEl   = document.getElementById('contactsListEl');
+      const detailEl = document.getElementById('contactsDetailEl');
+      const addEl    = document.getElementById('contactsAddFormEl');
+      detailEl.classList.add('hidden'); addEl.classList.add('hidden'); listEl.classList.remove('hidden');
+      document.getElementById('contactsPanelTitle').textContent = 'Your People';
+      document.getElementById('contactsPanelDesc').style.display = '';
+
+      listEl.innerHTML =
+        '<button type="button" class="btn-add-contact" id="showAddContactBtn">+ Add someone</button>' +
+        '<div class="ns-skeleton skeleton" style="height:60px;border-radius:10px;margin-top:10px"></div>'.repeat(3);
+      document.getElementById('showAddContactBtn').addEventListener('click', showAddContactForm);
+
+      try {
+        const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const contacts = await r.json();
+        if (!r.ok) throw new Error(contacts.error);
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        listEl.innerHTML = '<button type="button" class="btn-add-contact" id="showAddContactBtn2">+ Add someone</button>';
+        document.getElementById('showAddContactBtn2').addEventListener('click', showAddContactForm);
+        if (!contacts.length) {
+          listEl.innerHTML += '<p style="color:var(--sec);font-size:.84rem;text-align:center;padding:24px 0">No people added yet.<br>Tap "+ Add someone" to get started.</p>';
+          return;
+        }
+        contacts.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'contact-card';
+          div.style.marginTop = '8px';
+          div.innerHTML = `
+            <div class="contact-card-head">
+              <span class="contact-name">${escH(c.name)}</span>
+              ${c.type ? `<span class="ctype-badge ${_typeClass(c.type)}">${escH(c.type)}</span>` : ''}
+            </div>
+            ${c.relationship_state ? `<span class="contact-state ${_stateClass(c.relationship_state)}">${escH(c.relationship_state)}</span>` : ''}
+            ${c.relationship_summary ? `<span class="contact-meta">${escH(c.relationship_summary.slice(0,60))}${c.relationship_summary.length>60?'…':''}</span>` : ''}`;
+          div.addEventListener('click', () => loadContactDetail(c.id, c.name));
+          listEl.appendChild(div);
+        });
+      } catch {
+        listEl.innerHTML += '<p style="color:#f87171;font-size:.84rem;margin-top:10px">Could not load contacts.</p>';
+      }
+    }
+
+    function showAddContactForm() {
+      document.getElementById('contactsListEl').classList.add('hidden');
+      const addEl = document.getElementById('contactsAddFormEl');
+      addEl.classList.remove('hidden');
+      document.getElementById('contactsPanelTitle').textContent = 'Add Someone';
+      document.getElementById('contactsPanelDesc').style.display = 'none';
+      addEl.innerHTML = `
+        <button class="conv-back" id="cntBack">← Back</button>
+        <div class="contacts-form" style="margin-top:14px">
+          <div><label class="contacts-form-label">Name <span style="color:var(--acc2)">*</span></label><input id="cntName" type="text" placeholder="Their name…" /></div>
+          <div><label class="contacts-form-label">Type</label>
+            <select id="cntType">
+              <option value="">Select…</option>
+              <option>Ex</option><option>Partner</option><option>Crush</option>
+              <option>Friend</option><option>Family</option><option>Boss</option>
+              <option>Colleague</option><option>Client</option>
+            </select>
+          </div>
+          <div><label class="contacts-form-label">Relationship state</label>
+            <select id="cntState">
+              <option value="">Select…</option>
+              <option>Warm</option><option>Neutral</option><option>Cold</option>
+              <option>Tense</option><option>Distant</option><option>Flirty</option>
+            </select>
+          </div>
+          <div><label class="contacts-form-label">Short summary <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+            <textarea id="cntSummary" placeholder="e.g. We dated for 2 years, broke up in March…" style="min-height:80px"></textarea>
+          </div>
+          <button type="button" class="btn-save-contact" id="cntSaveBtn">Save →</button>
+        </div>`;
+      document.getElementById('cntBack').addEventListener('click', loadContactsList);
+      document.getElementById('cntSaveBtn').addEventListener('click', saveContact);
+    }
+
+    async function saveContact() {
+      const name    = document.getElementById('cntName').value.trim();
+      const type    = document.getElementById('cntType').value;
+      const state   = document.getElementById('cntState').value;
+      const summary = document.getElementById('cntSummary').value.trim();
+      if (!name) { document.getElementById('cntName').focus(); return; }
+      const btn = document.getElementById('cntSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const r = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ name, type: type||null, relationship_state: state||null, relationship_summary: summary||null })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+        loadContactsList();
+      } catch {
+        showToast('Could not save. Please try again.', 'error');
+        btn.disabled = false; btn.textContent = 'Save →';
+      }
+    }
+
+    async function loadContactDetail(contactId, contactName) {
+      document.getElementById('contactsListEl').classList.add('hidden');
+      const detailEl = document.getElementById('contactsDetailEl');
+      detailEl.classList.remove('hidden');
+      document.getElementById('contactsPanelTitle').textContent = contactName;
+      document.getElementById('contactsPanelDesc').style.display = 'none';
+      detailEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(4);
+      try {
+        const r = await fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const c = await r.json();
+        if (!r.ok) throw new Error(c.error);
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const fmt = d => new Date(d).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+        const convs = c.conversations || [];
+        detailEl.innerHTML = `
+          <button class="conv-back" id="cntDetailBack">← All people</button>
+          <div class="contact-detail-head" style="margin-top:10px">
+            <div class="contact-detail-name">${escH(c.name)}</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;flex-wrap:wrap">
+              ${c.type ? `<span class="ctype-badge ${_typeClass(c.type)}">${escH(c.type)}</span>` : ''}
+              ${c.relationship_state ? `<span class="contact-state ${_stateClass(c.relationship_state)}">${escH(c.relationship_state)}</span>` : ''}
+            </div>
+            ${c.relationship_summary ? `<p style="font-size:.8rem;color:var(--sec);line-height:1.55">${escH(c.relationship_summary)}</p>` : ''}
+          </div>
+          <div style="margin-bottom:14px">
+            <div class="contacts-section-label">Observed patterns</div>
+            <div class="contact-patterns-empty">Import a WhatsApp chat with this person to automatically learn their communication patterns.</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <div class="contacts-section-label">Conversations (${convs.length})</div>
+            ${convs.length ? convs.map(cv => {
+              const cat = appData?.categories.find(x => x.id === cv.category_id);
+              const sub = cat?.subcategories.find(x => x.id === cv.subcategory_id);
+              return `<div class="conv-item" style="margin-bottom:8px;cursor:default">
+                <div class="conv-item-cat">${escH(cat?.icon||'')} ${escH(cat?.name||cv.category_id)} · ${escH(sub?.name||cv.subcategory_id)}</div>
+                <div class="conv-item-preview">"${escH((cv.situation||'—').slice(0,52))}${(cv.situation||'').length>52?'…':''}"</div>
+                <span class="conv-item-date">${fmt(cv.created_at)}</span>
+              </div>`;
+            }).join('') : '<p style="color:var(--sec);font-size:.82rem;margin-bottom:8px">No conversations linked to this person yet.</p>'}
+          </div>
+          <button type="button" class="btn-start-conv-contact" id="startConvWithCnt">✍️ Start a conversation with ${escH(c.name)} →</button>
+          <button type="button" class="btn-del-contact" style="margin-top:10px" id="delCntBtn">Delete this person</button>`;
+        document.getElementById('cntDetailBack').addEventListener('click', loadContactsList);
+        document.getElementById('startConvWithCnt').addEventListener('click', () => {
+          hideContactsPanel();
+          selectMode(1);
+          document.getElementById('smartInput').value = `I need to write to ${c.name}.`;
+          detectCategory();
+        });
+        document.getElementById('delCntBtn').addEventListener('click', async () => {
+          if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
+          try {
+            const dr = await fetch(`/api/contacts/${contactId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
+            if (!dr.ok) throw new Error();
+            loadContactsList();
+          } catch { showToast('Could not delete. Please try again.', 'error'); }
+        });
+      } catch {
+        detailEl.innerHTML = `<button class="conv-back" id="cntDetailBack2">← Back</button><p style="color:#f87171;font-size:.84rem;margin-top:10px">Could not load.</p>`;
+        document.getElementById('cntDetailBack2').addEventListener('click', loadContactsList);
+      }
+    }
     // ────────────────────────────────────────────────────────────
 
     // ── Conversation Import ─────────────────────────────────────
@@ -2927,7 +3205,8 @@
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
     document.getElementById('convClose').addEventListener('click', hideConvPanel);
-    document.getElementById('convOverlay').addEventListener('click', hideConvPanel);
+    document.getElementById('contactsClose').addEventListener('click', hideContactsPanel);
+    document.getElementById('convOverlay').addEventListener('click', () => { hideConvPanel(); hideContactsPanel(); });
     document.getElementById('theirReplyInput').addEventListener('input', scheduleAnalysis);
     document.getElementById('theirReplyInput').addEventListener('keydown', e => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fetchNextReply();
