@@ -937,6 +937,7 @@ LAST_MESSAGE_BY: [A or B]
 DAYS_SINCE_LAST: [number of days if timestamps visible, otherwise omit]
 RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
+OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -949,7 +950,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Language context: ${lang}\n\nConversation:\n${snippet}` }]
       })
@@ -964,21 +965,27 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       return m ? m[1].trim() : null;
     };
 
-    console.log('[analyze-conversation] done | interest:', extract('INTEREST_LEVEL'));
+    const patternsRaw = extract('OBSERVED_PATTERNS');
+    const observed_patterns = patternsRaw
+      ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 4)
+      : [];
+
+    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| patterns:', observed_patterns.length);
     res.json({
-      person_a:          extract('PERSON_A'),
-      person_b:          extract('PERSON_B'),
-      total_messages:    extract('TOTAL_MESSAGES'),
-      person_a_messages: extract('PERSON_A_MESSAGES'),
-      person_b_messages: extract('PERSON_B_MESSAGES'),
-      power_balance:     extract('POWER_BALANCE'),
-      interest_level:    extract('INTEREST_LEVEL'),
-      emotional_tone:    extract('EMOTIONAL_TONE'),
-      key_moment:        extract('KEY_MOMENT'),
-      last_message_by:   extract('LAST_MESSAGE_BY'),
-      days_since_last:   extract('DAYS_SINCE_LAST'),
-      recommended_next:  extract('RECOMMENDED_NEXT'),
-      biggest_risk:      extract('BIGGEST_RISK')
+      person_a:           extract('PERSON_A'),
+      person_b:           extract('PERSON_B'),
+      total_messages:     extract('TOTAL_MESSAGES'),
+      person_a_messages:  extract('PERSON_A_MESSAGES'),
+      person_b_messages:  extract('PERSON_B_MESSAGES'),
+      power_balance:      extract('POWER_BALANCE'),
+      interest_level:     extract('INTEREST_LEVEL'),
+      emotional_tone:     extract('EMOTIONAL_TONE'),
+      key_moment:         extract('KEY_MOMENT'),
+      last_message_by:    extract('LAST_MESSAGE_BY'),
+      days_since_last:    extract('DAYS_SINCE_LAST'),
+      recommended_next:   extract('RECOMMENDED_NEXT'),
+      biggest_risk:       extract('BIGGEST_RISK'),
+      observed_patterns
     });
   } catch (e) {
     console.error('[analyze-conversation]', e.message);
@@ -1153,12 +1160,13 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
     if (relationship_summary !== undefined) updates.relationship_summary = relationship_summary;
     if (relationship_state !== undefined) updates.relationship_state = relationship_state;
+    if (observed_patterns !== undefined) updates.observed_patterns = observed_patterns;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },

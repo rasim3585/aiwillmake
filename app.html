@@ -1216,6 +1216,27 @@
       padding: 11px 13px; border-radius: 9px;
       background: rgba(255,255,255,.04); border: 1px solid var(--bord); line-height: 1.55;
     }
+    .contact-pattern-item {
+      font-size: .81rem; color: var(--sec); line-height: 1.55; padding: 8px 12px;
+      border-left: 2px solid rgba(110,129,255,.4); margin-bottom: 6px;
+      background: rgba(110,129,255,.04); border-radius: 0 7px 7px 0;
+    }
+    .contact-patterns-note {
+      font-size: .69rem; color: var(--muted); font-style: italic; margin-top: 8px; line-height: 1.4;
+    }
+    .btn-import-contact-chat {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+      background: rgba(37,211,102,.1); border: 1px solid rgba(37,211,102,.25);
+      color: #20d47a; border-radius: 8px; padding: 7px 13px;
+      font: inherit; font-size: .79rem; font-weight: 700; cursor: pointer;
+      transition: background .18s;
+    }
+    .btn-import-contact-chat:hover { background: rgba(37,211,102,.2); }
+    .contact-patterns-loading {
+      display: flex; align-items: center; gap: 9px; padding: 12px 13px; border-radius: 9px;
+      background: rgba(110,129,255,.06); border: 1px solid rgba(110,129,255,.2);
+      font-size: .82rem; color: var(--sec);
+    }
     .btn-add-contact {
       display: flex; align-items: center; gap: 7px; width: 100%;
       background: rgba(110,129,255,.08); border: 1px solid rgba(110,129,255,.22);
@@ -1422,6 +1443,7 @@
         </div>
         <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt)</label>
         <input type="file" id="convFileInput" accept=".txt" style="display:none">
+        <input type="file" id="contactChatInput" accept=".txt" style="display:none">
         <div id="convAnalysisResult" class="conv-analysis-result hidden"></div>
       </div>
     </section>
@@ -2886,6 +2908,119 @@
     // ────────────────────────────────────────────────────────────
 
     // ── Contacts Panel ──────────────────────────────────────────
+
+    function renderContactPatterns(name, patterns) {
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (patterns?.length) {
+        return `
+          <div class="contacts-section-label">What we learned about ${escH(name)}</div>
+          <div>${patterns.map(p => `<div class="contact-pattern-item">${escH(p)}</div>`).join('')}</div>
+          <p class="contact-patterns-note">Based on conversation history — observations, not labels.</p>
+          <button class="btn-import-contact-chat" id="reimportChatBtn">↻ Update with new chat</button>`;
+      }
+      return `
+        <div class="contacts-section-label">Observed patterns</div>
+        <div class="contact-patterns-empty">Import a WhatsApp chat with this person to automatically learn their communication patterns.</div>
+        <button class="btn-import-contact-chat" id="importChatBtn">Import WhatsApp chat →</button>
+        <div id="contactImportInfo" class="wai-box hidden" style="margin-top:10px">
+          <p class="wai-text"><strong>How to export:</strong> Open the chat → tap <em>⋮</em> → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file.</p>
+          <button class="wai-btn" id="contactChooseFileBtn">Choose file →</button>
+        </div>`;
+    }
+
+    function wireContactImportBtn(contactId, contactName) {
+      const showInfo = () => {
+        const info = document.getElementById('contactImportInfo');
+        if (info) {
+          info.classList.toggle('hidden');
+          if (!info.classList.contains('hidden')) {
+            document.getElementById('contactChooseFileBtn')?.addEventListener('click', () => {
+              const inp = document.getElementById('contactChatInput');
+              inp.dataset.contactId = contactId;
+              inp.dataset.contactName = contactName;
+              inp.click();
+            }, { once: true });
+          }
+        }
+      };
+      document.getElementById('importChatBtn')?.addEventListener('click', showInfo);
+      document.getElementById('reimportChatBtn')?.addEventListener('click', () => {
+        const inp = document.getElementById('contactChatInput');
+        inp.dataset.contactId = contactId;
+        inp.dataset.contactName = contactName;
+        inp.click();
+      });
+    }
+
+    function mapToneToState(tone) {
+      const t = (tone || '').toLowerCase();
+      if (t.includes('warm') || t.includes('friendly') || t.includes('positive')) return 'Warm';
+      if (t.includes('cold') || t.includes('distant') || t.includes('formal')) return 'Cold';
+      if (t.includes('tense') || t.includes('conflict') || t.includes('difficult')) return 'Tense';
+      if (t.includes('flirt') || t.includes('playful') || t.includes('romantic')) return 'Flirty';
+      return 'Neutral';
+    }
+
+    async function analyzeContactChat(file, contactId, contactName) {
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const patternsEl = document.getElementById('patternsSectionEl');
+      if (patternsEl) {
+        patternsEl.innerHTML = `
+          <div class="contacts-section-label">Observed patterns</div>
+          <div class="contact-patterns-loading">
+            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:var(--accent);animation:spin .7s linear infinite;flex-shrink:0"></span>
+            Building ${escH(contactName)}'s profile…
+          </div>`;
+      }
+
+      try {
+        const text = await file.text();
+        const [analysisRes] = await Promise.all([
+          fetch('/api/analyze-conversation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversationText: text, language: lastFields.language || 'English' })
+          }),
+          new Promise(r => setTimeout(r, 2200)) // feel substantial
+        ]);
+        const data = await analysisRes.json();
+        if (!analysisRes.ok) throw new Error(data.error);
+
+        const patterns = data.observed_patterns || [];
+        const patchBody = { observed_patterns: patterns.length ? patterns : null };
+        if (data.emotional_tone) patchBody.relationship_state = mapToneToState(data.emotional_tone);
+        if (data.recommended_next) patchBody.relationship_summary = data.recommended_next;
+
+        await fetch(`/api/contacts/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify(patchBody)
+        });
+
+        if (patternsEl) {
+          patternsEl.innerHTML = renderContactPatterns(contactName, patterns.length ? patterns : null);
+          wireContactImportBtn(contactId, contactName);
+        }
+        if (!patterns.length) showToast('Analysis complete — not enough patterns found.', 'info');
+      } catch {
+        if (patternsEl) {
+          patternsEl.innerHTML = renderContactPatterns(contactName, null);
+          wireContactImportBtn(contactId, contactName);
+        }
+        showToast('Could not analyze chat. Please try again.', 'error');
+      } finally {
+        document.getElementById('contactChatInput').value = '';
+      }
+    }
+
+    document.getElementById('contactChatInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const { contactId, contactName } = e.target.dataset;
+      if (!contactId) return;
+      await analyzeContactChat(file, contactId, contactName);
+    });
+
     function showContactsPanel() {
       document.getElementById('contactsPanel').classList.add('open');
       document.getElementById('convOverlay').classList.add('visible');
@@ -3023,9 +3158,8 @@
             </div>
             ${c.relationship_summary ? `<p style="font-size:.8rem;color:var(--sec);line-height:1.55">${escH(c.relationship_summary)}</p>` : ''}
           </div>
-          <div style="margin-bottom:14px">
-            <div class="contacts-section-label">Observed patterns</div>
-            <div class="contact-patterns-empty">Import a WhatsApp chat with this person to automatically learn their communication patterns.</div>
+          <div id="patternsSectionEl" style="margin-bottom:14px">
+            ${renderContactPatterns(c.name, c.observed_patterns)}
           </div>
           <div style="margin-bottom:16px">
             <div class="contacts-section-label">Conversations (${convs.length})</div>
@@ -3042,6 +3176,7 @@
           <button type="button" class="btn-start-conv-contact" id="startConvWithCnt">✍️ Start a conversation with ${escH(c.name)} →</button>
           <button type="button" class="btn-del-contact" style="margin-top:10px" id="delCntBtn">Delete this person</button>`;
         document.getElementById('cntDetailBack').addEventListener('click', loadContactsList);
+        wireContactImportBtn(contactId, c.name);
         document.getElementById('startConvWithCnt').addEventListener('click', () => {
           hideContactsPanel();
           selectMode(1);
