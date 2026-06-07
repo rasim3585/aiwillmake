@@ -122,12 +122,18 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .nav { display: flex; gap: 8px; align-items: center; }
+    .nav-user {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      display: inline-grid; place-items: center;
+      font-size: .72rem; font-weight: 800; color: #fff;
+      letter-spacing: 0; padding: 0; cursor: default; border: none;
+    }
     .nav a {
       color: var(--sec); text-decoration: none; font-size: .88rem;
       padding: 7px 14px; border-radius: 99px; transition: color .2s, background .2s;
     }
     .nav a:hover { color: var(--text); background: var(--surf); }
-    .nav-user { color: var(--sec); font-size: .82rem; padding: 0 4px; }
     .btn-signout {
       background: transparent; border: 1px solid var(--bord); color: var(--sec);
       padding: 6px 14px; border-radius: 99px; font: inherit; font-size: .81rem;
@@ -351,6 +357,14 @@
     .upgrade-msg a:hover { text-decoration: underline; }
 
     /* ── Results ── */
+    .result-credit-badge {
+      font-size: .72rem; color: var(--muted);
+      background: rgba(255,255,255,.05); border: 1px solid var(--bord);
+      padding: 3px 9px; border-radius: 99px; white-space: nowrap;
+    }
+    .result-credit-badge.rbc-warn { color: #f59e0b; border-color: rgba(245,158,11,.3); }
+    .results-loading-bar { display: flex; align-items: center; gap: 10px; padding: 4px 0 2px; }
+    .results-loading-msg { font-size: .83rem; color: var(--sec); font-style: italic; }
     .results-section { display: grid; gap: 20px; }
     .results-header {
       display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
@@ -1009,6 +1023,25 @@
     .btn-review-analyze:disabled { opacity: .42; cursor: not-allowed; }
 
 
+    /* ── WhatsApp import info box ── */
+    .wai-box {
+      margin-top: 10px; padding: 12px 14px; border-radius: 10px;
+      background: rgba(37,211,102,.07); border: 1px solid rgba(37,211,102,.22);
+      display: flex; flex-direction: column; gap: 10px;
+      animation: fadeUp .25s ease both;
+    }
+    .wai-text { font-size: .81rem; line-height: 1.65; color: var(--sec); }
+    .wai-text strong { color: var(--text); font-weight: 700; }
+    .wai-text em { color: var(--text); font-style: normal; font-weight: 600; }
+    .wai-btn {
+      align-self: flex-start; background: rgba(37,211,102,.12);
+      border: 1px solid rgba(37,211,102,.28); color: #20d47a;
+      border-radius: 8px; padding: 7px 14px; font: inherit;
+      font-size: .8rem; font-weight: 700; cursor: pointer;
+      transition: background .18s; min-height: 36px;
+    }
+    .wai-btn:hover { background: rgba(37,211,102,.22); }
+
     /* ── Conversation Import ── */
     .import-link {
       font-size: .79rem; color: var(--muted); cursor: pointer;
@@ -1408,7 +1441,13 @@
     <section id="resultsSection" class="results-section hidden">
       <div class="results-header">
         <h2 class="results-title">Communication strategies</h2>
-        <p class="results-note">Select the approach that fits your situation</p>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span id="resultCreditBadge" class="result-credit-badge hidden"></span>
+          <p class="results-note" id="resultsNote">Select the approach that fits your situation</p>
+        </div>
+      </div>
+      <div id="resultsLoadingBar" class="results-loading-bar hidden">
+        <span id="resultsLoadingMsg" class="results-loading-msg"></span>
       </div>
       <div class="cards-grid" id="captionsContainer"></div>
       <div class="action-btns">
@@ -1502,7 +1541,7 @@
       const upgradeMsg = document.getElementById('upgradeMsg');
       const generateBtn = document.getElementById('generateBtn');
 
-      wrap.classList.remove('hidden');
+      // credit wrap stays hidden in form; button state still updates
       label.textContent = isGuest ? 'Free uses (guest)' : 'Generations used';
       const remaining = Math.max(limit - used, 0);
       count.textContent = `${used} / ${limit}`;
@@ -1551,7 +1590,7 @@
         const { data: { session } } = await sbClient.auth.getSession();
         if (session) {
           accessToken = session.access_token;
-          document.getElementById('navUser').textContent = session.user.email || '';
+          const _nu = document.getElementById('navUser'); _nu.textContent = (session.user.email || '?').charAt(0).toUpperCase(); _nu.title = session.user.email || '';
           document.getElementById('signOutBtn').classList.remove('hidden');
           document.getElementById('authGate').classList.add('hidden');
         } else {
@@ -1561,7 +1600,7 @@
         sbClient.auth.onAuthStateChange((_event, session) => {
           if (session) {
             accessToken = session.access_token;
-            document.getElementById('navUser').textContent = session.user.email || '';
+            const _nu = document.getElementById('navUser'); _nu.textContent = (session.user.email || '?').charAt(0).toUpperCase(); _nu.title = session.user.email || '';
             document.getElementById('signOutBtn').classList.remove('hidden');
             document.getElementById('authGate').classList.add('hidden');
             fetchAndShowCredits();
@@ -1811,17 +1850,20 @@
 
     function startLoadingMessages(labelEl) {
       let idx = 0;
-      labelEl.textContent = GEN_MESSAGES[0];
+      const msgEl = document.getElementById('resultsLoadingMsg');
+      const loadBar = document.getElementById('resultsLoadingBar');
+      const set = m => { if (labelEl) labelEl.textContent = m; if (msgEl) msgEl.textContent = m; };
+      set(GEN_MESSAGES[0]);
+      if (loadBar) loadBar.classList.remove('hidden');
       clearInterval(_msgTimer);
-      _msgTimer = setInterval(() => {
-        idx = (idx + 1) % GEN_MESSAGES.length;
-        labelEl.textContent = GEN_MESSAGES[idx];
-      }, 1800);
+      _msgTimer = setInterval(() => { idx = (idx + 1) % GEN_MESSAGES.length; set(GEN_MESSAGES[idx]); }, 1800);
     }
 
     function stopLoadingMessages(labelEl) {
       clearInterval(_msgTimer);
       if (labelEl) labelEl.textContent = 'Generate ✦';
+      const loadBar = document.getElementById('resultsLoadingBar');
+      if (loadBar) loadBar.classList.add('hidden');
     }
     // ────────────────────────────────────────────────────────────
 
@@ -1876,10 +1918,20 @@
 
       // Show skeleton loaders while waiting
       const _skeletonContainer = document.getElementById('captionsContainer');
-      _skeletonContainer.innerHTML = Array(6).fill(0).map((_, i) =>
-        `<div class="caption-card skeleton" style="height:200px;animation-delay:${i * 40}ms"></div>`
-      ).join('');
+      _skeletonContainer.innerHTML = Array(6).fill(0).map((_, i) => `
+        <div class="caption-card" style="animation-delay:${i * 60}ms">
+          <div class="skeleton" style="height:13px;width:52%;border-radius:4px;margin-bottom:14px"></div>
+          <div class="skeleton" style="height:11px;width:100%;border-radius:4px;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:11px;width:86%;border-radius:4px;margin-bottom:7px"></div>
+          <div class="skeleton" style="height:11px;width:70%;border-radius:4px;margin-bottom:16px"></div>
+          <div style="display:flex;gap:8px">
+            <div class="skeleton" style="height:9px;width:50px;border-radius:4px"></div>
+            <div class="skeleton" style="height:9px;width:50px;border-radius:4px"></div>
+            <div class="skeleton" style="height:9px;width:50px;border-radius:4px"></div>
+          </div>
+        </div>`).join('');
       document.getElementById('resultsSection').classList.remove('hidden');
+      document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -1903,6 +1955,16 @@
         }
         const data     = await res.json();
         const captions = data.captions || [];
+
+        // Quiet credit badge in results area
+        if (data.credits_used != null) {
+          const remaining = Math.max(AUTH_LIMIT - data.credits_used, 0);
+          const badge = document.getElementById('resultCreditBadge');
+          badge.textContent = remaining === 0 ? 'No free uses left' : `${remaining} free ${remaining === 1 ? 'use' : 'uses'} left`;
+          badge.className = `result-credit-badge${remaining <= 1 ? ' rbc-warn' : ''}`;
+          badge.classList.remove('hidden');
+        }
+
         const container = document.getElementById('captionsContainer');
         container.innerHTML = '';
 
@@ -2662,7 +2724,15 @@
     document.getElementById('contImportOpt').addEventListener('click', () => {
       document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
       document.getElementById('contImportOpt').classList.add('active');
-      document.getElementById('convFileInput').click();
+      const existing = document.getElementById('waiBox');
+      if (existing) { existing.remove(); document.getElementById('convFileInput').click(); return; }
+      const box = document.createElement('div');
+      box.id = 'waiBox'; box.className = 'wai-box';
+      box.innerHTML = `
+        <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file.</p>
+        <button type="button" class="wai-btn" id="waiChooseBtn">Choose file →</button>`;
+      document.getElementById('continueSection').querySelector('.continue-card').appendChild(box);
+      document.getElementById('waiChooseBtn').addEventListener('click', () => document.getElementById('convFileInput').click());
     });
 
     document.getElementById('contHistoryOpt').addEventListener('click', () => {

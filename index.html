@@ -761,7 +761,6 @@
   </div>
   <div class="ft-bottom">
     <span>© 2026 aiwillmake. All rights reserved.</span>
-    <span>Powered by Claude AI</span>
   </div>
 </footer>
 
@@ -780,7 +779,7 @@
       sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
-        const go = 'Go to App →';
+        const go = 'Open App →';
         document.getElementById('ctaBtn').textContent = go;
         document.getElementById('hdrCta').textContent = go;
         document.getElementById('ctaBottom').textContent = go;
