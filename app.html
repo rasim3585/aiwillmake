@@ -720,6 +720,39 @@
       font-size: .82rem; color: var(--sec); font-style: italic;
       margin-bottom: 8px; line-height: 1.55; padding-left: 2px;
     }
+
+    /* ── Hidden signals (said vs meant) ── */
+    .analysis-said-box, .analysis-meant-box {
+      padding: 9px 13px; border-radius: 9px; margin-bottom: 6px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .analysis-said-box  { background: rgba(255,255,255,.04); border: 1px solid var(--bord); }
+    .analysis-meant-box { background: rgba(167,139,250,.08); border: 1px solid rgba(167,139,250,.28); }
+    .analysis-box-lbl {
+      font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    }
+    .analysis-said-box  .analysis-box-lbl { color: var(--muted); }
+    .analysis-meant-box .analysis-box-lbl { color: #a78bfa; }
+    .analysis-box-text { font-size: .83rem; line-height: 1.58; }
+    .analysis-said-box  .analysis-box-text { color: var(--sec); }
+    .analysis-meant-box .analysis-box-text { color: #c4b5fd; }
+    .analysis-box-disclaimer { font-size: .68rem; color: var(--muted); font-style: italic; margin-top: 2px; }
+
+    /* ── Reply timing ── */
+    .analysis-timing-wrap {
+      padding: 9px 13px; border-radius: 9px; margin-bottom: 6px;
+      display: flex; flex-direction: column; gap: 4px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+    }
+    .analysis-timing-badge { font-size: .84rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .timing-now      { color: #20d47a; }
+    .timing-hours    { color: #f59e0b; }
+    .timing-tomorrow { color: #fb923c; }
+    .timing-later    { color: #60a5fa; }
+    .timing-no       { color: #ef4444; }
+    .analysis-timing-reason     { font-size: .79rem; color: var(--sec); line-height: 1.45; }
+    .analysis-timing-disclaimer { font-size: .68rem; color: var(--muted); font-style: italic; }
+
     .analysis-risk {
       font-size: .78rem; color: #fb923c; padding: 7px 11px;
       background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
@@ -1944,6 +1977,15 @@
 
         const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const lvl  = v => ({ 'High':'badge-high','Medium':'badge-mid','Low':'badge-low' }[v] || 'badge-mid');
+        const timingClass = t => {
+          if (!t) return 'timing-later';
+          const tl = t.toLowerCase();
+          if (tl.includes('now'))      return 'timing-now';
+          if (tl.includes('hours'))    return 'timing-hours';
+          if (tl.includes('tomorrow')) return 'timing-tomorrow';
+          if (tl.includes("don't") || tl.includes('dont') || tl.includes('not yet')) return 'timing-no';
+          return 'timing-later';
+        };
 
         content.innerHTML = `
           <div class="analysis-metrics">
@@ -1952,8 +1994,24 @@
             ${data.openness         ? `<div class="analysis-badge ${lvl(data.openness)}"><span class="abadge-label">Openness</span><span class="abadge-value">${escH(data.openness)}</span></div>` : ''}
             ${data.tone             ? `<div class="analysis-badge badge-tone"><span class="abadge-label">Tone</span><span class="abadge-value">${escH(data.tone)}</span></div>` : ''}
           </div>
-          ${data.hidden_signal  ? `<p class="analysis-hidden-signal">"${escH(data.hidden_signal)}"</p>` : ''}
+          ${data.what_they_said ? `
+            <div class="analysis-said-box">
+              <span class="analysis-box-lbl">💬 What they said</span>
+              <span class="analysis-box-text">${escH(data.what_they_said)}</span>
+            </div>` : ''}
+          ${data.what_they_might_mean ? `
+            <div class="analysis-meant-box">
+              <span class="analysis-box-lbl">🔍 What they might really mean</span>
+              <span class="analysis-box-text">${escH(data.what_they_might_mean)}</span>
+              <span class="analysis-box-disclaimer">A possible reading — not a certainty.</span>
+            </div>` : ''}
           ${data.risk           ? `<div class="analysis-risk">⚠ ${escH(data.risk)}</div>` : ''}
+          ${data.reply_timing ? `
+            <div class="analysis-timing-wrap">
+              <span class="analysis-timing-badge ${timingClass(data.reply_timing)}">⏱ Suggested timing: ${escH(data.reply_timing)}</span>
+              ${data.reply_timing_reason ? `<span class="analysis-timing-reason">${escH(data.reply_timing_reason)}</span>` : ''}
+              <span class="analysis-timing-disclaimer">A suggestion — not a rule.</span>
+            </div>` : ''}
           ${data.suggested_move ? `<div class="analysis-move">→ ${escH(data.suggested_move)}</div>` : ''}`;
       } catch {
         content.innerHTML = `<p style="color:var(--sec);font-size:.82rem">Could not analyze reply.</p>`;

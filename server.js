@@ -529,8 +529,12 @@ EMOTIONAL_WARMTH: High/Medium/Low
 OPENNESS: High/Medium/Low
 TONE: [one word - e.g. Friendly, Cautious, Distant, Enthusiastic]
 HIDDEN_SIGNAL: [one sentence about what they really mean]
+WHAT_THEY_SAID: [one sentence — the literal surface meaning of their reply]
+WHAT_THEY_MIGHT_MEAN: [one sentence — a possible underlying meaning; frame cautiously with "might", not as certainty]
 RISK: [one sentence about the main risk going forward]
 SUGGESTED_MOVE: [one concrete sentence about what to do next]
+REPLY_TIMING: [exactly one of: "Reply now" / "Wait a few hours" / "Wait until tomorrow" / "Take your time" / "Don't reply yet"]
+REPLY_TIMING_REASON: [one short sentence explaining why]
 No other text. No markdown. Write in ${lang}.`;
 
     const userPrompt = `Category: ${categoryId || 'general'}
@@ -546,7 +550,7 @@ Reply to analyze: ${reply}`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 800,
+        max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }]
       })
@@ -562,13 +566,17 @@ Reply to analyze: ${reply}`;
     };
 
     res.json({
-      interest_level:   extract('INTEREST_LEVEL'),
-      emotional_warmth: extract('EMOTIONAL_WARMTH'),
-      openness:         extract('OPENNESS'),
-      tone:             extract('TONE'),
-      hidden_signal:    extract('HIDDEN_SIGNAL'),
-      risk:             extract('RISK'),
-      suggested_move:   extract('SUGGESTED_MOVE')
+      interest_level:      extract('INTEREST_LEVEL'),
+      emotional_warmth:    extract('EMOTIONAL_WARMTH'),
+      openness:            extract('OPENNESS'),
+      tone:                extract('TONE'),
+      hidden_signal:       extract('HIDDEN_SIGNAL'),
+      what_they_said:      extract('WHAT_THEY_SAID'),
+      what_they_might_mean: extract('WHAT_THEY_MIGHT_MEAN'),
+      risk:                extract('RISK'),
+      suggested_move:      extract('SUGGESTED_MOVE'),
+      reply_timing:        extract('REPLY_TIMING'),
+      reply_timing_reason: extract('REPLY_TIMING_REASON')
     });
   } catch (e) {
     console.error('[analyze-reply]', e.message);
