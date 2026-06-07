@@ -837,6 +837,73 @@ Be realistic, not optimistic. Write in ${lang}.`;
   }
 });
 
+app.post('/api/review-message', limiter, async (req, res) => {
+  try {
+    const { message, context, language } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: 'message is required' });
+
+    const lang = language || 'English';
+    const systemPrompt = `You are a communication expert. Review this message before it's sent.
+
+Return ONLY this exact format — no markdown, no extra text:
+TONE: [one or two words]
+CLARITY: High/Medium/Low
+CLARITY_NOTE: [one sentence]
+RISK_LEVEL: High/Medium/Low
+RISK_NOTE: [one sentence about the main risk]
+REACTION_1: [likely reaction — format: "Type: example"]
+REACTION_2: [another likely reaction]
+REACTION_3: [another likely reaction]
+SUGGESTION: [one concrete improvement, or "None needed" if the message is strong]
+VERDICT: [one sentence — is this ready to send or does it need changes?]
+
+Write in ${lang}.`;
+
+    const userPrompt = context?.trim()
+      ? `Context: ${context}\n\nMessage to review:\n${message}`
+      : `Message to review:\n${message}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: userPrompt }],
+        system: systemPrompt
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => {
+      const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    console.log('[review-message] tone:', extract('TONE'), '| risk:', extract('RISK_LEVEL'));
+    res.json({
+      tone:         extract('TONE'),
+      clarity:      extract('CLARITY'),
+      clarity_note: extract('CLARITY_NOTE'),
+      risk_level:   extract('RISK_LEVEL'),
+      risk_note:    extract('RISK_NOTE'),
+      reactions:    [1, 2, 3].map(n => extract(`REACTION_${n}`)).filter(Boolean),
+      suggestion:   extract('SUGGESTION'),
+      verdict:      extract('VERDICT')
+    });
+  } catch (e) {
+    console.error('[review-message]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/analyze-conversation', limiter, async (req, res) => {
   try {
     const { conversationText, language } = req.body;
