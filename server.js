@@ -194,7 +194,7 @@ BARRIER: Easy to reply / Some thought required / Emotionally demanding
 PRESSURE: Low/Medium/High
 BEST_WHEN: [one short sentence about when to use this]
 RISK: [one short sentence about what could go wrong]
-EMOTIONAL_STATE: [one of: Nostalgic / Cautious / Defensive / Curious / Indifferent / Hopeful / Hurt / Neutral] — the recipient's most likely emotional state when reading this message
+EMOTIONAL_STATE: [one of: Nostalgic / Cautious / Defensive / Curious / Indifferent / Hopeful / Hurt / Neutral] — a possible interpretation of how the recipient might feel when reading this message, not a certainty
 REPLY_YES: [one sentence why the recipient would reply to this message]
 REPLY_NO: [one sentence why they might not reply]
 RECOMMENDED: yes or no

@@ -743,11 +743,38 @@
     @media (max-width: 540px) {
       .page          { padding: 20px 16px 60px; gap: 32px; }
       .category-grid { grid-template-columns: 1fr; }
-      .form-card     { padding: 20px; }
+      .form-card     { padding: 20px; scroll-padding-bottom: 140px; }
       .header        { margin: -20px -16px 0; padding: 14px 16px; width: calc(100% + 32px); }
       .action-btns   { flex-direction: column; }
       .btn-action    { min-width: unset; }
+      select, input  { min-height: 48px; }
+      textarea       { min-height: 96px; }
+      .btn-generate  { min-height: 52px; }
+      .btn-detect    { min-height: 48px; }
     }
+
+    /* ── Progress bar ── */
+    #progressBar {
+      position: fixed; top: 0; left: 0; z-index: 1001;
+      height: 3px; width: 0%; opacity: 0; pointer-events: none;
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      box-shadow: 0 0 8px rgba(110,129,255,.65);
+    }
+
+    /* ── Tooltip ── */
+    [data-tooltip] { position: relative; cursor: help; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: calc(100% + 7px); left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,20,45,.97); color: var(--text);
+      font-size: .71rem; font-weight: 400; font-style: normal;
+      white-space: nowrap; padding: 5px 10px; border-radius: 7px;
+      border: 1px solid var(--bord2);
+      opacity: 0; pointer-events: none;
+      transition: opacity .18s; z-index: 20;
+    }
+    [data-tooltip]:hover::after { opacity: 1; }
 
     /* ── Toast ── */
     .toast {
@@ -806,6 +833,8 @@
   </style>
 </head>
 <body>
+
+  <div id="progressBar"></div>
 
   <!-- Toast notification -->
   <div id="toast" class="toast" role="alert" aria-live="polite">
@@ -932,7 +961,7 @@
           </div>
           <button type="button" class="btn-generate" id="generateBtn">
             <span class="btn-spin"></span>
-            Generate ✦
+            <span class="btn-label">Generate ✦</span>
           </button>
         </div>
       </form>
@@ -1043,11 +1072,11 @@
       if (used >= limit) {
         upgradeMsg.classList.remove('hidden');
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '<span class="btn-spin"></span>Upgrade to continue';
+        generateBtn.innerHTML = '<span class="btn-spin"></span><span class="btn-label">Upgrade to continue</span>';
       } else {
         upgradeMsg.classList.add('hidden');
         generateBtn.disabled = false;
-        generateBtn.innerHTML = '<span class="btn-spin"></span>Generate ✦';
+        generateBtn.innerHTML = '<span class="btn-spin"></span><span class="btn-label">Generate ✦</span>';
         if (remaining === 1) count.style.color = '#f59e0b';
         else count.style.color = '';
       }
@@ -1302,6 +1331,58 @@
 
     function val(id) { return document.getElementById(id)?.value?.trim() || ''; }
 
+    // ── Progress bar helpers ─────────────────────────────────────
+    const GEN_MESSAGES = [
+      'AI is thinking…',
+      'Analyzing your situation…',
+      'Crafting your strategies…',
+      'Personalizing messages…',
+      'Almost ready…'
+    ];
+    let _progressTimer = null;
+    let _msgTimer = null;
+
+    function startProgress() {
+      const bar = document.getElementById('progressBar');
+      bar.style.transition = 'none';
+      bar.style.width = '0%';
+      bar.style.opacity = '1';
+      let pct = 0;
+      clearInterval(_progressTimer);
+      _progressTimer = setInterval(() => {
+        if (pct < 60) pct += 3;
+        else if (pct < 80) pct += 1;
+        else if (pct < 90) pct += 0.3;
+        bar.style.transition = 'width 0.4s ease';
+        bar.style.width = pct + '%';
+      }, 200);
+    }
+
+    function finishProgress() {
+      clearInterval(_progressTimer);
+      const bar = document.getElementById('progressBar');
+      bar.style.transition = 'width 0.3s ease';
+      bar.style.width = '100%';
+      setTimeout(() => { bar.style.transition = 'opacity 0.5s ease'; bar.style.opacity = '0'; }, 350);
+      setTimeout(() => { bar.style.transition = 'none'; bar.style.width = '0%'; }, 950);
+    }
+
+    function startLoadingMessages(labelEl) {
+      let idx = 0;
+      labelEl.textContent = GEN_MESSAGES[0];
+      clearInterval(_msgTimer);
+      _msgTimer = setInterval(() => {
+        idx = (idx + 1) % GEN_MESSAGES.length;
+        labelEl.textContent = GEN_MESSAGES[idx];
+      }, 1800);
+    }
+
+    function stopLoadingMessages(labelEl) {
+      clearInterval(_msgTimer);
+      if (labelEl) labelEl.textContent = 'Generate ✦';
+    }
+    // ────────────────────────────────────────────────────────────
+
     function setActionBtns(disabled) {
       document.getElementById('regenBtn').disabled = disabled;
       document.getElementById('diffBtn').disabled  = disabled;
@@ -1346,8 +1427,17 @@
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.classList.add('loading');
-      btn.innerHTML = '<span class="btn-spin"></span>Generating…';
+      const btnLabel = btn.querySelector('.btn-label');
+      startProgress();
+      startLoadingMessages(btnLabel);
       setActionBtns(true);
+
+      // Show skeleton loaders while waiting
+      const _skeletonContainer = document.getElementById('captionsContainer');
+      _skeletonContainer.innerHTML = Array(6).fill(0).map((_, i) =>
+        `<div class="caption-card skeleton" style="height:200px;animation-delay:${i * 40}ms"></div>`
+      ).join('');
+      document.getElementById('resultsSection').classList.remove('hidden');
 
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -1418,7 +1508,7 @@
             <div class="caption-metrics">
               ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Ease of Reply</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
               ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
-              ${emotional_state ? `<div class="metric-item"><span class="metric-label">Recipient feels</span><span class="metric-value es-${escHtml(emotional_state).toLowerCase()}">${escHtml(emotional_state)}</span></div>` : ''}
+              ${emotional_state ? `<div class="metric-item"><span class="metric-label" data-tooltip="Based on the message content — actual feelings may vary">Possible feeling</span><span class="metric-value es-${escHtml(emotional_state).toLowerCase()}">${escHtml(emotional_state)}</span></div>` : ''}
             </div>` : ''}
             ${hasAnalysis ? `
             <button type="button" class="show-analysis-btn">Show analysis ▾</button>
@@ -1472,9 +1562,10 @@
         console.error('Generate error:', err);
         showToast('Something went wrong. Please try again.', 'error');
       } finally {
+        finishProgress();
+        stopLoadingMessages(btn.querySelector('.btn-label'));
         btn.disabled = false;
         btn.classList.remove('loading');
-        btn.innerHTML = '<span class="btn-spin"></span>Generate ✦';
         setActionBtns(false);
         if (accessToken) fetchAndShowCredits();
       }
@@ -2054,6 +2145,14 @@
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) fetchNextReply();
     });
     document.getElementById('mainForm').addEventListener('submit', e => e.preventDefault());
+
+    // Mobile: smooth scroll to focused form element so keyboard doesn't hide it
+    document.addEventListener('focusin', e => {
+      const el = e.target;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 320);
+      }
+    });
 
     initAuth().then(() => { init(); fetchAndShowCredits(); });
   </script>
