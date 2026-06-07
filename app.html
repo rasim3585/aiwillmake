@@ -753,6 +753,74 @@
       .btn-detect    { min-height: 48px; }
     }
 
+    /* ── Conversation Import ── */
+    .import-link {
+      font-size: .79rem; color: var(--muted); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+      transition: color .2s; display: inline-block; margin-top: 10px;
+    }
+    .import-link:hover { color: var(--sec); }
+    .conv-analysis-result {
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--bord);
+      display: grid; gap: 11px;
+      animation: fadeUp .35s ease both;
+    }
+    .conv-analysis-head {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+    .conv-analysis-title { font-size: .93rem; font-weight: 700; color: var(--text); }
+    .conv-analysis-sub   { font-size: .75rem; color: var(--muted); }
+    .conv-analysis-badges { display: flex; gap: 7px; flex-wrap: wrap; }
+    .conv-badge {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 5px 10px; border-radius: 8px; min-width: 62px;
+    }
+    .conv-badge-lbl { font-size: .61rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--sec); }
+    .conv-badge-val { font-size: .79rem; font-weight: 700; }
+    .cb-high { background: rgba(32,212,122,.1);  border: 1px solid rgba(32,212,122,.25); }
+    .cb-mid  { background: rgba(245,158,11,.1);  border: 1px solid rgba(245,158,11,.25); }
+    .cb-low  { background: rgba(239,68,68,.1);   border: 1px solid rgba(239,68,68,.25); }
+    .cb-tone { background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25); }
+    .cb-neu  { background: rgba(255,255,255,.05);border: 1px solid var(--bord2); }
+    .cb-high .conv-badge-val { color: #20d47a; }
+    .cb-mid  .conv-badge-val { color: #f59e0b; }
+    .cb-low  .conv-badge-val { color: #ef4444; }
+    .cb-tone .conv-badge-val { color: #a78bfa; }
+    .cb-neu  .conv-badge-val { color: var(--sec); }
+    .conv-power {
+      font-size: .8rem; color: var(--sec); line-height: 1.5;
+      padding: 7px 11px; border-radius: 8px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--bord);
+    }
+    .conv-power strong { color: var(--text); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; }
+    .conv-key-moment {
+      font-size: .84rem; line-height: 1.65; color: var(--text); font-style: italic;
+      padding: 10px 14px; border-radius: 9px;
+      background: rgba(110,129,255,.06); border: 1px solid rgba(110,129,255,.2);
+    }
+    .conv-key-moment::before { content: '💬  '; }
+    .conv-recommended {
+      padding: 11px 14px; border-radius: 9px;
+      background: rgba(96,165,250,.08); border: 1px solid rgba(96,165,250,.22);
+    }
+    .conv-rec-lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #60a5fa; margin-bottom: 5px; }
+    .conv-rec-text { font-size: .86rem; line-height: 1.6; color: var(--text); }
+    .conv-risk {
+      font-size: .82rem; line-height: 1.55; color: #fb923c;
+      padding: 9px 13px; border-radius: 9px;
+      background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
+    }
+    .conv-risk::before { content: '⚠  '; }
+    .btn-conv-generate {
+      width: 100%; padding: 13px; border: none; border-radius: var(--r-lg);
+      background: linear-gradient(95deg, var(--accent), var(--acc2));
+      color: #fff; font: inherit; font-size: .92rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 20px var(--glow);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-conv-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
+
     /* ── Outcome tracking ── */
     .outcome-widget {
       border-top: 1px solid var(--bord); padding-top: 12px; margin-top: 6px;
@@ -956,6 +1024,9 @@
           </button>
           <span class="smart-feedback hidden" id="smartFeedback"></span>
         </div>
+        <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt)</label>
+        <input type="file" id="convFileInput" accept=".txt" style="display:none">
+        <div id="convAnalysisResult" class="conv-analysis-result hidden"></div>
       </div>
     </section>
 
@@ -2203,6 +2274,75 @@
         grid.innerHTML = `<p style="color:var(--sec);font-size:.85rem;grid-column:1/-1;padding:8px 0">Could not load next steps.</p>`;
       }
     }
+
+    // ── Conversation Import ─────────────────────────────────────
+    let _convAnalysis = null;
+
+    document.getElementById('convFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      e.target.value = '';
+      const text = await file.text();
+      analyzeConversation(text);
+    });
+
+    async function analyzeConversation(conversationText) {
+      const resultEl = document.getElementById('convAnalysisResult');
+      resultEl.classList.remove('hidden');
+      resultEl.innerHTML = [1,2,3].map(i =>
+        `<div class="ns-skeleton skeleton" style="height:${i===1?76:i===2?56:48}px;border-radius:10px"></div>`
+      ).join('');
+
+      try {
+        const resp = await fetch('/api/analyze-conversation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conversationText, language: lastFields.language || 'English' })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error);
+        _convAnalysis = data;
+
+        const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const lvl  = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
+
+        resultEl.innerHTML = `
+          <div class="conv-analysis-head">
+            <span class="conv-analysis-title">Conversation with ${escH(data.person_b || 'Unknown')}</span>
+            ${data.total_messages ? `<span class="conv-analysis-sub">${escH(data.total_messages)} messages total</span>` : ''}
+          </div>
+          <div class="conv-analysis-badges">
+            ${data.interest_level ? `<div class="conv-badge ${lvl(data.interest_level)}"><span class="conv-badge-lbl">Interest</span><span class="conv-badge-val">${escH(data.interest_level)}</span></div>` : ''}
+            ${data.emotional_tone ? `<div class="conv-badge cb-tone"><span class="conv-badge-lbl">Tone</span><span class="conv-badge-val">${escH(data.emotional_tone)}</span></div>` : ''}
+            ${data.person_a_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Your msgs</span><span class="conv-badge-val">${escH(data.person_a_messages)}</span></div>` : ''}
+            ${data.person_b_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Their msgs</span><span class="conv-badge-val">${escH(data.person_b_messages)}</span></div>` : ''}
+            ${data.days_since_last   ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Days since</span><span class="conv-badge-val">${escH(data.days_since_last)}</span></div>` : ''}
+          </div>
+          ${data.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escH(data.power_balance)}</div>` : ''}
+          ${data.key_moment    ? `<div class="conv-key-moment">${escH(data.key_moment)}</div>` : ''}
+          ${data.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(data.recommended_next)}</div></div>` : ''}
+          ${data.biggest_risk  ? `<div class="conv-risk">${escH(data.biggest_risk)}</div>` : ''}
+          <button type="button" class="btn-conv-generate" id="convGenerateBtn">
+            Generate a message based on this conversation →
+          </button>`;
+
+        document.getElementById('convGenerateBtn').addEventListener('click', () => {
+          const d = _convAnalysis;
+          const summary = [
+            d.person_b     ? `I need to write to ${d.person_b}.` : '',
+            d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
+            d.recommended_next || ''
+          ].filter(Boolean).join(' ');
+          document.getElementById('smartInput').value = summary.trim();
+          document.getElementById('smartInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          detectCategory();
+        });
+
+      } catch (e) {
+        resultEl.innerHTML = `<p style="color:#f87171;font-size:.85rem">Could not analyze conversation: ${escH ? escH(e.message) : e.message}</p>`;
+      }
+    }
+    // ────────────────────────────────────────────────────────────
 
     async function detectCategory() {
       const input    = document.getElementById('smartInput');

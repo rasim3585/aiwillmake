@@ -837,6 +837,80 @@ Be realistic, not optimistic. Write in ${lang}.`;
   }
 });
 
+app.post('/api/analyze-conversation', limiter, async (req, res) => {
+  try {
+    const { conversationText, language } = req.body;
+    if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
+
+    const lang = language || 'English';
+    // Use the last 8000 chars — most recent messages are most relevant
+    const snippet = conversationText.length > 8000
+      ? conversationText.slice(-8000)
+      : conversationText;
+
+    const systemPrompt = `Analyze this exported chat conversation. Extract:
+PERSON_A: [who seems to be the user - the one asking for help]
+PERSON_B: [the other person's name if visible]
+TOTAL_MESSAGES: [count]
+PERSON_A_MESSAGES: [count]
+PERSON_B_MESSAGES: [count]
+POWER_BALANCE: [who initiates more, who responds faster — one sentence]
+INTEREST_LEVEL: High/Medium/Low
+EMOTIONAL_TONE: [overall tone — one or two words]
+KEY_MOMENT: [most significant moment in the conversation — one sentence]
+LAST_MESSAGE_BY: [A or B]
+DAYS_SINCE_LAST: [number of days if timestamps visible, otherwise omit]
+RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
+BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
+
+Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: `Language context: ${lang}\n\nConversation:\n${snippet}` }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => {
+      const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    console.log('[analyze-conversation] done | interest:', extract('INTEREST_LEVEL'));
+    res.json({
+      person_a:          extract('PERSON_A'),
+      person_b:          extract('PERSON_B'),
+      total_messages:    extract('TOTAL_MESSAGES'),
+      person_a_messages: extract('PERSON_A_MESSAGES'),
+      person_b_messages: extract('PERSON_B_MESSAGES'),
+      power_balance:     extract('POWER_BALANCE'),
+      interest_level:    extract('INTEREST_LEVEL'),
+      emotional_tone:    extract('EMOTIONAL_TONE'),
+      key_moment:        extract('KEY_MOMENT'),
+      last_message_by:   extract('LAST_MESSAGE_BY'),
+      days_since_last:   extract('DAYS_SINCE_LAST'),
+      recommended_next:  extract('RECOMMENDED_NEXT'),
+      biggest_risk:      extract('BIGGEST_RISK')
+    });
+  } catch (e) {
+    console.error('[analyze-conversation]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Conversations ──────────────────────────────────────────────
 app.post('/api/conversations', requireAuth, async (req, res) => {
   try {
