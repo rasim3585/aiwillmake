@@ -753,6 +753,48 @@
       .btn-detect    { min-height: 48px; }
     }
 
+    /* ── Outcome tracking ── */
+    .outcome-widget {
+      border-top: 1px solid var(--bord); padding-top: 12px; margin-top: 6px;
+      animation: fadeUp .3s ease both;
+    }
+    .outcome-q {
+      font-size: .78rem; color: var(--sec); margin-bottom: 9px; font-weight: 500;
+    }
+    .outcome-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+    .outcome-btn {
+      font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer;
+      border-radius: 7px; padding: 5px 13px; border: 1px solid;
+      transition: background .18s;
+    }
+    .outcome-btn-yes {
+      background: rgba(32,212,122,.1); border-color: rgba(32,212,122,.3); color: #20d47a;
+    }
+    .outcome-btn-yes:hover { background: rgba(32,212,122,.2); }
+    .outcome-btn-no {
+      background: var(--surf); border-color: var(--bord); color: var(--muted);
+    }
+    .outcome-btn-no:hover { background: var(--surf2); color: var(--sec); border-color: var(--bord2); }
+    .outcome-reactions { display: flex; gap: 7px; flex-wrap: wrap; }
+    .outcome-reaction {
+      font: inherit; font-size: .76rem; cursor: pointer;
+      background: var(--surf); border: 1px solid var(--bord);
+      border-radius: 8px; padding: 6px 12px; color: var(--text);
+      transition: background .18s, border-color .18s, transform .15s;
+    }
+    .outcome-reaction:hover { background: var(--surf2); border-color: var(--bord2); transform: translateY(-1px); }
+    .outcome-reaction.selected { background: rgba(110,129,255,.12); border-color: var(--borda); }
+    .outcome-confirm { font-size: .76rem; color: var(--ok); }
+
+    /* ── History outcome dots ── */
+    .conv-outcome-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-positive { background: #20d47a; }
+    .dot-neutral  { background: #6b7280; }
+    .dot-negative { background: #ef4444; }
+    .dot-waiting  { background: #f59e0b; }
+
     /* ── Progress bar ── */
     #progressBar {
       position: fixed; top: 0; left: 0; z-index: 1001;
@@ -1530,7 +1572,10 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
-            saveMessage('sent', text, badge || '');
+            const msgId = await saveMessage('sent', text, badge || '');
+            if (msgId && accessToken) {
+              setTimeout(() => showOutcomeFeedback(card, msgId), 2000);
+            }
             if (text !== selectedMsgText) {
               selectedMsgText = text;
               document.getElementById('nsNote').textContent = 'Updated for your selected message';
@@ -1738,13 +1783,67 @@
       } catch (e) { console.warn('[conv create]', e.message); }
     }
 
-    function saveMessage(role, content, strategy) {
-      if (!accessToken || !currentConvId) return;
-      fetch(`/api/conversations/${currentConvId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-        body: JSON.stringify({ role, content, strategy: strategy || '' })
-      }).catch(() => {});
+    async function saveMessage(role, content, strategy) {
+      if (!accessToken || !currentConvId) return null;
+      try {
+        const r = await fetch(`/api/conversations/${currentConvId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ role, content, strategy: strategy || '' })
+        });
+        if (r.ok) { const d = await r.json(); return d.id || null; }
+      } catch {}
+      return null;
+    }
+
+    function showOutcomeFeedback(card, msgId) {
+      if (!card.isConnected || card.querySelector('.outcome-widget')) return;
+      const widget = document.createElement('div');
+      widget.className = 'outcome-widget';
+      widget.innerHTML = `
+        <p class="outcome-q">Did you send this?</p>
+        <div class="outcome-btns">
+          <button class="outcome-btn outcome-btn-yes" type="button">Yes, I sent it ✓</button>
+          <button class="outcome-btn outcome-btn-no" type="button">No, not yet</button>
+        </div>`;
+
+      widget.querySelector('.outcome-btn-yes').addEventListener('click', () => {
+        widget.innerHTML = `
+          <p class="outcome-q">What happened?</p>
+          <div class="outcome-reactions">
+            <button class="outcome-reaction" data-outcome="positive" data-note="They replied warmly" type="button">😊 Positive</button>
+            <button class="outcome-reaction" data-outcome="neutral"  data-note="They replied briefly" type="button">😐 Neutral</button>
+            <button class="outcome-reaction" data-outcome="negative" data-note="Didn't reply or went badly" type="button">😔 Negative</button>
+            <button class="outcome-reaction" data-outcome="waiting"  data-note="Still waiting for reply" type="button">⏳ Still waiting</button>
+          </div>`;
+        widget.querySelectorAll('.outcome-reaction').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            widget.querySelectorAll('.outcome-reaction').forEach(b => b.disabled = true);
+            btn.classList.add('selected');
+            await postOutcome(msgId, btn.dataset.outcome, btn.dataset.note);
+            widget.innerHTML = `<p class="outcome-confirm">✓ Saved — thanks for the feedback</p>`;
+          });
+        });
+      });
+
+      widget.querySelector('.outcome-btn-no').addEventListener('click', () => {
+        widget.style.transition = 'opacity .3s';
+        widget.style.opacity = '0';
+        setTimeout(() => widget.remove(), 300);
+      });
+
+      card.appendChild(widget);
+    }
+
+    async function postOutcome(msgId, outcome, note) {
+      if (!accessToken || !currentConvId || !msgId) return;
+      try {
+        await fetch(`/api/conversations/${currentConvId}/messages/${msgId}/outcome`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ outcome, outcome_note: note })
+        });
+      } catch (e) { console.warn('[outcome]', e.message); }
     }
 
     function showConvPanel() {
@@ -1778,6 +1877,14 @@
         data.forEach(c => {
           const cat = appData?.categories.find(x => x.id === c.category_id);
           const sub = cat?.subcategories.find(x => x.id === c.subcategory_id);
+
+          const outcomes = (c.conversation_messages || []).map(m => m.outcome).filter(Boolean);
+          let dot = '';
+          if (outcomes.includes('positive'))      dot = `<span class="conv-outcome-dot dot-positive" title="Sent — positive outcome"></span>`;
+          else if (outcomes.includes('waiting'))  dot = `<span class="conv-outcome-dot dot-waiting"  title="Sent — still waiting"></span>`;
+          else if (outcomes.includes('neutral'))  dot = `<span class="conv-outcome-dot dot-neutral"  title="Sent — neutral outcome"></span>`;
+          else if (outcomes.includes('negative')) dot = `<span class="conv-outcome-dot dot-negative" title="Sent — didn't go well"></span>`;
+
           const item = document.createElement('div');
           item.className = 'conv-item';
           item.innerHTML = `
@@ -1785,7 +1892,7 @@
             <div class="conv-item-situation">${escH(c.situation || '—')}</div>
             <div class="conv-item-foot">
               <span class="conv-item-date">${fmt(c.created_at)}</span>
-              <button class="conv-continue-btn" data-id="${escH(c.id)}" type="button">Continue →</button>
+              <div style="display:flex;align-items:center;gap:8px">${dot}<button class="conv-continue-btn" data-id="${escH(c.id)}" type="button">Continue →</button></div>
             </div>`;
           item.querySelector('.conv-continue-btn').addEventListener('click', (e) => {
             e.stopPropagation();

@@ -885,7 +885,7 @@ app.post('/api/conversations/:id/messages', requireAuth, async (req, res) => {
 
 app.get('/api/conversations', requireAuth, async (req, res) => {
   try {
-    const r = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at,updated_at`, {
+    const r = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at,updated_at,conversation_messages(id,outcome)`, {
       headers: sbHeaders(req.token)
     });
     const data = await r.json();
@@ -909,6 +909,34 @@ app.get('/api/conversations/:id', requireAuth, async (req, res) => {
     res.json(data[0]);
   } catch (e) {
     console.error('[conv GET detail]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, async (req, res) => {
+  try {
+    const { outcome, outcome_note } = req.body;
+    // Verify the conversation belongs to this user
+    const cr = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.convId}&user_id=eq.${req.user.id}&select=id`, {
+      headers: sbHeaders(req.token)
+    });
+    const cd = await cr.json();
+    if (!Array.isArray(cd) || !cd.length) return res.status(404).json({ error: 'Not found' });
+
+    const r = await fetch(
+      `${SUPABASE_REST}/conversation_messages?id=eq.${req.params.msgId}&conversation_id=eq.${req.params.convId}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+        body: JSON.stringify({ outcome: outcome || null, outcome_note: outcome_note || null })
+      }
+    );
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    console.log('[outcome PATCH] msgId:', req.params.msgId, '| outcome:', outcome);
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) {
+    console.error('[outcome PATCH]', e.message);
     res.status(500).json({ error: e.message });
   }
 });
