@@ -576,11 +576,89 @@ Reply to analyze: ${reply}`;
   }
 });
 
+// ── Disengagement detection ────────────────────────────────────
+async function checkDisengagement(text) {
+  if (!text?.trim()) return false;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 5,
+        messages: [{
+          role: 'user',
+          content: `Does this message indicate clear disengagement, rejection, or a request to stop contact? Reply with only YES or NO.\nMessage: ${text}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const answer = (data.content?.[0]?.text || '').trim().toUpperCase();
+    console.log('[disengagement-check] answer:', answer, '| text snippet:', text.slice(0, 60));
+    return answer === 'YES';
+  } catch (e) {
+    console.error('[disengagement-check] error:', e.message);
+    return false;
+  }
+}
+
+const DISENGAGEMENT_NEXT_STEPS = {
+  scenarios: [
+    {
+      label: 'Respect their boundary',
+      action: "They have clearly communicated they don't want contact. The most respectful response is to stop reaching out. Give them space and focus on your own wellbeing."
+    },
+    {
+      label: 'Why pushing further is harmful',
+      action: 'Continuing to reach out after someone has asked you to stop can feel threatening to them and damaging to you. It prevents both of you from healing.'
+    },
+    {
+      label: 'What to do instead',
+      action: 'Talk to someone you trust, consider speaking with a therapist, and redirect your energy toward your own life.'
+    }
+  ],
+  timing: 'Do not send another message. Their boundary deserves to be respected.',
+  disengaged: true
+};
+
+const DISENGAGEMENT_NEXT_REPLY = {
+  options: [
+    {
+      strategy: 'Respect their boundary',
+      message: "They have clearly communicated they don't want contact. The most respectful response is to stop reaching out. Give them space and focus on your own wellbeing.",
+      why: "Respecting an explicit request to stop contact is the right thing to do for both of you.",
+      recommended: true
+    },
+    {
+      strategy: 'Why pushing further is harmful',
+      message: 'Continuing to reach out after someone has asked you to stop can feel threatening to them and damaging to you. It prevents both of you from healing.',
+      why: 'Repeated contact after rejection causes harm and delays recovery for both sides.',
+      recommended: false
+    },
+    {
+      strategy: 'What to do instead',
+      message: 'Talk to someone you trust, consider speaking with a therapist, and redirect your energy toward your own life.',
+      why: 'Taking care of your own wellbeing is the most constructive step forward.',
+      recommended: false
+    }
+  ],
+  disengaged: true
+};
+// ────────────────────────────────────────────────────────────────
+
 app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
     if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
     const { categoryId, situation, originalMessage, theirReply, language } = req.body;
     if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
+
+    if (await checkDisengagement(theirReply)) {
+      return res.json(DISENGAGEMENT_NEXT_REPLY);
+    }
 
     const lang = language || 'English';
     const systemPrompt = `You are a communication strategist. The user sent a message and received a reply. Generate 3 possible next messages they could send, each with a different strategy.
@@ -695,6 +773,10 @@ app.post('/api/next-steps', limiter, async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, scenario, theirMessage } = req.body;
     if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
+
+    if (theirMessage?.trim() && await checkDisengagement(theirMessage)) {
+      return res.json(DISENGAGEMENT_NEXT_STEPS);
+    }
 
     const lang = language || 'English';
     const scenarioCtx = scenario ? `\n\nThe user's situation fell into this scenario: ${scenario}. Generate advice specifically for this outcome.${theirMessage ? ` They actually said: "${theirMessage}"` : ''}` : '';
