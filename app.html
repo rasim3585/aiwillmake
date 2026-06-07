@@ -614,7 +614,6 @@
     }
     .reply-yes { font-size: .76rem; color: #20d47a; line-height: 1.45; }
     .reply-no  { font-size: .76rem; color: #ef4444; line-height: 1.45; }
-    @media (max-width: 640px) { .ns-grid { grid-template-columns: 1fr; } }
 
     /* ── Conversation Simulator ── */
     .simulator-section { margin-top: 8px; }
@@ -785,17 +784,97 @@
       .form-row      { grid-template-columns: 1fr; }
       .cards-grid    { grid-template-columns: 1fr; }
     }
-    @media (max-width: 540px) {
-      .page          { padding: 20px 16px 60px; gap: 32px; }
-      .category-grid { grid-template-columns: 1fr; }
-      .form-card     { padding: 20px; scroll-padding-bottom: 140px; }
-      .header        { margin: -20px -16px 0; padding: 14px 16px; width: calc(100% + 32px); }
-      .action-btns   { flex-direction: column; }
-      .btn-action    { min-width: unset; }
-      select, input  { min-height: 48px; }
-      textarea       { min-height: 96px; }
-      .btn-generate  { min-height: 52px; }
-      .btn-detect    { min-height: 48px; }
+    @media (max-width: 680px) {
+      /* Base */
+      body { overflow-x: hidden; }
+
+      /* Layout */
+      .page   { padding: 16px 14px 120px; gap: 28px; }
+      .header { margin: -16px -14px 0; padding: 12px 14px; width: calc(100% + 28px); }
+
+      /* Mode selector — big tappable cards */
+      .mode-grid     { grid-template-columns: 1fr; gap: 10px; }
+      .mode-card     { padding: 22px 18px; min-height: 80px; }
+      .mode-card-icon  { font-size: 1.9rem; }
+      .mode-card-title { font-size: 1rem; }
+      .what-heading    { font-size: 1.5rem; margin-bottom: 20px; }
+
+      /* Inputs — font-size: 16px prevents iOS auto-zoom */
+      select, input       { min-height: 48px; font-size: 16px; }
+      textarea            { font-size: 16px; }
+      .smart-ta           { font-size: 16px; min-height: 88px; }
+      .sim-textarea       { font-size: 16px; }
+
+      /* All touch targets ≥ 48px */
+      .btn-generate, .btn-review-analyze,
+      .btn-conv-generate, .btn-detect   { min-height: 52px; }
+      .btn-action, .sim-btn             { min-height: 48px; }
+      .copy-btn                         { min-height: 40px; padding: 8px 14px; }
+      .conv-continue-btn                { min-height: 38px; }
+      .outcome-btn, .outcome-reaction   { min-height: 44px; }
+      .continue-opt                     { min-height: 64px; }
+      .subcat-card                      { min-height: 64px; }
+      .cat-card                         { min-height: 100px; }
+
+      /* Tap spacing */
+      .category-grid { grid-template-columns: 1fr; gap: 10px; }
+      .subcat-grid   { grid-template-columns: 1fr; gap: 8px; }
+
+      /* Form */
+      .form-card  { padding: 18px 14px; scroll-padding-bottom: 120px; }
+      .form-row   { grid-template-columns: 1fr; }
+      .optional-section { gap: 14px; }
+
+      /* ── Sticky generate button ──
+         Only when formCard is visible; inside display:none it's also hidden */
+      #formCard:not(.hidden) .btn-generate {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        border-radius: 0; z-index: 90; margin-top: 0;
+        padding: 18px 24px;
+        box-shadow: 0 -4px 24px rgba(0,0,0,.55), 0 -1px 0 rgba(255,255,255,.06);
+      }
+      #formCard:not(.hidden) .form-inner { padding-bottom: 84px; }
+
+      /* Strategy cards */
+      .cards-grid   { grid-template-columns: 1fr; gap: 12px; }
+      .caption-card { padding: 16px 14px; }
+      .caption-text { font-size: .92rem; line-height: 1.72; }
+      .caption-metrics { flex-wrap: wrap; gap: 6px; }
+      .metric-item  { min-width: 54px; }
+
+      /* Action buttons */
+      .action-btns { flex-direction: column; gap: 10px; }
+      .btn-action  { min-width: unset; text-align: center; }
+
+      /* Category icons */
+      .cat-icon-wrap { width: 56px; height: 56px; font-size: 1.6rem; border-radius: 16px; }
+
+      /* Smart / Continue / Review cards */
+      .smart-card, .continue-card, .review-card { padding: 18px 14px; }
+      .continue-opts { gap: 8px; }
+      .co-primary    { padding: 18px 14px; }
+
+      /* Simulator */
+      .sim-card-outer { padding: 18px 14px; }
+
+      /* Next steps */
+      .ns-grid { grid-template-columns: 1fr; gap: 10px; }
+      .ns-card { padding: 16px 14px; }
+
+      /* Likely responses */
+      .likely-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+      /* Analysis badges */
+      .analysis-metrics { flex-wrap: wrap; gap: 6px; }
+      .analysis-badge   { min-width: 60px; }
+
+      /* Conversations panel → full screen on mobile */
+      .conv-panel { width: 100vw; border-left: none; }
+      .conv-panel-head { padding: 16px 18px; }
+
+      /* Modals — comfortable padding on small screens */
+      .auth-card    { padding: 32px 20px; border-radius: 22px; }
+      .credits-card { padding: 32px 20px; border-radius: 22px; }
     }
 
     /* ── Mode Selector ── */
@@ -929,10 +1008,6 @@
     .btn-review-analyze:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
     .btn-review-analyze:disabled { opacity: .42; cursor: not-allowed; }
 
-    @media (max-width: 680px) {
-      .mode-grid     { grid-template-columns: 1fr; }
-      .continue-opts { grid-template-columns: 1fr; }
-    }
 
     /* ── Conversation Import ── */
     .import-link {
