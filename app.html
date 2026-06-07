@@ -356,6 +356,15 @@
     .upgrade-msg a { color: var(--accent); text-decoration: none; font-weight: 600; }
     .upgrade-msg a:hover { text-decoration: underline; }
 
+    /* ── Contact context badge ── */
+    .contact-context-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .75rem; font-weight: 600; color: var(--accent);
+      background: rgba(110,129,255,.08); border: 1px solid rgba(110,129,255,.22);
+      padding: 5px 12px; border-radius: 99px;
+      animation: fadeUp .35s ease both;
+    }
+
     /* ── Results ── */
     .result-credit-badge {
       font-size: .72rem; color: var(--muted);
@@ -1402,7 +1411,7 @@
     <section>
       <h1 class="what-heading">What do you need <span>help with?</span></h1>
       <div class="mode-grid">
-        <button type="button" class="mode-card" data-mode="1" onclick="selectMode(1)">
+        <button type="button" class="mode-card" data-mode="1" onclick="selectMode(1, true)">
           <div class="mode-card-icon">✍️</div>
           <div class="mode-card-title">Start a Conversation</div>
           <div class="mode-card-desc">Need help writing the first message.</div>
@@ -1561,6 +1570,7 @@
           <p class="results-note" id="resultsNote">Select the approach that fits your situation</p>
         </div>
       </div>
+      <span id="contactContextBadge" class="contact-context-badge hidden"></span>
       <div id="resultsLoadingBar" class="results-loading-bar hidden">
         <span id="resultsLoadingMsg" class="results-loading-msg"></span>
       </div>
@@ -1791,6 +1801,7 @@
     let selectedSubId = null;
     let lastFields    = {};
     let selectedMsgText = '';
+    let activeContactContext = null;
     let currentConvId   = null;
 
     async function init() {
@@ -2054,7 +2065,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers,
-          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, variation: variation || undefined })
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, variation: variation || undefined, contactContext: activeContactContext || undefined })
         });
         if (res.status === 429) {
           showToast("You're going too fast! Wait a few seconds and try again.", 'warning');
@@ -2072,6 +2083,15 @@
         const captions = data.captions || [];
 
         // Quiet credit badge in results area
+        // Contact context personalization badge
+        const ctxBadge = document.getElementById('contactContextBadge');
+        if (activeContactContext?.name) {
+          ctxBadge.textContent = `✨ Personalized for ${activeContactContext.name}`;
+          ctxBadge.classList.remove('hidden');
+        } else {
+          ctxBadge.classList.add('hidden');
+        }
+
         if (data.credits_used != null) {
           const remaining = Math.max(AUTH_LIMIT - data.credits_used, 0);
           const badge = document.getElementById('resultCreditBadge');
@@ -2222,7 +2242,7 @@
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English' })
+          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -2305,7 +2325,8 @@
             situation,
             originalMessage: selectedMsgText,
             theirReply:      reply,
-            language:        lastFields.language || 'English'
+            language:        lastFields.language || 'English',
+            contactContext:  activeContactContext || undefined
           })
         });
         const data = await resp.json();
@@ -2370,7 +2391,7 @@
         const r = await fetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, situation, fields: lastFields })
+          body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, situation, fields: lastFields, contact_id: activeContactContext?.id || null })
         });
         if (r.ok) { const d = await r.json(); currentConvId = d.id; }
       } catch (e) { console.warn('[conv create]', e.message); }
@@ -2634,7 +2655,7 @@
         const resp = await fetch('/api/likely-responses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ categoryId: selectedCatId, situation, selectedMessage: selectedMsgText, language: lastFields.language || 'English' })
+          body: JSON.stringify({ categoryId: selectedCatId, situation, selectedMessage: selectedMsgText, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -2668,7 +2689,7 @@
               if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
               const r2 = await fetch('/api/next-reply', {
                 method: 'POST', headers,
-                body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English' })
+                body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
               });
               const d2 = await r2.json();
               if (r2.status === 403) { panel.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Sign in to see reply suggestions.</p>`; return; }
@@ -2809,10 +2830,14 @@
     }
 
     // ── Mode Selector ───────────────────────────────────────────
-    function selectMode(mode) {
+    function selectMode(mode, clearContext = false) {
       document.querySelectorAll('.mode-card').forEach(c =>
         c.classList.toggle('active', parseInt(c.dataset.mode) === mode)
       );
+      if (mode !== 1 || clearContext) {
+        activeContactContext = null;
+        document.getElementById('contactContextBadge')?.classList.add('hidden');
+      }
       document.getElementById('smartStartSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('catSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('continueSection').classList.toggle('hidden', mode !== 2);
@@ -3179,7 +3204,13 @@
         wireContactImportBtn(contactId, c.name);
         document.getElementById('startConvWithCnt').addEventListener('click', () => {
           hideContactsPanel();
-          selectMode(1);
+          activeContactContext = {
+            id: contactId,
+            name: c.name,
+            relationship_state: c.relationship_state || null,
+            observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
+          };
+          selectMode(1); // clearContext=false → context preserved
           document.getElementById('smartInput').value = `I need to write to ${c.name}.`;
           detectCategory();
         });

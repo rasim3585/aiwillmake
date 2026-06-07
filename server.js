@@ -157,9 +157,19 @@ app.get('/api/credits', async (req, res) => {
   }
 });
 
+function buildContactContext(contactContext) {
+  if (!contactContext?.name) return '';
+  const patterns = Array.isArray(contactContext.observed_patterns) && contactContext.observed_patterns.length
+    ? contactContext.observed_patterns.join('; ')
+    : null;
+  return `\n\nCONTEXT about the recipient (${contactContext.name}): Based on past conversations, here's what we've observed: ${patterns || 'No specific patterns yet'}. Current relationship state: ${contactContext.relationship_state || 'Unknown'}.
+Use these observations to make your strategies, predictions, and analysis more accurate and personal.
+STRICT RULES: Do not diagnose personality traits. Do not assume intent or label them psychologically. Use these observed tendencies only as soft probabilistic signals, never as certainties.`;
+}
+
 app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, fields, variation } = req.body;
+    const { categoryId, subcategoryId, fields, variation, contactContext } = req.body;
     const variationPrompts = {
       different: 'Generate 6 NEW outputs that are DIFFERENT from a previous attempt. Use different sentence structures, vocabulary and emotional angles.',
       completely_new: 'IGNORE everything about the previous outputs. Use a completely different tone, style and creative approach. Be bold and unexpected.'
@@ -207,7 +217,7 @@ When choosing which message to recommend, consider: which strategy is most likel
 CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
 CRITICAL: Do NOT use markdown. No headers (#), no bold (**), no dividers (---), no bullet points. Plain numbered list ONLY: 1. 2. 3. 4. 5. 6.
 AVOID these AI-sounding openings: "I've been trying to make sense of...", "I've had time to think clearly...", "I wasn't going to reach out...", "I've been doing a lot of thinking...". Instead write like a real person: sometimes short and direct, sometimes warm and specific, always authentic. Vary the sentence structure. Some messages can start mid-thought.
-Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.`;
+Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.${buildContactContext(contactContext)}`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
       .map(f => { const v = (fields[f.key] || '').trim(); return v ? `${f.label}: ${v}` : null; })
@@ -519,7 +529,7 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
 
 app.post('/api/analyze-reply', limiter, async (req, res) => {
   try {
-    const { reply, categoryId, situation, language } = req.body;
+    const { reply, categoryId, situation, language, contactContext } = req.body;
     if (!reply?.trim()) return res.status(400).json({ error: 'reply is required' });
 
     const lang = language || 'English';
@@ -551,7 +561,7 @@ Reply to analyze: ${reply}`;
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1000,
-        system: systemPrompt,
+        system: systemPrompt + buildContactContext(contactContext),
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
@@ -661,7 +671,7 @@ const DISENGAGEMENT_NEXT_REPLY = {
 app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
     if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
-    const { categoryId, situation, originalMessage, theirReply, language } = req.body;
+    const { categoryId, situation, originalMessage, theirReply, language, contactContext } = req.body;
     if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
 
     if (await checkDisengagement(theirReply)) {
@@ -686,7 +696,7 @@ OPTION_3_WHY: [one sentence]
 
 RECOMMENDED: 1/2/3
 
-Rules: Be specific to their actual reply. No generic responses. Write in ${lang}.`;
+Rules: Be specific to their actual reply. No generic responses. Write in ${lang}.${buildContactContext(contactContext)}`;
 
     const userPrompt = `Category: ${categoryId || 'general'}
 Situation: ${situation || 'Not provided'}
@@ -735,11 +745,11 @@ Their reply: ${theirReply}`;
 
 app.post('/api/likely-responses', limiter, async (req, res) => {
   try {
-    const { categoryId, situation, selectedMessage, language } = req.body;
+    const { categoryId, situation, selectedMessage, language, contactContext } = req.body;
     if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
 
     const lang = language || 'English';
-    const systemPrompt = `Based on this message being sent, predict 5 most likely responses the recipient might give. Be realistic and varied — include both positive and negative possibilities. Write in ${lang}.
+    const systemPrompt = `Based on this message being sent, predict 5 most likely responses the recipient might give. Be realistic and varied — include both positive and negative possibilities. Write in ${lang}.${buildContactContext(contactContext)}
 
 Format exactly (no extra text):
 RESPONSE_1_TYPE: [one word: e.g. Warm, Curious, Neutral, Brief, Cold, Positive, Hesitant, Enthusiastic, Distant, Confused]
@@ -967,7 +977,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
     const patternsRaw = extract('OBSERVED_PATTERNS');
     const observed_patterns = patternsRaw
-      ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 4)
+      ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5)
       : [];
 
     console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| patterns:', observed_patterns.length);
@@ -996,7 +1006,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 // ── Conversations ──────────────────────────────────────────────
 app.post('/api/conversations', requireAuth, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, situation, fields } = req.body;
+    const { categoryId, subcategoryId, situation, fields, contact_id } = req.body;
     const r = await fetch(`${SUPABASE_REST}/conversations`, {
       method: 'POST',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -1005,7 +1015,8 @@ app.post('/api/conversations', requireAuth, async (req, res) => {
         category_id: categoryId || '',
         subcategory_id: subcategoryId || '',
         situation: (situation || '').slice(0, 600),
-        fields: fields || null
+        fields: fields || null,
+        contact_id: contact_id || null
       })
     });
     const data = await r.json();
