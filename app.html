@@ -1572,10 +1572,7 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
-            const msgId = await saveMessage('sent', text, badge || '');
-            if (msgId && accessToken) {
-              setTimeout(() => showOutcomeFeedback(card, msgId), 2000);
-            }
+            saveMessage('sent', text, badge || '');
             if (text !== selectedMsgText) {
               selectedMsgText = text;
               document.getElementById('nsNote').textContent = 'Updated for your selected message';
@@ -1835,10 +1832,11 @@
       card.appendChild(widget);
     }
 
-    async function postOutcome(msgId, outcome, note) {
-      if (!accessToken || !currentConvId || !msgId) return;
+    async function postOutcome(msgId, outcome, note, convId) {
+      const cId = convId || currentConvId;
+      if (!accessToken || !cId || !msgId) return;
       try {
-        await fetch(`/api/conversations/${currentConvId}/messages/${msgId}/outcome`, {
+        await fetch(`/api/conversations/${cId}/messages/${msgId}/outcome`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
           body: JSON.stringify({ outcome, outcome_note: note })
@@ -1964,19 +1962,47 @@
           }
         }
 
+        // Set conversation ID early so postOutcome can use it
+        currentConvId = convId;
+
         // Find last sent message
         const msgs = data.conversation_messages || [];
         const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+
+        // Remove any leftover outcome widget from a previous restore
+        document.getElementById('restoreOutcomeWidget')?.remove();
+
         if (lastSent) {
           selectedMsgText = lastSent.content;
           const preview = lastSent.content.length > 80 ? lastSent.content.slice(0, 80) + '…' : lastSent.content;
           const noteEl = document.getElementById('simRestoreNote');
           noteEl.innerHTML = `Returning to this conversation? Paste their reply below.<br><strong>You sent:</strong> "${preview}"`;
           noteEl.classList.remove('hidden');
-        }
 
-        // Set conversation ID and show simulator
-        currentConvId = convId;
+          // Show outcome widget if this message has no recorded outcome yet
+          if (!lastSent.outcome && accessToken) {
+            const outcomeEl = document.createElement('div');
+            outcomeEl.id = 'restoreOutcomeWidget';
+            outcomeEl.className = 'outcome-widget';
+            outcomeEl.innerHTML = `
+              <p class="outcome-q">You sent this message. What happened?</p>
+              <div class="outcome-reactions">
+                <button class="outcome-reaction" data-outcome="positive" data-note="They replied warmly"        type="button">😊 Positive</button>
+                <button class="outcome-reaction" data-outcome="neutral"  data-note="They replied briefly"       type="button">😐 Neutral</button>
+                <button class="outcome-reaction" data-outcome="negative" data-note="Didn't reply or went badly" type="button">😔 Negative</button>
+                <button class="outcome-reaction" data-outcome="waiting"  data-note="Still waiting for reply"    type="button">⏳ Still waiting</button>
+              </div>`;
+            outcomeEl.querySelectorAll('.outcome-reaction').forEach(btn => {
+              btn.addEventListener('click', async () => {
+                outcomeEl.querySelectorAll('.outcome-reaction').forEach(b => b.disabled = true);
+                btn.classList.add('selected');
+                await postOutcome(lastSent.id, btn.dataset.outcome, btn.dataset.note, convId);
+                outcomeEl.innerHTML = `<p class="outcome-confirm">✓ Saved — thanks for the feedback</p>`;
+              });
+            });
+            noteEl.insertAdjacentElement('afterend', outcomeEl);
+          }
+        }
         document.getElementById('simulatorSection').classList.remove('hidden');
         document.getElementById('simulatorSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         document.getElementById('theirReplyInput').focus();
