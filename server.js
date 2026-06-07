@@ -176,14 +176,18 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     };
     const modifier = variationPrompts[variation] || null;
 
+    const DEV_BYPASS_EMAILS = ['rasimkurum@gmail.com']; // TODO: remove before launch
     let creditsUsed = 0;
     if (req.user) {
-      console.log('[generate] auth user:', req.user.id);
-      creditsUsed = await getCredits(req.token, req.user.id);
-      console.log('[generate] creditsUsed:', creditsUsed);
-      if (creditsUsed >= 5) {
-        console.log('[generate] limit reached, blocking');
-        return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
+      const isBypass = DEV_BYPASS_EMAILS.includes(req.user.email);
+      console.log('[generate] auth user:', req.user.id, '| bypass:', isBypass);
+      if (!isBypass) {
+        creditsUsed = await getCredits(req.token, req.user.id);
+        console.log('[generate] creditsUsed:', creditsUsed);
+        if (creditsUsed >= 5) {
+          console.log('[generate] limit reached, blocking');
+          return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
+        }
       }
     } else {
       console.log('[generate] no auth user (guest)');
@@ -367,7 +371,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       });
     }
 
-    if (req.user) {
+    if (req.user && !DEV_BYPASS_EMAILS.includes(req.user.email)) {
       console.log('[generate] incrementing credits for user:', req.user.id);
       await incrementCredits(req.token, req.user.id);
     }
