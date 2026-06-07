@@ -1026,7 +1026,7 @@ app.post('/api/conversations/:id/messages', requireAuth, async (req, res) => {
 
 app.get('/api/conversations', requireAuth, async (req, res) => {
   try {
-    const r = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at,updated_at,conversation_messages(id,outcome)`, {
+    const r = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at,updated_at,conversation_messages(id,role,content,outcome)`, {
       headers: sbHeaders(req.token)
     });
     const data = await r.json();

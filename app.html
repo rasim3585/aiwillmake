@@ -461,14 +461,15 @@
     }
     .nav-conv-btn:hover { border-color: var(--bord2); color: var(--text); }
     .conv-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      z-index: 200; opacity: 0; transition: opacity .25s; pointer-events: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      z-index: 1000; opacity: 0; transition: opacity .25s; pointer-events: none;
     }
     .conv-overlay.visible { opacity: 1; pointer-events: all; }
     .conv-panel {
       position: fixed; top: 0; right: 0; bottom: 0; width: min(420px,100vw);
       background: var(--bg2); border-left: 1px solid var(--bord);
-      z-index: 201; display: flex; flex-direction: column;
+      z-index: 1001; display: flex; flex-direction: column;
       transform: translateX(100%); transition: transform .3s ease;
     }
     .conv-panel.open { transform: translateX(0); }
@@ -491,7 +492,8 @@
     .conv-item:hover { border-color: var(--bord2); background: var(--surf2); }
     .conv-item-cat { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
     .conv-item-situation { font-size: .83rem; color: var(--text); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .conv-item-date { font-size: .72rem; color: var(--sec); }
+    .conv-item-date { font-size: .76rem; color: var(--sec); font-weight: 600; }
+    .conv-item-preview { font-size: .8rem; color: var(--sec); line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
     .conv-item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
     .conv-continue-btn {
       font-size: .74rem; font-weight: 700; color: var(--accent);
@@ -801,21 +803,40 @@
       background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-xl);
       padding: 28px; display: grid; gap: 16px;
     }
-    .continue-opts { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .continue-opts { display: flex; flex-direction: column; gap: 8px; }
     .continue-opt {
       background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: var(--r-lg);
-      padding: 18px 14px; cursor: pointer; font: inherit; color: var(--text);
-      text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 16px 18px; cursor: pointer; font: inherit; color: var(--text);
+      text-align: left; display: flex; align-items: center; gap: 14px;
       transition: background .2s, border-color .2s, transform .18s;
     }
-    .continue-opt:hover { background: var(--surf2); border-color: var(--bord2); transform: translateY(-2px); }
+    .continue-opt:hover { background: var(--surf2); border-color: var(--bord2); transform: translateY(-1px); }
     .continue-opt.active { background: var(--surfa); border-color: var(--borda); }
-    .co-icon  { font-size: 1.55rem; line-height: 1; }
-    .co-title { font-size: .84rem; font-weight: 700; }
-    .co-desc  { font-size: .73rem; color: var(--sec); line-height: 1.42; }
-    .cont-paste-area {
-      border-top: 1px solid var(--bord); padding-top: 16px;
-      display: grid; gap: 10px; animation: fadeUp .25s ease both;
+    .co-icon  { font-size: 1.55rem; line-height: 1; flex-shrink: 0; }
+    .co-body  { display: flex; flex-direction: column; gap: 3px; }
+    .co-title { font-size: .86rem; font-weight: 700; }
+    .co-desc  { font-size: .74rem; color: var(--sec); line-height: 1.4; }
+    /* Primary — most important */
+    .co-primary {
+      padding: 20px 20px; border-color: rgba(110,129,255,.28);
+      background: linear-gradient(135deg, rgba(110,129,255,.08), rgba(163,96,255,.04));
+    }
+    .co-primary .co-icon  { font-size: 1.85rem; }
+    .co-primary .co-title { font-size: .95rem; }
+    .co-primary:hover     { border-color: var(--borda); }
+    /* Tertiary — least important */
+    .co-tertiary { padding: 11px 16px; }
+    .co-tertiary .co-icon  { font-size: 1.1rem; }
+    .co-tertiary .co-title { font-size: .79rem; color: var(--sec); }
+    .co-tertiary .co-desc  { display: none; }
+
+    /* Review "You'll get" preview */
+    .review-preview { margin-bottom: 2px; }
+    .review-preview-lbl { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 8px; }
+    .review-preview-items { display: flex; gap: 8px; flex-wrap: wrap; }
+    .review-preview-item {
+      font-size: .77rem; color: var(--sec); padding: 4px 10px; border-radius: 99px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--bord);
     }
 
     /* ── Review Section ── */
@@ -1129,7 +1150,7 @@
         <button type="button" class="mode-card" data-mode="2" onclick="selectMode(2)">
           <div class="mode-card-icon">💬</div>
           <div class="mode-card-title">Continue a Conversation</div>
-          <div class="mode-card-desc">Paste a reply, import a chat, or open a saved conversation.</div>
+          <div class="mode-card-desc">Understand what their reply really means and know exactly what to say next.</div>
           <div class="mode-card-arrow">→</div>
         </button>
         <button type="button" class="mode-card" data-mode="3" onclick="selectMode(3)">
@@ -1169,20 +1190,25 @@
     <section id="continueSection" class="hidden">
       <div class="continue-card">
         <div class="continue-opts">
-          <button type="button" class="continue-opt" id="contPasteOpt">
+          <button type="button" class="continue-opt co-primary" id="contPasteOpt">
             <span class="co-icon">💬</span>
-            <span class="co-title">Paste their reply →</span>
-            <span class="co-desc">Analyze what they really mean and get your next move</span>
+            <div class="co-body">
+              <span class="co-title">Paste their reply →</span>
+              <span class="co-desc">Analyze what they really mean and get your next move</span>
+            </div>
           </button>
           <button type="button" class="continue-opt" id="contImportOpt">
             <span class="co-icon">📂</span>
-            <span class="co-title">Import WhatsApp chat →</span>
-            <span class="co-desc">Upload a chat export (.txt) for full conversation analysis</span>
+            <div class="co-body">
+              <span class="co-title">Import WhatsApp chat →</span>
+              <span class="co-desc">Analyze the relationship, interest level, power balance, and next best move.</span>
+            </div>
           </button>
-          <button type="button" class="continue-opt" id="contHistoryOpt">
+          <button type="button" class="continue-opt co-tertiary" id="contHistoryOpt">
             <span class="co-icon">🕐</span>
-            <span class="co-title">Open saved conversation →</span>
-            <span class="co-desc">Return to a conversation you started earlier</span>
+            <div class="co-body">
+              <span class="co-title">Open saved conversation →</span>
+            </div>
           </button>
         </div>
       </div>
@@ -1191,6 +1217,15 @@
     <!-- Mode 3: Review Before Sending -->
     <section id="reviewSection" class="hidden">
       <div class="review-card">
+        <div class="review-preview">
+          <div class="review-preview-lbl">You'll get</div>
+          <div class="review-preview-items">
+            <span class="review-preview-item">🎯 Tone check</span>
+            <span class="review-preview-item">⚠️ Emotional risk</span>
+            <span class="review-preview-item">💬 Likely reactions</span>
+            <span class="review-preview-item">💡 Improvement suggestions</span>
+          </div>
+        </div>
         <div class="review-field-label">Paste your message here…</div>
         <textarea id="reviewMessageInput" class="smart-ta" placeholder="The message you're about to send…" style="min-height:140px"></textarea>
         <button type="button" class="btn-review-analyze" id="reviewAnalyzeBtn">Check this message →</button>
@@ -2121,11 +2156,17 @@
           else if (outcomes.includes('neutral'))  dot = `<span class="conv-outcome-dot dot-neutral"  title="Sent — neutral outcome"></span>`;
           else if (outcomes.includes('negative')) dot = `<span class="conv-outcome-dot dot-negative" title="Sent — didn't go well"></span>`;
 
+          const msgs = c.conversation_messages || [];
+          const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+          const msgPreview = lastSent
+            ? escH(lastSent.content.length > 52 ? lastSent.content.slice(0, 52) + '…' : lastSent.content)
+            : escH(c.situation || '—');
+
           const item = document.createElement('div');
           item.className = 'conv-item';
           item.innerHTML = `
             <div class="conv-item-cat">${escH(cat?.icon || '')} ${escH(cat?.name || c.category_id)} · ${escH(sub?.name || c.subcategory_id)}</div>
-            <div class="conv-item-situation">${escH(c.situation || '—')}</div>
+            <div class="conv-item-preview">"${msgPreview}"</div>
             <div class="conv-item-foot">
               <span class="conv-item-date">${fmt(c.created_at)}</span>
               <div style="display:flex;align-items:center;gap:8px">${dot}<button class="conv-continue-btn" data-id="${escH(c.id)}" type="button">Continue →</button></div>
