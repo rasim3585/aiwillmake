@@ -20,6 +20,13 @@ const categories = require('./categories.json');
 
 const app = express();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST BYPASS - REMOVE BEFORE LAUNCH
+// Accounts in this list: unlimited credits + all PRO features unlocked
+const DEV_BYPASS_EMAILS = ['rasimkurum@gmail.com'];
+const isDevBypass = req => !!(req.user?.email && DEV_BYPASS_EMAILS.includes(req.user.email));
+// ─────────────────────────────────────────────────────────────────────────────
+
 const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '');
 const supabase = supabaseUrl && process.env.SUPABASE_ANON_KEY
   ? createClient(supabaseUrl, process.env.SUPABASE_ANON_KEY)
@@ -176,12 +183,10 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     };
     const modifier = variationPrompts[variation] || null;
 
-    const DEV_BYPASS_EMAILS = ['rasimkurum@gmail.com']; // TODO: remove before launch
     let creditsUsed = 0;
     if (req.user) {
-      const isBypass = DEV_BYPASS_EMAILS.includes(req.user.email);
-      console.log('[generate] auth user:', req.user.id, '| bypass:', isBypass);
-      if (!isBypass) {
+      console.log('[generate] auth user:', req.user.id, '| bypass:', isDevBypass(req));
+      if (!isDevBypass(req)) {
         creditsUsed = await getCredits(req.token, req.user.id);
         console.log('[generate] creditsUsed:', creditsUsed);
         if (creditsUsed >= 5) {
@@ -371,7 +376,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       });
     }
 
-    if (req.user && !DEV_BYPASS_EMAILS.includes(req.user.email)) {
+    if (req.user && !isDevBypass(req)) {
       console.log('[generate] incrementing credits for user:', req.user.id);
       await incrementCredits(req.token, req.user.id);
     }
@@ -674,7 +679,7 @@ const DISENGAGEMENT_NEXT_REPLY = {
 
 app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
-    if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
+    if (!req.user && !isDevBypass(req)) return res.status(403).json({ error: 'Sign in required to use this feature.' });
     const { categoryId, situation, originalMessage, theirReply, language, contactContext } = req.body;
     if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
 
