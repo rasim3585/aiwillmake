@@ -1079,8 +1079,15 @@
       background: var(--surf2); border-color: var(--bord2);
       transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2);
     }
-    .wiz-opt-secondary { opacity: .75; }
+    .wiz-opt-secondary { opacity: .6; margin-top: 4px; }
     .wiz-opt-secondary:hover { opacity: 1; }
+    .wiz-opt-continue {
+      background: linear-gradient(95deg, rgba(212,113,90,.15), rgba(196,98,92,.10));
+      border-color: rgba(212,113,90,.4);
+    }
+    .wiz-opt-continue .wiz-opt-title { color: var(--accent); }
+    .wiz-opt-continue .wiz-opt-arrow { opacity: .9; }
+    .wiz-opt-continue:hover { border-color: var(--accent); background: linear-gradient(95deg, rgba(212,113,90,.25), rgba(196,98,92,.18)); }
     .wiz-opt-icon { font-size: 1.6rem; flex-shrink: 0; width: 36px; text-align: center; }
     .wiz-opt-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
     .wiz-opt-title { font-size: .95rem; font-weight: 700; }
@@ -3225,11 +3232,51 @@
       wizLoadContacts();
     }
 
-    function wizGoToStep2() {
+    async function wizGoToStep2() {
       document.getElementById('wizStep1').classList.add('hidden');
       document.getElementById('wizStep2').classList.remove('hidden');
       document.getElementById('wizStep2Sub').textContent = _wizContact ? `Writing to ${_wizContact.name}` : '';
       document.getElementById('newConvWizard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Remove any continue button left from a prior contact selection
+      document.getElementById('wizContinueBtn')?.remove();
+
+      if (_wizContact?.id && accessToken) {
+        try {
+          const r = await fetch(`/api/contacts/${_wizContact.id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          if (r.ok) {
+            const cd = await r.json();
+            const convs = cd.conversations || [];
+            if (convs.length > 0) {
+              const latest = convs[0]; // ordered updated_at desc by server
+              const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+              const fmt = d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+              const desc = latest.situation?.trim()
+                ? escH(latest.situation.length > 60 ? latest.situation.slice(0, 60) + '…' : latest.situation)
+                : fmt(latest.created_at);
+              const btn = document.createElement('button');
+              btn.id = 'wizContinueBtn';
+              btn.type = 'button';
+              btn.className = 'wiz-opt wiz-opt-continue';
+              btn.innerHTML = `
+                <span class="wiz-opt-icon">↩</span>
+                <div class="wiz-opt-body">
+                  <span class="wiz-opt-title">Continue with ${escH(_wizContact.name)}</span>
+                  <span class="wiz-opt-desc">${desc}</span>
+                </div>
+                <span class="wiz-opt-arrow">→</span>`;
+              btn.addEventListener('click', () => {
+                document.getElementById('newConvWizard').classList.add('hidden');
+                restoreConversation(latest.id);
+              });
+              const optsEl = document.querySelector('#wizStep2 .wiz-opts');
+              optsEl.insertBefore(btn, optsEl.firstChild);
+            }
+          }
+        } catch { /* silently skip if fetch fails — normal 4 options still shown */ }
+      }
     }
 
     function wizChoose(type) {
