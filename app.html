@@ -3080,7 +3080,7 @@
         listEl.innerHTML = '<button type="button" class="btn-add-contact" id="showAddContactBtn2">+ Add someone</button>';
         document.getElementById('showAddContactBtn2').addEventListener('click', showAddContactForm);
         if (!contacts.length) {
-          listEl.innerHTML += '<p style="color:var(--sec);font-size:.84rem;text-align:center;padding:24px 0">No people added yet.<br>Tap "+ Add someone" to get started.</p>';
+          listEl.insertAdjacentHTML('beforeend', '<p style="color:var(--sec);font-size:.84rem;text-align:center;padding:24px 0">No people added yet.<br>Tap "+ Add someone" to get started.</p>');
           return;
         }
         contacts.forEach(c => {
@@ -3098,7 +3098,7 @@
           listEl.appendChild(div);
         });
       } catch {
-        listEl.innerHTML += '<p style="color:#f87171;font-size:.84rem;margin-top:10px">Could not load contacts.</p>';
+        listEl.insertAdjacentHTML('beforeend', '<p style="color:#f87171;font-size:.84rem;margin-top:10px">Could not load contacts.</p>');
       }
     }
 
