@@ -340,6 +340,7 @@
     }
     .btn-generate:active:not(:disabled) { transform: translateY(0); }
     .btn-generate:disabled { opacity: .42; cursor: not-allowed; }
+    .btn-generate.btn-regenerated { opacity: .68; }
     .btn-generate.loading { animation: genPulse 1.4s ease-in-out infinite; }
     .btn-spin {
       display: none; width: 16px; height: 16px; border-radius: 50%;
@@ -1496,7 +1497,8 @@
           <button type="button" class="continue-opt co-tertiary" id="contHistoryOpt">
             <span class="co-icon">🕐</span>
             <div class="co-body">
-              <span class="co-title">Open a conversation →</span>
+              <span class="co-title">Your past conversations →</span>
+              <span class="co-desc">Pick up where you left off — your saved chats and analyses.</span>
             </div>
           </button>
         </div>
@@ -1815,6 +1817,7 @@
     let selectedCatId = null;
     let selectedSubId = null;
     let lastFields    = {};
+    let lastGeneratedSig = null;
     let selectedMsgText = '';
     let activeContactContext = null;
     let currentConvId   = null;
@@ -1863,6 +1866,7 @@
     function selectCategory(id) {
       selectedCatId = id;
       selectedSubId = null;
+      lastGeneratedSig = null;
       document.querySelectorAll('.cat-card').forEach(c => c.classList.toggle('active', c.dataset.id === id));
 
       const cat = appData.categories.find(c => c.id === id);
@@ -1898,6 +1902,7 @@
       const sub = cat.subcategories.find(s => s.id === id);
       renderDynamicFields(sub);
 
+      lastGeneratedSig = null;
       document.getElementById('formCard').classList.remove('hidden');
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('nextStepsSection').classList.add('hidden');
@@ -2011,6 +2016,29 @@
     function setActionBtns(disabled) {
       document.getElementById('regenBtn').disabled = disabled;
       document.getElementById('diffBtn').disabled  = disabled;
+    }
+
+    function getGenerateSig() {
+      if (!selectedCatId || !selectedSubId) return null;
+      const vals = {};
+      document.getElementById('formCard').querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.id) vals[el.id] = el.value;
+      });
+      return JSON.stringify({ c: selectedCatId, s: selectedSubId, v: vals });
+    }
+
+    function updateGenerateBtnState() {
+      const btn = document.getElementById('generateBtn');
+      if (!btn || btn.disabled) return;
+      const lbl = btn.querySelector('.btn-label');
+      const sig = getGenerateSig();
+      if (sig && sig === lastGeneratedSig) {
+        lbl.textContent = 'Regenerate ↻';
+        btn.classList.add('btn-regenerated');
+      } else {
+        lbl.textContent = 'Generate ✦';
+        btn.classList.remove('btn-regenerated');
+      }
     }
 
     async function generate(variation = '') {
@@ -2212,6 +2240,7 @@
         createConversation();
         fetchLikelyResponses();
         fetchNextSteps();
+        lastGeneratedSig = getGenerateSig();
       } catch (err) {
         console.error('Generate error:', err);
         showToast('Something went wrong. Please try again.', 'error');
@@ -2222,6 +2251,7 @@
         btn.classList.remove('loading');
         setActionBtns(false);
         if (accessToken) fetchAndShowCredits();
+        updateGenerateBtnState();
       }
     }
 
@@ -3398,6 +3428,8 @@
     }
 
     document.getElementById('generateBtn').addEventListener('click', () => generate());
+    document.getElementById('formCard').addEventListener('input',  updateGenerateBtnState);
+    document.getElementById('formCard').addEventListener('change', updateGenerateBtnState);
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
