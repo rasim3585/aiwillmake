@@ -1010,6 +1010,64 @@
       padding: 28px 0; line-height: 1.6;
     }
 
+    /* ── New Conversation Wizard ── */
+    .wiz-heading {
+      font-size: 1.65rem; font-weight: 900; letter-spacing: -.03em; margin: 0 0 6px; line-height: 1.2;
+    }
+    .wiz-heading span {
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .wiz-sub { font-size: .86rem; color: var(--sec); margin: 0 0 20px; min-height: 1.3em; }
+    .wiz-contact-list { display: flex; flex-direction: column; gap: 8px; }
+    .wiz-contact-card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surf); border: 1px solid var(--bord); border-radius: 14px;
+      padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; color: var(--text);
+      transition: border-color .18s, background .18s, transform .15s;
+    }
+    .wiz-contact-card:hover { background: var(--surf2); border-color: var(--bord2); transform: translateX(3px); }
+    .wiz-contact-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .wiz-contact-name { font-size: .92rem; font-weight: 700; }
+    .wiz-contact-state { font-size: .72rem; color: var(--sec); }
+    .wiz-contact-arrow { color: var(--accent); font-size: .9rem; opacity: .7; }
+    .wiz-contact-new {
+      display: block; width: 100%; padding: 12px 14px; margin-top: 4px;
+      background: rgba(212,113,90,.1); border: 1px dashed var(--borda); border-radius: 14px;
+      font: 600 .88rem/1 inherit; color: var(--accent); cursor: pointer; text-align: center;
+      transition: background .18s;
+    }
+    .wiz-contact-new:hover { background: rgba(212,113,90,.18); }
+    .wiz-contact-skip {
+      display: block; width: 100%; padding: 10px; border: none; background: none;
+      font: 500 .84rem/1 inherit; color: var(--sec); cursor: pointer; text-align: center;
+      transition: color .15s;
+    }
+    .wiz-contact-skip:hover { color: var(--text); }
+    .wiz-contact-note { font-size: .76rem; color: var(--muted); text-align: center; margin: 0; }
+    .wiz-opts { display: flex; flex-direction: column; gap: 10px; }
+    .wiz-opt {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surf); border: 1px solid var(--bord); border-radius: 18px;
+      padding: 20px 18px; cursor: pointer; text-align: left; font: inherit; color: var(--text);
+      transition: border-color .2s, background .2s, transform .18s, box-shadow .18s;
+    }
+    .wiz-opt:hover {
+      background: var(--surf2); border-color: var(--bord2);
+      transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2);
+    }
+    .wiz-opt-secondary { opacity: .75; }
+    .wiz-opt-secondary:hover { opacity: 1; }
+    .wiz-opt-icon { font-size: 1.6rem; flex-shrink: 0; width: 36px; text-align: center; }
+    .wiz-opt-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .wiz-opt-title { font-size: .95rem; font-weight: 700; }
+    .wiz-opt-desc { font-size: .78rem; color: var(--sec); line-height: 1.45; }
+    .wiz-opt-arrow {
+      color: var(--accent); font-size: 1rem; flex-shrink: 0; opacity: .6;
+      transition: opacity .18s, transform .18s;
+    }
+    .wiz-opt:hover .wiz-opt-arrow { opacity: 1; transform: translateX(4px); }
+
     /* ── Continue Section ── */
     .continue-card {
       background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r-xl);
@@ -1481,6 +1539,57 @@
       <button type="button" class="btn-new-conv" onclick="openNewConversation()">+ New conversation</button>
       <div class="home-conv-label">Recent</div>
       <div id="homeConvList" class="home-conv-list"></div>
+    </section>
+
+    <!-- New Conversation Wizard -->
+    <section id="newConvWizard" class="hidden">
+      <!-- Step 1: Who are you talking to? -->
+      <div id="wizStep1">
+        <button type="button" class="back-btn" onclick="closeWizard()">← Back</button>
+        <h2 class="wiz-heading">Who are you <span>talking to?</span></h2>
+        <p class="wiz-sub">We'll personalize suggestions based on what we know about them.</p>
+        <div id="wizContactList" class="wiz-contact-list"></div>
+      </div>
+      <!-- Step 2: What do you have? -->
+      <div id="wizStep2" class="hidden">
+        <button type="button" class="back-btn" onclick="wizGoToStep1()">← Back</button>
+        <h2 class="wiz-heading">What do you <span>have?</span></h2>
+        <p class="wiz-sub" id="wizStep2Sub"></p>
+        <div class="wiz-opts">
+          <button type="button" class="wiz-opt" onclick="wizChoose('start')">
+            <span class="wiz-opt-icon">✍️</span>
+            <div class="wiz-opt-body">
+              <span class="wiz-opt-title">Nothing yet — help me start</span>
+              <span class="wiz-opt-desc">I need to write the first message. AI picks the right form for you.</span>
+            </div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+          <button type="button" class="wiz-opt" onclick="wizChoose('decode')">
+            <span class="wiz-opt-icon">💬</span>
+            <div class="wiz-opt-body">
+              <span class="wiz-opt-title">They sent something — decode it</span>
+              <span class="wiz-opt-desc">Understand what they really mean and know your next move.</span>
+            </div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+          <button type="button" class="wiz-opt" onclick="wizChoose('whatsapp')">
+            <span class="wiz-opt-icon">📂</span>
+            <div class="wiz-opt-body">
+              <span class="wiz-opt-title">I have a chat history (WhatsApp)</span>
+              <span class="wiz-opt-desc">Analyze the full conversation — interest level, patterns, next move.</span>
+            </div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+          <button type="button" class="wiz-opt wiz-opt-secondary" onclick="wizChoose('review')">
+            <span class="wiz-opt-icon">🔍</span>
+            <div class="wiz-opt-body">
+              <span class="wiz-opt-title">I have a draft — review it</span>
+              <span class="wiz-opt-desc">Check tone, risk, and likely reactions before you send.</span>
+            </div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- Smart Start (Mode 1) -->
@@ -3007,14 +3116,130 @@
       }
     }
 
+    // ── New Conversation Wizard ──────────────────────────────────
+    let _wizContact = null;
+
     function openNewConversation() {
-      selectMode(1, true);
-      document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      _wizContact = null;
+      ['smartStartSection','catSection','subcatSection','formCard',
+       'continueSection','reviewSection','convAnalysisResult'].forEach(id =>
+        document.getElementById(id)?.classList.add('hidden'));
+      document.getElementById('newConvWizard').classList.remove('hidden');
+      document.getElementById('wizStep1').classList.remove('hidden');
+      document.getElementById('wizStep2').classList.add('hidden');
+      document.getElementById('wizStep2Sub').textContent = '';
+      wizLoadContacts();
+      document.getElementById('newConvWizard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeWizard() {
+      document.getElementById('newConvWizard').classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function wizGoToStep1() {
+      _wizContact = null;
+      document.getElementById('wizStep1').classList.remove('hidden');
+      document.getElementById('wizStep2').classList.add('hidden');
+      wizLoadContacts();
+    }
+
+    function wizGoToStep2() {
+      document.getElementById('wizStep1').classList.add('hidden');
+      document.getElementById('wizStep2').classList.remove('hidden');
+      document.getElementById('wizStep2Sub').textContent = _wizContact ? `Writing to ${_wizContact.name}` : '';
+      document.getElementById('newConvWizard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function wizChoose(type) {
+      document.getElementById('newConvWizard').classList.add('hidden');
+      activeContactContext = _wizContact ? {
+        id: _wizContact.id,
+        name: _wizContact.name,
+        relationship_state: _wizContact.relationship_state || null,
+        observed_patterns: Array.isArray(_wizContact.observed_patterns) && _wizContact.observed_patterns.length
+          ? _wizContact.observed_patterns : null
+      } : null;
+      updatePrevMsgFieldVisibility();
+
+      if (type === 'start') {
+        ['continueSection','reviewSection','subcatSection','formCard','convAnalysisResult'].forEach(id =>
+          document.getElementById(id)?.classList.add('hidden'));
+        selectMode(1, !_wizContact);
+        if (_wizContact) {
+          document.getElementById('smartInput').value = `I need to write to ${_wizContact.name}.`;
+          detectCategory();
+        }
+        document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (type === 'decode') {
+        selectMode(2);
+        document.getElementById('contPasteOpt').click();
+        document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (type === 'whatsapp') {
+        if (_wizContact) {
+          const inp = document.getElementById('contactChatInput');
+          inp.dataset.contactId = _wizContact.id;
+          inp.dataset.contactName = _wizContact.name;
+          inp.click();
+        } else {
+          selectMode(2);
+          document.getElementById('contImportOpt').click();
+          document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else if (type === 'review') {
+        selectMode(3);
+        document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    async function wizLoadContacts() {
+      const el = document.getElementById('wizContactList');
+      if (!el) return;
+      if (!accessToken) {
+        el.innerHTML = `
+          <p class="wiz-contact-note" style="margin-bottom:12px">Sign in to track your contacts.</p>
+          <button type="button" class="wiz-contact-skip" onclick="wizGoToStep2()">Skip for now →</button>`;
+        return;
+      }
+      el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div>'.repeat(3);
+      try {
+        const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const contacts = await r.json();
+        if (!r.ok) throw new Error();
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const stCls = s => 'cstate-' + (s || 'neutral').toLowerCase();
+        el.innerHTML = '';
+        contacts.forEach(c => {
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'wiz-contact-card';
+          btn.innerHTML = `
+            <span class="contact-card-avatar ${stCls(c.relationship_state)}">${escH((c.name||'?').charAt(0).toUpperCase())}</span>
+            <div class="wiz-contact-info">
+              <span class="wiz-contact-name">${escH(c.name)}</span>
+              ${c.relationship_state ? `<span class="wiz-contact-state">${escH(c.relationship_state)}</span>` : ''}
+            </div>
+            <span class="wiz-contact-arrow">→</span>`;
+          btn.addEventListener('click', () => { _wizContact = c; wizGoToStep2(); });
+          el.appendChild(btn);
+        });
+        const newBtn = document.createElement('button');
+        newBtn.type = 'button'; newBtn.className = 'wiz-contact-new'; newBtn.textContent = '+ Someone new';
+        newBtn.addEventListener('click', () => showContactsPanel());
+        el.appendChild(newBtn);
+        const skipBtn = document.createElement('button');
+        skipBtn.type = 'button'; skipBtn.className = 'wiz-contact-skip'; skipBtn.textContent = 'Skip for now →';
+        skipBtn.addEventListener('click', () => wizGoToStep2());
+        el.appendChild(skipBtn);
+      } catch {
+        el.innerHTML = `
+          <p style="color:#f87171;font-size:.84rem;margin-bottom:12px">Could not load contacts.</p>
+          <button type="button" class="wiz-contact-skip" onclick="wizGoToStep2()">Skip for now →</button>`;
+      }
     }
 
     function goBack() {
       document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
-      ['smartStartSection','catSection','subcatSection','formCard',
+      ['newConvWizard','smartStartSection','catSection','subcatSection','formCard',
        'continueSection','reviewSection','convAnalysisResult'].forEach(id => {
         document.getElementById(id)?.classList.add('hidden');
       });
@@ -3230,6 +3455,11 @@
       document.getElementById('contactsPanel').classList.remove('open');
       document.getElementById('convOverlay').classList.remove('visible');
       document.body.style.overflow = '';
+      // Refresh wizard contact list if step 1 is visible (user may have just added someone)
+      if (!document.getElementById('newConvWizard').classList.contains('hidden') &&
+          !document.getElementById('wizStep1').classList.contains('hidden')) {
+        wizLoadContacts();
+      }
     }
 
     const _typeClass  = t => 'ctype-' + (t || '').toLowerCase();
