@@ -15,27 +15,31 @@
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="SayTheThing — AI Communication Coach for Difficult Conversations" />
   <meta name="twitter:description" content="Say the right thing. Know what to do next. AI coach for apologies, breakups, raises, and difficult conversations — from first message to final outcome." />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,800;1,9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:     #09090b;
-      --bg2:    #111113;
-      --surf:   rgba(255,255,255,0.04);
-      --surf2:  rgba(255,255,255,0.07);
-      --bord:   rgba(255,255,255,0.07);
-      --bord2:  rgba(255,255,255,0.13);
-      --text:   #f4f4f5;
-      --sec:    #a1a1aa;
-      --muted:  #52525b;
-      --accent: #818cf8;
-      --acc2:   #a78bfa;
-      --glow:   rgba(129,140,248,0.32);
+      --bg:     #faf6f1;
+      --bg2:    #f2ebe0;
+      --surf:   #ffffff;
+      --surf2:  #fdf9f5;
+      --bord:   rgba(120,72,48,0.11);
+      --bord2:  rgba(120,72,48,0.20);
+      --text:   #1e140d;
+      --sec:    #7a5646;
+      --muted:  #b89880;
+      --accent: #c4614a;
+      --acc2:   #e8956e;
+      --glow:   rgba(196,97,74,0.16);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -43,13 +47,23 @@
       overflow-x: hidden;
     }
 
-    /* Ambient light */
+    /* Warm ambient glow */
     body::before {
       content: '';
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
-        radial-gradient(ellipse 1000px 700px at 50% -100px, rgba(129,140,248,.08) 0%, transparent 70%),
-        radial-gradient(ellipse 600px 600px at 90%  90%,   rgba(167,139,250,.05) 0%, transparent 65%);
+        radial-gradient(ellipse 1000px 640px at 12% -4%, rgba(255,210,170,0.50) 0%, transparent 58%),
+        radial-gradient(ellipse 720px 520px  at 88% 48%, rgba(232,149,110,0.26) 0%, transparent 56%),
+        radial-gradient(ellipse 520px 420px  at 50% 98%, rgba(255,185,130,0.20) 0%, transparent 55%);
+    }
+
+    /* Subtle grain texture */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.022;
     }
 
     .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
@@ -60,44 +74,47 @@
     /* ════════ HEADER ════════ */
     #hdr {
       position: sticky; top: 0; z-index: 200; padding: 0 24px;
-      transition: background .3s, border-color .3s;
+      transition: background .3s, border-color .3s, box-shadow .3s;
       border-bottom: 1px solid transparent;
     }
     #hdr.scrolled {
-      background: rgba(9,9,11,.88);
+      background: rgba(250,246,241,.94);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-bottom-color: var(--bord);
+      box-shadow: 0 1px 20px rgba(42,31,23,0.06);
     }
     .hdr-inner {
       max-width: 1100px; margin: 0 auto;
       display: flex; justify-content: space-between; align-items: center;
       padding: 20px 0;
     }
-    .brand { font-size: .88rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+    .brand { font-size: .95rem; font-weight: 800; letter-spacing: -.01em; }
     .hdr-nav { display: flex; align-items: center; gap: 4px; }
     .hdr-nav a {
       color: var(--sec); text-decoration: none; font-size: .86rem;
       padding: 8px 14px; border-radius: 8px; transition: color .2s, background .2s;
     }
-    .hdr-nav a:hover { color: var(--text); background: var(--surf); }
+    .hdr-nav a:hover { color: var(--text); background: rgba(196,97,74,0.07); }
     .hdr-cta {
-      background: var(--text) !important; color: var(--bg) !important;
+      background: var(--accent) !important; color: #fff !important;
       font-weight: 700; border-radius: 8px; padding: 8px 18px;
       transition: opacity .2s !important;
+      box-shadow: 0 2px 10px rgba(196,97,74,0.28);
     }
-    .hdr-cta:hover { opacity: .88 !important; background: var(--text) !important; }
+    .hdr-cta:hover { opacity: .88 !important; background: var(--accent) !important; }
 
     /* ════════ HERO ════════ */
     .hero {
       text-align: center;
-      padding: 120px 0 100px;
+      padding: 130px 0 110px;
     }
+    .hero-deco { margin: 0 auto 28px; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 7px;
-      font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .16em;
-      color: var(--sec); border: 1px solid var(--bord2);
-      padding: 6px 14px; border-radius: 99px; margin-bottom: 32px;
-      background: var(--surf);
+      font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
+      color: var(--accent); border: 1px solid rgba(196,97,74,0.22);
+      padding: 6px 16px; border-radius: 99px; margin-bottom: 36px;
+      background: rgba(196,97,74,0.07);
     }
     .hero-badge-dot {
       width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
@@ -106,82 +123,98 @@
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
 
     .hero h1 {
-      font-size: clamp(3rem, 7.5vw, 5.8rem);
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(3.2rem, 8vw, 6.4rem);
       font-weight: 800;
       line-height: 1.0;
-      letter-spacing: -0.045em;
-      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+      margin-bottom: 18px;
     }
     .hero-h2 {
-      font-size: clamp(1.6rem, 4vw, 2.8rem);
-      font-weight: 700; letter-spacing: -.03em;
+      font-family: 'Fraunces', Georgia, serif;
+      font-style: italic;
+      font-size: clamp(1.7rem, 4.5vw, 3.2rem);
+      font-weight: 700; letter-spacing: -.01em;
       background: linear-gradient(135deg, var(--accent), var(--acc2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 20px;
+      background-clip: text; margin-bottom: 28px;
     }
     .hero-sub {
       color: var(--sec);
       font-size: clamp(.95rem, 2vw, 1.05rem);
       font-weight: 400;
       line-height: 1.72;
-      max-width: 500px; margin: 0 auto 44px;
+      max-width: 400px; margin: 0 auto 48px;
     }
     .hero-sub strong { color: var(--text); font-weight: 600; }
 
     .hero-cta {
       display: inline-flex; align-items: center; gap: 8px;
-      background: var(--text); color: var(--bg);
+      background: var(--accent); color: #fff;
       padding: 16px 32px; border-radius: 12px;
       font: inherit; font-size: 1rem; font-weight: 700;
       text-decoration: none; cursor: pointer; border: none;
-      transition: opacity .2s, transform .2s;
+      transition: opacity .2s, transform .2s, box-shadow .2s;
       margin-bottom: 32px;
+      box-shadow: 0 4px 22px rgba(196,97,74,0.32);
     }
-    .hero-cta:hover { opacity: .9; transform: translateY(-1px); }
+    .hero-cta:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(196,97,74,0.42); }
 
     .hero-trust {
       display: flex; align-items: center; justify-content: center;
       gap: 0; flex-wrap: wrap;
     }
     .trust-item {
-      color: var(--muted); font-size: .8rem;
+      color: var(--sec); font-size: .8rem;
       padding: 0 16px; border-right: 1px solid var(--bord);
     }
     .trust-item:last-child { border-right: none; }
 
     /* ════════ DIVIDER ════════ */
-    .hr { border: none; border-top: 1px solid var(--bord); }
+    .hr {
+      border: none; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--bord) 25%, var(--bord) 75%, transparent);
+    }
 
     /* ════════ CONVERSATION FOCUS ════════ */
     .conv-focus { text-align: center; padding: 100px 0 88px; }
     .conv-focus h2 {
+      font-family: 'Fraunces', Georgia, serif;
       font-size: clamp(2rem, 5.5vw, 4rem);
-      font-weight: 800; line-height: 1.05; letter-spacing: -.04em;
+      font-weight: 800; line-height: 1.05; letter-spacing: -.03em;
       color: var(--text); margin-bottom: 8px;
     }
     .conv-focus-gradient {
       display: block;
+      font-family: 'Fraunces', Georgia, serif;
+      font-style: italic;
       font-size: clamp(2rem, 5.5vw, 4rem);
-      font-weight: 800; line-height: 1.1; letter-spacing: -.04em;
+      font-weight: 800; line-height: 1.1; letter-spacing: -.02em;
       background: linear-gradient(135deg, var(--accent), var(--acc2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 28px;
+      background-clip: text; margin-bottom: 32px;
     }
     .conv-focus-desc {
       color: var(--sec); font-size: clamp(.93rem, 1.8vw, 1.05rem);
-      line-height: 1.78; max-width: 480px; margin: 0 auto;
+      line-height: 1.78; max-width: 420px; margin: 0 auto;
     }
 
     /* ════════ SECTIONS ════════ */
-    .s { padding: 96px 0; }
+    .s { padding: 100px 0; }
 
     .s-label {
+      display: inline-block;
       font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .16em; color: var(--accent); margin-bottom: 12px;
+      letter-spacing: .14em; color: var(--accent);
+      background: rgba(196,97,74,0.08);
+      border: 1px solid rgba(196,97,74,0.16);
+      padding: 4px 13px; border-radius: 99px;
+      margin-bottom: 14px;
     }
     .s-title {
-      font-size: clamp(1.8rem, 3.5vw, 2.4rem);
-      font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
       margin-bottom: 14px;
     }
     .s-sub {
@@ -194,8 +227,9 @@
 
     /* ════════ REPLY FLOW ════════ */
     .reply-flow {
-      background: linear-gradient(145deg, rgba(110,129,255,.06), rgba(163,96,255,.03));
-      border: 1px solid rgba(110,129,255,.18); border-radius: 24px; padding: 52px 48px;
+      background: linear-gradient(145deg, rgba(196,97,74,0.04), rgba(232,149,110,0.02));
+      border: 1.5px solid rgba(196,97,74,0.16); border-radius: 24px; padding: 52px 48px;
+      box-shadow: 0 4px 32px rgba(196,97,74,0.07);
     }
     .reply-flow-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; margin-top: 36px; }
     .reply-step { display: flex; flex-direction: column; gap: 8px; }
@@ -210,18 +244,25 @@
 
     /* ════════ STORY FLOW ════════ */
     .story-flow { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
-    .story-step { flex: 1; border-radius: 16px; padding: 20px 18px; border: 1px solid var(--bord); background: var(--surf); }
-    .story-step.story-strategy { background: rgba(110,129,255,.06); border-color: rgba(110,129,255,.2); }
-    .story-step.story-reply    { background: rgba(32,212,122,.05);  border-color: rgba(32,212,122,.2); }
-    .story-arrow { padding: 16px 10px; font-size: 1.3rem; color: var(--sec); align-self: center; flex-shrink: 0; }
+    .story-step {
+      flex: 1; border-radius: 16px; padding: 20px 18px; border: 1px solid var(--bord);
+      background: var(--surf);
+      box-shadow: 0 2px 14px rgba(42,31,23,0.05);
+    }
+    .story-step.story-strategy { background: rgba(196,97,74,0.04); border-color: rgba(196,97,74,0.18); }
+    .story-step.story-reply    { background: rgba(232,149,110,0.05); border-color: rgba(232,149,110,0.20); }
+    .story-arrow { padding: 16px 10px; font-size: 1.3rem; color: var(--muted); align-self: center; flex-shrink: 0; }
     .story-step-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .story-badge { background: rgba(110,129,255,.12); border: 1px solid rgba(110,129,255,.2); color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: .63rem; text-transform: none; letter-spacing: 0; }
+    .story-badge { background: rgba(196,97,74,0.10); border: 1px solid rgba(196,97,74,0.20); color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: .63rem; text-transform: none; letter-spacing: 0; }
     .story-step-text { font-size: .86rem; line-height: 1.65; color: var(--text); font-style: italic; }
     .story-meta { font-size: .72rem; color: var(--sec); margin-top: 8px; }
-    .story-next { background: rgba(110,129,255,.06); border: 1px solid rgba(110,129,255,.18); border-radius: 14px; padding: 16px 20px; margin-bottom: 22px; }
-    .story-next-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #20d47a; margin-bottom: 6px; }
+    .story-next {
+      background: linear-gradient(135deg, rgba(196,97,74,0.06), rgba(232,149,110,0.03));
+      border: 1px solid rgba(196,97,74,0.14); border-radius: 14px; padding: 16px 20px; margin-bottom: 22px;
+    }
+    .story-next-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); margin-bottom: 6px; }
     .story-next-text { font-size: .9rem; line-height: 1.6; color: var(--text); }
-    .story-caption { text-align: center; color: var(--sec); font-size: .88rem; font-style: italic; margin-top: 4px; }
+    .story-caption { text-align: center; color: var(--muted); font-size: .88rem; font-style: italic; margin-top: 4px; }
     @media (max-width: 860px) {
       .story-flow { flex-direction: column; gap: 0; }
       .story-arrow { transform: rotate(90deg); align-self: center; padding: 6px 16px; }
@@ -233,13 +274,13 @@
       background: var(--bord); border: 1px solid var(--bord); border-radius: 20px; overflow: hidden;
     }
     .feat-card {
-      background: var(--bg); padding: 36px 32px;
+      background: var(--surf); padding: 36px 32px;
       transition: background .25s;
     }
-    .feat-card:hover { background: var(--bg2); }
+    .feat-card:hover { background: var(--surf2); }
     .feat-icon {
       font-size: 1.6rem; width: 52px; height: 52px; border-radius: 14px;
-      background: var(--surf2); border: 1px solid var(--bord2);
+      background: rgba(196,97,74,0.08); border: 1px solid rgba(196,97,74,0.15);
       display: grid; place-items: center; margin-bottom: 20px;
     }
     .feat-name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
@@ -258,18 +299,23 @@
     .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; }
     .step-card {
       background: var(--surf); border: 1px solid var(--bord);
-      border-radius: 20px; padding: 28px 26px; position: relative; overflow: hidden;
-      transition: border-color .22s, box-shadow .22s, transform .22s;
+      border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden;
+      box-shadow: 0 2px 14px rgba(42,31,23,0.05), 0 1px 4px rgba(42,31,23,0.03);
+      transition: box-shadow .22s, transform .22s;
     }
-    .step-card:hover { border-color: var(--bord2); transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.22); }
+    .step-card:hover {
+      box-shadow: 0 8px 40px rgba(42,31,23,0.10), 0 2px 8px rgba(42,31,23,0.06);
+      transform: translateY(-3px);
+    }
     .step-num {
-      font-size: 3.2rem; font-weight: 900; line-height: 1;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 3.5rem; font-weight: 800; line-height: 1;
       background: linear-gradient(135deg, var(--accent), var(--acc2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text; margin-bottom: 14px; letter-spacing: -.04em;
     }
     .step-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
-    .step-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .step-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
     .step-desc  { color: var(--sec); font-size: .87rem; line-height: 1.65; }
     .steps-cta  { text-align: center; margin-top: 36px; }
 
@@ -279,18 +325,19 @@
       background: var(--surf); border: 1px solid var(--bord);
       border-radius: 18px; padding: 22px;
       display: flex; flex-direction: column; gap: 14px;
-      transition: border-color .2s;
+      box-shadow: 0 2px 14px rgba(42,31,23,0.05);
+      transition: box-shadow .2s, transform .2s;
     }
-    .sample-card:hover { border-color: var(--bord2); }
+    .sample-card:hover { box-shadow: 0 6px 28px rgba(42,31,23,0.09); transform: translateY(-2px); }
     .sample-meta { display: flex; align-items: center; gap: 9px; }
     .sample-ic {
       font-size: .95rem; width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-      background: var(--surf2); border: 1px solid var(--bord2); display: grid; place-items: center;
+      background: rgba(196,97,74,0.08); border: 1px solid rgba(196,97,74,0.14); display: grid; place-items: center;
     }
     .sample-cat { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
     .sample-prompt {
-      font-size: .79rem; color: var(--muted); font-style: italic; line-height: 1.52;
-      padding: 9px 12px; background: rgba(255,255,255,.025);
+      font-size: .79rem; color: var(--sec); font-style: italic; line-height: 1.52;
+      padding: 9px 12px; background: rgba(196,97,74,0.04);
       border: 1px solid var(--bord); border-radius: 9px;
     }
     .sample-sep {
@@ -307,13 +354,14 @@
     .price-card {
       background: var(--surf); border: 1px solid var(--bord);
       border-radius: 20px; padding: 28px; display: flex; flex-direction: column;
-      transition: border-color .2s;
+      box-shadow: 0 2px 14px rgba(42,31,23,0.05);
+      transition: box-shadow .2s;
     }
-    .price-card:hover { border-color: var(--bord2); }
+    .price-card:hover { box-shadow: 0 6px 30px rgba(42,31,23,0.09); }
     .price-card.hi {
-      background: var(--bg2);
-      border-color: rgba(129,140,248,.36);
-      box-shadow: 0 0 0 1px rgba(129,140,248,.12), 0 20px 60px rgba(129,140,248,.08);
+      background: linear-gradient(160deg, #fff8f5, #fff1e8);
+      border-color: rgba(196,97,74,0.35);
+      box-shadow: 0 6px 36px rgba(196,97,74,0.14), 0 0 0 1px rgba(196,97,74,0.06);
     }
     .price-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
     .price-plan { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); }
@@ -323,17 +371,18 @@
       background: linear-gradient(90deg, var(--accent), var(--acc2)); color: #fff;
     }
     .price-amt {
-      font-size: 2.8rem; font-weight: 900; letter-spacing: -.04em; line-height: 1; margin-bottom: 4px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 2.8rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; margin-bottom: 4px;
     }
-    .price-amt sup { font-size: .9rem; font-weight: 600; vertical-align: top; margin-top: 8px; }
-    .price-amt small { font-size: .85rem; font-weight: 400; color: var(--muted); }
+    .price-amt sup { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .9rem; font-weight: 600; vertical-align: top; margin-top: 8px; }
+    .price-amt small { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 400; color: var(--muted); }
     .price-tagline { font-size: .84rem; color: var(--sec); line-height: 1.5; margin-bottom: 22px; }
     .price-hr { border: none; border-top: 1px solid var(--bord); margin-bottom: 20px; }
     .price-feats { display: grid; gap: 9px; margin-bottom: 24px; flex: 1; }
     .price-feat { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--sec); }
     .price-chk {
       width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; font-size: .6rem;
-      background: rgba(129,140,248,.12); border: 1px solid rgba(129,140,248,.22);
+      background: rgba(196,97,74,0.10); border: 1px solid rgba(196,97,74,0.20);
       display: grid; place-items: center; color: var(--accent); font-weight: 800;
     }
     .btn-plan {
@@ -343,34 +392,37 @@
       border: 1px solid var(--bord2); color: var(--sec); background: transparent;
       transition: background .2s, color .2s, border-color .2s;
     }
-    .btn-plan:hover { background: var(--surf2); color: var(--text); border-color: rgba(255,255,255,.22); }
+    .btn-plan:hover { background: rgba(196,97,74,0.05); color: var(--text); border-color: rgba(196,97,74,0.28); }
     .btn-plan.hi {
-      background: var(--text); border-color: transparent; color: var(--bg);
+      background: var(--accent); border-color: transparent; color: #fff;
+      box-shadow: 0 4px 18px rgba(196,97,74,0.30);
     }
-    .btn-plan.hi:hover { opacity: .9; }
+    .btn-plan.hi:hover { background: #b55540; box-shadow: 0 6px 24px rgba(196,97,74,0.38); }
     .price-note { text-align: center; margin-top: 20px; font-size: .81rem; color: var(--muted); }
     .price-note a { color: var(--accent); text-decoration: none; }
     .price-note a:hover { text-decoration: underline; }
 
     /* ════════ BOTTOM CTA ════════ */
     .bcta {
-      text-align: center; padding: 100px 24px;
+      text-align: center; padding: 110px 24px;
     }
     .bcta h2 {
-      font-size: clamp(2rem, 5vw, 3.6rem);
-      font-weight: 800; letter-spacing: -.04em; margin-bottom: 16px;
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      font-weight: 800; letter-spacing: -.03em; margin-bottom: 16px;
     }
     .bcta p { color: var(--sec); font-size: 1rem; margin-bottom: 40px; }
 
     /* ════════ AUTH ════════ */
     .btn-google {
       display: inline-flex; align-items: center; gap: 10px;
-      background: var(--surf2); border: 1px solid var(--bord2);
+      background: var(--surf); border: 1px solid var(--bord2);
       color: var(--text); padding: 14px 26px; border-radius: 12px;
       font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
-      text-decoration: none; transition: background .2s;
+      text-decoration: none; transition: background .2s, box-shadow .2s;
+      box-shadow: 0 2px 10px rgba(42,31,23,0.07);
     }
-    .btn-google:hover { background: rgba(255,255,255,.12); }
+    .btn-google:hover { background: var(--bg2); box-shadow: 0 4px 18px rgba(42,31,23,0.11); }
     .btn-google svg { flex-shrink: 0; }
     #authStatus { color: var(--sec); font-size: .83rem; }
 
@@ -378,6 +430,7 @@
     footer {
       border-top: 1px solid var(--bord);
       padding: 40px 24px 36px;
+      background: var(--bg2);
     }
     .ft-inner {
       max-width: 1100px; margin: 0 auto;
@@ -431,19 +484,30 @@
 <section>
   <div class="wrap">
     <div class="hero">
+      <!-- Decorative chat bubble illustration -->
+      <div class="hero-deco" aria-hidden="true">
+        <svg width="96" height="68" viewBox="0 0 96 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="56" height="38" rx="14" fill="rgba(196,97,74,0.07)" stroke="rgba(196,97,74,0.32)" stroke-width="1.5"/>
+          <rect x="39" y="29" width="56" height="38" rx="14" fill="rgba(232,149,110,0.07)" stroke="rgba(232,149,110,0.24)" stroke-width="1.5"/>
+          <circle cx="17" cy="20" r="3.2" fill="rgba(196,97,74,0.58)"/>
+          <circle cx="29" cy="20" r="3.2" fill="rgba(196,97,74,0.40)"/>
+          <circle cx="41" cy="20" r="3.2" fill="rgba(196,97,74,0.22)"/>
+          <path d="M67.5 56 C67.5 56 59 50.5 59 47 C59 44.8 60.8 43 63 43 C64.5 43 65.8 43.8 66.5 45 C67.2 43.8 68.5 43 70 43 C72.2 43 74 44.8 74 47 C74 50.5 67.5 56 67.5 56Z" fill="rgba(232,149,110,0.52)"/>
+        </svg>
+      </div>
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
         AI Communication Coach
       </div>
       <h1>Say the right thing.</h1>
       <p class="hero-h2">Know what to do next.</p>
-      <h2 class="hero-sub">AI communication coach for difficult conversations — from first message to final outcome.</h2>
+      <h2 class="hero-sub">AI coach for difficult conversations — from first message to final outcome.</h2>
       <div>
         <a href="app.html" class="hero-cta" id="ctaBtn">
           Open App →
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <p style="font-size:.82rem;color:var(--sec);margin-top:14px;margin-bottom:0">Used for apologies, raises, breakups, complaints, and more.</p>
+        <p style="font-size:.82rem;color:var(--muted);margin-top:14px;margin-bottom:0">Used for apologies, raises, breakups, complaints, and more.</p>
         <button class="btn-google" id="googleBtn" onclick="signInWithGoogle()" style="display:none;margin-left:12px">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
           Sign in with Google
@@ -469,7 +533,7 @@
     <div class="conv-focus">
       <h2>Don't just write better messages.</h2>
       <span class="conv-focus-gradient">Have better conversations.</span>
-      <p class="conv-focus-desc">From the first message to their reply to your next move — manage the whole conversation, not just one text.</p>
+      <p class="conv-focus-desc">One platform. The whole conversation — from first message to their reply and beyond.</p>
     </div>
   </div>
 </section>
@@ -516,13 +580,13 @@
     <div class="s-head">
       <div class="s-label">What it does</div>
       <h2 class="s-title">From first message to final outcome.</h2>
-      <p class="s-sub">Not just a message generator — a communication coach that guides you through the entire conversation.</p>
+      <p class="s-sub">A coach for the whole conversation.</p>
     </div>
     <div class="feat-grid">
       <div class="feat-card">
         <div class="feat-icon">🎯</div>
         <div class="feat-name">Start the right way</div>
-        <p class="feat-desc">The right opening changes everything. Get 6 strategic approaches with risk analysis for any difficult conversation.</p>
+        <p class="feat-desc">The right opening changes everything. Get 6 strategic approaches with risk analysis.</p>
         <div class="feat-list">
           <div class="feat-li">6 strategies, each with a different angle</div>
           <div class="feat-li">Risk analysis & best timing for each</div>
@@ -532,7 +596,7 @@
       <div class="feat-card">
         <div class="feat-icon">🔍</div>
         <div class="feat-name">Understand their reply</div>
-        <p class="feat-desc">Paste what they said. Get instant analysis — interest level, hidden signals, emotional tone, and what it really means.</p>
+        <p class="feat-desc">Paste what they said. Get instant analysis of what it really means.</p>
         <div class="feat-list">
           <div class="feat-li">Interest level & emotional warmth decoded</div>
           <div class="feat-li">Hidden signals & what they really mean</div>
@@ -542,7 +606,7 @@
       <div class="feat-card">
         <div class="feat-icon">💬</div>
         <div class="feat-name">Know your next move</div>
-        <p class="feat-desc">Never wonder what to say next. Get coached on exactly how to respond based on their reply and your goal.</p>
+        <p class="feat-desc">Never wonder what to say next. Get coached based on their reply and your goal.</p>
         <div class="feat-list">
           <div class="feat-li">3 strategic responses to choose from</div>
           <div class="feat-li">Tailored to what they actually said</div>
@@ -568,19 +632,19 @@
         <span class="step-icon">✍️</span>
         <div class="step-num">01</div>
         <div class="step-title">Say what you need</div>
-        <p class="step-desc">Describe your situation in plain language. Who are you talking to? What's at stake? The more you share, the more personal the result.</p>
+        <p class="step-desc">Describe your situation in plain language — the more context, the more personal the result.</p>
       </div>
       <div class="step-card">
         <span class="step-icon">🎯</span>
         <div class="step-num">02</div>
         <div class="step-title">Get your strategies</div>
-        <p class="step-desc">Receive 6 communication approaches, each with a different strategy. Every option includes risk analysis, best timing, and a recommended pick for your situation.</p>
+        <p class="step-desc">Get 6 tailored approaches, each with risk analysis, best timing, and a recommended pick.</p>
       </div>
       <div class="step-card">
         <span class="step-icon">💬</span>
         <div class="step-num">03</div>
         <div class="step-title">Handle their reply</div>
-        <p class="step-desc">Paste their response to get instant analysis — interest level, hidden signals, and what to do next. The conversation doesn't have to end there.</p>
+        <p class="step-desc">Paste their reply for instant analysis — interest level, hidden signals, and your exact next move.</p>
       </div>
     </div>
     <div class="steps-cta">
@@ -604,17 +668,17 @@
         <div class="reply-step">
           <div class="reply-step-num">Step 01</div>
           <div class="reply-step-title">Paste their reply</div>
-          <p class="reply-step-desc">Whatever they said — short, long, cold, or warm — paste it in. No formatting needed.</p>
+          <p class="reply-step-desc">Paste whatever they said — short, long, cold, or warm. No formatting needed.</p>
         </div>
         <div class="reply-step">
           <div class="reply-step-num">Step 02</div>
           <div class="reply-step-title">Get instant analysis</div>
-          <p class="reply-step-desc">Interest level, hidden signals, and emotional tone decoded. Understand what they really mean.</p>
+          <p class="reply-step-desc">Interest level, hidden signals, emotional tone — decoded instantly.</p>
         </div>
         <div class="reply-step">
           <div class="reply-step-num">Step 03</div>
           <div class="reply-step-title">Know what to say next</div>
-          <p class="reply-step-desc">Get 3 strategic responses based on their reply and your goal — so you always have the right next move.</p>
+          <p class="reply-step-desc">Get 3 strategic responses tailored to their reply and your goal.</p>
         </div>
       </div>
       <div class="reply-flow-cta">
