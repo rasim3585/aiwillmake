@@ -2759,7 +2759,7 @@
 
           const cat = appData?.categories?.find(x => x.id === c.category_id);
           const sub = cat?.subcategories?.find(x => x.id === c.subcategory_id);
-          const title = escH(sub?.name || cat?.name || c.category_id || 'Conversation');
+          const title = escH(c.contacts?.name || sub?.name || cat?.name || c.category_id || 'Conversation');
 
           const card = document.createElement('div');
           card.className = 'home-conv-card';
@@ -3212,10 +3212,11 @@
         ['continueSection','reviewSection','subcatSection','formCard','convAnalysisResult'].forEach(id =>
           document.getElementById(id)?.classList.add('hidden'));
         selectMode(1, !_wizContact);
-        if (_wizContact) {
-          document.getElementById('smartInput').value = `I need to write to ${_wizContact.name}.`;
-          detectCategory();
-        }
+        const smartIn = document.getElementById('smartInput');
+        smartIn.value = '';
+        smartIn.placeholder = _wizContact
+          ? `What do you want to say to ${_wizContact.name}?`
+          : "What do you need to write? (e.g. 'I need to message my ex', 'write a complaint to BIM')";
         document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else if (type === 'decode') {
         selectMode(2);
@@ -3665,8 +3666,9 @@
           };
           updatePrevMsgFieldVisibility();
           selectMode(1); // clearContext=false → context preserved
-          document.getElementById('smartInput').value = `I need to write to ${c.name}.`;
-          detectCategory();
+          const _si = document.getElementById('smartInput');
+          _si.value = '';
+          _si.placeholder = `What do you want to say to ${c.name}?`;
         });
         document.getElementById('delCntBtn').addEventListener('click', async () => {
           if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
