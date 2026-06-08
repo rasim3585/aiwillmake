@@ -171,6 +171,13 @@
       border: 1px solid rgba(110,129,255,.24); border-radius: var(--r-xl);
       padding: 26px 26px 22px;
     }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text2); font-size: .82rem; padding: 0 0 14px;
+      opacity: .75; transition: opacity .15s;
+    }
+    .back-btn:hover { opacity: 1; color: var(--accent); }
     .smart-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
     .smart-badge {
       font-size: .69rem; font-weight: 700; text-transform: uppercase; letter-spacing: .13em;
@@ -1435,6 +1442,7 @@
 
     <!-- Smart Start (Mode 1) -->
     <section id="smartStartSection" class="hidden">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="smart-card">
         <div class="smart-top">
           <span class="smart-badge">✦ Smart Start</span>
@@ -1461,6 +1469,7 @@
 
     <!-- Mode 2: Continue a Conversation -->
     <section id="continueSection" class="hidden">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="continue-card">
         <div class="continue-opts">
           <button type="button" class="continue-opt co-primary" id="contPeopleOpt">
@@ -1499,6 +1508,7 @@
 
     <!-- Mode 3: Review Before Sending -->
     <section id="reviewSection" class="hidden">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="review-card">
         <div class="review-preview">
           <div class="review-preview-lbl">You'll get</div>
@@ -2856,6 +2866,15 @@
         document.getElementById('subcatSection').classList.add('hidden');
         document.getElementById('formCard').classList.add('hidden');
       }
+    }
+
+    function goBack() {
+      document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+      ['smartStartSection','catSection','subcatSection','formCard',
+       'continueSection','reviewSection','convAnalysisResult'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ── Continue Section ─────────────────────────────────────────
