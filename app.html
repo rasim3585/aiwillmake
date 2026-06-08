@@ -909,6 +909,10 @@
       .conv-panel { width: 100vw; border-left: none; }
       .conv-panel-head { padding: 16px 18px; }
 
+      /* Home screen */
+      .home-heading { font-size: 1.6rem; }
+      .home-conv-card { padding: 16px; }
+
       /* Modals — comfortable padding on small screens */
       .auth-card    { padding: 32px 20px; border-radius: 22px; }
       .credits-card { padding: 32px 20px; border-radius: 22px; }
@@ -956,6 +960,55 @@
     }
     .mode-card:hover .mode-card-arrow,
     .mode-card.active .mode-card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* ── Home Screen ── */
+    .home-heading {
+      font-size: 2rem; font-weight: 900; letter-spacing: -.03em;
+      margin: 0 0 6px; line-height: 1.15;
+    }
+    .home-heading span {
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .home-sub { font-size: .88rem; color: var(--sec); margin: 0 0 22px; }
+    .btn-new-conv {
+      display: block; width: 100%; padding: 16px 20px;
+      background: linear-gradient(95deg, var(--accent), var(--acc2));
+      border: none; border-radius: var(--r-lg);
+      font: 700 1rem/1 inherit; color: #fff; cursor: pointer;
+      margin-bottom: 24px; text-align: center; letter-spacing: -.01em;
+      transition: opacity .2s, transform .18s, box-shadow .18s;
+      box-shadow: 0 8px 24px rgba(212,113,90,.25);
+    }
+    .btn-new-conv:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(212,113,90,.35); }
+    .home-conv-list { display: flex; flex-direction: column; gap: 10px; }
+    .home-conv-label {
+      font-size: .69rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 4px;
+    }
+    .home-conv-card {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: 18px;
+      padding: 18px 20px; cursor: pointer; position: relative; overflow: hidden;
+      transition: border-color .2s, background .2s, transform .18s, box-shadow .18s;
+    }
+    .home-conv-card:hover {
+      background: var(--surf2); border-color: var(--bord2);
+      transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,.2);
+    }
+    .home-conv-name { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+    .home-conv-preview {
+      font-size: .82rem; color: var(--sec); margin-bottom: 10px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .home-conv-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .75rem; color: var(--muted);
+    }
+    .home-conv-status { font-weight: 600; color: var(--accent); }
+    .home-conv-empty {
+      color: var(--sec); font-size: .85rem; text-align: center;
+      padding: 28px 0; line-height: 1.6;
+    }
 
     /* ── Continue Section ── */
     .continue-card {
@@ -1421,29 +1474,13 @@
       <div id="contactsAddFormEl" class="conv-list hidden"></div>
     </div>
 
-    <!-- What do you need help with? -->
-    <section>
-      <h1 class="what-heading">What do you need <span>help with?</span></h1>
-      <div class="mode-grid">
-        <button type="button" class="mode-card" data-mode="1" onclick="selectMode(1, true)">
-          <div class="mode-card-icon">✍️</div>
-          <div class="mode-card-title">Start a Conversation</div>
-          <div class="mode-card-desc">Need help writing the first message.</div>
-          <div class="mode-card-arrow">→</div>
-        </button>
-        <button type="button" class="mode-card" data-mode="2" onclick="selectMode(2)">
-          <div class="mode-card-icon">💬</div>
-          <div class="mode-card-title">Continue a Conversation</div>
-          <div class="mode-card-desc">Understand what their reply really means and know exactly what to say next.</div>
-          <div class="mode-card-arrow">→</div>
-        </button>
-        <button type="button" class="mode-card" data-mode="3" onclick="selectMode(3)">
-          <div class="mode-card-icon">🔍</div>
-          <div class="mode-card-title">Review Before Sending</div>
-          <div class="mode-card-desc">Check tone, risk, and likely reactions before you hit send.</div>
-          <div class="mode-card-arrow">→</div>
-        </button>
-      </div>
+    <!-- Home: Your Conversations -->
+    <section id="homeSection">
+      <h1 class="home-heading">Your <span>conversations</span></h1>
+      <p class="home-sub">Pick up where you left off, or start something new.</p>
+      <button type="button" class="btn-new-conv" onclick="openNewConversation()">+ New conversation</button>
+      <div class="home-conv-label">Recent</div>
+      <div id="homeConvList" class="home-conv-list"></div>
     </section>
 
     <!-- Smart Start (Mode 1) -->
@@ -1755,10 +1792,12 @@
             document.getElementById('signOutBtn').classList.remove('hidden');
             document.getElementById('authGate').classList.add('hidden');
             fetchAndShowCredits();
+            loadHomeConvList();
           } else {
             accessToken = null;
             document.getElementById('authGate').classList.remove('hidden');
             fetchAndShowCredits();
+            loadHomeConvList();
           }
         });
       } catch (e) {
@@ -2538,6 +2577,58 @@
       document.body.style.overflow = '';
     }
 
+    async function loadHomeConvList() {
+      const listEl = document.getElementById('homeConvList');
+      if (!listEl) return;
+      if (!accessToken) {
+        listEl.innerHTML = '<p class="home-conv-empty">Sign in to see your conversations.</p>';
+        return;
+      }
+      listEl.innerHTML = '<div class="ns-skeleton skeleton" style="height:72px;border-radius:14px;margin-bottom:10px"></div>'.repeat(3);
+      try {
+        const r = await fetch('/api/conversations', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+        if (!data.length) {
+          listEl.innerHTML = '<p class="home-conv-empty">No conversations yet. Start your first one above.</p>';
+          return;
+        }
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const fmt = d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        listEl.innerHTML = '';
+        data.forEach(c => {
+          const msgs = c.conversation_messages || [];
+          const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+          const lastMsg = msgs[msgs.length - 1];
+          let status = '';
+          if (lastMsg?.role === 'sent') status = 'Waiting for reply';
+          else if (lastMsg?.role === 'received') status = 'Your move';
+
+          const preview = lastSent
+            ? escH(lastSent.content.length > 65 ? lastSent.content.slice(0, 65) + '…' : lastSent.content)
+            : escH(c.situation || '—');
+
+          const cat = appData?.categories?.find(x => x.id === c.category_id);
+          const sub = cat?.subcategories?.find(x => x.id === c.subcategory_id);
+          const title = escH(sub?.name || cat?.name || c.category_id || 'Conversation');
+
+          const card = document.createElement('div');
+          card.className = 'home-conv-card';
+          card.innerHTML = `
+            <div class="home-conv-name">${title}</div>
+            <div class="home-conv-preview">"${preview}"</div>
+            <div class="home-conv-foot">
+              <span>${fmt(c.created_at)}</span>
+              ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
+            </div>`;
+          card.addEventListener('click', () => restoreConversation(c.id));
+          listEl.appendChild(card);
+        });
+      } catch {
+        listEl.innerHTML = '<p class="home-conv-empty" style="color:#f87171">Could not load conversations.</p>';
+      }
+    }
+
     async function loadConvList() {
       const listEl   = document.getElementById('convListEl');
       const detailEl = document.getElementById('convDetailEl');
@@ -2914,6 +3005,11 @@
         document.getElementById('subcatSection').classList.add('hidden');
         document.getElementById('formCard').classList.add('hidden');
       }
+    }
+
+    function openNewConversation() {
+      selectMode(1, true);
+      document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function goBack() {
@@ -3470,7 +3566,7 @@
       }
     });
 
-    initAuth().then(() => { init(); fetchAndShowCredits(); });
+    initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); });
   </script>
 </body>
 </html>
