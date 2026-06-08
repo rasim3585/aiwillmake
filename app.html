@@ -1452,11 +1452,12 @@
           <span class="smart-feedback hidden" id="smartFeedback"></span>
         </div>
         <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt)</label>
-        <input type="file" id="convFileInput" accept=".txt" style="display:none">
-        <input type="file" id="contactChatInput" accept=".txt" style="display:none">
-        <div id="convAnalysisResult" class="conv-analysis-result hidden"></div>
       </div>
     </section>
+
+    <!-- File inputs live outside all mode sections so .click() always works -->
+    <input type="file" id="convFileInput" accept=".txt" style="display:none">
+    <input type="file" id="contactChatInput" accept=".txt" style="display:none">
 
     <!-- Mode 2: Continue a Conversation -->
     <section id="continueSection" class="hidden">
@@ -1492,6 +1493,9 @@
         </div>
       </div>
     </section>
+
+    <!-- WhatsApp import analysis result — shared between mode 1 and mode 2 -->
+    <div id="convAnalysisResult" class="conv-analysis-result hidden"></div>
 
     <!-- Mode 3: Review Before Sending -->
     <section id="reviewSection" class="hidden">
