@@ -2744,22 +2744,37 @@
         }
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const fmt = d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const stripPrefix = t => t.replace(/^\[[^\]]+\]\s+(?:[A-Z]\w*\s*&\s*[A-Z]\w*\s+)?/, '');
         listEl.innerHTML = '';
+
+        // Group conversations by contact; contactless stay individual
+        const contactGroups = new Map();
+        const soloConvs = [];
         data.forEach(c => {
-          const msgs = c.conversation_messages || [];
+          if (c.contact_id) {
+            if (!contactGroups.has(c.contact_id)) contactGroups.set(c.contact_id, []);
+            contactGroups.get(c.contact_id).push(c);
+          } else {
+            soloConvs.push(c);
+          }
+        });
+
+        const renderHomeCard = (conv, titleOverride) => {
+          const msgs = conv.conversation_messages || [];
           const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
           const lastMsg = msgs[msgs.length - 1];
           let status = '';
-          if (lastMsg?.role === 'sent') status = 'Waiting for reply';
-          else if (lastMsg?.role === 'received') status = 'Your move';
+          if (msgs.length > 0) {
+            if (lastMsg?.role === 'sent') status = 'Waiting for reply';
+            else if (lastMsg?.role === 'received') status = 'Your move';
+          }
 
-          const preview = lastSent
-            ? escH(lastSent.content.length > 65 ? lastSent.content.slice(0, 65) + '…' : lastSent.content)
-            : escH(c.situation || '—');
+          const rawPreview = stripPrefix(lastSent ? lastSent.content : (conv.situation || '—'));
+          const preview = escH(rawPreview.length > 65 ? rawPreview.slice(0, 65) + '…' : rawPreview);
 
-          const cat = appData?.categories?.find(x => x.id === c.category_id);
-          const sub = cat?.subcategories?.find(x => x.id === c.subcategory_id);
-          const title = escH(c.contacts?.name || sub?.name || cat?.name || c.category_id || 'Conversation');
+          const cat = appData?.categories?.find(x => x.id === conv.category_id);
+          const sub = cat?.subcategories?.find(x => x.id === conv.subcategory_id);
+          const title = titleOverride ?? escH(conv.contacts?.name || sub?.name || cat?.name || conv.category_id || 'Conversation');
 
           const card = document.createElement('div');
           card.className = 'home-conv-card';
@@ -2767,12 +2782,24 @@
             <div class="home-conv-name">${title}</div>
             <div class="home-conv-preview">"${preview}"</div>
             <div class="home-conv-foot">
-              <span>${fmt(c.created_at)}</span>
+              <span>${fmt(conv.created_at)}</span>
               ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
             </div>`;
-          card.addEventListener('click', () => restoreConversation(c.id));
+          card.addEventListener('click', () => restoreConversation(conv.id));
           listEl.appendChild(card);
+        };
+
+        contactGroups.forEach(convs => {
+          convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          const latest = convs[0];
+          const contactName = latest.contacts?.name || 'Unknown';
+          const title = convs.length > 1
+            ? escH(`${contactName} (${convs.length} conversations)`)
+            : escH(contactName);
+          renderHomeCard(latest, title);
         });
+
+        soloConvs.forEach(c => renderHomeCard(c));
       } catch {
         listEl.innerHTML = '<p class="home-conv-empty" style="color:#f87171">Could not load conversations.</p>';
       }
