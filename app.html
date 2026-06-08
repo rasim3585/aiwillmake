@@ -18,6 +18,7 @@
   <style>
     :root {
       --bg:     #050816;
+      --bg2:    #080c1f;
       --surf:   rgba(255,255,255,0.04);
       --surf2:  rgba(255,255,255,0.07);
       --surfa:  rgba(110,129,255,0.10);
@@ -2464,11 +2465,13 @@
     function showConvPanel() {
       document.getElementById('convPanel').classList.add('open');
       document.getElementById('convOverlay').classList.add('visible');
+      document.body.style.overflow = 'hidden';
       loadConvList();
     }
     function hideConvPanel() {
       document.getElementById('convPanel').classList.remove('open');
       document.getElementById('convOverlay').classList.remove('visible');
+      document.body.style.overflow = '';
     }
 
     async function loadConvList() {
@@ -3049,11 +3052,13 @@
     function showContactsPanel() {
       document.getElementById('contactsPanel').classList.add('open');
       document.getElementById('convOverlay').classList.add('visible');
+      document.body.style.overflow = 'hidden';
       loadContactsList();
     }
     function hideContactsPanel() {
       document.getElementById('contactsPanel').classList.remove('open');
       document.getElementById('convOverlay').classList.remove('visible');
+      document.body.style.overflow = '';
     }
 
     const _typeClass  = t => 'ctype-' + (t || '').toLowerCase();
