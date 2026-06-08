@@ -1244,6 +1244,12 @@
     }
     .btn-conv-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
 
+    /* ── Analysis-to-action bridge ── */
+    .analysis-bridge-hint {
+      font-size: .78rem; color: var(--accent); text-align: center;
+      padding: 10px 0 2px; opacity: .85; letter-spacing: .01em;
+    }
+
     /* ── Outcome tracking ── */
     .outcome-widget {
       border-top: 1px solid var(--bord); padding-top: 12px; margin-top: 6px;
@@ -1801,7 +1807,7 @@
           </div>
           <div id="analysisContent"></div>
         </div>
-        <button id="nextReplyBtn" class="sim-btn sim-btn-lg" type="button" style="margin-top:14px">Generate next message →</button>
+        <button id="nextReplyBtn" class="sim-btn sim-btn-lg" type="button" style="margin-top:14px;box-shadow:0 6px 22px var(--glow)">→ What should I say back?</button>
         <div id="simGrid" class="sim-grid hidden"></div>
       </div>
     </section>
@@ -2494,7 +2500,8 @@
               ${data.reply_timing_reason ? `<span class="analysis-timing-reason">${escH(data.reply_timing_reason)}</span>` : ''}
               <span class="analysis-timing-disclaimer">A suggestion — not a rule.</span>
             </div>` : ''}
-          ${data.suggested_move ? `<div class="analysis-move">→ ${escH(data.suggested_move)}</div>` : ''}`;
+          ${data.suggested_move ? `<div class="analysis-move">→ ${escH(data.suggested_move)}</div>` : ''}
+          <div class="analysis-bridge-hint">Now you know what they mean — ready to reply? ↓</div>`;
       } catch (e) {
         console.error('[analyzeReply]', e?.message);
         content.innerHTML = `<p style="color:var(--sec);font-size:.82rem">Could not analyze reply.</p>`;
@@ -3684,18 +3691,30 @@
           ${data.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(data.recommended_next)}</div></div>` : ''}
           ${data.biggest_risk  ? `<div class="conv-risk">${escH(data.biggest_risk)}</div>` : ''}
           <button type="button" class="btn-conv-generate" id="convGenerateBtn">
-            Generate a message based on this conversation →
+            → Now, what do you want to say?
           </button>`;
 
         document.getElementById('convGenerateBtn').addEventListener('click', () => {
           const d = _convAnalysis;
+          // Set transient contact context from analysis if no contact is already linked
+          if (!activeContactContext && d.person_b) {
+            activeContactContext = {
+              id: null,
+              name: d.person_b,
+              relationship_state: d.emotional_tone || null,
+              observed_patterns: d.recommended_next ? [d.recommended_next] : null
+            };
+            updatePrevMsgFieldVisibility();
+          }
           const summary = [
-            d.person_b     ? `I need to write to ${d.person_b}.` : '',
+            d.person_b ? `I need to write to ${d.person_b}.` : '',
             d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
             d.recommended_next || ''
           ].filter(Boolean).join(' ');
+          // Show Smart Start section so the user can actually see and use it
+          selectMode(1, false);
           document.getElementById('smartInput').value = summary.trim();
-          document.getElementById('smartInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
           detectCategory();
         });
 
