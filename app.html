@@ -2869,6 +2869,7 @@
     }
     async function restoreConversation(convId) {
       hideConvPanel();
+      document.getElementById('homeSection').classList.add('hidden');
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
@@ -3139,6 +3140,7 @@
 
     // ── Mode Selector ───────────────────────────────────────────
     function selectMode(mode, clearContext = false) {
+      document.getElementById('homeSection').classList.add('hidden');
       document.querySelectorAll('.mode-card').forEach(c =>
         c.classList.toggle('active', parseInt(c.dataset.mode) === mode)
       );
@@ -3163,6 +3165,7 @@
 
     function openNewConversation() {
       _wizContact = null;
+      document.getElementById('homeSection').classList.add('hidden');
       ['smartStartSection','catSection','subcatSection','formCard',
        'continueSection','reviewSection','convAnalysisResult'].forEach(id =>
         document.getElementById(id)?.classList.add('hidden'));
@@ -3176,6 +3179,7 @@
 
     function closeWizard() {
       document.getElementById('newConvWizard').classList.add('hidden');
+      document.getElementById('homeSection').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -3285,6 +3289,7 @@
        'continueSection','reviewSection','convAnalysisResult'].forEach(id => {
         document.getElementById(id)?.classList.add('hidden');
       });
+      document.getElementById('homeSection').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
