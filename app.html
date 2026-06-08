@@ -370,11 +370,27 @@
 
     /* ── Contact context badge ── */
     .contact-context-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .75rem; font-weight: 600; color: var(--accent);
-      background: rgba(212,113,90,.08); border: 1px solid rgba(212,113,90,.22);
-      padding: 5px 12px; border-radius: 99px;
+      display: block;
+      background: rgba(212,113,90,.08); border: 1px solid rgba(212,113,90,.18);
+      border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
       animation: fadeUp .35s ease both;
+    }
+    .ctx-badge-name {
+      display: flex; align-items: center; gap: 5px;
+      color: var(--accent); font-weight: 700; font-size: .8rem;
+    }
+    .ctx-badge-toggle {
+      display: block; color: var(--sec); font-size: .73rem; margin-top: 5px;
+      cursor: pointer; background: none; border: none; font: inherit; text-align: left;
+      padding: 0; transition: color .15s;
+    }
+    .ctx-badge-toggle:hover { color: var(--accent); }
+    .ctx-badge-patterns { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(212,113,90,.12); }
+    .ctx-badge-patterns.open { display: block; }
+    .ctx-badge-pattern-item {
+      font-size: .73rem; color: var(--sec); line-height: 1.45;
+      padding: 3px 0 3px 10px; border-left: 2px solid rgba(212,113,90,.4);
+      margin-bottom: 4px;
     }
 
     /* ── Results ── */
@@ -1744,7 +1760,7 @@
           <p class="results-note" id="resultsNote">Select the approach that fits your situation</p>
         </div>
       </div>
-      <span id="contactContextBadge" class="contact-context-badge hidden"></span>
+      <div id="contactContextBadge" class="contact-context-badge hidden"></div>
       <div id="resultsLoadingBar" class="results-loading-bar hidden">
         <span id="resultsLoadingMsg" class="results-loading-msg"></span>
       </div>
@@ -1757,6 +1773,7 @@
 
     <!-- Likely Responses -->
     <section id="likelySection" class="likely-section hidden">
+      <div id="likelyCtxBadge" class="contact-context-badge hidden"></div>
       <h2 class="likely-title">How might they respond?</h2>
       <div class="likely-grid" id="likelyGrid">
         <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
@@ -1802,6 +1819,7 @@
           </div>
         </div>
         <div id="replyAnalysis" class="reply-analysis hidden">
+          <div id="replyCtxBadge" class="contact-context-badge hidden"></div>
           <div id="analysisLoading" class="hidden">
             <div class="ns-skeleton skeleton" style="height:72px;border-radius:10px;margin-bottom:8px"></div>
           </div>
@@ -2288,15 +2306,8 @@
         const data     = await res.json();
         const captions = data.captions || [];
 
-        // Quiet credit badge in results area
         // Contact context personalization badge
-        const ctxBadge = document.getElementById('contactContextBadge');
-        if (activeContactContext?.name) {
-          ctxBadge.textContent = `✨ Personalized for ${activeContactContext.name}`;
-          ctxBadge.classList.remove('hidden');
-        } else {
-          ctxBadge.classList.add('hidden');
-        }
+        renderCtxBadge(document.getElementById('contactContextBadge'));
 
         if (data.credits_used != null) {
           const remaining = Math.max(AUTH_LIMIT - data.credits_used, 0);
@@ -2434,6 +2445,27 @@
       document.getElementById('prevMsgField').classList.toggle('hidden', !!activeContactContext);
     }
 
+    function renderCtxBadge(el) {
+      if (!el) return;
+      if (!activeContactContext?.name) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const name = activeContactContext.name;
+      const patterns = activeContactContext.observed_patterns;
+      const hasPatterns = Array.isArray(patterns) && patterns.length > 0;
+      const patId = (el.id || 'ctx') + '_pat';
+      el.innerHTML = `
+        <div class="ctx-badge-name">✨ Personalized for ${escH(name)}</div>
+        ${hasPatterns ? `
+          <button type="button" class="ctx-badge-toggle"
+            onclick="var p=document.getElementById('${patId}');p.classList.toggle('open');this.textContent=p.classList.contains('open')?'Based on what we\'ve learned about ${escH(name).replace(/'/g,"\\'")} ▾':'Based on what we\'ve learned about ${escH(name).replace(/'/g,"\\'")} ›'">
+            Based on what we've learned about ${escH(name)} ›
+          </button>
+          <div class="ctx-badge-patterns" id="${patId}">
+            ${patterns.map(p => `<div class="ctx-badge-pattern-item">${escH(p)}</div>`).join('')}
+          </div>` : ''}`;
+      el.classList.remove('hidden');
+    }
+
     async function analyzeReply() {
       const reply = document.getElementById('theirReplyInput').value.trim();
       if (!reply) return;
@@ -2441,6 +2473,7 @@
       const section  = document.getElementById('replyAnalysis');
       const loading  = document.getElementById('analysisLoading');
       const content  = document.getElementById('analysisContent');
+      renderCtxBadge(document.getElementById('replyCtxBadge'));
 
       section.classList.remove('hidden');
       loading.classList.remove('hidden');
@@ -2917,6 +2950,7 @@
       const panel   = document.getElementById('likelyPanel');
 
       section.classList.remove('hidden');
+      renderCtxBadge(document.getElementById('likelyCtxBadge'));
       panel.classList.add('hidden');
       panel.innerHTML = '';
       grid.innerHTML = [0,1,2,3,4].map(() => `<div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>`).join('');
@@ -3110,7 +3144,8 @@
       );
       if (mode !== 1 || clearContext) {
         activeContactContext = null;
-        document.getElementById('contactContextBadge')?.classList.add('hidden');
+        ['contactContextBadge','likelyCtxBadge','replyCtxBadge'].forEach(id =>
+          document.getElementById(id)?.classList.add('hidden'));
         updatePrevMsgFieldVisibility();
       }
       document.getElementById('smartStartSection').classList.toggle('hidden', mode !== 1);
