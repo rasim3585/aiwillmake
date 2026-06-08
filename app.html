@@ -2286,7 +2286,8 @@
               <span class="analysis-timing-disclaimer">A suggestion — not a rule.</span>
             </div>` : ''}
           ${data.suggested_move ? `<div class="analysis-move">→ ${escH(data.suggested_move)}</div>` : ''}`;
-      } catch {
+      } catch (e) {
+        console.error('[analyzeReply]', e?.message);
         content.innerHTML = `<p style="color:var(--sec);font-size:.82rem">Could not analyze reply.</p>`;
       } finally {
         loading.classList.add('hidden');
@@ -2318,9 +2319,11 @@
           .map(([, v]) => v.trim())
           .join('. ');
 
+        const replyHeaders = { 'Content-Type': 'application/json' };
+        if (accessToken) replyHeaders['Authorization'] = `Bearer ${accessToken}`;
         const resp = await fetch('/api/next-reply', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: replyHeaders,
           body: JSON.stringify({
             categoryId:      selectedCatId,
             situation,
@@ -2331,7 +2334,7 @@
           })
         });
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error);
+        if (!resp.ok) throw new Error(data.error || 'Request failed');
 
         grid.innerHTML = '';
         const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
