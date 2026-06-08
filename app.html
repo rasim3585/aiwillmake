@@ -669,6 +669,8 @@
       border-radius: 8px; margin-bottom: 12px;
     }
     .sim-input-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .prev-msg-field label { font-size: .76rem; color: var(--text2); display: block; margin-bottom: 5px; }
+    .prev-msg-field textarea { font-size: .84rem; min-height: 60px; opacity: .85; }
     .sim-textarea {
       width: 100%; box-sizing: border-box;
       background: var(--surf); border: 1px solid var(--bord);
@@ -1639,6 +1641,10 @@
         <div id="simRestoreNote" class="sim-restore-note hidden"></div>
         <div class="sim-input-area">
           <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
+          <div id="prevMsgField" class="prev-msg-field hidden">
+            <label for="prevMsgInput">What did you say right before this? <span style="opacity:.6">(optional)</span></label>
+            <textarea id="prevMsgInput" class="sim-textarea" placeholder="Paste your previous message for more accurate analysis…"></textarea>
+          </div>
         </div>
         <div id="replyAnalysis" class="reply-analysis hidden">
           <div id="analysisLoading" class="hidden">
@@ -2267,6 +2273,10 @@
       analyzeTimer = setTimeout(analyzeReply, 1500);
     }
 
+    function updatePrevMsgFieldVisibility() {
+      document.getElementById('prevMsgField').classList.toggle('hidden', !!activeContactContext);
+    }
+
     async function analyzeReply() {
       const reply = document.getElementById('theirReplyInput').value.trim();
       if (!reply) return;
@@ -2284,10 +2294,14 @@
           .filter(([k, v]) => v?.trim() && !['language','country'].includes(k))
           .map(([, v]) => v.trim()).join('. ');
 
+        const previousMessage = activeContactContext
+          ? (selectedMsgText || undefined)
+          : (document.getElementById('prevMsgInput').value.trim() || undefined);
+
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
+          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English', contactContext: activeContactContext || undefined, previousMessage })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -2887,6 +2901,7 @@
       if (mode !== 1 || clearContext) {
         activeContactContext = null;
         document.getElementById('contactContextBadge')?.classList.add('hidden');
+        updatePrevMsgFieldVisibility();
       }
       document.getElementById('smartStartSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('catSection').classList.toggle('hidden', mode !== 1);
@@ -2923,6 +2938,7 @@
       document.getElementById('replyAnalysis').classList.add('hidden');
       document.getElementById('simGrid').innerHTML = '';
       document.getElementById('simGrid').classList.add('hidden');
+      updatePrevMsgFieldVisibility();
       sim.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => document.getElementById('theirReplyInput').focus(), 400);
     });
@@ -2963,7 +2979,7 @@
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply: message, categoryId: selectedCatId || 'general', situation: '', language: lastFields.language || 'English' })
+          body: JSON.stringify({ reply: message, categoryId: selectedCatId || 'general', situation: '', language: lastFields.language || 'English', senderType: 'review' })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -3271,6 +3287,7 @@
             relationship_state: c.relationship_state || null,
             observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
           };
+          updatePrevMsgFieldVisibility();
           selectMode(1); // clearContext=false → context preserved
           document.getElementById('smartInput').value = `I need to write to ${c.name}.`;
           detectCategory();

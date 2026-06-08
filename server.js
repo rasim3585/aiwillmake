@@ -538,11 +538,34 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
 
 app.post('/api/analyze-reply', limiter, async (req, res) => {
   try {
-    const { reply, categoryId, situation, language, contactContext } = req.body;
+    const { reply, categoryId, situation, language, contactContext, previousMessage, senderType } = req.body;
     if (!reply?.trim()) return res.status(400).json({ error: 'reply is required' });
 
     const lang = language || 'English';
-    const systemPrompt = `You are a communication analyst. Analyze the reply someone received and extract signals. Return ONLY this exact format:
+
+    let systemPrompt;
+    if (senderType === 'review') {
+      systemPrompt = `You are reviewing a DRAFT the user is about to send. The message was written BY the user — do NOT treat it as something received from someone else. Refer to the writer as "you" and the recipient as "they".
+Analyze: tone, how the recipient will likely interpret it, unintended signals, emotional risk, and what to improve before sending.
+Return ONLY this exact format:
+INTEREST_LEVEL: High/Medium/Low (how likely the recipient is to respond positively)
+EMOTIONAL_WARMTH: High/Medium/Low (emotional risk this message carries)
+OPENNESS: High/Medium/Low (how vulnerable or open this message sounds)
+TONE: [one word - e.g. Assertive, Warm, Cold, Needy, Confident]
+HIDDEN_SIGNAL: [one sentence about the unintended signal this message might send to the recipient]
+WHAT_THEY_SAID: [one sentence — what you are literally communicating in this message]
+WHAT_THEY_MIGHT_MEAN: [one sentence — how the recipient might actually interpret this]
+RISK: [one sentence about the main risk of sending this message as-is]
+SUGGESTED_MOVE: [one concrete sentence suggesting an improvement or confirming it is ready to send]
+REPLY_TIMING: [exactly one of: "Send now" / "Rephrase first" / "Wait and revise" / "Don't send yet" / "Send as-is"]
+REPLY_TIMING_REASON: [one short sentence explaining why]
+No other text. No markdown. Write in ${lang}.`;
+    } else {
+      const contextNote = previousMessage?.trim()
+        ? `The received message is a reply to what you said: "${previousMessage}". Analyze this as a two-message exchange — use that context to sharpen your analysis.`
+        : `No prior message was provided. Be appropriately cautious and acknowledge when conclusions are uncertain due to limited context — do NOT be overconfident.`;
+      systemPrompt = `You are analyzing a message the user RECEIVED from the other person. Refer to the other person as "they" and the user as "you". ${contextNote}
+Return ONLY this exact format:
 INTEREST_LEVEL: High/Medium/Low
 EMOTIONAL_WARMTH: High/Medium/Low
 OPENNESS: High/Medium/Low
@@ -555,10 +578,11 @@ SUGGESTED_MOVE: [one concrete sentence about what to do next]
 REPLY_TIMING: [exactly one of: "Reply now" / "Wait a few hours" / "Wait until tomorrow" / "Take your time" / "Don't reply yet"]
 REPLY_TIMING_REASON: [one short sentence explaining why]
 No other text. No markdown. Write in ${lang}.`;
+    }
 
     const userPrompt = `Category: ${categoryId || 'general'}
 Situation: ${situation || 'Not provided'}
-Reply to analyze: ${reply}`;
+${senderType === 'review' ? 'Draft to review' : 'Reply to analyze'}: ${reply}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
