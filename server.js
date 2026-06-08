@@ -155,6 +155,8 @@ app.get('/api/credits', async (req, res) => {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     console.log('[/api/credits] user:', user?.id, '| error:', error?.message);
     if (!user) return res.json({ credits_used: 0, limit: 5, guest: true });
+    if (DEV_BYPASS_EMAILS.includes(user.email)) // TEST BYPASS - REMOVE BEFORE LAUNCH
+      return res.json({ credits_used: 0, limit: 999, guest: false }); // TEST BYPASS - REMOVE BEFORE LAUNCH
     const credits_used = await getCredits(token, user.id);
     console.log('[/api/credits] returning credits_used:', credits_used);
     res.json({ credits_used, limit: 5, guest: false });
