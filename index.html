@@ -440,7 +440,7 @@
       <h2 class="hero-sub">AI communication coach for difficult conversations — from first message to final outcome.</h2>
       <div>
         <a href="app.html" class="hero-cta" id="ctaBtn">
-          Start Writing Free
+          Open App →
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
         <p style="font-size:.82rem;color:var(--sec);margin-top:14px;margin-bottom:0">Used for apologies, raises, breakups, complaints, and more.</p>
@@ -738,7 +738,7 @@
       <h2>Stop staring at a<br><span class="g">blank screen.</span></h2>
       <p>Describe your situation. AI writes it. You send it.</p>
       <a href="app.html" class="hero-cta" id="ctaBottom">
-        Start Writing Free
+        Open App →
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -787,6 +787,7 @@
       } else {
         document.getElementById('googleBtn').style.display = 'inline-flex';
         document.getElementById('ctaBtn').style.display = 'none';
+        document.getElementById('ctaBottom').textContent = 'Start Writing Free';
         document.getElementById('authStatus').textContent = 'Sign in to start writing for free.';
       }
     } catch (e) {
