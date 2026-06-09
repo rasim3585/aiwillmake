@@ -1708,6 +1708,21 @@
             <span class="wiz-opt-arrow">→</span>
           </button>
         </div>
+        <!-- Chat import: upload OR paste — shown when whatsapp is chosen -->
+        <div id="wizChatInputPanel" class="hidden" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <button type="button" class="wiz-opt" id="wizUploadBtn" style="padding:12px 16px">
+            <span class="wiz-opt-icon" style="font-size:1.2rem">📂</span>
+            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt file</span></div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+          <div style="text-align:center;font-size:.76rem;color:var(--muted)">or</div>
+          <div>
+            <div style="font-size:.78rem;color:var(--sec);margin-bottom:6px">Paste the conversation directly</div>
+            <textarea id="wizPasteArea" class="smart-ta" placeholder="Paste your WhatsApp chat here…" style="min-height:120px;resize:vertical"></textarea>
+            <p id="wizPasteWarning" class="smart-feedback hidden" style="margin:4px 0 0">Paste a longer conversation for better analysis</p>
+            <button type="button" class="btn-detect" id="wizPasteAnalyzeBtn" style="width:100%;margin-top:8px">Analyze conversation →</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -3344,6 +3359,9 @@
       document.getElementById('wizStep1').classList.add('hidden');
       document.getElementById('wizStep2').classList.remove('hidden');
       document.getElementById('wizStep2Sub').textContent = _wizContact ? `Writing to ${_wizContact.name}` : '';
+      document.getElementById('wizChatInputPanel')?.classList.add('hidden');
+      const pa = document.getElementById('wizPasteArea');
+      if (pa) pa.value = '';
       document.getElementById('newConvWizard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       // Remove any continue button left from a prior contact selection
@@ -3388,6 +3406,20 @@
     }
 
     function wizChoose(type) {
+      // 'whatsapp': show inline paste/upload panel — keep wizard visible until user picks
+      if (type === 'whatsapp') {
+        activeContactContext = _wizContact ? {
+          id: _wizContact.id, name: _wizContact.name,
+          relationship_state: _wizContact.relationship_state || null,
+          observed_patterns: Array.isArray(_wizContact.observed_patterns) && _wizContact.observed_patterns.length
+            ? _wizContact.observed_patterns : null
+        } : null;
+        updatePrevMsgFieldVisibility();
+        document.getElementById('wizChatInputPanel')?.classList.remove('hidden');
+        setTimeout(() => document.getElementById('wizChatInputPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+        return;
+      }
+
       document.getElementById('newConvWizard').classList.add('hidden');
       activeContactContext = _wizContact ? {
         id: _wizContact.id,
@@ -3412,17 +3444,6 @@
         selectMode(2);
         document.getElementById('contPasteOpt').click();
         document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (type === 'whatsapp') {
-        if (_wizContact) {
-          const inp = document.getElementById('contactChatInput');
-          inp.dataset.contactId = _wizContact.id;
-          inp.dataset.contactName = _wizContact.name;
-          inp.click();
-        } else {
-          selectMode(2);
-          document.getElementById('contImportOpt').click();
-          document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
       } else if (type === 'review') {
         selectMode(3);
         document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3687,7 +3708,7 @@
       return 'Neutral';
     }
 
-    async function analyzeContactChat(file, contactId, contactName) {
+    async function analyzeContactChat(fileOrText, contactId, contactName) {
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const patternsEl = document.getElementById('patternsSectionEl');
       if (patternsEl) {
@@ -3700,7 +3721,7 @@
       }
 
       try {
-        const text = await file.text();
+        const text = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
         const [analysisRes] = await Promise.all([
           fetch('/api/analyze-conversation', {
             method: 'POST',
@@ -4372,6 +4393,36 @@
     function closeCreditsModal() {
       document.getElementById('creditsModal').classList.add('hidden');
     }
+
+    // ── Wizard chat-import panel ────────────────────────────────
+    document.getElementById('wizUploadBtn').addEventListener('click', () => {
+      document.getElementById('newConvWizard').classList.add('hidden');
+      if (_wizContact) {
+        const inp = document.getElementById('contactChatInput');
+        inp.dataset.contactId = _wizContact.id;
+        inp.dataset.contactName = _wizContact.name;
+        inp.click();
+      } else {
+        selectMode(2);
+        document.getElementById('contImportOpt').click();
+        document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    document.getElementById('wizPasteAnalyzeBtn').addEventListener('click', () => {
+      const text = document.getElementById('wizPasteArea').value.trim();
+      if (!text) { document.getElementById('wizPasteArea').focus(); return; }
+      const warning = document.getElementById('wizPasteWarning');
+      warning.classList.toggle('hidden', text.length >= 50);
+      document.getElementById('newConvWizard').classList.add('hidden');
+      if (_wizContact) {
+        analyzeContactChat(text, _wizContact.id, _wizContact.name);
+      } else {
+        selectMode(1, true);
+        analyzeConversation(text);
+      }
+    });
+    // ────────────────────────────────────────────────────────────
 
     document.getElementById('generateBtn').addEventListener('click', () => generate());
     document.getElementById('formCard').addEventListener('input',  updateGenerateBtnState);
