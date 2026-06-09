@@ -1484,6 +1484,25 @@
     }
     .btn-del-contact:hover { background: rgba(239,68,68,.08); }
 
+    /* ── Contact Timeline ── */
+    .contact-timeline { display: flex; flex-direction: column; }
+    .tl-item { display: flex; gap: 11px; padding-bottom: 13px; cursor: pointer; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-left { display: flex; flex-direction: column; align-items: center; width: 14px; flex-shrink: 0; padding-top: 4px; }
+    .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .tl-line { width: 1.5px; flex: 1; background: var(--bord); margin-top: 4px; min-height: 8px; }
+    .tl-item:last-child .tl-line { display: none; }
+    .tl-content {
+      flex: 1; min-width: 0; padding: 8px 10px; border-radius: 9px;
+      border: 1px solid var(--bord); background: rgba(255,255,255,.02);
+      transition: background .15s;
+    }
+    .tl-content:hover { background: var(--surf2); }
+    .tl-meta { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; flex-wrap: wrap; }
+    .tl-date { font-size: .7rem; font-weight: 700; color: var(--accent); }
+    .tl-cat-badge { font-size: .68rem; color: var(--sec); }
+    .tl-sit { font-size: .79rem; color: var(--fg); line-height: 1.5; }
+
     /* ── Toast ── */
     .toast {
       position: fixed; bottom: 28px; left: 50%;
@@ -3967,19 +3986,32 @@
             ${renderContactPatterns(c.name, c.observed_patterns)}
           </div>
           <div style="margin-bottom:16px">
-            <div class="contacts-section-label">Conversations (${convs.length})</div>
-            ${convs.length ? convs.map(cv => {
+            <div class="contacts-section-label">Conversation Timeline${convs.length ? ` (${convs.length})` : ''}</div>
+            ${convs.length ? `<div class="contact-timeline">${convs.map(cv => {
               const cat = appData?.categories.find(x => x.id === cv.category_id);
-              const sub = cat?.subcategories.find(x => x.id === cv.subcategory_id);
-              return `<div class="conv-item" style="margin-bottom:8px;cursor:default">
-                <div class="conv-item-cat">${escH(cat?.icon||'')} ${escH(cat?.name||cv.category_id)} · ${escH(sub?.name||cv.subcategory_id)}</div>
-                <div class="conv-item-preview">"${escH((cv.situation||'—').slice(0,52))}${(cv.situation||'').length>52?'…':''}"</div>
-                <span class="conv-item-date">${fmt(cv.created_at)}</span>
+              const shortDate = new Date(cv.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+              const sit = (cv.situation || '').trim();
+              const sitPreview = sit.slice(0, 72) + (sit.length > 72 ? '…' : '');
+              return `<div class="tl-item" data-conv-id="${escH(cv.id)}">
+                <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+                <div class="tl-content">
+                  <div class="tl-meta">
+                    <span class="tl-date">${escH(shortDate)}</span>
+                    ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
+                  </div>
+                  ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
+                </div>
               </div>`;
-            }).join('') : '<p style="color:var(--sec);font-size:.82rem;margin-bottom:8px">No conversations linked to this person yet.</p>'}
+            }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem;margin-bottom:8px">No conversations yet with ${escH(c.name)}.</p>`}
           </div>
           <button type="button" class="btn-start-conv-contact" id="startConvWithCnt">✍️ Start a conversation with ${escH(c.name)} →</button>
           <button type="button" class="btn-del-contact" style="margin-top:10px" id="delCntBtn">Delete this person</button>`;
+        detailEl.querySelectorAll('.tl-item[data-conv-id]').forEach(el => {
+          el.addEventListener('click', () => {
+            hideContactsPanel();
+            restoreConversation(el.dataset.convId);
+          });
+        });
         document.getElementById('cntDetailBack').addEventListener('click', loadContactsList);
         wireContactImportBtn(contactId, c.name);
         document.getElementById('startConvWithCnt').addEventListener('click', () => {
