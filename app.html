@@ -4097,9 +4097,11 @@
     async function analyzeConversation(conversationText) {
       const resultEl = document.getElementById('convAnalysisResult');
       resultEl.classList.remove('hidden');
-      resultEl.innerHTML = [1,2,3].map(i =>
-        `<div class="ns-skeleton skeleton" style="height:${i===1?76:i===2?56:48}px;border-radius:10px"></div>`
-      ).join('');
+      resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Analyzing your conversation…</p>' +
+        [1,2,3].map(i =>
+          `<div class="ns-skeleton skeleton" style="height:${i===1?76:i===2?56:48}px;border-radius:10px;margin-bottom:8px"></div>`
+        ).join('');
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       try {
         const resp = await fetch('/api/analyze-conversation', {
@@ -4133,6 +4135,7 @@
           <button type="button" class="btn-conv-generate" id="convGenerateBtn">
             → Now, what do you want to say?
           </button>`;
+        resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         document.getElementById('convGenerateBtn').addEventListener('click', () => {
           const d = _convAnalysis;
@@ -4151,7 +4154,7 @@
             d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
             d.recommended_next || ''
           ].filter(Boolean).join(' ');
-          // Show Smart Start section so the user can actually see and use it
+          resultEl.classList.add('hidden');
           selectMode(1, false);
           document.getElementById('smartInput').value = summary.trim();
           document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
