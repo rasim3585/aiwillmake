@@ -3684,7 +3684,17 @@
       document.getElementById('contactsPanelDesc').style.display = 'none';
       addEl.innerHTML = `
         <button class="conv-back" id="cntBack">← Back</button>
-        <div class="contacts-form" style="margin-top:14px">
+
+        <div id="cntMagicPath" style="margin-top:14px">
+          <label class="contacts-form-label" style="font-size:.88rem;font-weight:600;color:var(--fg)">Paste a chat or describe them</label>
+          <textarea id="cntMagicText" placeholder="Paste a WhatsApp chat with them, or just describe them in your own words…&#10;&#10;e.g. &quot;My boss — gets direct when stressed, loves data, short replies&quot;" style="min-height:140px;margin-top:8px;resize:vertical"></textarea>
+          <button type="button" class="btn-save-contact" id="cntMagicBtn" style="margin-top:10px;width:100%">Create profile ✨</button>
+          <div style="text-align:center;margin-top:14px">
+            <button type="button" id="cntShowManual" style="background:none;border:none;color:var(--sec);font-size:.8rem;cursor:pointer;text-decoration:underline;padding:4px">Or add manually →</button>
+          </div>
+        </div>
+
+        <div id="cntManualPath" class="contacts-form hidden" style="margin-top:14px">
           <div><label class="contacts-form-label">Name <span style="color:var(--acc2)">*</span></label><input id="cntName" type="text" placeholder="Their name…" /></div>
           <div><label class="contacts-form-label">Type</label>
             <select id="cntType">
@@ -3707,7 +3717,90 @@
           <button type="button" class="btn-save-contact" id="cntSaveBtn">Save →</button>
         </div>`;
       document.getElementById('cntBack').addEventListener('click', loadContactsList);
+      document.getElementById('cntMagicBtn').addEventListener('click', createContactFromText);
+      document.getElementById('cntShowManual').addEventListener('click', () => {
+        document.getElementById('cntManualPath').classList.remove('hidden');
+        document.getElementById('cntShowManual').style.display = 'none';
+      });
       document.getElementById('cntSaveBtn').addEventListener('click', saveContact);
+    }
+
+    async function createContactFromText() {
+      const text = document.getElementById('cntMagicText').value.trim();
+      if (!text) { document.getElementById('cntMagicText').focus(); return; }
+      const btn = document.getElementById('cntMagicBtn');
+      btn.disabled = true; btn.textContent = 'Analyzing…';
+      try {
+        const r = await fetch('/api/contacts/from-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ text, language: lastFields.language || 'English' })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error);
+
+        const addEl = document.getElementById('contactsAddFormEl');
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const patterns = data.observed_patterns || [];
+        const displayName = data.name || '';
+
+        addEl.innerHTML = `
+          <button class="conv-back" id="cntBack2">← Back</button>
+          <div style="margin-top:14px">
+            <div style="font-size:.78rem;color:var(--sec);margin-bottom:12px">Here's what we learned — confirm the name and save.</div>
+            <div class="contacts-form">
+              <div>
+                <label class="contacts-form-label">Name <span style="color:var(--acc2)">*</span></label>
+                <input id="cntResultName" type="text" placeholder="Their name…" value="${escH(displayName)}" />
+              </div>
+              ${data.type || data.relationship_state ? `
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:2px 0">
+                ${data.type ? `<span class="ctype-badge ${_typeClass(data.type)}">${escH(data.type)}</span>` : ''}
+                ${data.relationship_state ? `<span class="contact-state ${_stateClass(data.relationship_state)}">${escH(data.relationship_state)}</span>` : ''}
+              </div>` : ''}
+              ${patterns.length ? `
+              <div>
+                <div class="contacts-form-label" style="margin-bottom:6px">What we noticed</div>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  ${patterns.map(p => `<div style="font-size:.78rem;color:var(--sec);background:var(--surface2,rgba(0,0,0,.04));border-radius:7px;padding:6px 10px;line-height:1.5">${escH(p)}</div>`).join('')}
+                </div>
+              </div>` : ''}
+              <button type="button" class="btn-save-contact" id="cntResultSaveBtn">Add ${escH(displayName || 'person')} →</button>
+            </div>
+          </div>`;
+
+        document.getElementById('cntBack2').addEventListener('click', showAddContactForm);
+        document.getElementById('cntResultSaveBtn').addEventListener('click', async () => {
+          const name = document.getElementById('cntResultName').value.trim();
+          if (!name) { document.getElementById('cntResultName').focus(); return; }
+          const saveBtn = document.getElementById('cntResultSaveBtn');
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+          try {
+            const cr = await fetch('/api/contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({
+                name, type: data.type || null,
+                relationship_state: data.relationship_state || null,
+                observed_patterns: patterns.length ? patterns : null,
+                source: 'ai'
+              })
+            });
+            const saved = await cr.json();
+            if (!cr.ok) throw new Error(saved.error);
+            showToast(`✓ ${name} added`, 'success');
+            loadContactsList();
+          } catch {
+            showToast('Could not save. Please try again.', 'error');
+            saveBtn.disabled = false; saveBtn.textContent = `Add ${name} →`;
+          }
+        });
+
+        if (!displayName) document.getElementById('cntResultName').focus();
+      } catch {
+        showToast('Could not analyze. Please try again.', 'error');
+        btn.disabled = false; btn.textContent = 'Create profile ✨';
+      }
     }
 
     async function saveContact() {

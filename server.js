@@ -1157,18 +1157,84 @@ app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, asy
 //   CREATE POLICY "contacts_owner" ON contacts FOR ALL USING (auth.uid() = user_id);
 //   ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_id uuid REFERENCES contacts(id) ON DELETE SET NULL;
 
+app.post('/api/contacts/from-text', requireAuth, limiter, async (req, res) => {
+  try {
+    const { text, language } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: 'text is required' });
+
+    const lang = language || 'English';
+    const snippet = text.length > 6000 ? text.slice(-6000) : text;
+
+    const systemPrompt = `You are analyzing text about a person. The text may be a WhatsApp/chat export, a free-text description, or a mix.
+
+Extract:
+NAME: [the other person's name if identifiable, otherwise "Unknown"]
+TYPE: [one of: Partner, Ex, Crush, Friend, Family, Boss, Colleague, Client — best fit, or leave blank]
+RELATIONSHIP_STATE: [one of: Warm, Neutral, Cold, Tense, Distant, Flirty — best fit, or leave blank]
+OBSERVED_PATTERNS: [2-4 behavioral observations separated by | — OBSERVATIONS only, never diagnoses, percentages, or clinical labels. GOOD: "Prefers short messages" | "Gets direct when stressed". BAD: attachment styles, personality types]
+
+Reply with ONLY these labeled lines. No markdown, no extra commentary. Language context: ${lang}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: snippet }]
+      })
+    });
+
+    const apiData = await response.json();
+    if (!response.ok) throw new Error(apiData.error?.message || 'API error');
+
+    const rawText = apiData.content[0].text;
+    const extract = key => {
+      const m = rawText.match(new RegExp(`^${key}:\\s*(.+)`, 'im'));
+      return m ? m[1].trim() : null;
+    };
+
+    const patternsRaw = extract('OBSERVED_PATTERNS');
+    const observed_patterns = patternsRaw
+      ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 3).slice(0, 4)
+      : [];
+
+    const name = extract('NAME');
+    console.log('[contacts from-text] name:', name, '| patterns:', observed_patterns.length);
+    res.json({
+      name: (name && name.toLowerCase() !== 'unknown') ? name : null,
+      type: extract('TYPE'),
+      relationship_state: extract('RELATIONSHIP_STATE'),
+      observed_patterns
+    });
+  } catch (e) {
+    console.error('[contacts from-text]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/contacts', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, source } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' });
+    const insertBody = {
+      user_id: req.user.id, name: name.trim(),
+      type: type || null, relationship_summary: relationship_summary || null,
+      relationship_state: relationship_state || null,
+      source: source || 'manual'
+    };
+    if (Array.isArray(observed_patterns) && observed_patterns.length) {
+      insertBody.observed_patterns = observed_patterns;
+    }
     const r = await fetch(`${SUPABASE_REST}/contacts`, {
       method: 'POST',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        user_id: req.user.id, name: name.trim(),
-        type: type || null, relationship_summary: relationship_summary || null,
-        relationship_state: relationship_state || null, source: 'manual'
-      })
+      body: JSON.stringify(insertBody)
     });
     const data = await r.json();
     if (!r.ok) throw new Error(JSON.stringify(data));
