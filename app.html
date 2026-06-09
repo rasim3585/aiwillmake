@@ -2526,7 +2526,7 @@
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
         currentConvId = null;
         document.getElementById('simRestoreNote').classList.add('hidden');
-        createConversation();
+        await createConversation();
         fetchLikelyResponses();
         fetchNextSteps();
         lastGeneratedSig = getGenerateSig();
@@ -2724,10 +2724,12 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            saveMessage('sent', opt.message, opt.strategy || '');
           });
 
           card.querySelector('.sim-use-btn').addEventListener('click', () => {
             selectedMsgText = opt.message;
+            saveMessage('sent', opt.message, opt.strategy || '');
             textarea.value = '';
             grid.innerHTML = '';
             grid.classList.add('hidden');
@@ -3807,6 +3809,7 @@
           });
           if (convResp.ok) {
             const conv = await convResp.json();
+            currentConvId = conv.id;
             const msgContent = [data.key_moment, data.power_balance, data.recommended_next]
               .filter(Boolean).join(' | ');
             if (msgContent) {
