@@ -510,6 +510,7 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
     if (!response.ok) throw new Error(apiData.error?.message || 'API error');
 
     const raw = apiData.content[0].text.trim();
+    console.log('[detect-category] raw:', raw.slice(0, 300));
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in AI response');
 
@@ -526,8 +527,19 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
       listings:     ['property_sale','property_rent','car_sale','item_sale','wanted_ad','business_for_sale','service_listing','roommate_search'],
       creative:     ['song_lyrics','poem','biography','slogan','speech','story_opening','toast','brand_voice','caption_creative','eulogy']
     };
+
+    // Graceful fallback: never throw for an invalid pair — recover instead of erroring
     if (!valid[result.categoryId]?.includes(result.subcategoryId)) {
-      throw new Error('AI returned an invalid category/subcategory pair');
+      console.warn('[detect-category] invalid pair:', result.categoryId, '/', result.subcategoryId, '— applying fallback');
+      if (valid[result.categoryId]) {
+        // Category is valid but subcategory is off — use its first (most general) subcategory
+        result.subcategoryId = valid[result.categoryId][0];
+      } else {
+        // Unknown category entirely — safe neutral default
+        result.categoryId    = 'personal';
+        result.subcategoryId = 'checking_in';
+      }
+      result.explanation = (result.explanation || '') + ' (subcategory adjusted to nearest valid option)';
     }
 
     console.log('[detect-category] result:', JSON.stringify(result));
