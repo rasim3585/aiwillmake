@@ -3017,70 +3017,82 @@
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
 
-        // Restore category + subcategory + form fields
-        if (data.category_id) {
-          selectCategory(data.category_id);
-          if (data.subcategory_id) {
-            selectSubcategory(data.subcategory_id);
-            // Populate form fields from stored fields JSON
-            // Iterate data.fields directly — covers input, textarea, and select equally
-            if (data.fields) {
-              for (const [key, val] of Object.entries(data.fields)) {
-                if (!val) continue;
-                const cfEl = document.getElementById(`cf-${key}`);
-                if (cfEl) cfEl.value = val;
-                const dfEl = document.getElementById(`df-${key}`);
-                if (dfEl) dfEl.value = val;
-              }
-              lastFields = { ...data.fields };
-            }
-          }
-        }
-
-        // Set conversation ID early so postOutcome can use it
         currentConvId = convId;
 
-        // Find last sent message
-        const msgs = data.conversation_messages || [];
-        const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+        const isImport = !data.subcategory_id && (
+          data.situation?.startsWith('WhatsApp history') ||
+          data.fields?.interest_level || data.fields?.recommended_next
+        );
 
-        // Remove any leftover outcome widget from a previous restore
-        document.getElementById('restoreOutcomeWidget')?.remove();
-
-        if (lastSent) {
-          selectedMsgText = lastSent.content;
-          const preview = lastSent.content.length > 80 ? lastSent.content.slice(0, 80) + '…' : lastSent.content;
-          const noteEl = document.getElementById('simRestoreNote');
-          noteEl.innerHTML = `Returning to this conversation? Paste their reply below.<br><strong>You sent:</strong> "${preview}"`;
-          noteEl.classList.remove('hidden');
-
-          // Show outcome widget if this message has no recorded outcome yet
-          if (!lastSent.outcome && accessToken) {
-            const outcomeEl = document.createElement('div');
-            outcomeEl.id = 'restoreOutcomeWidget';
-            outcomeEl.className = 'outcome-widget';
-            outcomeEl.innerHTML = `
-              <p class="outcome-q">You sent this message. What happened?</p>
-              <div class="outcome-reactions">
-                <button class="outcome-reaction" data-outcome="positive" data-note="They replied warmly"        type="button">😊 Positive</button>
-                <button class="outcome-reaction" data-outcome="neutral"  data-note="They replied briefly"       type="button">😐 Neutral</button>
-                <button class="outcome-reaction" data-outcome="negative" data-note="Didn't reply or went badly" type="button">😔 Negative</button>
-                <button class="outcome-reaction" data-outcome="waiting"  data-note="Still waiting for reply"    type="button">⏳ Still waiting</button>
-              </div>`;
-            outcomeEl.querySelectorAll('.outcome-reaction').forEach(btn => {
-              btn.addEventListener('click', async () => {
-                outcomeEl.querySelectorAll('.outcome-reaction').forEach(b => b.disabled = true);
-                btn.classList.add('selected');
-                await postOutcome(lastSent.id, btn.dataset.outcome, btn.dataset.note, convId);
-                outcomeEl.innerHTML = `<p class="outcome-confirm">✓ Saved — thanks for the feedback</p>`;
-              });
-            });
-            noteEl.insertAdjacentElement('afterend', outcomeEl);
+        if (isImport) {
+          // Rebuild analysis card from stored fields and show it
+          const personB = data.situation?.replace('WhatsApp history with ', '') || null;
+          const analysisData = { person_b: personB, ...(data.fields || {}) };
+          const resultEl = document.getElementById('convAnalysisResult');
+          resultEl.classList.remove('hidden');
+          renderConvAnalysis(analysisData);
+          resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // Normal conversation: restore JS state silently, then show simulator only
+          if (data.category_id) {
+            selectCategory(data.category_id);
+            if (data.subcategory_id) {
+              selectSubcategory(data.subcategory_id);
+              // Hide sections that selectCategory/selectSubcategory unhide — restore UI shows simulator only
+              document.getElementById('subcatSection').classList.add('hidden');
+              document.getElementById('formCard').classList.add('hidden');
+              if (data.fields) {
+                for (const [key, val] of Object.entries(data.fields)) {
+                  if (!val) continue;
+                  const cfEl = document.getElementById(`cf-${key}`);
+                  if (cfEl) cfEl.value = val;
+                  const dfEl = document.getElementById(`df-${key}`);
+                  if (dfEl) dfEl.value = val;
+                }
+                lastFields = { ...data.fields };
+              }
+            }
           }
+
+          const msgs = data.conversation_messages || [];
+          const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
+          document.getElementById('restoreOutcomeWidget')?.remove();
+
+          if (lastSent) {
+            selectedMsgText = lastSent.content;
+            const preview = lastSent.content.length > 80 ? lastSent.content.slice(0, 80) + '…' : lastSent.content;
+            const noteEl = document.getElementById('simRestoreNote');
+            noteEl.innerHTML = `Returning to this conversation? Paste their reply below.<br><strong>You sent:</strong> "${preview}"`;
+            noteEl.classList.remove('hidden');
+
+            if (!lastSent.outcome && accessToken) {
+              const outcomeEl = document.createElement('div');
+              outcomeEl.id = 'restoreOutcomeWidget';
+              outcomeEl.className = 'outcome-widget';
+              outcomeEl.innerHTML = `
+                <p class="outcome-q">You sent this message. What happened?</p>
+                <div class="outcome-reactions">
+                  <button class="outcome-reaction" data-outcome="positive" data-note="They replied warmly"        type="button">😊 Positive</button>
+                  <button class="outcome-reaction" data-outcome="neutral"  data-note="They replied briefly"       type="button">😐 Neutral</button>
+                  <button class="outcome-reaction" data-outcome="negative" data-note="Didn't reply or went badly" type="button">😔 Negative</button>
+                  <button class="outcome-reaction" data-outcome="waiting"  data-note="Still waiting for reply"    type="button">⏳ Still waiting</button>
+                </div>`;
+              outcomeEl.querySelectorAll('.outcome-reaction').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                  outcomeEl.querySelectorAll('.outcome-reaction').forEach(b => b.disabled = true);
+                  btn.classList.add('selected');
+                  await postOutcome(lastSent.id, btn.dataset.outcome, btn.dataset.note, convId);
+                  outcomeEl.innerHTML = `<p class="outcome-confirm">✓ Saved — thanks for the feedback</p>`;
+                });
+              });
+              noteEl.insertAdjacentElement('afterend', outcomeEl);
+            }
+          }
+
+          document.getElementById('simulatorSection').classList.remove('hidden');
+          document.getElementById('simulatorSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.getElementById('theirReplyInput').focus();
         }
-        document.getElementById('simulatorSection').classList.remove('hidden');
-        document.getElementById('simulatorSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        document.getElementById('theirReplyInput').focus();
       } catch (e) {
         showToast('Could not restore conversation.', 'error');
       }
@@ -4121,6 +4133,77 @@
       analyzeConversation(text);
     });
 
+    function renderConvAnalysis(analysisData) {
+      _convAnalysis = analysisData;
+      const resultEl = document.getElementById('convAnalysisResult');
+      const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const lvl  = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
+
+      resultEl.innerHTML = `
+        <div class="conv-analysis-head">
+          <span class="conv-analysis-title">Conversation with ${escH(analysisData.person_b || 'Unknown')}</span>
+          ${analysisData.total_messages ? `<span class="conv-analysis-sub">${escH(analysisData.total_messages)} messages total</span>` : ''}
+        </div>
+        <div class="conv-analysis-badges">
+          ${analysisData.interest_level ? `<div class="conv-badge ${lvl(analysisData.interest_level)}"><span class="conv-badge-lbl">Interest</span><span class="conv-badge-val">${escH(analysisData.interest_level)}</span></div>` : ''}
+          ${analysisData.emotional_tone ? `<div class="conv-badge cb-tone"><span class="conv-badge-lbl">Tone</span><span class="conv-badge-val">${escH(analysisData.emotional_tone)}</span></div>` : ''}
+          ${analysisData.person_a_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Your msgs</span><span class="conv-badge-val">${escH(analysisData.person_a_messages)}</span></div>` : ''}
+          ${analysisData.person_b_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Their msgs</span><span class="conv-badge-val">${escH(analysisData.person_b_messages)}</span></div>` : ''}
+          ${analysisData.days_since_last   ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Days since</span><span class="conv-badge-val">${escH(analysisData.days_since_last)}</span></div>` : ''}
+        </div>
+        ${analysisData.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escH(analysisData.power_balance)}</div>` : ''}
+        ${analysisData.key_moment    ? `<div class="conv-key-moment">${escH(analysisData.key_moment)}</div>` : ''}
+        ${analysisData.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(analysisData.recommended_next)}</div></div>` : ''}
+        ${analysisData.biggest_risk  ? `<div class="conv-risk">${escH(analysisData.biggest_risk)}</div>` : ''}
+        <button type="button" class="btn-conv-generate" id="convGenerateBtn">
+          → Now, what do you want to say?
+        </button>`;
+
+      document.getElementById('convGenerateBtn').addEventListener('click', async () => {
+        const d = _convAnalysis;
+        const btn = document.getElementById('convGenerateBtn');
+        btn.disabled = true; btn.textContent = 'Setting up…';
+
+        if (!activeContactContext && d.person_b) {
+          activeContactContext = {
+            id: null, name: d.person_b,
+            relationship_state: d.emotional_tone || null,
+            observed_patterns: Array.isArray(d.observed_patterns) && d.observed_patterns.length
+              ? d.observed_patterns : (d.recommended_next ? [d.recommended_next] : null)
+          };
+          updatePrevMsgFieldVisibility();
+        }
+
+        const summary = [
+          d.person_b ? `I need to write to ${d.person_b}.` : '',
+          d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
+          d.recommended_next || ''
+        ].filter(Boolean).join(' ');
+
+        resultEl.classList.add('hidden');
+        selectMode(1, false);
+
+        const situationText = [
+          d.recommended_next || '',
+          d.key_moment ? `Context: ${d.key_moment}` : '',
+          d.power_balance || ''
+        ].filter(Boolean).join(' ');
+
+        await generateFromContext({
+          summaryText:   summary,
+          situationText,
+          analysisData:  d,
+          personName:    d.person_b,
+          emotionalTone: d.emotional_tone,
+          onFail: () => {
+            document.getElementById('smartInput').value = summary.trim();
+            document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            btn.disabled = false; btn.textContent = '→ Now, what do you want to say?';
+          }
+        });
+      });
+    }
+
     async function analyzeConversation(conversationText) {
       const resultEl = document.getElementById('convAnalysisResult');
       resultEl.classList.remove('hidden');
@@ -4138,78 +4221,8 @@
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
-        _convAnalysis = data;
-
-        const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const lvl  = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
-
-        resultEl.innerHTML = `
-          <div class="conv-analysis-head">
-            <span class="conv-analysis-title">Conversation with ${escH(data.person_b || 'Unknown')}</span>
-            ${data.total_messages ? `<span class="conv-analysis-sub">${escH(data.total_messages)} messages total</span>` : ''}
-          </div>
-          <div class="conv-analysis-badges">
-            ${data.interest_level ? `<div class="conv-badge ${lvl(data.interest_level)}"><span class="conv-badge-lbl">Interest</span><span class="conv-badge-val">${escH(data.interest_level)}</span></div>` : ''}
-            ${data.emotional_tone ? `<div class="conv-badge cb-tone"><span class="conv-badge-lbl">Tone</span><span class="conv-badge-val">${escH(data.emotional_tone)}</span></div>` : ''}
-            ${data.person_a_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Your msgs</span><span class="conv-badge-val">${escH(data.person_a_messages)}</span></div>` : ''}
-            ${data.person_b_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Their msgs</span><span class="conv-badge-val">${escH(data.person_b_messages)}</span></div>` : ''}
-            ${data.days_since_last   ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Days since</span><span class="conv-badge-val">${escH(data.days_since_last)}</span></div>` : ''}
-          </div>
-          ${data.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escH(data.power_balance)}</div>` : ''}
-          ${data.key_moment    ? `<div class="conv-key-moment">${escH(data.key_moment)}</div>` : ''}
-          ${data.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(data.recommended_next)}</div></div>` : ''}
-          ${data.biggest_risk  ? `<div class="conv-risk">${escH(data.biggest_risk)}</div>` : ''}
-          <button type="button" class="btn-conv-generate" id="convGenerateBtn">
-            → Now, what do you want to say?
-          </button>`;
+        renderConvAnalysis(data);
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        document.getElementById('convGenerateBtn').addEventListener('click', async () => {
-          const d = _convAnalysis;
-          const btn = document.getElementById('convGenerateBtn');
-          btn.disabled = true; btn.textContent = 'Setting up…';
-
-          // Contact context — use actual observed_patterns from the analysis
-          if (!activeContactContext && d.person_b) {
-            activeContactContext = {
-              id: null,
-              name: d.person_b,
-              relationship_state: d.emotional_tone || null,
-              observed_patterns: Array.isArray(d.observed_patterns) && d.observed_patterns.length
-                ? d.observed_patterns
-                : (d.recommended_next ? [d.recommended_next] : null)
-            };
-            updatePrevMsgFieldVisibility();
-          }
-
-          const summary = [
-            d.person_b ? `I need to write to ${d.person_b}.` : '',
-            d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
-            d.recommended_next || ''
-          ].filter(Boolean).join(' ');
-
-          resultEl.classList.add('hidden');
-          selectMode(1, false);
-
-          const situationText = [
-            d.recommended_next || '',
-            d.key_moment ? `Context: ${d.key_moment}` : '',
-            d.power_balance || ''
-          ].filter(Boolean).join(' ');
-
-          await generateFromContext({
-            summaryText:   summary,
-            situationText,
-            analysisData:  d,
-            personName:    d.person_b,
-            emotionalTone: d.emotional_tone,
-            onFail: () => {
-              document.getElementById('smartInput').value = summary.trim();
-              document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-              btn.disabled = false; btn.textContent = '→ Now, what do you want to say?';
-            }
-          });
-        });
 
       } catch (e) {
         resultEl.innerHTML = `<p style="color:#f87171;font-size:.85rem">Could not analyze conversation: ${escH ? escH(e.message) : e.message}</p>`;
