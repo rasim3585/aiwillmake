@@ -4137,28 +4137,122 @@
           </button>`;
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        document.getElementById('convGenerateBtn').addEventListener('click', () => {
+        document.getElementById('convGenerateBtn').addEventListener('click', async () => {
           const d = _convAnalysis;
-          // Set transient contact context from analysis if no contact is already linked
+          const btn = document.getElementById('convGenerateBtn');
+          btn.disabled = true; btn.textContent = 'Setting up…';
+
+          // Contact context — use actual observed_patterns from the analysis
           if (!activeContactContext && d.person_b) {
             activeContactContext = {
               id: null,
               name: d.person_b,
               relationship_state: d.emotional_tone || null,
-              observed_patterns: d.recommended_next ? [d.recommended_next] : null
+              observed_patterns: Array.isArray(d.observed_patterns) && d.observed_patterns.length
+                ? d.observed_patterns
+                : (d.recommended_next ? [d.recommended_next] : null)
             };
             updatePrevMsgFieldVisibility();
           }
+
           const summary = [
             d.person_b ? `I need to write to ${d.person_b}.` : '',
             d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
             d.recommended_next || ''
           ].filter(Boolean).join(' ');
+
           resultEl.classList.add('hidden');
           selectMode(1, false);
-          document.getElementById('smartInput').value = summary.trim();
-          document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-          detectCategory();
+
+          try {
+            // Detect category from the analysis summary
+            const detRes = await fetch('/api/detect-category', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: summary.trim() })
+            });
+            if (!detRes.ok) throw new Error('detect failed');
+            const { categoryId, subcategoryId } = await detRes.json();
+
+            const cat = appData?.categories.find(c => c.id === categoryId);
+            const sub = cat?.subcategories.find(s => s.id === subcategoryId);
+            if (!cat || !sub) throw new Error('unknown category');
+
+            // Set category + render form (also sets selectedCatId / selectedSubId)
+            selectCategory(categoryId);
+            selectSubcategory(subcategoryId);
+
+            // --- Auto-fill form fields from analysis ---
+
+            // Textarea fields (situation / context / reason)
+            const situationText = [
+              d.recommended_next || '',
+              d.key_moment ? `Context: ${d.key_moment}` : '',
+              d.power_balance || ''
+            ].filter(Boolean).join(' ').slice(0, 500);
+
+            for (const field of [...sub.required_fields, ...sub.optional_fields]) {
+              if (field.type === 'textarea') {
+                const el = document.getElementById(`df-${field.key}`);
+                if (el) el.value = situationText;
+              }
+            }
+
+            // Select fields — map from analysis where possible, else first option
+            const emotionLower = (d.emotional_tone || '').toLowerCase();
+            for (const field of sub.required_fields) {
+              if (field.type !== 'select') continue;
+              const el = document.getElementById(`df-${field.key}`);
+              if (!el) continue;
+
+              if (field.key === 'tone') {
+                const match = field.options.find(o => o.toLowerCase().includes(emotionLower.split(' ')[0]));
+                el.value = match || field.options[0];
+              } else if (field.key === 'goal') {
+                const rec = (d.recommended_next || '').toLowerCase();
+                if (rec.includes('reconnect') || rec.includes('reach out') || rec.includes('check in'))
+                  el.value = field.options.find(o => o.toLowerCase().includes('check in')) || field.options[0];
+                else if (rec.includes('closure'))
+                  el.value = field.options.find(o => o.toLowerCase().includes('closure')) || field.options[0];
+                else if (rec.includes('apologize') || rec.includes('sorry'))
+                  el.value = field.options.find(o => o.toLowerCase().includes('apologize')) || field.options[0];
+                else
+                  el.value = field.options.find(o => o.toLowerCase().includes('check in')) || field.options[0];
+              } else if (field.key === 'time_since') {
+                const days = parseInt(d.days_since_last || '0', 10);
+                if (days && days < 30)       el.value = field.options[0]; // Less than 1 month
+                else if (days && days < 180) el.value = field.options[1]; // 1–6 months
+                else if (days && days < 365) el.value = field.options[2]; // 6 months – 1 year
+                else                          el.value = field.options[field.options.length - 1]; // Over 1 year / last
+              } else {
+                el.value = field.options[0]; // Safe default: first option
+              }
+            }
+
+            // Common fields (language / country)
+            const langEl = document.getElementById('cf-language');
+            if (langEl && lastFields.language) langEl.value = lastFields.language;
+
+            // Optional name field → person_b
+            if (d.person_b) {
+              for (const field of sub.optional_fields) {
+                if (field.type === 'text' && field.key.includes('name')) {
+                  const el = document.getElementById(`df-${field.key}`);
+                  if (el && !el.value) el.value = d.person_b;
+                }
+              }
+            }
+
+            // Auto-generate — user sees 6 strategies without touching the form
+            await generate();
+
+          } catch {
+            // Graceful fallback: pre-fill smart input, let user proceed manually
+            document.getElementById('smartInput').value = summary.trim();
+            document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            detectCategory();
+            btn.disabled = false; btn.textContent = '→ Now, what do you want to say?';
+          }
         });
 
       } catch (e) {
