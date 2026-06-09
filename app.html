@@ -607,6 +607,23 @@
     }
     .likely-reply-strategy { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
     .likely-reply-text { font-size: .87rem; line-height: 1.65; color: var(--text); }
+    .likely-sub { font-size: .74rem; color: var(--muted); margin: -6px 0 14px; }
+    .likely-prob { font-size: .69rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .likely-bar { height: 3px; border-radius: 2px; background: var(--bord); margin: 3px 0 2px; overflow: hidden; }
+    .likely-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width .5s ease; }
+    .likely-next-move-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-bottom: 5px; }
+    .likely-next-move {
+      font-size: .83rem; color: var(--fg); line-height: 1.55;
+      padding: 10px 13px; border-radius: 9px;
+      background: rgba(212,113,90,.08); border: 1px solid rgba(212,113,90,.2);
+    }
+    .likely-gen-btn {
+      background: none; border: 1px solid var(--bord); color: var(--sec);
+      border-radius: var(--r-sm); padding: 7px 14px; font: inherit; font-size: .79rem;
+      cursor: pointer; transition: background .15s, border-color .15s; align-self: flex-start;
+    }
+    .likely-gen-btn:hover { background: var(--surf2); border-color: var(--bord2); }
+    .likely-gen-btn:disabled { opacity: .4; cursor: not-allowed; }
 
     /* ── What Happens Next ── */
     .next-steps-section { margin-top: 8px; }
@@ -1856,6 +1873,7 @@
     <section id="likelySection" class="likely-section hidden">
       <div id="likelyCtxBadge" class="contact-context-badge hidden"></div>
       <h2 class="likely-title">How might they respond?</h2>
+      <p class="likely-sub">Likely reactions if you send this — and your next move. Estimates, not certainties.</p>
       <div class="likely-grid" id="likelyGrid">
         <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
         <div class="ns-skeleton skeleton" style="height:68px;border-radius:12px"></div>
@@ -3082,13 +3100,20 @@
         const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         let activeCard = null;
 
+        data.responses.sort((a, b) => (b.probability || 0) - (a.probability || 0));
         data.responses.forEach((r, i) => {
           const card = document.createElement('div');
           card.className = 'likely-card';
           card.style.animationDelay = `${i * 60}ms`;
-          card.innerHTML = `<div class="likely-type">${escH(r.type)}</div><div class="likely-example">"${escH(r.example)}"</div>`;
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+              <div class="likely-type">${escH(r.type)}</div>
+              ${r.probability > 0 ? `<div class="likely-prob">${r.probability}%</div>` : ''}
+            </div>
+            <div class="likely-bar"><div class="likely-bar-fill" style="width:${r.probability || 0}%"></div></div>
+            <div class="likely-example">"${escH(r.example)}"</div>`;
 
-          card.addEventListener('click', async () => {
+          card.addEventListener('click', () => {
             if (activeCard === card) {
               card.classList.remove('active');
               panel.classList.add('hidden');
@@ -3100,35 +3125,50 @@
             activeCard = card;
             card.classList.add('active');
             panel.classList.remove('hidden');
-            panel.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton" style="height:44px;border-radius:10px"></div>`).join('');
 
-            try {
-              const headers = { 'Content-Type': 'application/json' };
-              if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-              const r2 = await fetch('/api/next-reply', {
-                method: 'POST', headers,
-                body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
-              });
-              const d2 = await r2.json();
-              if (r2.status === 403) { panel.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Sign in to see reply suggestions.</p>`; return; }
-              if (!r2.ok) throw new Error(d2.error);
+            panel.innerHTML = `
+              <div class="likely-panel-title">If they respond: <em>"${escH(r.example)}"</em></div>
+              ${r.next_move ? `<div>
+                <div class="likely-next-move-lbl">→ Your move</div>
+                <div class="likely-next-move">${escH(r.next_move)}</div>
+              </div>` : ''}
+              <div id="likelyDeepResult"></div>
+              <button class="likely-gen-btn" id="likelyGenBtn">Generate full reply suggestions →</button>`;
 
-              panel.innerHTML = `<div class="likely-panel-title">If they say: <em>"${escH(r.example)}"</em></div>`;
-              d2.options.forEach((opt, idx) => {
-                const item = document.createElement('div');
-                item.className = 'likely-reply-item';
-                item.style.animationDelay = `${idx * 60}ms`;
-                item.innerHTML = `<div class="likely-reply-strategy">${escH(opt.strategy)}</div><p class="likely-reply-text">${escH(opt.message)}</p><button class="sim-copy-btn" type="button">Copy</button>`;
-                item.querySelector('.sim-copy-btn').addEventListener('click', async (e) => {
-                  await navigator.clipboard.writeText(opt.message);
-                  e.target.textContent = 'Copied ✓'; e.target.classList.add('copied');
-                  setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            document.getElementById('likelyGenBtn').addEventListener('click', async () => {
+              const genBtn = document.getElementById('likelyGenBtn');
+              const deepEl = document.getElementById('likelyDeepResult');
+              genBtn.disabled = true; genBtn.textContent = 'Generating…';
+              deepEl.innerHTML = [0,1,2].map(() => `<div class="ns-skeleton skeleton" style="height:44px;border-radius:10px;margin-bottom:8px"></div>`).join('');
+              try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+                const r2 = await fetch('/api/next-reply', {
+                  method: 'POST', headers,
+                  body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
                 });
-                panel.appendChild(item);
-              });
-            } catch (e) {
-              panel.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Could not load reply suggestions. Try again.</p>`;
-            }
+                const d2 = await r2.json();
+                if (r2.status === 403) { deepEl.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Sign in to see reply suggestions.</p>`; genBtn.remove(); return; }
+                if (!r2.ok) throw new Error(d2.error);
+                deepEl.innerHTML = '';
+                genBtn.remove();
+                d2.options.forEach((opt, idx) => {
+                  const item = document.createElement('div');
+                  item.className = 'likely-reply-item';
+                  item.style.animationDelay = `${idx * 60}ms`;
+                  item.innerHTML = `<div class="likely-reply-strategy">${escH(opt.strategy)}</div><p class="likely-reply-text">${escH(opt.message)}</p><button class="sim-copy-btn" type="button">Copy</button>`;
+                  item.querySelector('.sim-copy-btn').addEventListener('click', async (e) => {
+                    await navigator.clipboard.writeText(opt.message);
+                    e.target.textContent = 'Copied ✓'; e.target.classList.add('copied');
+                    setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+                  });
+                  deepEl.appendChild(item);
+                });
+              } catch {
+                deepEl.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Could not load suggestions. Try again.</p>`;
+                genBtn.disabled = false; genBtn.textContent = 'Generate full reply suggestions →';
+              }
+            });
           });
           grid.appendChild(card);
         });

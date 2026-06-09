@@ -792,14 +792,18 @@ app.post('/api/likely-responses', limiter, async (req, res) => {
     if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
 
     const lang = language || 'English';
-    const systemPrompt = `Based on this message being sent, predict 5 most likely responses the recipient might give. Be realistic and varied — include both positive and negative possibilities. Write in ${lang}.${buildContactContext(contactContext)}
+    const systemPrompt = `Based on this message being sent, predict 5 most likely responses the recipient might give. Be realistic and varied — include both positive and negative possibilities. If you have context about the recipient, use it to calibrate the probabilities. Write in ${lang}.${buildContactContext(contactContext)}
 
 Format exactly (no extra text):
 RESPONSE_1_TYPE: [one word: e.g. Warm, Curious, Neutral, Brief, Cold, Positive, Hesitant, Enthusiastic, Distant, Confused]
+RESPONSE_1_PROBABILITY: [integer 0-100. All 5 must sum to roughly 100]
 RESPONSE_1_EXAMPLE: [one short realistic example reply, 1-2 sentences max]
+RESPONSE_1_NEXT_MOVE: [if they respond this way, one concrete sentence on what the sender should do next]
 
 RESPONSE_2_TYPE: ...
+RESPONSE_2_PROBABILITY: ...
 RESPONSE_2_EXAMPLE: ...
+RESPONSE_2_NEXT_MOVE: ...
 
 (repeat for all 5)`;
 
@@ -818,8 +822,10 @@ RESPONSE_2_EXAMPLE: ...
     const extract = key => { const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
 
     const responses = [1,2,3,4,5].map(n => ({
-      type:    extract(`RESPONSE_${n}_TYPE`),
-      example: extract(`RESPONSE_${n}_EXAMPLE`)
+      type:        extract(`RESPONSE_${n}_TYPE`),
+      probability: parseInt(extract(`RESPONSE_${n}_PROBABILITY`) || '0', 10),
+      example:     extract(`RESPONSE_${n}_EXAMPLE`),
+      next_move:   extract(`RESPONSE_${n}_NEXT_MOVE`)
     })).filter(r => r.type && r.example);
 
     console.log('[likely-responses] count:', responses.length);
