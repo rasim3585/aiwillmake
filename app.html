@@ -2862,15 +2862,35 @@
         const stripPrefix = t => t.replace(/^\[[^\]]+\]\s+(?:[A-Z]\w*\s*&\s*[A-Z]\w*\s+)?/, '');
         listEl.innerHTML = '';
 
-        // Group conversations by contact; contactless stay individual
-        const contactGroups = new Map();
+        // Group by contact_id; contactless convs get secondary grouping by extracted name
+        const contactGroups = new Map(); // contact_id → { name, convs[] }
         const soloConvs = [];
         data.forEach(c => {
           if (c.contact_id) {
-            if (!contactGroups.has(c.contact_id)) contactGroups.set(c.contact_id, []);
-            contactGroups.get(c.contact_id).push(c);
+            if (!contactGroups.has(c.contact_id))
+              contactGroups.set(c.contact_id, { name: c.contacts?.name || 'Unknown', convs: [] });
+            contactGroups.get(c.contact_id).convs.push(c);
           } else {
             soloConvs.push(c);
+          }
+        });
+
+        // For solos: "WhatsApp history with X" → try to merge into matching contact group,
+        // or fall into a name-keyed group. Prevents the same person appearing as two cards.
+        const nameGroups = new Map(); // extracted name → convs[]
+        const trueSoloConvs = [];
+        soloConvs.forEach(c => {
+          const waName = c.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+          if (waName) {
+            const matchGroup = [...contactGroups.values()].find(g => g.name === waName);
+            if (matchGroup) {
+              matchGroup.convs.push(c); // merge into existing contact group
+            } else {
+              if (!nameGroups.has(waName)) nameGroups.set(waName, []);
+              nameGroups.get(waName).push(c);
+            }
+          } else {
+            trueSoloConvs.push(c);
           }
         });
 
@@ -2887,9 +2907,13 @@
           const rawPreview = stripPrefix(lastSent ? lastSent.content : (conv.situation || '—'));
           const preview = escH(rawPreview.length > 65 ? rawPreview.slice(0, 65) + '…' : rawPreview);
 
-          const cat = appData?.categories?.find(x => x.id === conv.category_id);
-          const sub = cat?.subcategories?.find(x => x.id === conv.subcategory_id);
-          const title = titleOverride ?? escH(conv.contacts?.name || sub?.name || cat?.name || conv.category_id || 'Conversation');
+          let title = titleOverride;
+          if (!title) {
+            const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+            const cat = appData?.categories?.find(x => x.id === conv.category_id);
+            const sub = cat?.subcategories?.find(x => x.id === conv.subcategory_id);
+            title = escH(waName || conv.contacts?.name || sub?.name || cat?.name || conv.category_id || 'Conversation');
+          }
 
           const card = document.createElement('div');
           card.className = 'home-conv-card';
@@ -2904,17 +2928,23 @@
           listEl.appendChild(card);
         };
 
-        contactGroups.forEach(convs => {
+        contactGroups.forEach(({ name, convs }) => {
           convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          const latest = convs[0];
-          const contactName = latest.contacts?.name || 'Unknown';
           const title = convs.length > 1
-            ? escH(`${contactName} (${convs.length} conversations)`)
-            : escH(contactName);
-          renderHomeCard(latest, title);
+            ? escH(`${name} (${convs.length} conversations)`)
+            : escH(name);
+          renderHomeCard(convs[0], title);
         });
 
-        soloConvs.forEach(c => renderHomeCard(c));
+        nameGroups.forEach((convs, name) => {
+          convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          const title = convs.length > 1
+            ? escH(`${name} (${convs.length} conversations)`)
+            : escH(name);
+          renderHomeCard(convs[0], title);
+        });
+
+        trueSoloConvs.forEach(c => renderHomeCard(c));
       } catch {
         listEl.innerHTML = '<p class="home-conv-empty" style="color:#f87171">Could not load conversations.</p>';
       }
