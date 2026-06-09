@@ -977,9 +977,10 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
 
     const lang = language || 'English';
-    // Use the last 8000 chars — most recent messages are most relevant
-    const snippet = conversationText.length > 8000
-      ? conversationText.slice(-8000)
+    // Head (identity/context) + tail (recent dynamics) preserves both ends
+    const HEAD = 2000, TAIL = 12000;
+    const snippet = conversationText.length > HEAD + TAIL
+      ? conversationText.slice(0, HEAD) + '\n[...]\n' + conversationText.slice(-TAIL)
       : conversationText;
 
     const systemPrompt = `Analyze this exported chat conversation. Extract:

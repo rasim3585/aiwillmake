@@ -42,7 +42,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
 
     body {
       font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -4090,6 +4090,12 @@
       const file = e.target.files[0];
       if (!file) return;
       e.target.value = '';
+      // Show loading immediately — large files can take a moment to read
+      const resultEl = document.getElementById('convAnalysisResult');
+      resultEl.classList.remove('hidden');
+      resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading file…</p>' +
+        '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const text = await file.text();
       analyzeConversation(text);
     });
