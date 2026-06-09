@@ -548,19 +548,16 @@ app.post('/api/analyze-reply', limiter, async (req, res) => {
     let systemPrompt;
     if (senderType === 'review') {
       systemPrompt = `You are reviewing a DRAFT the user is about to send. The message was written BY the user — do NOT treat it as something received from someone else. Refer to the writer as "you" and the recipient as "they".
-Analyze: tone, how the recipient will likely interpret it, unintended signals, emotional risk, and what to improve before sending.
 Return ONLY this exact format:
-INTEREST_LEVEL: High/Medium/Low (how likely the recipient is to respond positively)
-EMOTIONAL_WARMTH: High/Medium/Low (emotional risk this message carries)
-OPENNESS: High/Medium/Low (how vulnerable or open this message sounds)
-TONE: [one word - e.g. Assertive, Warm, Cold, Needy, Confident]
-HIDDEN_SIGNAL: [one sentence about the unintended signal this message might send to the recipient]
-WHAT_THEY_SAID: [one sentence — what you are literally communicating in this message]
-WHAT_THEY_MIGHT_MEAN: [one sentence — how the recipient might actually interpret this]
-RISK: [one sentence about the main risk of sending this message as-is]
-SUGGESTED_MOVE: [one concrete sentence suggesting an improvement or confirming it is ready to send]
-REPLY_TIMING: [exactly one of: "Send now" / "Rephrase first" / "Wait and revise" / "Don't send yet" / "Send as-is"]
-REPLY_TIMING_REASON: [one short sentence explaining why]
+TONE: [one word — e.g. Assertive, Warm, Cold, Needy, Confident, Playful, Formal]
+EMOTIONAL_RISK: [exactly one of: High / Medium / Low]
+LANDING: [one sentence — how the recipient will likely feel or react upon reading this]
+WHAT_YOU_SENT: [one sentence — what you are literally communicating]
+HOW_THEY_READ_IT: [one sentence — how the recipient might actually interpret this, including any unintended signals]
+STRENGTHS: [2-3 things working well in this message, separated by |]
+WATCH_OUT: [2-3 things to be careful about, separated by |]
+VERDICT: [exactly one of: "Send as is" / "Soften it" / "Rethink"]
+VERDICT_REASON: [one sentence explaining the verdict]
 No other text. No markdown. Write in ${lang}.`;
     } else {
       const contextNote = previousMessage?.trim()
@@ -610,18 +607,29 @@ ${senderType === 'review' ? 'Draft to review' : 'Reply to analyze'}: ${reply}`;
       return m ? m[1].trim() : null;
     };
 
+    const splitPipe = raw => raw ? raw.split('|').map(s => s.trim()).filter(Boolean) : [];
     res.json({
-      interest_level:      extract('INTEREST_LEVEL'),
-      emotional_warmth:    extract('EMOTIONAL_WARMTH'),
-      openness:            extract('OPENNESS'),
-      tone:                extract('TONE'),
-      hidden_signal:       extract('HIDDEN_SIGNAL'),
-      what_they_said:      extract('WHAT_THEY_SAID'),
+      // shared / non-review fields
+      interest_level:       extract('INTEREST_LEVEL'),
+      emotional_warmth:     extract('EMOTIONAL_WARMTH'),
+      openness:             extract('OPENNESS'),
+      tone:                 extract('TONE'),
+      hidden_signal:        extract('HIDDEN_SIGNAL'),
+      what_they_said:       extract('WHAT_THEY_SAID'),
       what_they_might_mean: extract('WHAT_THEY_MIGHT_MEAN'),
-      risk:                extract('RISK'),
-      suggested_move:      extract('SUGGESTED_MOVE'),
-      reply_timing:        extract('REPLY_TIMING'),
-      reply_timing_reason: extract('REPLY_TIMING_REASON')
+      risk:                 extract('RISK'),
+      suggested_move:       extract('SUGGESTED_MOVE'),
+      reply_timing:         extract('REPLY_TIMING'),
+      reply_timing_reason:  extract('REPLY_TIMING_REASON'),
+      // review-mode structured fields
+      emotional_risk:       extract('EMOTIONAL_RISK'),
+      landing:              extract('LANDING'),
+      what_you_sent:        extract('WHAT_YOU_SENT'),
+      how_they_read_it:     extract('HOW_THEY_READ_IT'),
+      strengths:            splitPipe(extract('STRENGTHS')),
+      watch_out:            splitPipe(extract('WATCH_OUT')),
+      verdict:              extract('VERDICT'),
+      verdict_reason:       extract('VERDICT_REASON')
     });
   } catch (e) {
     console.error('[analyze-reply]', e.message);

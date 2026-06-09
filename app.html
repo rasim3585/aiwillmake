@@ -1186,6 +1186,52 @@
     .btn-review-analyze:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px var(--glow); }
     .btn-review-analyze:disabled { opacity: .42; cursor: not-allowed; }
 
+    .review-header { display: flex; align-items: flex-start; gap: 13px; }
+    .review-header-icon { font-size: 1.7rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+    .review-header-title { font-size: .97rem; font-weight: 700; color: var(--fg); margin-bottom: 3px; }
+    .review-header-sub { font-size: .78rem; color: var(--sec); line-height: 1.55; }
+    .review-contact-hint {
+      display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+      padding: 8px 11px; border-radius: 9px;
+      background: rgba(255,255,255,.03); border: 1px dashed var(--bord);
+    }
+    .review-contact-hint label { font-size: .76rem; color: var(--sec); white-space: nowrap; }
+    .review-contact-hint select {
+      font-size: .78rem; padding: 4px 9px; border-radius: 7px;
+      border: 1px solid var(--bord); background: var(--surf); color: var(--fg);
+      flex: 1; min-width: 0; max-width: 200px;
+    }
+    .review-landing-lbl { font-size: .69rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #c9a87c; margin-bottom: 6px; }
+    .review-landing {
+      font-size: .87rem; line-height: 1.6; color: var(--fg);
+      padding: 13px 15px; border-radius: 10px; font-style: italic;
+      background: rgba(200,168,130,.1); border: 1px solid rgba(200,168,130,.25);
+    }
+    .review-subrow { display: grid; gap: 7px; }
+    .review-subrow-item { font-size: .8rem; line-height: 1.55; color: var(--sec); }
+    .review-subrow-lbl { font-weight: 600; color: var(--fg); font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+    .review-sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .review-sw-card { padding: 12px 13px; border-radius: 10px; }
+    .review-sw-card.strengths { background: rgba(32,212,122,.07); border: 1px solid rgba(32,212,122,.2); }
+    .review-sw-card.watchout  { background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); }
+    .review-sw-lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+    .review-sw-card.strengths .review-sw-lbl { color: #20d47a; }
+    .review-sw-card.watchout  .review-sw-lbl { color: #f87171; }
+    .review-sw-item { font-size: .77rem; line-height: 1.5; color: var(--sec); display: flex; gap: 6px; margin-bottom: 4px; }
+    .review-sw-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+    .review-sw-card.strengths .review-sw-dot { background: #20d47a; }
+    .review-sw-card.watchout  .review-sw-dot { background: #f87171; }
+    .review-verdict-card { padding: 14px 16px; border-radius: 10px; display: flex; flex-direction: column; gap: 3px; }
+    .review-verdict-send    { background: rgba(32,212,122,.09); border: 1px solid rgba(32,212,122,.28); }
+    .review-verdict-soft    { background: rgba(245,158,11,.09);  border: 1px solid rgba(245,158,11,.28); }
+    .review-verdict-rethink { background: rgba(239,68,68,.09);   border: 1px solid rgba(239,68,68,.28); }
+    .review-verdict-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); }
+    .review-verdict-val { font-size: .95rem; font-weight: 700; }
+    .review-verdict-send    .review-verdict-val { color: #20d47a; }
+    .review-verdict-soft    .review-verdict-val { color: #f59e0b; }
+    .review-verdict-rethink .review-verdict-val { color: #ef4444; }
+    .review-verdict-why { font-size: .8rem; color: var(--sec); line-height: 1.5; margin-top: 3px; }
+
 
     /* ── WhatsApp import info box ── */
     .wai-box {
@@ -1700,17 +1746,18 @@
     <section id="reviewSection" class="hidden">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="review-card">
-        <div class="review-preview">
-          <div class="review-preview-lbl">You'll get</div>
-          <div class="review-preview-items">
-            <span class="review-preview-item">🎯 Tone check</span>
-            <span class="review-preview-item">⚠️ Emotional risk</span>
-            <span class="review-preview-item">💬 Likely reactions</span>
-            <span class="review-preview-item">💡 Improvement suggestions</span>
+        <div class="review-header">
+          <div class="review-header-icon">✉</div>
+          <div>
+            <div class="review-header-title">Review Before Sending</div>
+            <div class="review-header-sub">Paste your draft. We'll show you how it might land before you hit send.</div>
           </div>
         </div>
-        <div class="review-field-label">Paste your message here…</div>
-        <textarea id="reviewMessageInput" class="smart-ta" placeholder="The message you're about to send…" style="min-height:140px"></textarea>
+        <div id="reviewContactHint"></div>
+        <div>
+          <div class="review-field-label">Your draft</div>
+          <textarea id="reviewMessageInput" class="smart-ta" placeholder="The message you're about to send…" style="min-height:140px"></textarea>
+        </div>
         <button type="button" class="btn-review-analyze" id="reviewAnalyzeBtn">Check this message →</button>
         <div id="reviewResults" class="review-results hidden"></div>
       </div>
@@ -2016,6 +2063,7 @@
     let lastGeneratedSig = null;
     let selectedMsgText = '';
     let activeContactContext = null;
+    let _reviewContact  = null;
     let currentConvId   = null;
 
     async function init() {
@@ -3196,6 +3244,7 @@
       document.getElementById('catSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('continueSection').classList.toggle('hidden', mode !== 2);
       document.getElementById('reviewSection').classList.toggle('hidden', mode !== 3);
+      if (mode === 3) refreshReviewContactHint();
       if (mode !== 1) {
         document.getElementById('subcatSection').classList.add('hidden');
         document.getElementById('formCard').classList.add('hidden');
@@ -3419,6 +3468,37 @@
     });
 
     // ── Review Section ───────────────────────────────────────────
+    function refreshReviewContactHint() {
+      const el = document.getElementById('reviewContactHint');
+      if (!el || !accessToken) return;
+      _reviewContact = null;
+      el.innerHTML = `
+        <div class="review-contact-hint">
+          <label for="reviewContactSel">Who's this for?</label>
+          <select id="reviewContactSel">
+            <option value="">Anyone</option>
+          </select>
+        </div>`;
+      fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then(contacts => {
+          const sel = document.getElementById('reviewContactSel');
+          if (!sel || !Array.isArray(contacts) || !contacts.length) return;
+          contacts.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            opt.dataset.ctx = JSON.stringify({ name: c.name, type: c.type || null, relationship_state: c.relationship_state || null });
+            sel.appendChild(opt);
+          });
+          sel.addEventListener('change', () => {
+            const opt = sel.options[sel.selectedIndex];
+            _reviewContact = opt.value ? JSON.parse(opt.dataset.ctx || '{}') : null;
+          });
+        })
+        .catch(() => {});
+    }
+
     document.getElementById('reviewAnalyzeBtn').addEventListener('click', async () => {
       const message = document.getElementById('reviewMessageInput').value.trim();
       if (!message) { document.getElementById('reviewMessageInput').focus(); return; }
@@ -3433,23 +3513,56 @@
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply: message, categoryId: selectedCatId || 'general', situation: '', language: lastFields.language || 'English', senderType: 'review' })
+          body: JSON.stringify({
+            reply: message, categoryId: selectedCatId || 'general', situation: '',
+            language: lastFields.language || 'English', senderType: 'review',
+            contactContext: _reviewContact || undefined
+          })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
 
         const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const lvl  = v => ({ 'High':'rb-high','Medium':'rb-mid','Low':'rb-low' }[v] || 'rb-mid');
+        const riskLvl = v => ({ 'High':'rb-low','Medium':'rb-mid','Low':'rb-high' }[v] || 'rb-mid');
+        const verdictClass = v => {
+          if (!v) return 'review-verdict-soft';
+          if (v.toLowerCase().includes('as is')) return 'review-verdict-send';
+          if (v.toLowerCase().includes('soften')) return 'review-verdict-soft';
+          return 'review-verdict-rethink';
+        };
 
         resultEl.innerHTML = `
           <div class="review-badges">
-            ${data.interest_level   ? `<div class="review-badge ${lvl(data.interest_level)}"><span class="review-badge-lbl">Interest Level</span><span class="review-badge-val">${escH(data.interest_level)}</span></div>` : ''}
-            ${data.emotional_warmth ? `<div class="review-badge ${lvl(data.emotional_warmth)}"><span class="review-badge-lbl">Emotional Risk</span><span class="review-badge-val">${escH(data.emotional_warmth)}</span></div>` : ''}
-            ${data.tone             ? `<div class="review-badge rb-tone"><span class="review-badge-lbl">Tone</span><span class="review-badge-val">${escH(data.tone)}</span></div>` : ''}
+            ${data.tone          ? `<div class="review-badge rb-tone"><span class="review-badge-lbl">Tone</span><span class="review-badge-val">${escH(data.tone)}</span></div>` : ''}
+            ${data.emotional_risk ? `<div class="review-badge ${riskLvl(data.emotional_risk)}"><span class="review-badge-lbl">Emotional Risk</span><span class="review-badge-val">${escH(data.emotional_risk)}</span></div>` : ''}
           </div>
-          ${data.hidden_signal  ? `<div class="conv-key-moment">${escH(data.hidden_signal)}</div>` : ''}
-          ${data.risk           ? `<div class="conv-risk">${escH(data.risk)}</div>` : ''}
-          ${data.suggested_move ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Suggested move</div><div class="conv-rec-text">${escH(data.suggested_move)}</div></div>` : ''}`;
+          ${data.landing ? `
+          <div>
+            <div class="review-landing-lbl">How it might land</div>
+            <div class="review-landing">${escH(data.landing)}</div>
+          </div>` : ''}
+          ${data.what_you_sent || data.how_they_read_it ? `
+          <div class="review-subrow">
+            ${data.what_you_sent     ? `<div><div class="review-subrow-lbl">What you sent</div><div class="review-subrow-item">${escH(data.what_you_sent)}</div></div>` : ''}
+            ${data.how_they_read_it  ? `<div><div class="review-subrow-lbl">How they might read it</div><div class="review-subrow-item">${escH(data.how_they_read_it)}</div></div>` : ''}
+          </div>` : ''}
+          ${(data.strengths?.length || data.watch_out?.length) ? `
+          <div class="review-sw-grid">
+            <div class="review-sw-card strengths">
+              <div class="review-sw-lbl">✓ Strengths</div>
+              ${(data.strengths||[]).map(s => `<div class="review-sw-item"><span class="review-sw-dot"></span>${escH(s)}</div>`).join('')}
+            </div>
+            <div class="review-sw-card watchout">
+              <div class="review-sw-lbl">⚠ Watch out</div>
+              ${(data.watch_out||[]).map(s => `<div class="review-sw-item"><span class="review-sw-dot"></span>${escH(s)}</div>`).join('')}
+            </div>
+          </div>` : ''}
+          ${data.verdict ? `
+          <div class="review-verdict-card ${verdictClass(data.verdict)}">
+            <div class="review-verdict-lbl">Verdict</div>
+            <div class="review-verdict-val">${escH(data.verdict)}</div>
+            ${data.verdict_reason ? `<div class="review-verdict-why">${escH(data.verdict_reason)}</div>` : ''}
+          </div>` : ''}`;
         resultEl.classList.remove('hidden');
       } catch {
         resultEl.innerHTML = `<p style="color:#f87171;font-size:.84rem">Could not analyze. Please try again.</p>`;
