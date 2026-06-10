@@ -41,7 +41,7 @@ const limiter = rateLimit({
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+)
 app.use(express.static(__dirname));
 
 app.get('/api/debug', (req, res) => {

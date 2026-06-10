@@ -4608,7 +4608,7 @@
               headers,
               body: JSON.stringify({ images: [{ media_type, data }] })
             });
-            if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || 'OCR failed'); }
+            if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || `OCR failed (HTTP ${resp.status})`); }
             const json = await resp.json();
             resolve(json.text || '');
           } catch (err) { reject(err); }
