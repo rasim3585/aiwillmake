@@ -1594,6 +1594,20 @@
     .tl-date { font-size: .7rem; font-weight: 700; color: var(--accent); }
     .tl-cat-badge { font-size: .68rem; color: var(--sec); }
     .tl-sit { font-size: .79rem; color: var(--fg); line-height: 1.5; }
+    .tl-state { font-size: .64rem; font-weight: 700; }
+    .tl-what-changed { font-size: .72rem; color: var(--sec); margin-top: 4px; line-height: 1.5; font-style: italic; }
+
+    /* ── Relationship Journey ── */
+    .journey-bar {
+      padding: 10px 14px 12px; background: var(--surf); border: 1px solid var(--bord);
+      border-radius: var(--r-md); margin-bottom: 14px;
+    }
+    .journey-bar-lbl { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: block; margin-bottom: 8px; }
+    .journey-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .journey-step { display: flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 700; }
+    .journey-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .journey-date { font-size: .64rem; font-weight: 400; color: var(--muted); }
+    .journey-sep { font-size: .72rem; color: var(--bord2); }
 
     /* ── Toast ── */
     .toast {
@@ -3872,6 +3886,21 @@
         </div>`;
     }
 
+    function renderJourney(convs, escH) {
+      const snaps = convs
+        .filter(c => c.situation?.startsWith('WhatsApp history') && c.fields?.relationship_state)
+        .slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      if (snaps.length < 2) return '';
+      const dotColor = s => ({ Warm:'#20d47a', Flirty:'#f59e0b', Cold:'#60a5fa', Tense:'#ef4444', Distant:'#64748b' })[s] || 'var(--muted)';
+      const fmt = d => new Date(d).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+      const steps = snaps.map((snap, i) => {
+        const st = snap.fields.relationship_state;
+        const sep = i > 0 ? '<span class="journey-sep">→</span>' : '';
+        return `${sep}<span class="journey-step"><span class="journey-dot" style="background:${dotColor(st)}"></span><span class="${_stateClass(st)}">${escH(st)}</span><span class="journey-date">${fmt(snap.created_at)}</span></span>`;
+      }).join('');
+      return `<div class="journey-bar"><span class="journey-bar-lbl">Relationship over time</span><div class="journey-steps">${steps}</div></div>`;
+    }
+
     function wireContactImportBtn(contactId, contactName) {
       const setAndClick = (inpId) => {
         const inp = document.getElementById(inpId);
@@ -4324,6 +4353,8 @@
           </div>
           ${c.relationship_summary ? `<p class="person-summary">${escH(c.relationship_summary)}</p>` : ''}
 
+          ${renderJourney(convs, escH)}
+
           <button type="button" class="btn-person-continue" id="personContinueBtn">
             ${latestConv ? '→ Continue the conversation' : '✍️ Start a conversation'}
           </button>
@@ -4351,8 +4382,10 @@
                     <div class="tl-meta">
                       <span class="tl-date">${escH(shortDate)}</span>
                       ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
+                      ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
                     </div>
                     ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
+                    ${cv.fields?.what_changed ? `<div class="tl-what-changed">${escH(cv.fields.what_changed)}</div>` : ''}
                   </div>
                 </div>`;
               }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem">No conversations yet.</p>`}
