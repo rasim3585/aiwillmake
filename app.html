@@ -271,6 +271,36 @@
       transform: translateY(-3px);
     }
     .cat-card.active::after { opacity: 1; }
+    .cat-card.cat-secondary { opacity: .68; }
+    .cat-card.cat-secondary:hover, .cat-card.cat-secondary.active { opacity: 1; }
+    .cat-group-sep {
+      grid-column: 1 / -1;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted);
+      padding: 14px 0 2px; border-top: 1px solid var(--bord); margin-top: 4px;
+    }
+    /* ── Context gate (requires_contact gating) ── */
+    #contextGate {
+      background: rgba(212,113,90,0.06); border: 1px solid rgba(212,113,90,0.18);
+      border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px;
+    }
+    .context-gate-label {
+      font-size: .84rem; font-weight: 700; color: var(--text);
+    }
+    .context-gate-row { display: flex; gap: 8px; }
+    .context-gate-input {
+      flex: 1; padding: 9px 12px; background: var(--surf2); border: 1px solid var(--bord2);
+      border-radius: 9px; color: var(--text); font: inherit; font-size: .85rem; outline: none;
+      transition: border-color .2s;
+    }
+    .context-gate-input:focus { border-color: rgba(212,113,90,0.55); }
+    .context-gate-input::placeholder { color: var(--muted); }
+    .context-gate-btn {
+      padding: 9px 16px; background: var(--accent); border: none; border-radius: 9px;
+      color: #fff; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: opacity .15s;
+    }
+    .context-gate-btn:hover { opacity: .88; }
     .cat-icon-wrap {
       width: 70px; height: 70px; border-radius: 20px; font-size: 1.9rem;
       background: linear-gradient(135deg, rgba(212,113,90,.17), rgba(232,149,110,.12));
@@ -2226,6 +2256,13 @@
         <div class="form-inner">
           <div class="form-row" id="commonFields"></div>
           <div id="dynamicFields" style="display:grid;gap:18px"></div>
+          <div id="contextGate" class="hidden">
+            <div class="context-gate-label">Who is this for?</div>
+            <div class="context-gate-row">
+              <input type="text" id="contextGateInput" class="context-gate-input" placeholder="A name or role — e.g. Emma, my manager, startup founder" autocomplete="off" />
+              <button type="button" class="context-gate-btn" id="contextGateBtn">Set →</button>
+            </div>
+          </div>
           <div class="credit-wrap hidden" id="creditWrap">
             <div class="credit-row">
               <span class="credit-label" id="creditLabel">Generations used</span>
@@ -2533,13 +2570,20 @@
 
     function renderCategories() {
       const grid = document.getElementById('categoryGrid');
-      grid.innerHTML = appData.categories.map(cat =>
-        `<button type="button" class="cat-card" data-id="${cat.id}">
+      const catBtn = (cat, secondary = false) =>
+        `<button type="button" class="cat-card${secondary ? ' cat-secondary' : ''}" data-id="${cat.id}">
           <div class="cat-icon-wrap">${cat.icon}</div>
           <p class="cat-title">${cat.name}</p>
           <span class="cat-count">${cat.subcategories.length} types</span>
-        </button>`
-      ).join('');
+        </button>`;
+      const primary   = appData.categories.filter(c => c.requires_contact !== false);
+      const secondary = appData.categories.filter(c => c.requires_contact === false);
+      let html = primary.map(c => catBtn(c)).join('');
+      if (secondary.length) {
+        html += `<div class="cat-group-sep">Other content types</div>`;
+        html += secondary.map(c => catBtn(c, true)).join('');
+      }
+      grid.innerHTML = html;
       grid.querySelectorAll('.cat-card').forEach(card =>
         card.addEventListener('click', () => selectCategory(card.dataset.id))
       );
@@ -2591,6 +2635,7 @@
       document.getElementById('likelySection').classList.add('hidden');
       document.getElementById('simulatorSection').classList.add('hidden');
       document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      updateGenerateBtnState();
     }
 
     function fieldHTML(f, required) {
@@ -2711,7 +2756,23 @@
 
     function updateGenerateBtnState() {
       const btn = document.getElementById('generateBtn');
-      if (!btn || btn.disabled) return;
+      if (!btn) return;
+      const gateEl = document.getElementById('contextGate');
+
+      // Determine if this subcategory requires a contact/context
+      const cat = selectedCatId ? appData?.categories?.find(c => c.id === selectedCatId) : null;
+      const sub = (cat && selectedSubId) ? cat.subcategories.find(s => s.id === selectedSubId) : null;
+      const needsContact = (sub?.requires_contact ?? cat?.requires_contact ?? true) !== false;
+      const hasContext   = !!(activeContactContext?.name);
+
+      if (needsContact && !hasContext) {
+        btn.disabled = true;
+        if (gateEl) gateEl.classList.remove('hidden');
+        return;
+      }
+      if (gateEl) gateEl.classList.add('hidden');
+
+      if (btn.disabled) return; // skip label update during generation spinner
       const lbl = btn.querySelector('.btn-label');
       const sig = getGenerateSig();
       if (sig && sig === lastGeneratedSig) {
@@ -2721,6 +2782,15 @@
         lbl.textContent = 'Generate ✦';
         btn.classList.remove('btn-regenerated');
       }
+    }
+
+    function applyContextGate() {
+      const input = document.getElementById('contextGateInput');
+      const name  = input?.value?.trim();
+      if (!name) { input?.focus(); return; }
+      activeContactContext = { name };
+      updatePrevMsgFieldVisibility();
+      updateGenerateBtnState();
     }
 
     async function generate(variation = '') {
@@ -5418,6 +5488,10 @@
     document.getElementById('generateBtn').addEventListener('click', () => generate());
     document.getElementById('formCard').addEventListener('input',  updateGenerateBtnState);
     document.getElementById('formCard').addEventListener('change', updateGenerateBtnState);
+    document.getElementById('contextGateBtn')?.addEventListener('click', applyContextGate);
+    document.getElementById('contextGateInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); applyContextGate(); }
+    });
     document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);

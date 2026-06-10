@@ -140,6 +140,7 @@
 
     {
       "id": "social_media", "name": "Social Media", "icon": "📱",
+      "requires_contact": false,
       "subcategories": [
         {
           "id": "personal_photo", "name": "Personal Photo Caption",
@@ -416,6 +417,7 @@
         {
           "id": "cover_letter", "name": "Cover Letter",
           "description": "A compelling cover letter for a job application",
+          "requires_contact": false,
           "required_fields": [
             { "key": "job_title", "label": "Job title", "type": "text", "placeholder": "E.g.: Senior Product Designer, Marketing Manager..." },
             { "key": "company", "label": "Company name", "type": "text", "placeholder": "The company you're applying to" },
@@ -429,6 +431,7 @@
         {
           "id": "cv_summary", "name": "CV / Resume Summary",
           "description": "A professional summary paragraph for your CV or resume",
+          "requires_contact": false,
           "required_fields": [
             { "key": "profession", "label": "Your profession / field", "type": "text", "placeholder": "E.g.: Software engineer, marketing manager, UX designer..." },
             { "key": "years_experience", "label": "Years of experience", "type": "select", "options": ["0–2 years", "3–5 years", "6–10 years", "10+ years"] },
@@ -577,6 +580,7 @@
         {
           "id": "motivation_letter", "name": "Motivation Letter",
           "description": "Personal statement for university or program applications",
+          "requires_contact": false,
           "required_fields": [
             { "key": "program", "label": "Program / field", "type": "text", "placeholder": "E.g.: MSc Computer Science, MBA, LLB Law..." },
             { "key": "university", "label": "University / institution", "type": "text", "placeholder": "The institution you're applying to" },
@@ -590,6 +594,7 @@
         {
           "id": "scholarship_application", "name": "Scholarship Application",
           "description": "Applying for a scholarship or financial support",
+          "requires_contact": false,
           "required_fields": [
             { "key": "scholarship_name", "label": "Scholarship name / type", "type": "text", "placeholder": "E.g.: Chevening, Fulbright, departmental merit grant..." },
             { "key": "why_deserving", "label": "Why do you deserve this scholarship?", "type": "textarea", "placeholder": "Your merits, achievements, circumstances, and impact you aim to make..." },
@@ -641,6 +646,7 @@
         {
           "id": "internship_application", "name": "Internship Application",
           "description": "Applying for an internship position",
+          "requires_contact": false,
           "required_fields": [
             { "key": "company", "label": "Company name", "type": "text", "placeholder": "The company you're applying to" },
             { "key": "role", "label": "Internship role", "type": "text", "placeholder": "E.g.: Marketing intern, software engineering intern..." },
@@ -946,6 +952,7 @@
 
     {
       "id": "listings", "name": "Listings", "icon": "🏠",
+      "requires_contact": false,
       "subcategories": [
         {
           "id": "property_sale", "name": "Property for Sale",
@@ -1058,6 +1065,7 @@
         {
           "id": "song_lyrics", "name": "Song Lyrics",
           "description": "Writing lyrics for a song in any genre",
+          "requires_contact": false,
           "required_fields": [
             { "key": "theme", "label": "Theme / story", "type": "textarea", "placeholder": "What is the song about? A feeling, a story, a person, a moment..." },
             { "key": "genre", "label": "Genre", "type": "select", "options": ["Pop", "R&B / Soul", "Hip-hop / Rap", "Rock", "Folk / Acoustic", "Country", "Electronic / Dance", "Other"] },
@@ -1071,6 +1079,7 @@
         {
           "id": "poem", "name": "Poem",
           "description": "Any style of poem for any occasion or feeling",
+          "requires_contact": false,
           "required_fields": [
             { "key": "theme", "label": "Theme or subject", "type": "textarea", "placeholder": "What should the poem be about? A person, a feeling, a moment, nature..." },
             { "key": "style", "label": "Poetry style", "type": "select", "options": ["Free verse", "Rhyming", "Haiku", "Sonnet", "Ode", "Limerick / humorous"] },
@@ -1084,6 +1093,7 @@
         {
           "id": "biography", "name": "Biography / About Me",
           "description": "A personal or professional bio for any context",
+          "requires_contact": false,
           "required_fields": [
             { "key": "about_the_person", "label": "About the person", "type": "textarea", "placeholder": "Who they are, what they do, experience, achievements, personality..." },
             { "key": "context", "label": "Where will this bio be used?", "type": "select", "options": ["LinkedIn profile", "Personal website", "Conference / event speaker bio", "Book author bio", "Social media profile", "Press / media kit"] },
@@ -1097,6 +1107,7 @@
         {
           "id": "slogan", "name": "Slogan / Tagline",
           "description": "A catchy phrase for a brand, campaign, or product",
+          "requires_contact": false,
           "required_fields": [
             { "key": "brand_or_product", "label": "Brand or product name", "type": "text", "placeholder": "E.g.: BrewCo coffee, FitCore gym, Luma skincare..." },
             { "key": "what_it_does", "label": "What does it do?", "type": "text", "placeholder": "E.g.: Specialty coffee subscription, 24/7 gym, natural skincare for sensitive skin..." },
@@ -1121,6 +1132,7 @@
         {
           "id": "story_opening", "name": "Story Opening",
           "description": "The first paragraph of a story or novel — designed to hook the reader",
+          "requires_contact": false,
           "required_fields": [
             { "key": "genre", "label": "Genre", "type": "select", "options": ["Romance", "Thriller / Crime", "Fantasy", "Sci-fi", "Drama / Literary", "Mystery", "Horror", "Humor"] },
             { "key": "premise", "label": "Premise / setup", "type": "textarea", "placeholder": "What is the story about? Who is the main character? What situation are they in?" }
@@ -1146,6 +1158,7 @@
         {
           "id": "brand_voice", "name": "Brand Voice Statement",
           "description": "Defining how a brand communicates — its tone, style, and personality",
+          "requires_contact": false,
           "required_fields": [
             { "key": "brand_name", "label": "Brand name", "type": "text", "placeholder": "E.g.: Vela Studio, Greenify, PulseHealth..." },
             { "key": "what_brand_does", "label": "What does the brand do?", "type": "text", "placeholder": "E.g.: Sustainable fashion brand, B2B fintech platform, local bakery chain..." },
@@ -1159,6 +1172,7 @@
         {
           "id": "caption_creative", "name": "Creative Caption",
           "description": "An artistic or poetic caption for any image or artwork",
+          "requires_contact": false,
           "required_fields": [
             { "key": "image_description", "label": "Describe the image", "type": "textarea", "placeholder": "What does the image show? What feeling does it evoke? What's the context?" },
             { "key": "style", "label": "Caption style", "type": "select", "options": ["Poetic & lyrical", "Witty & clever", "Minimalist", "Storytelling", "Abstract & philosophical"] },
