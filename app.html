@@ -1720,7 +1720,7 @@
         <div id="wizChatInputPanel" class="hidden" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
           <button type="button" class="wiz-opt" id="wizUploadBtn" style="padding:12px 16px">
             <span class="wiz-opt-icon" style="font-size:1.2rem">📂</span>
-            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt file</span></div>
+            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt or screenshot</span></div>
             <span class="wiz-opt-arrow">→</span>
           </button>
           <div style="text-align:center;font-size:.76rem;color:var(--muted)">or</div>
@@ -1753,13 +1753,13 @@
           </button>
           <span class="smart-feedback hidden" id="smartFeedback"></span>
         </div>
-        <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt)</label>
+        <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt or screenshot)</label>
       </div>
     </section>
 
     <!-- File inputs live outside all mode sections so .click() always works -->
-    <input type="file" id="convFileInput" accept=".txt" style="display:none">
-    <input type="file" id="contactChatInput" accept=".txt" style="display:none">
+    <input type="file" id="convFileInput" accept=".txt,.jpg,.jpeg,.png,.webp" style="display:none">
+    <input type="file" id="contactChatInput" accept=".txt,.jpg,.jpeg,.png,.webp" style="display:none">
 
     <!-- Mode 2: Continue a Conversation -->
     <section id="continueSection" class="hidden">
@@ -3638,7 +3638,7 @@
       const box = document.createElement('div');
       box.id = 'waiBox'; box.className = 'wai-box';
       box.innerHTML = `
-        <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file.</p>
+        <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file. Or upload a screenshot of the conversation.</p>
         <button type="button" class="wai-btn" id="waiChooseBtn">Choose file →</button>`;
       document.getElementById('continueSection').querySelector('.continue-card').appendChild(box);
       document.getElementById('waiChooseBtn').addEventListener('click', () => document.getElementById('convFileInput').click());
@@ -3908,7 +3908,16 @@
       if (!file) return;
       const { contactId, contactName } = e.target.dataset;
       if (!contactId) return;
-      await analyzeContactChat(file, contactId, contactName);
+      if (file.type.startsWith('image/')) {
+        try {
+          const text = await extractScreenshot(file);
+          await analyzeContactChat(text, contactId, contactName);
+        } catch (_) {
+          showToast("Couldn't read the screenshot — try a clearer image or paste the text.", 'error');
+        }
+      } else {
+        await analyzeContactChat(file, contactId, contactName);
+      }
     });
 
     function showContactsPanel() {
@@ -4212,17 +4221,57 @@
     // ── Conversation Import ─────────────────────────────────────
     let _convAnalysis = null;
 
+    async function extractScreenshot(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const dataUrl = reader.result;
+          const commaIdx = dataUrl.indexOf(',');
+          const meta = dataUrl.slice(5, commaIdx);
+          const media_type = meta.split(';')[0];
+          const data = dataUrl.slice(commaIdx + 1);
+          const headers = { 'Content-Type': 'application/json' };
+          if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+          try {
+            const resp = await fetch('/api/extract-screenshot', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ images: [{ media_type, data }] })
+            });
+            if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error || 'OCR failed'); }
+            const json = await resp.json();
+            resolve(json.text || '');
+          } catch (err) { reject(err); }
+        };
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+      });
+    }
+
     document.getElementById('convFileInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       e.target.value = '';
-      // Show loading immediately — large files can take a moment to read
       const resultEl = document.getElementById('convAnalysisResult');
       resultEl.classList.remove('hidden');
-      resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading file…</p>' +
-        '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      const text = await file.text();
+      let text;
+      if (file.type.startsWith('image/')) {
+        resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading screenshot…</p>' +
+          '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+        try {
+          text = await extractScreenshot(file);
+        } catch (_) {
+          resultEl.innerHTML = '<p style="color:#e55;font-size:.84rem">Couldn\'t read the screenshot — try a clearer image or paste the text.</p>';
+          return;
+        }
+        resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Analyzing…</p>' +
+          '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+      } else {
+        resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading file…</p>' +
+          '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+        text = await file.text();
+      }
       analyzeConversation(text);
     });
 

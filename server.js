@@ -1327,6 +1327,46 @@ app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
   } catch (e) { console.error('[contacts DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
 
+app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
+  try {
+    const { images } = req.body; // array of { media_type, data }
+    if (!Array.isArray(images) || !images.length) {
+      return res.status(400).json({ error: 'images array required' });
+    }
+    const texts = [];
+    for (const img of images) {
+      const { media_type, data } = img;
+      if (!media_type || !data) continue;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 4096,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type, data } },
+              { type: 'text', text: 'Extract the visible conversation text from this screenshot. Output only the conversation as text — who said what, in order. No commentary.' }
+            ]
+          }]
+        })
+      });
+      const apiData = await response.json();
+      if (!response.ok) throw new Error(apiData.error?.message || 'OCR API error');
+      texts.push(apiData.content[0].text);
+    }
+    res.json({ text: texts.join('\n\n') });
+  } catch (e) {
+    console.error('[extract-screenshot]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));
