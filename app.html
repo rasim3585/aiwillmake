@@ -1776,6 +1776,12 @@
       font: inherit; font-size: .77rem; cursor: pointer; transition: background .18s;
     }
     .btn-del-contact:hover { background: rgba(239,68,68,.08); }
+    .btn-edit-contact {
+      flex: 1; background: none; border: 1px solid var(--border,rgba(0,0,0,.14));
+      color: var(--sec); border-radius: var(--r-sm); padding: 7px 12px;
+      font: inherit; font-size: .77rem; cursor: pointer; transition: background .18s;
+    }
+    .btn-edit-contact:hover { background: var(--surface2,rgba(0,0,0,.04)); }
 
     /* ── Contact Timeline ── */
     .contact-timeline { display: flex; flex-direction: column; }
@@ -4860,7 +4866,30 @@
             </div>
           </details>
 
-          <button type="button" class="btn-del-contact" style="margin-top:8px" id="personDelBtn">Delete this person</button>`;
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button type="button" class="btn-del-contact" id="personDelBtn">Delete this person</button>
+            <button type="button" class="btn-edit-contact" id="personEditBtn">Edit name &amp; type</button>
+          </div>
+          <div id="personEditForm" class="hidden" style="margin-top:10px;padding:12px;background:var(--surface2,rgba(0,0,0,.04));border-radius:10px">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <input id="personEditName" type="text" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border,rgba(0,0,0,.14));background:var(--bg,#fff);color:var(--fg,#000);font-size:.85rem" value="${escH(c.name)}">
+              <select id="personEditType" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border,rgba(0,0,0,.14));background:var(--bg,#fff);color:var(--fg,#000);font-size:.85rem">
+                <option value="">No type</option>
+                <option value="Ex" ${c.type==='Ex'?'selected':''}>Ex</option>
+                <option value="Partner" ${c.type==='Partner'?'selected':''}>Partner</option>
+                <option value="Crush" ${c.type==='Crush'?'selected':''}>Crush</option>
+                <option value="Friend" ${c.type==='Friend'?'selected':''}>Friend</option>
+                <option value="Family" ${c.type==='Family'?'selected':''}>Family</option>
+                <option value="Boss" ${c.type==='Boss'?'selected':''}>Boss</option>
+                <option value="Colleague" ${c.type==='Colleague'?'selected':''}>Colleague</option>
+                <option value="Client" ${c.type==='Client'?'selected':''}>Client</option>
+              </select>
+              <div style="display:flex;gap:8px">
+                <button type="button" id="personEditSaveBtn" style="flex:1;padding:8px 14px;border-radius:8px;background:var(--accent,#6366f1);color:#fff;border:none;font-size:.82rem;cursor:pointer">Save</button>
+                <button type="button" id="personEditCancelBtn" style="padding:8px 14px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--fg,#000);border:none;font-size:.82rem;cursor:pointer">Cancel</button>
+              </div>
+            </div>
+          </div>`;
 
         el.querySelectorAll('.tl-item[data-conv-id]').forEach(item => {
           item.addEventListener('click', () => restoreConversation(item.dataset.convId));
@@ -4920,6 +4949,43 @@
           if (firstCollapse) firstCollapse.insertAdjacentElement('afterend', analysisEl);
           else el.appendChild(analysisEl);
         }
+
+        document.getElementById('personEditBtn').addEventListener('click', () => {
+          document.getElementById('personEditForm').classList.toggle('hidden');
+        });
+
+        document.getElementById('personEditCancelBtn').addEventListener('click', () => {
+          document.getElementById('personEditForm').classList.add('hidden');
+        });
+
+        document.getElementById('personEditSaveBtn').addEventListener('click', async () => {
+          const newName = document.getElementById('personEditName').value.trim();
+          const newType = document.getElementById('personEditType').value;
+          if (!newName) { document.getElementById('personEditName').focus(); return; }
+          const saveBtn = document.getElementById('personEditSaveBtn');
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+          try {
+            const pr = await fetch(`/api/contacts/${contactId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ name: newName, type: newType || null })
+            });
+            const updated = await pr.json();
+            if (!pr.ok) throw new Error(updated.error);
+            activeContactContext = { ...activeContactContext, name: newName, type: newType || null };
+            el.querySelector('.person-name').textContent = newName;
+            const badgesEl = el.querySelector('.person-badges');
+            badgesEl.innerHTML =
+              (newType ? `<span class="ctype-badge ${_typeClass(newType)}">${escH(newType)}</span>` : '') +
+              (updated.relationship_state ? `<span class="contact-state ${_stateClass(updated.relationship_state)}">${escH(updated.relationship_state)}</span>` : '');
+            document.getElementById('personEditForm').classList.add('hidden');
+            showToast('Saved', 'success');
+          } catch {
+            showToast('Could not save. Please try again.', 'error');
+          } finally {
+            saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          }
+        });
 
         document.getElementById('personDelBtn').addEventListener('click', async () => {
           if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;

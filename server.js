@@ -66,7 +66,10 @@ app.get('/api/categories', (req, res) => {
 });
 
 async function requireAuth(req, res, next) {
-  if (!supabase) return next();
+  if (!supabase) {
+    console.error('[requireAuth] Supabase not configured — rejecting request to', req.path);
+    return res.status(503).json({ error: 'Auth not configured' });
+  }
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Authentication required. Please sign in.' });
   const { data: { user }, error } = await supabase.auth.getUser(token);
