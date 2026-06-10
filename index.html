@@ -4,17 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SayTheThing — AI Communication Coach for Difficult Conversations</title>
-  <meta name="description" content="Say the right thing. Know what to do next. AI that navigates the whole conversation — reads every reply, remembers what matters, and keeps you moving forward." />
+  <meta name="description" content="Navigate every conversation that matters. Know what to do next. AI that reads every reply, remembers the people involved, and keeps you moving forward." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="SayTheThing" />
   <meta property="og:url"         content="https://aiwillmake.com/" />
   <meta property="og:title"       content="SayTheThing — AI Communication Coach for Difficult Conversations" />
-  <meta property="og:description" content="Say the right thing. Know what to do next. AI that navigates the whole conversation — reads every reply, remembers what matters, and keeps you moving forward." />
+  <meta property="og:description" content="Navigate every conversation that matters. Know what to do next. AI that reads every reply, remembers the people involved, and keeps you moving forward." />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="SayTheThing — AI Communication Coach for Difficult Conversations" />
-  <meta name="twitter:description" content="Say the right thing. Know what to do next. AI that navigates the whole conversation — reads every reply, remembers what matters, and keeps you moving forward." />
+  <meta name="twitter:description" content="Navigate every conversation that matters. Know what to do next. AI that reads every reply, remembers the people involved, and keeps you moving forward." />
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -404,9 +404,35 @@
       font-size: .78rem; color: var(--muted);
     }
 
+    /* ════════ MOAT GRID ════════ */
+    .moat-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 20px;
+    }
+    .moat-card {
+      background: linear-gradient(145deg, rgba(212,113,90,0.09), rgba(232,149,110,0.03));
+      border: 1.5px solid rgba(212,113,90,0.22); border-radius: 24px; padding: 40px 36px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.22);
+      transition: box-shadow .22s, transform .22s;
+    }
+    .moat-card:hover { box-shadow: 0 8px 40px rgba(212,113,90,0.18); transform: translateY(-2px); }
+    .moat-icon {
+      font-size: 1.8rem; width: 58px; height: 58px; border-radius: 16px;
+      background: rgba(212,113,90,0.12); border: 1px solid rgba(212,113,90,0.22);
+      display: grid; place-items: center; margin-bottom: 22px;
+    }
+    .moat-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; letter-spacing: -.01em; }
+    .moat-tagline { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 14px; }
+    .moat-desc { color: var(--sec); font-size: .9rem; line-height: 1.7; margin-bottom: 16px; }
+    .moat-vs {
+      display: inline-block; font-size: .75rem; font-weight: 700;
+      background: rgba(212,113,90,0.10); border: 1px solid rgba(212,113,90,0.20);
+      color: var(--accent); padding: 5px 12px; border-radius: 6px;
+    }
+
     /* ════════ RESPONSIVE ════════ */
     @media (max-width: 860px) {
       .feat-grid  { grid-template-columns: 1fr; }
+      .moat-grid  { grid-template-columns: 1fr; }
       .steps      { grid-template-columns: 1fr; gap: 16px; }
       .samples    { grid-template-columns: 1fr; }
       .price-grid { grid-template-columns: 1fr; }
@@ -455,7 +481,7 @@
         <span class="hero-badge-dot"></span>
         AI Communication Coach
       </div>
-      <h1>Say the right thing.</h1>
+      <h1>Navigate every conversation that matters.</h1>
       <p class="hero-h2">Know what to do next.</p>
       <h2 class="hero-sub">Not just a message writer — a conversation navigator. We read their replies, remember what's been said, and keep you moving forward.</h2>
       <div>
@@ -575,6 +601,35 @@
 
 <hr class="hr" />
 
+<!-- What makes it different -->
+<section class="s">
+  <div class="wrap">
+    <div class="s-head c">
+      <div class="s-label">What makes it different</div>
+      <h2 class="s-title">Two things no other tool does.</h2>
+      <p class="s-sub">These aren't just features — they're why navigating a real conversation is fundamentally different from generating a single message.</p>
+    </div>
+    <div class="moat-grid">
+      <div class="moat-card">
+        <div class="moat-icon">🧠</div>
+        <div class="moat-name">Contact Memory</div>
+        <p class="moat-tagline">It remembers the people who matter.</p>
+        <p class="moat-desc">For every contact, we build a picture: how they communicate, how the relationship has evolved, and what's worked before. Every new conversation starts with that context already loaded — not from scratch.</p>
+        <span class="moat-vs">ChatGPT forgets. We remember.</span>
+      </div>
+      <div class="moat-card">
+        <div class="moat-icon">🎭</div>
+        <div class="moat-name">Conversation Simulator</div>
+        <p class="moat-tagline">Practice before you send.</p>
+        <p class="moat-desc">The AI plays the other person — based on everything you've told us about them. Run the conversation before it's real. See how they're likely to respond and adjust your approach before you press send.</p>
+        <span class="moat-vs">Test the real conversation first.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hr" />
+
 <!-- How it works -->
 <section class="s" id="how">
   <div class="wrap">
@@ -652,7 +707,7 @@
     <div class="s-head c">
       <div class="s-label">See it in action</div>
       <h2 class="s-title">Real inputs. Real output.</h2>
-      <p class="s-sub">Not templates — genuinely personalized text based on what you tell it.</p>
+      <p class="s-sub">Not templates — personalized to your actual situation.</p>
     </div>
     <div class="samples">
       <div class="sample-card">
@@ -666,21 +721,21 @@
       </div>
       <div class="sample-card">
         <div class="sample-meta">
-          <div class="sample-ic">📧</div>
-          <span class="sample-cat">Business · Cover Letter</span>
+          <div class="sample-ic">🔄</div>
+          <span class="sample-cat">Work · Follow-up</span>
         </div>
-        <div class="sample-prompt">"Applying for a Senior Product Designer role at Stripe. 6 years in fintech UX, led a team of 4."</div>
+        <div class="sample-prompt">"My manager gave me vague feedback in my review three weeks ago. I want to follow up but don't want to come across as insecure or pushy."</div>
         <div class="sample-sep">Output · Version 1</div>
-        <div class="sample-out">Six years ago, I joined a payments startup with a checkout flow that took 11 steps to complete. When I left, it took three. That obsession with reducing friction is what draws me to Stripe — and to this role.</div>
+        <div class="sample-out">Hey — I've been sitting with the feedback from our review and wanted to check in. I have a clearer sense of what I want to work on, but I'd love 20 minutes to make sure I'm focused on the right things. Does that work this week?</div>
       </div>
       <div class="sample-card">
         <div class="sample-meta">
-          <div class="sample-ic">✍️</div>
-          <span class="sample-cat">Creative · Wedding Speech</span>
+          <div class="sample-ic">💸</div>
+          <span class="sample-cat">Personal · Difficult Conversation</span>
         </div>
-        <div class="sample-prompt">"Best man speech for my brother's wedding. Known him 28 years, he's terrible with directions but amazing with people."</div>
+        <div class="sample-prompt">"A close friend borrowed $300 three months ago and hasn't mentioned it once. I need to bring it up without damaging the friendship."</div>
         <div class="sample-sep">Output · Version 1</div>
-        <div class="sample-out">In 28 years, I have watched my brother get lost in three airports, two car parks, and once — inexplicably — his own street. But I have never once seen him lose track of a person who matters to him.</div>
+        <div class="sample-out">Hey — I've been putting off saying this because I don't want it to be weird, but I could really use that money back when you're able. No urgency at all, I just didn't want to let it sit unsaid. You good?</div>
       </div>
     </div>
   </div>
@@ -770,7 +825,7 @@
   <div class="ft-inner">
     <div>
       <div class="ft-brand g">aiwillmake</div>
-      <div class="ft-desc">AI writing for every situation.</div>
+      <div class="ft-desc">AI that helps you navigate your most important conversations.</div>
     </div>
     <nav class="ft-links">
       <a href="#how" class="ft-link">How it works</a>
@@ -807,8 +862,8 @@
       } else {
         document.getElementById('googleBtn').style.display = 'inline-flex';
         document.getElementById('ctaBtn').style.display = 'none';
-        document.getElementById('ctaBottom').textContent = 'Start Writing Free';
-        document.getElementById('authStatus').textContent = 'Sign in to start writing for free.';
+        document.getElementById('ctaBottom').textContent = 'Start for free';
+        document.getElementById('authStatus').textContent = 'Sign in to start for free.';
       }
     } catch (e) {
       console.warn('Auth init failed:', e);
