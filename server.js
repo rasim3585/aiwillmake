@@ -171,7 +171,8 @@ function buildContactContext(contactContext) {
   const patterns = Array.isArray(contactContext.observed_patterns) && contactContext.observed_patterns.length
     ? contactContext.observed_patterns.join('; ')
     : null;
-  return `\n\nCONTEXT about the recipient (${contactContext.name}): Based on past conversations, here's what we've observed: ${patterns || 'No specific patterns yet'}. Current relationship state: ${contactContext.relationship_state || 'Unknown'}.
+  const summary = contactContext.relationship_summary || null;
+  return `\n\nCONTEXT about the recipient (${contactContext.name}): Based on past conversations, here's what we've observed: ${patterns || 'No specific patterns yet'}. Current relationship state: ${contactContext.relationship_state || 'Unknown'}.${summary ? ` Latest recommended action: ${summary}` : ''}
 Use these observations to make your strategies, predictions, and analysis more accurate and personal.
 STRICT RULES: Do not diagnose personality traits. Do not assume intent or label them psychologically. Use these observed tendencies only as soft probabilistic signals, never as certainties.`;
 }

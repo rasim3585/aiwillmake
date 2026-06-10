@@ -832,6 +832,9 @@
     .analysis-box-text { font-size: .83rem; line-height: 1.58; }
     .analysis-said-box  .analysis-box-text { color: var(--sec); }
     .analysis-meant-box .analysis-box-text { color: #dfc3a0; }
+    .analysis-hidden-signal-box { background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.22); }
+    .analysis-hidden-signal-box .analysis-box-lbl { color: #818cf8; }
+    .analysis-hidden-signal-box .analysis-box-text { color: #c4caf7; }
     .analysis-box-disclaimer { font-size: .68rem; color: var(--muted); font-style: italic; margin-top: 2px; }
 
     /* ── Reply timing ── */
@@ -1353,7 +1356,7 @@
       padding: 9px 13px; border-radius: 9px;
       background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
     }
-    .conv-risk::before { content: '⚠  '; }
+    .conv-risk-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fb923c; display: block; margin-bottom: 4px; }
     .btn-conv-generate {
       width: 100%; padding: 13px; border: none; border-radius: var(--r-lg);
       background: linear-gradient(95deg, var(--accent), var(--acc2));
@@ -2198,6 +2201,7 @@
     let activeContactContext = null;
     let currentConvId     = null;
     let _recentMessages   = [];
+    let _pendingContactAnalysis = null;
 
     async function init() {
       try {
@@ -2725,6 +2729,12 @@
               <span class="analysis-box-text">${escH(data.what_they_might_mean)}</span>
               <span class="analysis-box-disclaimer">A possible reading — not a certainty.</span>
             </div>` : ''}
+          ${data.hidden_signal ? `
+            <div class="analysis-meant-box analysis-hidden-signal-box">
+              <span class="analysis-box-lbl">💡 What they're really signaling</span>
+              <span class="analysis-box-text">${escH(data.hidden_signal)}</span>
+              <span class="analysis-box-disclaimer">A possible reading — not a certainty.</span>
+            </div>` : ''}
           ${data.risk           ? `<div class="analysis-risk">⚠ ${escH(data.risk)}</div>` : ''}
           ${data.reply_timing ? `
             <div class="analysis-timing-wrap">
@@ -3171,7 +3181,8 @@
             type: data.contacts.type || null,
             relationship_state: data.contacts.relationship_state || null,
             observed_patterns: Array.isArray(data.contacts.observed_patterns) && data.contacts.observed_patterns.length
-              ? data.contacts.observed_patterns : null
+              ? data.contacts.observed_patterns : null,
+            relationship_summary: data.contacts.relationship_summary || null
           };
         } else {
           activeContactContext = null;
@@ -3962,7 +3973,10 @@
         } catch { /* patterns already saved; conversation record is a bonus */ }
 
         showToast(`✓ Saved to ${contactName}'s history`, 'success');
-        if (accessToken) loadPersonSection(contactId);
+        if (accessToken) {
+          _pendingContactAnalysis = { contactId, data };
+          loadPersonSection(contactId);
+        }
       } catch {
         if (patternsEl) {
           patternsEl.innerHTML = renderContactPatterns(contactName, null);
@@ -4224,7 +4238,8 @@
         activeContactContext = {
           id: c.id, name: c.name, type: c.type || null,
           relationship_state: c.relationship_state || null,
-          observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
+          observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null,
+          relationship_summary: c.relationship_summary || null
         };
         updatePrevMsgFieldVisibility();
 
@@ -4319,6 +4334,33 @@
 
         wireContactImportBtn(contactId, c.name);
 
+        if (_pendingContactAnalysis?.contactId === contactId) {
+          const ad = _pendingContactAnalysis.data;
+          _pendingContactAnalysis = null;
+          const escHa = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const lvla = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
+          const badges = [
+            ad.interest_level ? `<div class="conv-badge ${lvla(ad.interest_level)}"><span class="conv-badge-lbl">Interest</span><span class="conv-badge-val">${escHa(ad.interest_level)}</span></div>` : '',
+            ad.emotional_tone ? `<div class="conv-badge cb-tone"><span class="conv-badge-lbl">Tone</span><span class="conv-badge-val">${escHa(ad.emotional_tone)}</span></div>` : '',
+            ad.total_messages ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Messages</span><span class="conv-badge-val">${escHa(ad.total_messages)}</span></div>` : '',
+            ad.days_since_last ? `<div class="conv-badge cb-neu"><span class="conv-badge-lbl">Days since</span><span class="conv-badge-val">${escHa(ad.days_since_last)}</span></div>` : '',
+          ].filter(Boolean).join('');
+          const analysisEl = document.createElement('details');
+          analysisEl.className = 'person-collapse';
+          analysisEl.open = true;
+          analysisEl.innerHTML = `
+            <summary>Latest chat analysis <span class="person-collapse-count">${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></summary>
+            <div>
+              ${badges ? `<div class="conv-analysis-badges" style="flex-wrap:wrap;gap:5px;margin-bottom:8px">${badges}</div>` : ''}
+              ${ad.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escHa(ad.power_balance)}</div>` : ''}
+              ${ad.key_moment ? `<div class="conv-key-moment">${escHa(ad.key_moment)}</div>` : ''}
+              ${ad.biggest_risk ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk in this dynamic</span>${escHa(ad.biggest_risk)}</div>` : ''}
+            </div>`;
+          const firstCollapse = el.querySelector('details.person-collapse');
+          if (firstCollapse) firstCollapse.insertAdjacentElement('afterend', analysisEl);
+          else el.appendChild(analysisEl);
+        }
+
         document.getElementById('personDelBtn').addEventListener('click', async () => {
           if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
           try {
@@ -4397,7 +4439,8 @@
             id: contactId,
             name: c.name,
             relationship_state: c.relationship_state || null,
-            observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
+            observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null,
+            relationship_summary: c.relationship_summary || null
           };
           updatePrevMsgFieldVisibility();
           selectMode(1); // clearContext=false → context preserved
@@ -4503,7 +4546,7 @@
         ${analysisData.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escH(analysisData.power_balance)}</div>` : ''}
         ${analysisData.key_moment    ? `<div class="conv-key-moment">${escH(analysisData.key_moment)}</div>` : ''}
         ${analysisData.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(analysisData.recommended_next)}</div></div>` : ''}
-        ${analysisData.biggest_risk  ? `<div class="conv-risk">${escH(analysisData.biggest_risk)}</div>` : ''}
+        ${analysisData.biggest_risk  ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk in this dynamic</span>${escH(analysisData.biggest_risk)}</div>` : ''}
         <button type="button" class="btn-conv-generate" id="convGenerateBtn">
           → Now, what do you want to say?
         </button>`;
