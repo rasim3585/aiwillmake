@@ -1054,6 +1054,32 @@
       box-shadow: 0 8px 24px rgba(212,113,90,.25);
     }
     .btn-new-conv:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(212,113,90,.35); }
+    .home-import-hook {
+      background: rgba(212,113,90,.06); border: 1px solid rgba(212,113,90,.15);
+      border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 14px;
+    }
+    .home-import-hint { font-size: .84rem; color: var(--sec); margin-bottom: 12px; line-height: 1.5; }
+    .home-import-btns { display: flex; gap: 8px; }
+    .home-import-btn {
+      flex: 1; text-align: center; padding: 10px 8px;
+      background: rgba(212,113,90,.1); border: 1px solid rgba(212,113,90,.22);
+      border-radius: 10px; cursor: pointer; font: 600 .84rem/1 inherit;
+      color: var(--accent); transition: background .18s; user-select: none;
+    }
+    .home-import-btn:hover { background: rgba(212,113,90,.18); }
+    .conv-save-cta {
+      display: flex; align-items: center; gap: 10px; margin-top: 10px;
+      padding: 12px 14px; border: 1px dashed rgba(212,113,90,.3);
+      border-radius: 10px; background: rgba(212,113,90,.05);
+    }
+    .conv-save-cta-text { font-size: .83rem; color: var(--sec); flex: 1; line-height: 1.45; }
+    .btn-save-from-analysis {
+      background: rgba(212,113,90,.14); border: 1px solid rgba(212,113,90,.28);
+      color: var(--accent); font: 600 .81rem/1 inherit; padding: 8px 13px;
+      border-radius: 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background .18s;
+    }
+    .btn-save-from-analysis:hover { background: rgba(212,113,90,.24); }
     .home-conv-list { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: hidden; }
     .home-conv-label {
       font-size: .69rem; font-weight: 700; text-transform: uppercase;
@@ -1816,6 +1842,13 @@
     <section id="homeSection">
       <h1 class="home-heading">Your <span>conversations</span></h1>
       <p class="home-sub">Pick up where you left off, or start something new.</p>
+      <div class="home-import-hook">
+        <p class="home-import-hint">Drop a WhatsApp chat — see the full picture in seconds.</p>
+        <div class="home-import-btns">
+          <label class="home-import-btn" for="convImgInput">📷 Screenshot</label>
+          <label class="home-import-btn" for="convTxtInput">📄 .txt file</label>
+        </div>
+      </div>
       <button type="button" class="btn-new-conv" onclick="openNewConversation()">+ New conversation</button>
       <div class="home-conv-label">Recent</div>
       <div id="homeConvList" class="home-conv-list"></div>
@@ -3069,7 +3102,14 @@
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
         if (!data.length) {
-          listEl.innerHTML = '<p class="home-conv-empty">No conversations yet. Start your first one above.</p>';
+          listEl.innerHTML = `
+            <div class="home-import-hook" style="margin-bottom:0">
+              <p class="home-import-hint">No conversations yet — upload a WhatsApp chat to see what's really going on.</p>
+              <div class="home-import-btns">
+                <label class="home-import-btn" for="convImgInput">📷 Screenshot</label>
+                <label class="home-import-btn" for="convTxtInput">📄 .txt file</label>
+              </div>
+            </div>`;
           return;
         }
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -4809,6 +4849,43 @@
         });
       } else {
         primaryBtn.addEventListener('click', () => triggerGenerate(primaryBtn));
+      }
+
+      // "Save as contact" CTA — standalone analysis only (no existing contact id)
+      if (analysisData.person_b && !activeContactContext?.id && accessToken) {
+        const saveCta = document.createElement('div');
+        saveCta.className = 'conv-save-cta'; saveCta.id = 'convSaveCta';
+        saveCta.innerHTML = `
+          <span class="conv-save-cta-text">Remember this conversation with <strong>${escH(analysisData.person_b)}</strong>?</span>
+          <button type="button" class="btn-save-from-analysis" id="convSaveContactBtn">Save ${escH(analysisData.person_b)} →</button>`;
+        resultEl.appendChild(saveCta);
+
+        document.getElementById('convSaveContactBtn').addEventListener('click', async () => {
+          const btn = document.getElementById('convSaveContactBtn');
+          btn.disabled = true; btn.textContent = 'Saving…';
+          try {
+            const r = await fetch('/api/contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({
+                name: analysisData.person_b,
+                relationship_state: analysisData.emotional_tone ? mapToneToState(analysisData.emotional_tone) : null,
+                observed_patterns: Array.isArray(analysisData.observed_patterns) && analysisData.observed_patterns.length
+                  ? analysisData.observed_patterns : null,
+                source: 'ai'
+              })
+            });
+            const saved = await r.json();
+            if (!r.ok) throw new Error(saved.error);
+            showToast(`✓ ${analysisData.person_b} added — I'll remember them`, 'success');
+            document.getElementById('convSaveCta')?.remove();
+            if (activeContactContext) activeContactContext.id = saved.id;
+            loadHomeConvList();
+          } catch (err) {
+            showToast(err.message || 'Could not save. Please try again.', 'error');
+            btn.disabled = false; btn.textContent = `Save ${analysisData.person_b} →`;
+          }
+        });
       }
     }
 
