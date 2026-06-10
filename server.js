@@ -1432,6 +1432,32 @@ app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
   }
 });
 
+app.post('/api/simulate-reply', limiter, async (req, res) => {
+  try {
+    const { character, history, language } = req.body;
+    if (!character || !Array.isArray(history) || history.length === 0) {
+      return res.status(400).json({ error: 'character and history are required' });
+    }
+    const lang = language || 'English';
+    const patterns = Array.isArray(character.observed_patterns) && character.observed_patterns.length
+      ? character.observed_patterns.join('; ')
+      : 'No specific patterns available';
+    const systemPrompt = `You ARE ${character.name || 'the other person'}. Respond exactly as ${character.name || 'they'} would, based on these behavioral patterns: ${patterns}. Relationship type: ${character.type || 'unknown'}. Relationship state: ${character.relationship_state || 'unknown'}.${character.relationship_summary ? ` Context: ${character.relationship_summary}` : ''}
+Stay in character. Write short, realistic replies: 1-3 sentences. No acting notes, no parentheticals, no quotation marks around your response. Respond in ${lang}.`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: systemPrompt, messages: history })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+    res.json({ reply: data.content?.[0]?.text?.trim() || '' });
+  } catch (e) {
+    console.error('[simulate-reply]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));

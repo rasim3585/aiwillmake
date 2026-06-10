@@ -798,6 +798,85 @@
     }
     .sim-use-btn:hover { background: rgba(212,113,90,.2); }
 
+    /* ── Role-play practice modal ── */
+    .roleplay-modal {
+      position: fixed; inset: 0; z-index: 400;
+      background: rgba(26,25,24,.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .roleplay-modal.hidden { display: none; }
+    .roleplay-card {
+      background: var(--surf); border: 1px solid var(--bord); border-radius: var(--r);
+      width: 100%; max-width: 520px; max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .roleplay-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--bord); flex-shrink: 0;
+    }
+    .roleplay-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+    .roleplay-close {
+      background: none; border: none; cursor: pointer; color: var(--sec);
+      font-size: 1.1rem; padding: 4px 8px; border-radius: 6px; line-height: 1;
+      transition: background .15s, color .15s;
+    }
+    .roleplay-close:hover { background: var(--surf2); color: var(--text); }
+    .roleplay-turn-bar {
+      padding: 6px 16px; font-size: .73rem; color: var(--sec);
+      border-bottom: 1px solid var(--bord); flex-shrink: 0;
+    }
+    .roleplay-messages {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      min-height: 200px;
+    }
+    .rp-bubble {
+      max-width: 80%; padding: 10px 13px; border-radius: 14px; font-size: .87rem; line-height: 1.55;
+      animation: fadeUp .2s ease both; word-break: break-word;
+    }
+    .rp-bubble.user {
+      align-self: flex-end; background: var(--accent); color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .rp-bubble.other {
+      align-self: flex-start; background: var(--surf2); color: var(--text);
+      border: 1px solid var(--bord); border-bottom-left-radius: 4px;
+    }
+    .rp-typing {
+      align-self: flex-start; background: var(--surf2); border: 1px solid var(--bord);
+      padding: 10px 14px; border-radius: 14px; border-bottom-left-radius: 4px;
+      font-size: .82rem; color: var(--sec); animation: fadeUp .2s ease both;
+    }
+    .roleplay-suggest { padding: 8px 16px; text-align: center; flex-shrink: 0; }
+    .roleplay-suggest-btn {
+      background: none; border: 1px solid var(--bord); border-radius: 20px;
+      padding: 6px 14px; color: var(--sec); font: inherit; font-size: .78rem;
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .roleplay-suggest-btn:hover { background: var(--surf2); color: var(--text); }
+    .roleplay-footer {
+      display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--bord); flex-shrink: 0;
+    }
+    .roleplay-input {
+      flex: 1; background: var(--surf2); border: 1px solid var(--bord); border-radius: 10px;
+      padding: 9px 13px; color: var(--text); font: inherit; font-size: .87rem;
+      resize: none; line-height: 1.4; min-height: 40px; max-height: 120px; overflow-y: auto;
+      outline: none; transition: border-color .15s;
+    }
+    .roleplay-input:focus { border-color: var(--bord2); }
+    .roleplay-send {
+      background: var(--accent); border: none; border-radius: 10px;
+      padding: 9px 16px; color: #fff; font: inherit; font-size: .85rem; font-weight: 700;
+      cursor: pointer; flex-shrink: 0; align-self: flex-end; transition: opacity .15s;
+    }
+    .roleplay-send:disabled { opacity: .45; cursor: default; }
+    .practice-btn {
+      border: 1px solid rgba(212,113,90,.35); border-radius: var(--r-sm);
+      padding: 5px 11px; background: rgba(212,113,90,.08); color: var(--accent);
+      cursor: pointer; font: inherit; font-size: .77rem; font-weight: 600;
+      transition: background .18s; flex-shrink: 0;
+    }
+    .practice-btn:hover { background: rgba(212,113,90,.18); }
+
     /* ── Reply Analysis ── */
     .reply-analysis { margin-bottom: 16px; animation: fadeUp .3s ease both; }
     .analysis-metrics { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
@@ -1785,6 +1864,25 @@
     </div>
   </div>
 
+  <!-- Role-play practice modal -->
+  <div id="simulationModal" class="roleplay-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rp-title">
+    <div class="roleplay-card">
+      <div class="roleplay-header">
+        <span class="roleplay-title" id="rp-title">Practicing with…</span>
+        <button class="roleplay-close" id="rp-close" aria-label="Close">✕</button>
+      </div>
+      <div class="roleplay-turn-bar" id="rp-turn">Turn 1</div>
+      <div class="roleplay-messages" id="rp-messages"></div>
+      <div class="roleplay-suggest hidden" id="rp-suggest">
+        <button class="roleplay-suggest-btn" id="rp-suggest-btn">End &amp; see how it went →</button>
+      </div>
+      <div class="roleplay-footer">
+        <textarea class="roleplay-input" id="rp-input" placeholder="Write your next message…" rows="1"></textarea>
+        <button class="roleplay-send" id="rp-send">Send →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Auth gate -->
   <div id="authGate" class="auth-gate hidden">
     <div class="auth-card">
@@ -2688,7 +2786,10 @@
                 <span class="caption-num">${i + 1}</span>
                 ${badge ? `<span class="caption-badge">${escHtml(badge)}</span>` : ''}
               </div>
-              <button type="button" class="copy-btn">Copy</button>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button type="button" class="copy-btn">Copy</button>
+                <button type="button" class="practice-btn">⚡ Practice →</button>
+              </div>
             </div>
             <p class="caption-text">${displayText}</p>
             ${(reply_barrier || emotional_pressure || emotional_state) ? `
@@ -2722,6 +2823,9 @@
             const panel = card.querySelector('.caption-analysis');
             const open  = panel.classList.toggle('open');
             e.target.textContent = open ? 'Hide analysis ▴' : 'Show analysis ▾';
+          });
+          card.querySelector('.practice-btn').addEventListener('click', () => {
+            openSimulator(text, activeContactContext);
           });
           container.appendChild(card);
         });
@@ -5220,6 +5324,109 @@
       rec.start();
     }
     // ─────────────────────────────────────────────────────────────
+
+    // ── Role-play practice simulator ──────────────────────────────────────────
+    let _simHistory   = [];
+    let _simCharacter = null;
+    let _simTurn      = 1;
+
+    function openSimulator(msgText, contactCtx) {
+      if (!msgText?.trim()) return;
+      _simCharacter = contactCtx
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary }
+        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '' };
+      _simHistory = [{ role: 'user', content: msgText }];
+      _simTurn = 1;
+
+      document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
+      document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
+      document.getElementById('rp-messages').innerHTML = '';
+      document.getElementById('rp-input').value = '';
+      document.getElementById('rp-suggest').classList.add('hidden');
+      document.getElementById('simulationModal').classList.remove('hidden');
+
+      _rpAppendBubble('user', msgText);
+      _rpCallSimulate();
+    }
+
+    function _rpAppendBubble(role, text) {
+      const el = document.createElement('div');
+      el.className = `rp-bubble ${role}`;
+      el.textContent = text;
+      const container = document.getElementById('rp-messages');
+      container.appendChild(el);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function _rpShowTyping() {
+      const el = document.createElement('div');
+      el.className = 'rp-typing';
+      el.id = 'rp-typing-indicator';
+      el.textContent = '…';
+      const container = document.getElementById('rp-messages');
+      container.appendChild(el);
+      container.scrollTop = container.scrollHeight;
+      return el;
+    }
+
+    async function _rpCallSimulate() {
+      const sendBtn = document.getElementById('rp-send');
+      const input   = document.getElementById('rp-input');
+      sendBtn.disabled = true;
+      input.disabled   = true;
+      const typingEl = _rpShowTyping();
+      try {
+        const lang = lastFields?.language || 'English';
+        const resp = await fetch('/api/simulate-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang })
+        });
+        const data = await resp.json();
+        typingEl.remove();
+        if (!resp.ok) throw new Error(data.error || 'Failed');
+        _simHistory.push({ role: 'assistant', content: data.reply });
+        _rpAppendBubble('other', data.reply);
+        _simTurn++;
+        document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
+        if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
+      } catch (e) {
+        typingEl.remove();
+        _rpAppendBubble('other', 'Something went wrong — try again.');
+        console.error('[simulate-reply]', e);
+      } finally {
+        sendBtn.disabled = false;
+        input.disabled   = false;
+        input.focus();
+      }
+    }
+
+    function _rpClose() {
+      document.getElementById('simulationModal').classList.add('hidden');
+      _simHistory = []; _simCharacter = null;
+    }
+
+    document.getElementById('rp-close').addEventListener('click', _rpClose);
+    document.getElementById('rp-suggest-btn').addEventListener('click', _rpClose);
+    document.getElementById('simulationModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) _rpClose();
+    });
+
+    const _rpInput = document.getElementById('rp-input');
+    const _rpSend  = document.getElementById('rp-send');
+
+    _rpInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _rpSend.click(); }
+    });
+    _rpSend.addEventListener('click', () => {
+      const text = _rpInput.value.trim();
+      if (!text || _rpSend.disabled) return;
+      _simHistory.push({ role: 'user', content: text });
+      _rpAppendBubble('user', text);
+      _rpInput.value = '';
+      _rpCallSimulate();
+    });
+    // ─────────────────────────────────────────────────────────────────────────
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); });
   </script>
