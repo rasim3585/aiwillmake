@@ -1201,7 +1201,7 @@
       background: var(--surf2); border-color: var(--bord2);
       transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,.2);
     }
-    .home-conv-name { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+    .home-conv-name { font-size: .95rem; font-weight: 700; margin-bottom: 4px; padding-right: 26px; }
     .home-conv-preview {
       font-size: .82rem; color: var(--sec); margin-bottom: 10px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1860,6 +1860,42 @@
       font: inherit; font-size: .86rem; cursor: pointer; transition: color .2s;
     }
     .btn-later:hover { color: var(--sec); }
+
+    /* ── Conv Search ── */
+    .home-conv-search {
+      width: 100%; padding: 10px 14px;
+      background: var(--surf); border: 1px solid var(--bord);
+      border-radius: 11px; color: var(--text); font: inherit; font-size: .88rem;
+      outline: none; margin-bottom: 12px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .home-conv-search:focus { border-color: var(--bord2); box-shadow: 0 0 0 3px rgba(212,113,90,0.10); }
+    .home-conv-search::placeholder { color: var(--muted); }
+    /* ── Date group header ── */
+    .home-conv-section {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px;
+    }
+    /* ── Delete button on home card ── */
+    .home-conv-del {
+      position: absolute; top: 12px; right: 14px;
+      width: 20px; height: 20px; border-radius: 5px;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1.1rem; line-height: 1;
+      display: grid; place-items: center; padding: 0;
+      opacity: 0; transition: opacity .15s, background .15s, color .15s;
+    }
+    .home-conv-card:hover .home-conv-del { opacity: 1; }
+    .home-conv-del:hover { background: rgba(248,113,113,0.14); color: #f87171; }
+    /* ── Timeline delete button ── */
+    .tl-del-btn {
+      font-size: .7rem; color: var(--muted); background: none; border: none;
+      cursor: pointer; padding: 2px 7px; border-radius: 5px;
+      margin-left: auto; flex-shrink: 0;
+      opacity: 0; transition: opacity .15s, color .15s, background .15s;
+    }
+    .tl-item:hover .tl-del-btn { opacity: 1; }
+    .tl-del-btn:hover { color: #f87171; background: rgba(248,113,113,0.10); }
   </style>
 </head>
 <body>
@@ -1983,7 +2019,7 @@
         </div>
       </div>
       <button type="button" class="btn-new-conv" onclick="openNewConversation()">+ New conversation</button>
-      <div class="home-conv-label">Recent</div>
+      <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Search conversations or people…" autocomplete="off" />
       <div id="homeConvList" class="home-conv-list"></div>
     </section>
 
@@ -2464,6 +2500,7 @@
     let selectedMsgText = '';
     let activeContactContext = null;
     let currentConvId     = null;
+    let allConvData       = [];
     let _recentMessages   = [];
     let _pendingContactAnalysis = null;
 
@@ -3240,116 +3277,198 @@
         const r = await fetch('/api/conversations', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
-        if (!data.length) {
-          listEl.innerHTML = `
-            <div class="home-import-hook" style="margin-bottom:0">
+        allConvData = data;
+        const q = document.getElementById('convSearchInput')?.value?.trim() || '';
+        renderConvList(q ? filterConvData(data, q) : data);
+      } catch {
+        document.getElementById('homeConvList').innerHTML = '<p class="home-conv-empty" style="color:#f87171">Could not load conversations.</p>';
+      }
+    }
+
+    function filterConvData(data, q) {
+      const lq = q.toLowerCase();
+      const convMatches = c =>
+        (c.contacts?.name || '').toLowerCase().includes(lq) ||
+        (c.situation || '').toLowerCase().includes(lq) ||
+        (c.conversation_messages || []).some(m => (m.content || '').toLowerCase().includes(lq));
+      const matchedContactIds = new Set();
+      data.forEach(c => { if (c.contact_id && convMatches(c)) matchedContactIds.add(c.contact_id); });
+      return data.filter(c => c.contact_id ? matchedContactIds.has(c.contact_id) : convMatches(c));
+    }
+
+    function renderConvList(data) {
+      const listEl = document.getElementById('homeConvList');
+      const q = document.getElementById('convSearchInput')?.value?.trim() || '';
+      if (!data.length) {
+        const escQ = q.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        listEl.innerHTML = q
+          ? `<p class="home-conv-empty">No matches for "${escQ}".</p>`
+          : `<div class="home-import-hook" style="margin-bottom:0">
               <p class="home-import-hint">No conversations yet — upload a WhatsApp chat to see what's really going on.</p>
               <div class="home-import-btns">
                 <label class="home-import-btn" for="convImgInput">📷 Screenshot</label>
                 <label class="home-import-btn" for="convTxtInput">📄 .txt file</label>
               </div>
             </div>`;
-          return;
-        }
-        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const fmt = d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-        const stripPrefix = t => t.replace(/^\[[^\]]+\]\s+(?:[A-Z]\w*\s*&\s*[A-Z]\w*\s+)?/, '');
-        listEl.innerHTML = '';
-
-        // Group by contact_id; contactless convs get secondary grouping by extracted name
-        const contactGroups = new Map(); // contact_id → { name, convs[] }
-        const soloConvs = [];
-        data.forEach(c => {
-          if (c.contact_id) {
-            if (!contactGroups.has(c.contact_id))
-              contactGroups.set(c.contact_id, { name: c.contacts?.name || 'Unknown', convs: [] });
-            contactGroups.get(c.contact_id).convs.push(c);
-          } else {
-            soloConvs.push(c);
-          }
-        });
-
-        // For solos: "WhatsApp history with X" → try to merge into matching contact group,
-        // or fall into a name-keyed group. Prevents the same person appearing as two cards.
-        const nameGroups = new Map(); // extracted name → convs[]
-        const trueSoloConvs = [];
-        soloConvs.forEach(c => {
-          const waName = c.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
-          if (waName) {
-            const matchGroup = [...contactGroups.values()].find(g => g.name === waName);
-            if (matchGroup) {
-              matchGroup.convs.push(c); // merge into existing contact group
-            } else {
-              if (!nameGroups.has(waName)) nameGroups.set(waName, []);
-              nameGroups.get(waName).push(c);
-            }
-          } else {
-            trueSoloConvs.push(c);
-          }
-        });
-
-        const renderHomeCard = (conv, titleOverride, contactId = null) => {
-          const msgs = conv.conversation_messages || [];
-          const lastMsg = msgs[msgs.length - 1];
-          let status = '';
-          if (msgs.length > 0) {
-            if (lastMsg?.role === 'sent') status = 'Waiting for reply';
-            else if (lastMsg?.role === 'received') status = 'Your move';
-          }
-
-          let preview;
-          if (lastMsg) {
-            const raw = lastMsg.content.length > 58 ? lastMsg.content.slice(0, 58) + '…' : lastMsg.content;
-            const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
-            const contactName = conv.contacts?.name || waName || null;
-            const prefix = lastMsg.role === 'sent' ? 'You' : (contactName || 'Them');
-            preview = escH(`${prefix}: ${raw}`);
-          } else {
-            const raw = stripPrefix(conv.situation || '—');
-            preview = escH(raw.length > 65 ? raw.slice(0, 65) + '…' : raw);
-          }
-
-          let title = titleOverride;
-          if (!title) {
-            const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
-            const cat = appData?.categories?.find(x => x.id === conv.category_id);
-            const sub = cat?.subcategories?.find(x => x.id === conv.subcategory_id);
-            title = escH(waName || conv.contacts?.name || sub?.name || cat?.name || conv.category_id || 'Conversation');
-          }
-
-          const card = document.createElement('div');
-          card.className = 'home-conv-card';
-          card.innerHTML = `
-            <div class="home-conv-name">${title}</div>
-            <div class="home-conv-preview">${preview}</div>
-            <div class="home-conv-foot">
-              <span>${fmt(conv.created_at)}</span>
-              ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
-            </div>`;
-          card.addEventListener('click', () => contactId ? loadPersonSection(contactId) : restoreConversation(conv.id));
-          listEl.appendChild(card);
-        };
-
-        contactGroups.forEach(({ name, convs }, contactId) => {
-          convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          const title = convs.length > 1
-            ? escH(`${name} (${convs.length} conversations)`)
-            : escH(name);
-          renderHomeCard(convs[0], title, contactId);
-        });
-
-        nameGroups.forEach((convs, name) => {
-          convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          const title = convs.length > 1
-            ? escH(`${name} (${convs.length} conversations)`)
-            : escH(name);
-          renderHomeCard(convs[0], title);
-        });
-
-        trueSoloConvs.forEach(c => renderHomeCard(c));
-      } catch {
-        listEl.innerHTML = '<p class="home-conv-empty" style="color:#f87171">Could not load conversations.</p>';
+        return;
       }
+
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const fmt = d => new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const stripPrefix = t => t.replace(/^\[[^\]]+\]\s+(?:[A-Z]\w*\s*&\s*[A-Z]\w*\s+)?/, '');
+      listEl.innerHTML = '';
+
+      // Group by contact_id; contactless convs get secondary grouping by extracted name
+      const contactGroups = new Map();
+      const soloConvs = [];
+      data.forEach(c => {
+        if (c.contact_id) {
+          if (!contactGroups.has(c.contact_id))
+            contactGroups.set(c.contact_id, { name: c.contacts?.name || 'Unknown', convs: [] });
+          contactGroups.get(c.contact_id).convs.push(c);
+        } else {
+          soloConvs.push(c);
+        }
+      });
+
+      // Merge WA solos into contact groups or nameGroups
+      const nameGroups = new Map();
+      const trueSoloConvs = [];
+      soloConvs.forEach(c => {
+        const waName = c.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+        if (waName) {
+          const matchGroup = [...contactGroups.values()].find(g => g.name === waName);
+          if (matchGroup) {
+            matchGroup.convs.push(c);
+          } else {
+            if (!nameGroups.has(waName)) nameGroups.set(waName, []);
+            nameGroups.get(waName).push(c);
+          }
+        } else {
+          trueSoloConvs.push(c);
+        }
+      });
+
+      const renderHomeCard = (conv, titleOverride, contactId = null, isDeletable = false) => {
+        const msgs = conv.conversation_messages || [];
+        const lastMsg = msgs[msgs.length - 1];
+        let status = '';
+        if (msgs.length > 0) {
+          if (lastMsg?.role === 'sent') status = 'Waiting for reply';
+          else if (lastMsg?.role === 'received') status = 'Your move';
+        }
+
+        let preview;
+        if (lastMsg) {
+          const raw = lastMsg.content.length > 58 ? lastMsg.content.slice(0, 58) + '…' : lastMsg.content;
+          const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+          const contactName = conv.contacts?.name || waName || null;
+          const prefix = lastMsg.role === 'sent' ? 'You' : (contactName || 'Them');
+          preview = escH(`${prefix}: ${raw}`);
+        } else {
+          const raw = stripPrefix(conv.situation || '—');
+          preview = escH(raw.length > 65 ? raw.slice(0, 65) + '…' : raw);
+        }
+
+        let title = titleOverride;
+        if (!title) {
+          const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+          const cat = appData?.categories?.find(x => x.id === conv.category_id);
+          const sub = cat?.subcategories?.find(x => x.id === conv.subcategory_id);
+          title = escH(waName || conv.contacts?.name || sub?.name || cat?.name || conv.category_id || 'Conversation');
+        }
+
+        const card = document.createElement('div');
+        card.className = 'home-conv-card';
+        card.innerHTML = `
+          <div class="home-conv-name">${title}</div>
+          <div class="home-conv-preview">${preview}</div>
+          <div class="home-conv-foot">
+            <span>${fmt(conv.created_at)}</span>
+            ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
+          </div>`;
+
+        card.addEventListener('click', () => contactId ? loadPersonSection(contactId) : restoreConversation(conv.id));
+
+        if (isDeletable) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'home-conv-del';
+          delBtn.title = 'Delete conversation';
+          delBtn.setAttribute('aria-label', 'Delete');
+          delBtn.textContent = '×';
+          delBtn.addEventListener('click', async e => {
+            e.stopPropagation();
+            if (!confirm('Delete this conversation? This cannot be undone.')) return;
+            try {
+              const dr = await fetch(`/api/conversations/${conv.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
+              if (!dr.ok) throw new Error();
+              card.remove();
+              allConvData = allConvData.filter(c => c.id !== conv.id);
+            } catch { showToast('Could not delete. Please try again.', 'error'); }
+          });
+          card.appendChild(delBtn);
+        }
+
+        listEl.appendChild(card);
+      };
+
+      // Render contact groups sorted by latest updated_at
+      [...contactGroups.entries()]
+        .sort((a, b) => Math.max(...b[1].convs.map(c => +new Date(c.updated_at))) - Math.max(...a[1].convs.map(c => +new Date(c.updated_at))))
+        .forEach(([contactId, { name, convs }]) => {
+          convs.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+          const title = convs.length > 1 ? escH(`${name} (${convs.length} conversations)`) : escH(name);
+          renderHomeCard(convs[0], title, contactId, false);
+        });
+
+      // Render nameGroups sorted by latest updated_at
+      [...nameGroups.entries()]
+        .sort((a, b) => +new Date(b[1][0].updated_at) - +new Date(a[1][0].updated_at))
+        .forEach(([name, convs]) => {
+          convs.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+          const title = convs.length > 1 ? escH(`${name} (${convs.length} conversations)`) : escH(name);
+          renderHomeCard(convs[0], title, null, false);
+        });
+
+      // Render trueSoloConvs with date grouping
+      if (!trueSoloConvs.length) return;
+      trueSoloConvs.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
+
+      const now = Date.now();
+      const WEEK  = 7  * 24 * 60 * 60 * 1000;
+      const MONTH = 30 * 24 * 60 * 60 * 1000;
+      const dateGroups = [
+        { label: 'This week',  items: trueSoloConvs.filter(c => now - +new Date(c.updated_at) < WEEK) },
+        { label: 'This month', items: trueSoloConvs.filter(c => { const a = now - +new Date(c.updated_at); return a >= WEEK && a < MONTH; }) },
+        { label: 'Earlier',    items: trueSoloConvs.filter(c => now - +new Date(c.updated_at) >= MONTH) },
+      ];
+      const hasContactCards = contactGroups.size > 0 || nameGroups.size > 0;
+      const multiDateGroups = dateGroups.filter(g => g.items.length).length > 1;
+      const showHeaders = hasContactCards || multiDateGroups;
+
+      dateGroups.forEach(({ label, items }) => {
+        if (!items.length) return;
+        if (showHeaders) {
+          const hdr = document.createElement('div');
+          hdr.className = 'home-conv-section';
+          hdr.textContent = label;
+          listEl.appendChild(hdr);
+        }
+        items.forEach(c => renderHomeCard(c, null, null, true));
+      });
+    }
+
+    function initConvSearch() {
+      const searchEl = document.getElementById('convSearchInput');
+      if (!searchEl) return;
+      let timer;
+      searchEl.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          const q = searchEl.value.trim();
+          renderConvList(q ? filterConvData(allConvData, q) : allConvData);
+        }, 250);
+      });
     }
 
     async function loadConvList() {
@@ -4658,6 +4777,7 @@
                       <span class="tl-date">${escH(shortDate)}</span>
                       ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
                       ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
+                      <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Delete conversation">Delete</button>
                     </div>
                     ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
                     ${cv.fields?.what_changed ? `<div class="tl-what-changed">${escH(cv.fields.what_changed)}</div>` : ''}
@@ -4671,6 +4791,19 @@
 
         el.querySelectorAll('.tl-item[data-conv-id]').forEach(item => {
           item.addEventListener('click', () => restoreConversation(item.dataset.convId));
+        });
+
+        el.querySelectorAll('.tl-del-btn[data-conv-id]').forEach(btn => {
+          btn.addEventListener('click', async e => {
+            e.stopPropagation();
+            if (!confirm('Delete this conversation? This cannot be undone.')) return;
+            try {
+              const dr = await fetch(`/api/conversations/${btn.dataset.convId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
+              if (!dr.ok) throw new Error();
+              btn.closest('.tl-item').remove();
+              allConvData = allConvData.filter(c => c.id !== btn.dataset.convId);
+            } catch { showToast('Could not delete. Please try again.', 'error'); }
+          });
         });
 
         document.getElementById('personContinueBtn').addEventListener('click', () => {
@@ -5500,7 +5633,7 @@
     });
     // ─────────────────────────────────────────────────────────────────────────
 
-    initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); });
+    initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); initConvSearch(); });
   </script>
 </body>
 </html>

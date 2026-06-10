@@ -1228,6 +1228,23 @@ app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, asy
   }
 });
 
+app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const cr = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id`,
+      { headers: sbHeaders(req.token) });
+    const cd = await cr.json();
+    if (!Array.isArray(cd) || !cd.length) return res.status(404).json({ error: 'Not found' });
+    // Delete messages first (safe even if CASCADE already handles it)
+    await fetch(`${SUPABASE_REST}/conversation_messages?conversation_id=eq.${req.params.id}`,
+      { method: 'DELETE', headers: sbHeaders(req.token) });
+    const r = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}`,
+      { method: 'DELETE', headers: sbHeaders(req.token) });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(JSON.stringify(d)); }
+    console.log('[conv DELETE]', req.params.id);
+    res.json({ deleted: true });
+  } catch (e) { console.error('[conv DELETE]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 // ── Contacts ───────────────────────────────────────────────────
 // SQL to run in Supabase SQL Editor before using these endpoints:
 //   CREATE TABLE IF NOT EXISTS contacts (
