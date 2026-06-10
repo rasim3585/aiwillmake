@@ -993,10 +993,19 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
 
     const lang = language || 'English';
     // Head (identity/context) + tail (recent dynamics) preserves both ends
-    const HEAD = 2000, TAIL = 12000;
-    const snippet = conversationText.length > HEAD + TAIL
-      ? conversationText.slice(0, HEAD) + '\n[...]\n' + conversationText.slice(-TAIL)
-      : conversationText;
+    const FULL_THRESHOLD = 175000;
+    let snippet;
+    if (conversationText.length <= FULL_THRESHOLD) {
+      snippet = conversationText;
+    } else {
+      const HEAD = 3000, MID = 5000, TAIL = 6000;
+      const midStart = Math.floor((conversationText.length - MID) / 2);
+      snippet = (
+        conversationText.slice(0, HEAD) + '\n[...]\n' +
+        conversationText.slice(midStart, midStart + MID) + '\n[...]\n' +
+        conversationText.slice(-TAIL)
+      );
+    }
 
     const prevBlock = previousContext
       ? `PREVIOUS CONTEXT (from analysis on ${previousContext.date}):\n- Interest: ${previousContext.interest_level || '?'} · Tone: ${previousContext.emotional_tone || '?'} · State: ${previousContext.relationship_state || '?'}${previousContext.patterns?.length ? `\n- Patterns observed then: ${previousContext.patterns.join(' | ')}` : ''}\n\n`

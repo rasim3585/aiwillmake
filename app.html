@@ -3972,10 +3972,15 @@
     }
 
     function trimConversation(text) {
-      const HEAD = 2000, TAIL = 12000;
-      return text.length > HEAD + TAIL
-        ? text.slice(0, HEAD) + '\n[...]\n' + text.slice(-TAIL)
-        : text;
+      if (text.length <= 175000) return text; // full conversation fits in 200K context
+      // Sample: beginning (identity) + middle (dynamics) + end (current state)
+      const HEAD = 3000, MID = 5000, TAIL = 6000;
+      const midStart = Math.floor((text.length - MID) / 2);
+      return (
+        text.slice(0, HEAD) + '\n[...]\n' +
+        text.slice(midStart, midStart + MID) + '\n[...]\n' +
+        text.slice(-TAIL)
+      );
     }
 
     async function analyzeContactChat(fileOrText, contactId, contactName) {
@@ -3992,7 +3997,9 @@
       }
 
       try {
-        const text = trimConversation(typeof fileOrText === 'string' ? fileOrText : await fileOrText.text());
+        const rawText = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
+        const text = trimConversation(rawText);
+        const wasSampled = text.length < rawText.length;
 
         // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
         let previousContext = null;
@@ -4092,7 +4099,7 @@
           }
         } catch { /* patterns already saved; conversation record is a bonus */ }
 
-        showToast(`✓ Saved to ${contactName}'s history`, 'success');
+        showToast(`✓ Saved to ${contactName}'s history${wasSampled ? ' · sampled (beginning, middle & end)' : ''}`, 'success');
         if (accessToken) {
           _pendingContactAnalysis = { contactId, data };
           loadPersonSection(contactId);
@@ -4744,14 +4751,22 @@
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       try {
+        const trimmedConv = trimConversation(conversationText);
+        const wasSampled = trimmedConv.length < conversationText.length;
         const resp = await fetch('/api/analyze-conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conversationText: trimConversation(conversationText), language: lastFields.language || 'English' })
+          body: JSON.stringify({ conversationText: trimmedConv, language: lastFields.language || 'English' })
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(data.error || (resp.status === 413 ? 'File too large — please try a shorter conversation or paste the text.' : `Server error (${resp.status})`));
         renderConvAnalysis(data);
+        if (wasSampled) {
+          const note = document.createElement('p');
+          note.style.cssText = 'font-size:.77rem;color:var(--sec);opacity:.75;margin:0 0 10px';
+          note.textContent = 'Analysis based on a representative sample (beginning, middle & end) — conversation was too long to send in full.';
+          resultEl.prepend(note);
+        }
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (e) {
