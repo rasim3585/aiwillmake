@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://aiwillmake.com/sitemap.xml
