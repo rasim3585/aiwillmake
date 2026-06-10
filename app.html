@@ -213,6 +213,25 @@
     .smart-feedback.ok  { color: var(--ok); }
     .smart-feedback.err { color: #f87171; }
     .smart-feedback.hidden { display: none; }
+    .voice-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(212,113,90,.15); color: var(--accent);
+      font-size: 1rem; transition: background .2s, transform .15s;
+      flex-shrink: 0;
+    }
+    .voice-btn:hover { background: rgba(212,113,90,.28); transform: scale(1.07); }
+    .voice-btn.listening {
+      background: rgba(220,50,50,.18); color: #e05050;
+      animation: voice-pulse .9s ease-in-out infinite;
+    }
+    .voice-btn.hidden { display: none; }
+    @keyframes voice-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220,50,50,.45); }
+      50%       { box-shadow: 0 0 0 7px rgba(220,50,50,0); }
+    }
+    .voice-ta-wrap { position: relative; }
+    .voice-ta-wrap .voice-btn { position: absolute; top: 8px; right: 8px; z-index: 1; }
 
     /* ── Skeleton ── */
     .skeleton {
@@ -1751,6 +1770,7 @@
           <button type="button" class="btn-detect" id="detectBtn" onclick="detectCategory()">
             ✦ Detect Category →
           </button>
+          <button type="button" class="voice-btn hidden" id="voiceSmartBtn" title="Voice input" onclick="startVoice('smartInput','voiceSmartBtn')">🎤</button>
           <span class="smart-feedback hidden" id="smartFeedback"></span>
         </div>
         <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt or screenshot)</label>
@@ -1935,7 +1955,10 @@
         <div id="recentMsgsWidget" class="recent-msgs hidden"></div>
         <div id="simRestoreNote" class="sim-restore-note hidden"></div>
         <div class="sim-input-area">
-          <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
+          <div class="voice-ta-wrap">
+            <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
+            <button type="button" class="voice-btn hidden" id="voiceReplyBtn" title="Voice input" onclick="startVoice('theirReplyInput','voiceReplyBtn')">🎤</button>
+          </div>
           <div id="prevMsgField" class="prev-msg-field hidden">
             <label for="prevMsgInput">What did you say right before this? <span style="opacity:.6">(optional)</span></label>
             <textarea id="prevMsgInput" class="sim-textarea" placeholder="Paste your previous message for more accurate analysis…"></textarea>
@@ -4601,6 +4624,61 @@
         setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 320);
       }
     });
+
+    // ── Voice Input ──────────────────────────────────────────────
+    const _SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let _voiceRec = null;
+
+    if (_SR) {
+      document.getElementById('voiceSmartBtn')?.classList.remove('hidden');
+      document.getElementById('voiceReplyBtn')?.classList.remove('hidden');
+    }
+
+    function startVoice(targetId, btnId) {
+      const btn = document.getElementById(btnId);
+      const ta  = document.getElementById(targetId);
+
+      if (_voiceRec) {
+        _voiceRec.stop();
+        return;
+      }
+
+      const rec = new _SR();
+      rec.lang = 'tr-TR';
+      rec.continuous = false;
+      rec.interimResults = true;
+
+      const baseText = ta.value.trimEnd();
+      btn.classList.add('listening');
+      btn.title = 'Stop';
+      _voiceRec = rec;
+
+      rec.onresult = (e) => {
+        const latest = e.results[e.results.length - 1];
+        const transcript = latest[0].transcript;
+        ta.value = baseText ? baseText + ' ' + transcript : transcript;
+        ta.dispatchEvent(new Event('input'));
+      };
+
+      rec.onend = () => {
+        btn.classList.remove('listening');
+        btn.title = 'Voice input';
+        _voiceRec = null;
+        ta.dispatchEvent(new Event('input'));
+      };
+
+      rec.onerror = (e) => {
+        btn.classList.remove('listening');
+        btn.title = 'Voice input';
+        _voiceRec = null;
+        if (e.error === 'not-allowed') {
+          showToast('Microphone access needed for voice input.', 'error');
+        }
+      };
+
+      rec.start();
+    }
+    // ─────────────────────────────────────────────────────────────
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); });
   </script>
