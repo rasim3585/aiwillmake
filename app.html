@@ -1369,6 +1369,45 @@
       background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2);
     }
     .conv-what-changed-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fbbf24; display: block; margin-bottom: 4px; }
+    /* ── Conversation Brief ── */
+    .conv-brief {
+      background: rgba(212,113,90,.07); border: 1px solid rgba(212,113,90,.18);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .conv-brief-title {
+      font-size: .63rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--accent); margin-bottom: 10px;
+    }
+    .conv-brief-row {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+      font-size: .83rem; line-height: 1.45;
+    }
+    .conv-brief-row:last-child { margin-bottom: 0; }
+    .conv-brief-lbl {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--sec); min-width: 52px; padding-top: 2px; flex-shrink: 0;
+    }
+    .conv-brief-val { color: var(--fg); flex: 1; }
+    .action-badge {
+      display: inline-block; font-size: .62rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .07em;
+      padding: 2px 7px; border-radius: 20px; margin-right: 6px; vertical-align: middle;
+    }
+    .action-send  { background: rgba(212,113,90,.2); color: var(--accent); }
+    .action-wait  { background: rgba(251,191,36,.15); color: #fbbf24; }
+    .action-call  { background: rgba(96,165,250,.15); color: #60a5fa; }
+    .action-none  { background: rgba(148,163,184,.12); color: #94a3b8; }
+    .action-bound { background: rgba(167,139,250,.15); color: #a78bfa; }
+    .sig-strong { color: #4ade80; font-weight: 600; }
+    .sig-mod    { color: #fbbf24; font-weight: 600; }
+    .sig-weak   { color: #fb923c; font-weight: 600; }
+    .btn-conv-generate-alt {
+      width: 100%; padding: 8px; background: none; border: none;
+      color: var(--sec); font: inherit; font-size: .82rem; cursor: pointer;
+      text-align: center; margin-top: 4px; opacity: .65; border-radius: var(--r-lg);
+    }
+    .btn-conv-generate-alt:hover { opacity: 1; color: var(--fg); }
+
     .btn-conv-generate {
       width: 100%; padding: 13px; border: none; border-radius: var(--r-lg);
       background: linear-gradient(95deg, var(--accent), var(--acc2));
@@ -4676,7 +4715,37 @@
       const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const lvl  = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
 
-      resultEl.innerHTML = `
+      const actionType = analysisData.action_type || 'SEND_MESSAGE';
+      const actionLabel = { SEND_MESSAGE:'Send Message', WAIT:'Wait', CALL:'Call', DO_NOTHING:'Do Nothing', SET_BOUNDARY:'Set Boundary' }[actionType] || actionType;
+      const actionClass = { SEND_MESSAGE:'action-send', WAIT:'action-wait', CALL:'action-call', DO_NOTHING:'action-none', SET_BOUNDARY:'action-bound' }[actionType] || 'action-send';
+      const sigClass = { Strong:'sig-strong', Moderate:'sig-mod', Weak:'sig-weak' }[analysisData.signal_strength] || '';
+
+      const nowText = [analysisData.emotional_tone, analysisData.interest_level ? `Interest: ${analysisData.interest_level}` : ''].filter(Boolean).join(' · ');
+
+      const briefHtml = `
+        <div class="conv-brief">
+          <div class="conv-brief-title">Decision Brief</div>
+          ${nowText ? `<div class="conv-brief-row"><span class="conv-brief-lbl">Now</span><span class="conv-brief-val">${escH(nowText)}</span></div>` : ''}
+          ${analysisData.biggest_risk ? `<div class="conv-brief-row"><span class="conv-brief-lbl">Risk</span><span class="conv-brief-val">${escH(analysisData.biggest_risk)}</span></div>` : ''}
+          ${analysisData.action_detail ? `<div class="conv-brief-row"><span class="conv-brief-lbl">Move</span><span class="conv-brief-val"><span class="action-badge ${actionClass}">${escH(actionLabel)}</span>${escH(analysisData.action_detail)}</span></div>` : ''}
+          ${analysisData.avoid ? `<div class="conv-brief-row"><span class="conv-brief-lbl">Avoid</span><span class="conv-brief-val">${escH(analysisData.avoid)}</span></div>` : ''}
+          ${analysisData.signal_strength ? `<div class="conv-brief-row"><span class="conv-brief-lbl">Signal</span><span class="conv-brief-val ${sigClass}">${escH(analysisData.signal_strength)}</span></div>` : ''}
+        </div>`;
+
+      const isWaitType = actionType === 'WAIT' || actionType === 'DO_NOTHING';
+      const isCallType = actionType === 'CALL';
+      let ctaHtml;
+      if (isWaitType) {
+        ctaHtml = `<button type="button" class="btn-conv-generate" id="convGenerateBtn">✓ Got it, I'll wait</button>
+                   <button type="button" class="btn-conv-generate-alt" id="convGenerateBtnAlt">Write anyway →</button>`;
+      } else if (isCallType) {
+        ctaHtml = `<button type="button" class="btn-conv-generate" id="convGenerateBtn">✓ I'll call them</button>
+                   <button type="button" class="btn-conv-generate-alt" id="convGenerateBtnAlt">Write a message instead →</button>`;
+      } else {
+        ctaHtml = `<button type="button" class="btn-conv-generate" id="convGenerateBtn">→ Now, what do you want to say?</button>`;
+      }
+
+      resultEl.innerHTML = briefHtml + `
         <div class="conv-analysis-head">
           <span class="conv-analysis-title">Conversation with ${escH(analysisData.person_b || 'Unknown')}</span>
           ${analysisData.total_messages ? `<span class="conv-analysis-sub">${escH(analysisData.total_messages)} messages total</span>` : ''}
@@ -4690,55 +4759,57 @@
         </div>
         ${analysisData.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escH(analysisData.power_balance)}</div>` : ''}
         ${analysisData.key_moment    ? `<div class="conv-key-moment">${escH(analysisData.key_moment)}</div>` : ''}
-        ${analysisData.recommended_next ? `<div class="conv-recommended"><div class="conv-rec-lbl">→ Recommended next step</div><div class="conv-rec-text">${escH(analysisData.recommended_next)}</div></div>` : ''}
-        ${analysisData.biggest_risk  ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk in this dynamic</span>${escH(analysisData.biggest_risk)}</div>` : ''}
-        <button type="button" class="btn-conv-generate" id="convGenerateBtn">
-          → Now, what do you want to say?
-        </button>`;
+        ${ctaHtml}`;
 
-      document.getElementById('convGenerateBtn').addEventListener('click', async () => {
+      // Helper: trigger message generation
+      const triggerGenerate = async (btn) => {
         const d = _convAnalysis;
-        const btn = document.getElementById('convGenerateBtn');
         btn.disabled = true; btn.textContent = 'Setting up…';
-
         if (!activeContactContext && d.person_b) {
           activeContactContext = {
             id: null, name: d.person_b,
             relationship_state: d.emotional_tone || null,
             observed_patterns: Array.isArray(d.observed_patterns) && d.observed_patterns.length
-              ? d.observed_patterns : (d.recommended_next ? [d.recommended_next] : null)
+              ? d.observed_patterns : (d.action_detail ? [d.action_detail] : null)
           };
           updatePrevMsgFieldVisibility();
         }
-
         const summary = [
           d.person_b ? `I need to write to ${d.person_b}.` : '',
           d.emotional_tone ? `The tone has been ${d.emotional_tone.toLowerCase()}.` : '',
-          d.recommended_next || ''
+          d.action_detail || ''
         ].filter(Boolean).join(' ');
-
         resultEl.classList.add('hidden');
         selectMode(1, false);
-
         const situationText = [
-          d.recommended_next || '',
+          d.action_detail || '',
           d.key_moment ? `Context: ${d.key_moment}` : '',
           d.power_balance || ''
         ].filter(Boolean).join(' ');
-
         await generateFromContext({
-          summaryText:   summary,
-          situationText,
-          analysisData:  d,
-          personName:    d.person_b,
-          emotionalTone: d.emotional_tone,
+          summaryText: summary, situationText, analysisData: d,
+          personName: d.person_b, emotionalTone: d.emotional_tone,
           onFail: () => {
             document.getElementById('smartInput').value = summary.trim();
             document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            btn.disabled = false; btn.textContent = '→ Now, what do you want to say?';
+            btn.disabled = false;
           }
         });
-      });
+      };
+
+      const primaryBtn = document.getElementById('convGenerateBtn');
+      if (isWaitType || isCallType) {
+        // Primary: acknowledge only
+        primaryBtn.addEventListener('click', () => {
+          primaryBtn.textContent = '✓ Noted'; primaryBtn.disabled = true;
+        });
+        // Alt: generate message
+        document.getElementById('convGenerateBtnAlt')?.addEventListener('click', function() {
+          triggerGenerate(this);
+        });
+      } else {
+        primaryBtn.addEventListener('click', () => triggerGenerate(primaryBtn));
+      }
     }
 
     async function analyzeConversation(conversationText) {

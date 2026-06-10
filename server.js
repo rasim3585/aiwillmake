@@ -1029,8 +1029,11 @@ EMOTIONAL_TONE: [overall tone — one or two words]
 KEY_MOMENT: [most significant moment in the conversation — one sentence]
 LAST_MESSAGE_BY: [A or B]
 DAYS_SINCE_LAST: [number of days if timestamps visible, otherwise omit]
-RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
+ACTION_TYPE: [exactly one of: SEND_MESSAGE / WAIT / CALL / DO_NOTHING / SET_BOUNDARY — the best move RIGHT NOW. The best move is NOT always sending a message. If they need space, choose WAIT. If a real conversation is needed, choose CALL. If reaching out would hurt the dynamic, choose DO_NOTHING. Be honest, not optimistic.]
+ACTION_DETAIL: [one sentence — what to do and why, in the conversation's language]
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
+AVOID: [what NOT to do right now — one sentence]
+SIGNAL_STRENGTH: [exactly one of: Strong / Moderate / Weak — confidence in this analysis. Weak if very few messages or context is unclear.]
 OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
 ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]${whatChangedLine}
 
@@ -1066,7 +1069,8 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       : [];
     const what_changed = previousContext ? (extract('WHAT_CHANGED') || null) : null;
 
-    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| patterns:', observed_patterns.length, '| what_changed:', !!what_changed);
+    const action_detail = extract('ACTION_DETAIL') || null;
+    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| action:', extract('ACTION_TYPE'), '| patterns:', observed_patterns.length, '| what_changed:', !!what_changed);
     res.json({
       person_a:           extract('PERSON_A'),
       person_b:           extract('PERSON_B'),
@@ -1079,8 +1083,12 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       key_moment:         extract('KEY_MOMENT'),
       last_message_by:    extract('LAST_MESSAGE_BY'),
       days_since_last:    extract('DAYS_SINCE_LAST'),
-      recommended_next:   extract('RECOMMENDED_NEXT'),
+      action_type:        extract('ACTION_TYPE') || 'SEND_MESSAGE',
+      action_detail,
+      recommended_next:   action_detail, // backward-compat: contact screen + generateFromContext
       biggest_risk:       extract('BIGGEST_RISK'),
+      avoid:              extract('AVOID') || null,
+      signal_strength:    extract('SIGNAL_STRENGTH') || null,
       observed_patterns,
       what_changed,
       how_user_addresses: extract('ADDRESS_STYLE') || null
