@@ -1129,7 +1129,7 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
 app.get('/api/conversations/:id', requireAuth, async (req, res) => {
   try {
     const r = await fetch(
-      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,conversation_messages(id,role,content,strategy,created_at,outcome)`,
+      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,contact_id,contacts(id,name,relationship_state,observed_patterns),conversation_messages(id,role,content,strategy,created_at,outcome)`,
       { headers: sbHeaders(req.token) }
     );
     const data = await r.json();

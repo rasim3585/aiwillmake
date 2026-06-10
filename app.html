@@ -2524,9 +2524,8 @@
           || (typeof captions[0] === 'object' ? captions[0]?.text : captions[0])
           || '';
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
-        currentConvId = null;
         document.getElementById('simRestoreNote').classList.add('hidden');
-        await createConversation();
+        if (!currentConvId) await createConversation();
         fetchLikelyResponses();
         fetchNextSteps();
         lastGeneratedSig = getGenerateSig();
@@ -3051,6 +3050,18 @@
 
         currentConvId = convId;
 
+        if (data.contacts?.id && !activeContactContext) {
+          activeContactContext = {
+            id: data.contacts.id,
+            name: data.contacts.name,
+            relationship_state: data.contacts.relationship_state || null,
+            observed_patterns: Array.isArray(data.contacts.observed_patterns) && data.contacts.observed_patterns.length
+              ? data.contacts.observed_patterns : null
+          };
+          updatePrevMsgFieldVisibility();
+          renderCtxBadge(document.getElementById('contactContextBadge'));
+        }
+
         const isImport = !data.subcategory_id && (
           data.situation?.startsWith('WhatsApp history') ||
           data.fields?.interest_level || data.fields?.recommended_next
@@ -3452,6 +3463,7 @@
     function wizChoose(type) {
       // 'whatsapp': show inline paste/upload panel — keep wizard visible until user picks
       if (type === 'whatsapp') {
+        currentConvId = null;
         activeContactContext = _wizContact ? {
           id: _wizContact.id, name: _wizContact.name,
           relationship_state: _wizContact.relationship_state || null,
@@ -3464,6 +3476,7 @@
         return;
       }
 
+      currentConvId = null;
       document.getElementById('newConvWizard').classList.add('hidden');
       activeContactContext = _wizContact ? {
         id: _wizContact.id,
