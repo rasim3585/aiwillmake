@@ -99,49 +99,34 @@ const sbHeaders = (token) => ({
 
 async function getCredits(token, userId) {
   const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
-  console.log('[credits] GET', url);
   const res = await fetch(url, { headers: sbHeaders(token) });
-  console.log('[credits] GET status:', res.status);
   const rows = await res.json();
-  console.log('[credits] GET rows:', JSON.stringify(rows));
   return Array.isArray(rows) ? (rows[0]?.credits_used ?? 0) : 0;
 }
 
 async function incrementCredits(token, userId) {
-  console.log('[credits] increment start — userId:', userId);
   try {
-    // Step 1: SELECT current value
     const getUrl = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
     const getRes = await fetch(getUrl, { headers: sbHeaders(token) });
     const rows = await getRes.json();
-    console.log('[credits] SELECT rows:', JSON.stringify(rows));
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      // Step 2: No row — INSERT with credits_used = 1
-      console.log('[credits] no existing row — INSERT credits_used=1');
       const insRes = await fetch(`${SUPABASE_REST}/user_credits`, {
         method: 'POST',
         headers: sbHeaders(token),
         body: JSON.stringify({ user_id: userId, credits_used: 1 })
       });
       const insText = await insRes.text();
-      console.log('[credits] INSERT status:', insRes.status, '| body:', insText || '(empty)');
       if (insRes.status >= 400) console.error('[credits] INSERT FAILED:', insText);
-      else console.log('[credits] INSERT SUCCESS — credits_used now: 1');
     } else {
-      // Step 3: Row exists — UPDATE credits_used + 1
       const current = rows[0]?.credits_used ?? 0;
-      const next = current + 1;
-      console.log('[credits] existing row — current:', current, '→ UPDATE to', next);
       const updRes = await fetch(`${SUPABASE_REST}/user_credits?user_id=eq.${userId}`, {
         method: 'PATCH',
         headers: sbHeaders(token),
-        body: JSON.stringify({ credits_used: next })
+        body: JSON.stringify({ credits_used: current + 1 })
       });
       const updText = await updRes.text();
-      console.log('[credits] UPDATE status:', updRes.status, '| body:', updText || '(empty)');
       if (updRes.status >= 400) console.error('[credits] UPDATE FAILED:', updText);
-      else console.log('[credits] UPDATE SUCCESS — credits_used now:', next);
     }
   } catch (e) {
     console.error('[credits] increment EXCEPTION:', e.message);
@@ -152,16 +137,13 @@ app.get('/api/credits', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   const token = (req.headers.authorization || '').replace('Bearer ', '');
-  console.log('[/api/credits] token present:', !!token, '| supabase:', !!supabase);
   if (!supabase || !token) return res.json({ credits_used: 0, limit: 5, guest: !token });
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    console.log('[/api/credits] user:', user?.id, '| error:', error?.message);
     if (!user) return res.json({ credits_used: 0, limit: 5, guest: true });
     if (DEV_BYPASS_EMAILS.includes(user.email)) // TEST BYPASS - REMOVE BEFORE LAUNCH
       return res.json({ credits_used: 0, limit: 999, guest: false }); // TEST BYPASS - REMOVE BEFORE LAUNCH
     const credits_used = await getCredits(token, user.id);
-    console.log('[/api/credits] returning credits_used:', credits_used);
     res.json({ credits_used, limit: 5, guest: false });
   } catch (e) {
     console.error('[/api/credits] catch:', e.message);
@@ -193,17 +175,12 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
 
     let creditsUsed = 0;
     if (req.user) {
-      console.log('[generate] auth user:', req.user.id, '| bypass:', isDevBypass(req));
       if (!isDevBypass(req)) {
         creditsUsed = await getCredits(req.token, req.user.id);
-        console.log('[generate] creditsUsed:', creditsUsed);
         if (creditsUsed >= 5) {
-          console.log('[generate] limit reached, blocking');
           return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
         }
       }
-    } else {
-      console.log('[generate] no auth user (guest)');
     }
 
     const category = categories.categories.find(c => c.id === categoryId);
@@ -270,8 +247,6 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       ? `${basePrompt}${extraInstruction}\n\n${modifier}`
       : `${basePrompt}${extraInstruction}`;
 
-    console.log(`[${categoryId}/${subcategoryId}] Prompt:`, prompt);
-
     const MAX_RETRIES = 3;
     const RETRY_DELAY_MS = 2000;
     let data, response;
@@ -312,9 +287,6 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       return m ? clean(m[1].trim()) : null;
     };
 
-    console.log(`[parse] raw text length=${text.length} | blocks found=${('\n'+text).split(/\n\d+[\.\)]\s*/).length - 1}`);
-    console.log(`[parse] text preview: ${text.slice(0, 300).replace(/\n/g,'\\n')}`);
-
     const rawBlocks = ('\n' + text).split(/\n\*{0,2}\d+[\.\)]\*{0,2}\s*/);
     const captions = rawBlocks.slice(1)
       .map(block => {
@@ -347,8 +319,6 @@ Rules: use specific details provided, no clichés, each message sounds like a re
         ].filter(Boolean);
         if (missing.length) {
           console.warn(`[parse] block #${blockIdx} missing: ${missing.join(', ')} | metaIdx=${metaIdx} | metaBlock snippet: ${metaBlock.slice(0,120).replace(/\n/g,'\\n')}`);
-        } else {
-          console.log(`[parse] block #${blockIdx} OK | WHY=${why?.slice(0,40)} | BARRIER=${reply_barrier}`);
         }
 
         if (categoryId === 'official') {
@@ -385,7 +355,6 @@ Rules: use specific details provided, no clichés, each message sounds like a re
     }
 
     if (req.user && !isDevBypass(req)) {
-      console.log('[generate] incrementing credits for user:', req.user.id);
       await incrementCredits(req.token, req.user.id);
     }
 
@@ -516,7 +485,6 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
     if (!response.ok) throw new Error(apiData.error?.message || 'API error');
 
     const raw = apiData.content[0].text.trim();
-    console.log('[detect-category] raw:', raw.slice(0, 300));
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON in AI response');
 
@@ -548,7 +516,6 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
       result.explanation = (result.explanation || '') + ' (subcategory adjusted to nearest valid option)';
     }
 
-    console.log('[detect-category] result:', JSON.stringify(result));
     res.json(result);
   } catch (e) {
     console.error('[detect-category] error:', e.message);
@@ -677,7 +644,6 @@ async function checkDisengagement(text) {
     });
     const data = await response.json();
     const answer = (data.content?.[0]?.text || '').trim().toUpperCase();
-    console.log('[disengagement-check] answer:', answer, '| text snippet:', text.slice(0, 60));
     return answer === 'YES';
   } catch (e) {
     console.error('[disengagement-check] error:', e.message);
@@ -796,7 +762,6 @@ Their reply: ${theirReply}`;
       recommended: n === recommended
     })).filter(o => o.strategy && o.message);
 
-    console.log('[next-reply] options:', options.length);
     res.json({ options });
   } catch (e) {
     console.error('[next-reply]', e.message);
@@ -846,7 +811,6 @@ RESPONSE_2_NEXT_MOVE: ...
       next_move:   extract(`RESPONSE_${n}_NEXT_MOVE`)
     })).filter(r => r.type && r.example);
 
-    console.log('[likely-responses] count:', responses.length);
     res.json({ responses });
   } catch (e) {
     console.error('[likely-responses]', e.message);
@@ -914,7 +878,6 @@ Be realistic, not optimistic. Write in ${lang}.`;
     ].filter(s => s.label && s.action);
 
     const timing = extract('TIMING');
-    console.log('[next-steps] scenarios:', scenarios.length, '| timing:', !!timing);
     res.json({ scenarios, timing });
   } catch (e) {
     console.error('[next-steps]', e.message);
@@ -972,7 +935,6 @@ Write in ${lang}.`;
       return m ? m[1].trim() : null;
     };
 
-    console.log('[review-message] tone:', extract('TONE'), '| risk:', extract('RISK_LEVEL'));
     res.json({
       tone:         extract('TONE'),
       clarity:      extract('CLARITY'),
@@ -1073,7 +1035,6 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
     const what_changed = previousContext ? (extract('WHAT_CHANGED') || null) : null;
 
     const action_detail = extract('ACTION_DETAIL') || null;
-    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| action:', extract('ACTION_TYPE'), '| patterns:', observed_patterns.length, '| what_changed:', !!what_changed);
     res.json({
       person_a:           extract('PERSON_A'),
       person_b:           extract('PERSON_B'),
@@ -1140,7 +1101,6 @@ app.post('/api/conversations', requireAuth, async (req, res) => {
               `${SUPABASE_REST}/conversations?id=in.(${ids})&user_id=eq.${userId}`,
               { method: 'DELETE', headers: sbHeaders(token) }
             );
-            console.log(`[conv cleanup] deleted ${list.length - 20} old conversation(s) for contact ${contact_id}`);
           }
         } catch { /* best-effort, ignore */ }
       });
@@ -1223,7 +1183,6 @@ app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, asy
     );
     const data = await r.json();
     if (!r.ok) throw new Error(JSON.stringify(data));
-    console.log('[outcome PATCH] msgId:', req.params.msgId, '| outcome:', outcome);
     res.json(Array.isArray(data) ? data[0] : data);
   } catch (e) {
     console.error('[outcome PATCH]', e.message);
@@ -1243,7 +1202,6 @@ app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
     const r = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}`,
       { method: 'DELETE', headers: sbHeaders(req.token) });
     if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(JSON.stringify(d)); }
-    console.log('[conv DELETE]', req.params.id);
     res.json({ deleted: true });
   } catch (e) { console.error('[conv DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
@@ -1310,7 +1268,6 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary. Language 
       : [];
 
     const name = extract('NAME');
-    console.log('[contacts from-text] name:', name, '| patterns:', observed_patterns.length);
     res.json({
       name: (name && name.toLowerCase() !== 'unknown') ? name : null,
       type: extract('TYPE'),
@@ -1343,7 +1300,6 @@ app.post('/api/contacts', requireAuth, async (req, res) => {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(JSON.stringify(data));
-    console.log('[contacts POST]', data[0]?.id);
     res.json(Array.isArray(data) ? data[0] : data);
   } catch (e) { console.error('[contacts POST]', e.message); res.status(500).json({ error: e.message }); }
 });
@@ -1400,7 +1356,6 @@ app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`,
       { method: 'DELETE', headers: sbHeaders(req.token) });
     if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(JSON.stringify(d)); }
-    console.log('[contacts DELETE]', req.params.id);
     res.json({ deleted: true });
   } catch (e) { console.error('[contacts DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
