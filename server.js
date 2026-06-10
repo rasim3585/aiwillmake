@@ -1020,6 +1020,7 @@ RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
 OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]${whatChangedLine}
 
+IMPORTANT: Detect the language of the conversation and write ALL text output fields in that same language. If the conversation is in Turkish, every output field must be in Turkish. If in English, in English. Match the conversation's language exactly.
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1033,7 +1034,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
         model: 'claude-sonnet-4-6',
         max_tokens: 2200,
         system: systemPrompt,
-        messages: [{ role: 'user', content: `Language context: ${lang}\n\nConversation:\n${snippet}` }]
+        messages: [{ role: 'user', content: `Conversation:\n${snippet}` }]
       })
     });
 
