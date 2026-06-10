@@ -148,3 +148,9 @@ node server.js
 ## Status
 
 Pre-launch. Core features (generation, reply analysis, contact memory, simulator) are working. Free tier limited to 5 generations; upgrade gate in place. TEST BYPASS active for dev email — remove before production.
+
+---
+
+## Author
+
+Rasim Kurum — [github.com/rasim3585](https://github.com/rasim3585)
