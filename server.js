@@ -1363,6 +1363,7 @@ app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
 });
 
 app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
+  const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   try {
     const { images } = req.body; // array of { media_type, data }
     if (!Array.isArray(images) || !images.length) {
@@ -1372,6 +1373,9 @@ app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
     for (const img of images) {
       const { media_type, data } = img;
       if (!media_type || !data) continue;
+      if (!SUPPORTED_TYPES.includes(media_type)) {
+        throw new Error(`Unsupported image format (${media_type}). Please save the screenshot as JPG or PNG.`);
+      }
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -1392,7 +1396,10 @@ app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
         })
       });
       const apiData = await response.json();
-      if (!response.ok) throw new Error(apiData.error?.message || 'OCR API error');
+      if (!response.ok) {
+        console.error('[extract-screenshot] Anthropic error', response.status, JSON.stringify(apiData.error));
+        throw new Error(apiData.error?.message || `OCR API error (status ${response.status})`);
+      }
       texts.push(apiData.content[0].text);
     }
     res.json({ text: texts.join('\n\n') });

@@ -4108,9 +4108,9 @@
         const text = await extractScreenshot(file);
         // analyzeContactChat will update the overlay message to "Analyzing…"
         await analyzeContactChat(text, contactId, contactName);
-      } catch (_) {
+      } catch (err) {
         hideLoadingOverlay();
-        showToast("Couldn't read the screenshot — try a clearer image or paste the text.", 'error');
+        showToast(err.message || "Couldn't read the screenshot — try a clearer image or paste the text.", 'error');
       }
     });
 
@@ -4583,6 +4583,8 @@
     // ── Conversation Import ─────────────────────────────────────
     let _convAnalysis = null;
 
+    const SUPPORTED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
     async function extractScreenshot(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -4592,6 +4594,12 @@
           const meta = dataUrl.slice(5, commaIdx);
           const media_type = meta.split(';')[0];
           const data = dataUrl.slice(commaIdx + 1);
+          if (!SUPPORTED_IMG_TYPES.includes(media_type)) {
+            return reject(new Error(
+              `This image format (${media_type || 'unknown'}) isn't supported. ` +
+              'Please save as JPG or PNG, or paste the text instead.'
+            ));
+          }
           const headers = { 'Content-Type': 'application/json' };
           if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
           try {
@@ -4624,8 +4632,9 @@
         resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Analyzing…</p>' +
           '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
         analyzeConversation(text);
-      } catch (_) {
-        resultEl.innerHTML = '<p style="color:#e55;font-size:.84rem">Couldn\'t read the screenshot — try a clearer image or paste the text.</p>';
+      } catch (err) {
+        const safeMsg = String(err.message || "Couldn't read the screenshot.").replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        resultEl.innerHTML = `<p style="color:#e55;font-size:.84rem">${safeMsg}</p>`;
       }
     });
 
