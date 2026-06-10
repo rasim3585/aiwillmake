@@ -569,6 +569,14 @@
       border-radius: 8px; padding: 8px 12px; margin-bottom: 10px;
     }
     .sim-restore-note strong { color: var(--text); }
+    .recent-msgs { margin-bottom: 14px; }
+    .recent-msgs-title { font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+    .recent-msgs-list { display: flex; flex-direction: column; gap: 7px; }
+    .rmsg { max-width: 82%; padding: 8px 12px; border-radius: 14px; font-size: .82rem; line-height: 1.45; }
+    .rmsg-sent { align-self: flex-end; background: rgba(212,113,90,.16); border: 1px solid rgba(212,113,90,.25); border-bottom-right-radius: 3px; }
+    .rmsg-received { align-self: flex-start; background: var(--surf); border: 1px solid var(--bord); border-bottom-left-radius: 3px; }
+    .rmsg-label { font-size: .65rem; font-weight: 700; opacity: .5; margin-bottom: 3px; }
+    .rmsg-text { word-break: break-word; white-space: pre-wrap; }
     .conv-detail { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
     .conv-msg {
       background: var(--surf); border: 1px solid var(--bord); border-radius: 10px;
@@ -1924,6 +1932,7 @@
           <span class="pro-badge-lg">⭐ PRO</span>
         </div>
         <div id="simSentCtx" class="sim-sent-ctx hidden"></div>
+        <div id="recentMsgsWidget" class="recent-msgs hidden"></div>
         <div id="simRestoreNote" class="sim-restore-note hidden"></div>
         <div class="sim-input-area">
           <textarea id="theirReplyInput" class="sim-textarea" placeholder="Paste their reply here..." style="min-height:120px"></textarea>
@@ -2115,8 +2124,9 @@
     let lastGeneratedSig = null;
     let selectedMsgText = '';
     let activeContactContext = null;
-    let _reviewContact  = null;
-    let currentConvId   = null;
+    let _reviewContact    = null;
+    let currentConvId     = null;
+    let _recentMessages   = [];
 
     async function init() {
       try {
@@ -2525,7 +2535,11 @@
           || '';
         document.getElementById('nsNote').textContent = 'Your next move depends on their response';
         document.getElementById('simRestoreNote').classList.add('hidden');
-        if (!currentConvId) await createConversation();
+        if (!currentConvId) {
+          _recentMessages = [];
+          document.getElementById('recentMsgsWidget')?.classList.add('hidden');
+          await createConversation();
+        }
         fetchLikelyResponses();
         fetchNextSteps();
         lastGeneratedSig = getGenerateSig();
@@ -2768,6 +2782,8 @@
 
     async function saveMessage(role, content, strategy) {
       if (!accessToken || !currentConvId) return null;
+      _recentMessages.push({ role, content });
+      renderLastMessages(_recentMessages, activeContactContext?.name || null);
       try {
         const r = await fetch(`/api/conversations/${currentConvId}/messages`, {
           method: 'POST',
@@ -2777,6 +2793,25 @@
         if (r.ok) { const d = await r.json(); return d.id || null; }
       } catch {}
       return null;
+    }
+
+    function renderLastMessages(messages, contactName, n = 3) {
+      const el = document.getElementById('recentMsgsWidget');
+      if (!el) return;
+      if (!messages || !messages.length) { el.classList.add('hidden'); return; }
+      const slice = messages.slice(-n);
+      const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const themLabel = contactName ? escH(contactName) : 'Them';
+      el.innerHTML = `
+        <div class="recent-msgs-title">Where you left off</div>
+        <div class="recent-msgs-list">
+          ${slice.map(m => `
+            <div class="rmsg rmsg-${m.role === 'sent' ? 'sent' : 'received'}">
+              <div class="rmsg-label">${m.role === 'sent' ? 'You' : themLabel}</div>
+              <div class="rmsg-text">${escH(m.content)}</div>
+            </div>`).join('')}
+        </div>`;
+      el.classList.remove('hidden');
     }
 
     function showOutcomeFeedback(card, msgId) {
@@ -3069,6 +3104,8 @@
 
         if (isImport) {
           // Rebuild analysis card from stored fields and show it
+          _recentMessages = [];
+          document.getElementById('recentMsgsWidget')?.classList.add('hidden');
           const personB = data.situation?.replace('WhatsApp history with ', '') || null;
           const analysisData = { person_b: personB, ...(data.fields || {}) };
           const resultEl = document.getElementById('convAnalysisResult');
@@ -3098,6 +3135,8 @@
           }
 
           const msgs = data.conversation_messages || [];
+          _recentMessages = msgs.slice();
+          renderLastMessages(_recentMessages, activeContactContext?.name || null);
           const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
           document.getElementById('restoreOutcomeWidget')?.remove();
 
