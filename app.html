@@ -2932,7 +2932,6 @@
 
         const renderHomeCard = (conv, titleOverride) => {
           const msgs = conv.conversation_messages || [];
-          const lastSent = [...msgs].reverse().find(m => m.role === 'sent');
           const lastMsg = msgs[msgs.length - 1];
           let status = '';
           if (msgs.length > 0) {
@@ -2940,8 +2939,17 @@
             else if (lastMsg?.role === 'received') status = 'Your move';
           }
 
-          const rawPreview = stripPrefix(lastSent ? lastSent.content : (conv.situation || '—'));
-          const preview = escH(rawPreview.length > 65 ? rawPreview.slice(0, 65) + '…' : rawPreview);
+          let preview;
+          if (lastMsg) {
+            const raw = lastMsg.content.length > 58 ? lastMsg.content.slice(0, 58) + '…' : lastMsg.content;
+            const waName = conv.situation?.match(/^WhatsApp history with (.+)$/)?.[1];
+            const contactName = conv.contacts?.name || waName || null;
+            const prefix = lastMsg.role === 'sent' ? 'You' : (contactName || 'Them');
+            preview = escH(`${prefix}: ${raw}`);
+          } else {
+            const raw = stripPrefix(conv.situation || '—');
+            preview = escH(raw.length > 65 ? raw.slice(0, 65) + '…' : raw);
+          }
 
           let title = titleOverride;
           if (!title) {
@@ -2955,7 +2963,7 @@
           card.className = 'home-conv-card';
           card.innerHTML = `
             <div class="home-conv-name">${title}</div>
-            <div class="home-conv-preview">"${preview}"</div>
+            <div class="home-conv-preview">${preview}</div>
             <div class="home-conv-foot">
               <span>${fmt(conv.created_at)}</span>
               ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
