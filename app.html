@@ -81,7 +81,10 @@
       max-width: 1080px; margin: 0 auto;
       padding: 40px 24px 100px;
       display: grid; gap: 44px;
+      grid-template-columns: minmax(0, 1fr);
     }
+    /* Prevent grid/flex items expanding past their column (min-width:auto default) */
+    .page > * { min-width: 0; }
 
     /* ── Auth gate ── */
     .auth-gate {
@@ -1051,7 +1054,7 @@
       box-shadow: 0 8px 24px rgba(212,113,90,.25);
     }
     .btn-new-conv:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(212,113,90,.35); }
-    .home-conv-list { display: flex; flex-direction: column; gap: 10px; }
+    .home-conv-list { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: hidden; }
     .home-conv-label {
       font-size: .69rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .08em; color: var(--muted); margin-bottom: 4px;
@@ -1059,6 +1062,7 @@
     .home-conv-card {
       background: var(--surf); border: 1px solid var(--bord); border-radius: 18px;
       padding: 18px 20px; cursor: pointer; position: relative; overflow: hidden;
+      min-width: 0; max-width: 100%; width: 100%;
       transition: border-color .2s, background .2s, transform .18s, box-shadow .18s;
     }
     .home-conv-card:hover {
@@ -1069,12 +1073,14 @@
     .home-conv-preview {
       font-size: .82rem; color: var(--sec); margin-bottom: 10px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%; min-width: 0;
     }
     .home-conv-foot {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: .75rem; color: var(--muted);
+      flex-wrap: wrap; gap: 3px;
+      font-size: .75rem; color: var(--muted); min-width: 0;
     }
-    .home-conv-status { font-weight: 600; color: var(--accent); }
+    .home-conv-status { font-weight: 600; color: var(--accent); min-width: 0; white-space: nowrap; }
     .home-conv-empty {
       color: var(--sec); font-size: .85rem; text-align: center;
       padding: 28px 0; line-height: 1.6;
