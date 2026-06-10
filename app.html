@@ -3107,7 +3107,7 @@
     }
     async function restoreConversation(convId) {
       hideConvPanel();
-      document.getElementById('homeSection').classList.add('hidden');
+      hideAllMainSections();
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
@@ -3429,9 +3429,18 @@
       }
     }
 
-    // ── Mode Selector ───────────────────────────────────────────
+    // ── Screen Manager ───────────────────────────────────────────
+    const _ALL_SECTIONS = [
+      'homeSection','newConvWizard',
+      'smartStartSection','catSection','subcatSection','formCard',
+      'continueSection','reviewSection','simulatorSection','convAnalysisResult'
+    ];
+    function hideAllMainSections() {
+      _ALL_SECTIONS.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    }
+
     function selectMode(mode, clearContext = false) {
-      document.getElementById('homeSection').classList.add('hidden');
+      hideAllMainSections();
       document.querySelectorAll('.mode-card').forEach(c =>
         c.classList.toggle('active', parseInt(c.dataset.mode) === mode)
       );
@@ -3441,24 +3450,21 @@
           document.getElementById(id)?.classList.add('hidden'));
       }
       updatePrevMsgFieldVisibility();
-      document.getElementById('smartStartSection').classList.toggle('hidden', mode !== 1);
-      document.getElementById('catSection').classList.toggle('hidden', mode !== 1);
-      document.getElementById('continueSection').classList.toggle('hidden', mode !== 2);
-      document.getElementById('reviewSection').classList.toggle('hidden', mode !== 3);
-      if (mode === 3) refreshReviewContactHint();
-      if (mode !== 1) {
-        document.getElementById('subcatSection').classList.add('hidden');
-        document.getElementById('formCard').classList.add('hidden');
+      if (mode === 1) {
+        document.getElementById('smartStartSection').classList.remove('hidden');
+        document.getElementById('catSection').classList.remove('hidden');
+      } else if (mode === 2) {
+        document.getElementById('continueSection').classList.remove('hidden');
+      } else if (mode === 3) {
+        document.getElementById('reviewSection').classList.remove('hidden');
+        refreshReviewContactHint();
       }
     }
 
     // ── New Conversation Wizard ──────────────────────────────────
     function openNewConversation() {
       activeContactContext = null;
-      document.getElementById('homeSection').classList.add('hidden');
-      ['smartStartSection','catSection','subcatSection','formCard',
-       'continueSection','reviewSection','convAnalysisResult'].forEach(id =>
-        document.getElementById(id)?.classList.add('hidden'));
+      hideAllMainSections();
       document.getElementById('newConvWizard').classList.remove('hidden');
       document.getElementById('wizStep1').classList.remove('hidden');
       document.getElementById('wizStep2').classList.add('hidden');
@@ -3468,7 +3474,7 @@
     }
 
     function closeWizard() {
-      document.getElementById('newConvWizard').classList.add('hidden');
+      hideAllMainSections();
       document.getElementById('homeSection').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -3531,22 +3537,26 @@
     }
 
     function wizChoose(type) {
-      // 'whatsapp': show inline paste/upload panel — keep wizard visible until user picks
+      currentConvId = null;
+
       if (type === 'whatsapp') {
-        currentConvId = null;
+        hideAllMainSections();
         updatePrevMsgFieldVisibility();
-        document.getElementById('wizChatInputPanel')?.classList.remove('hidden');
-        setTimeout(() => document.getElementById('wizChatInputPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+        if (activeContactContext?.id) {
+          const inp = document.getElementById('contactChatInput');
+          inp.dataset.contactId = activeContactContext.id;
+          inp.dataset.contactName = activeContactContext.name;
+          document.getElementById('homeSection').classList.remove('hidden');
+          inp.click();
+        } else {
+          document.getElementById('continueSection').classList.remove('hidden');
+          setTimeout(() => document.getElementById('contImportOpt')?.click(), 0);
+          document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         return;
       }
 
-      currentConvId = null;
-      document.getElementById('newConvWizard').classList.add('hidden');
-      updatePrevMsgFieldVisibility();
-
       if (type === 'start') {
-        ['continueSection','reviewSection','subcatSection','formCard','convAnalysisResult'].forEach(id =>
-          document.getElementById(id)?.classList.add('hidden'));
         selectMode(1, !activeContactContext);
         const smartIn = document.getElementById('smartInput');
         smartIn.value = '';
@@ -3618,10 +3628,7 @@
 
     function goBack() {
       document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
-      ['newConvWizard','smartStartSection','catSection','subcatSection','formCard',
-       'continueSection','reviewSection','convAnalysisResult'].forEach(id => {
-        document.getElementById(id)?.classList.add('hidden');
-      });
+      hideAllMainSections();
       document.getElementById('homeSection').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -4572,11 +4579,12 @@
 
     // ── Wizard chat-import panel ────────────────────────────────
     document.getElementById('wizUploadBtn').addEventListener('click', () => {
-      document.getElementById('newConvWizard').classList.add('hidden');
       if (activeContactContext?.id) {
+        hideAllMainSections();
         const inp = document.getElementById('contactChatInput');
         inp.dataset.contactId = activeContactContext.id;
         inp.dataset.contactName = activeContactContext.name;
+        document.getElementById('homeSection').classList.remove('hidden');
         inp.click();
       } else {
         selectMode(2);
@@ -4590,7 +4598,7 @@
       if (!text) { document.getElementById('wizPasteArea').focus(); return; }
       const warning = document.getElementById('wizPasteWarning');
       warning.classList.toggle('hidden', text.length >= 50);
-      document.getElementById('newConvWizard').classList.add('hidden');
+      hideAllMainSections();
       if (activeContactContext?.id) {
         analyzeContactChat(text, activeContactContext.id, activeContactContext.name);
       } else {
