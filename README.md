@@ -8,6 +8,19 @@ Not a chatbot. Not a generic text generator. It keeps a memory of your relations
 
 ## What it does
 
+```mermaid
+flowchart TD
+    A[WhatsApp chat / screenshot / paste] --> B[Import and Extract]
+    B --> C[Decision Brief: what is happening, risk, next move]
+    C --> D{Choose path}
+    D --> E[Generate message - 6 strategy variants]
+    D --> F[Run Simulator - practice first]
+    D --> G[Next Steps - 3 scenario paths]
+    E --> H[Saved to Contact Memory]
+    F --> H
+    G --> H
+```
+
 ### Conversation Analysis & Decision Brief
 Paste their reply (or import a WhatsApp chat via screenshot, .txt export, or paste) and get a structured read: what the message signals, the risk in the dynamic, what to do next, and what to avoid. Decision Brief is the core output — not just tone labels, but actionable framing.
 
@@ -35,6 +48,18 @@ Before you send something real, you can run a practice conversation. The AI play
 
 ChatGPT has no memory of the person you're writing to. You explain context every time, get a message, and that's it. AIWILLMAKE builds a persistent model of the other person — patterns, history, relationship state — and uses it across every interaction with them. The Simulator adds rehearsal. The Decision Brief adds framing. The difference is continuity and decision support, not generation quality.
 
+```mermaid
+flowchart TD
+    A[Import conversation] --> B[AI extracts name, type, state, patterns]
+    B --> C[Snapshot saved with timestamp]
+    C --> D[Next import - same contact]
+    D --> E[Compare with previous snapshot]
+    E --> F[What changed since last time]
+    E --> G[Relationship Journey timeline]
+    F --> H[Decision Brief uses full history]
+    G --> H
+```
+
 ---
 
 ## Technical
@@ -44,6 +69,18 @@ ChatGPT has no memory of the person you're writing to. You explain context every
 - AI: Anthropic Claude API — `claude-sonnet-4-6` for analysis/simulation, `claude-haiku-4-5` for lighter tasks
 - Auth + Storage: Supabase (JWT auth, PostgreSQL via REST API)
 - Frontend: single-file (`app.html`), no build step, no framework
+
+```mermaid
+flowchart LR
+    FE[Browser - app.html vanilla JS]
+    BE[Express server.js - Node.js]
+    AI[Claude API - Sonnet for analysis and generation - Haiku for OCR and simulation]
+    DB[Supabase - JWT auth - contacts and conversations]
+
+    FE --> BE
+    BE --> AI
+    BE --> DB
+```
 
 **Key implementation details**
 - **Multimodal input**: Screenshot OCR uses Claude's vision API (base64 image → conversation transcript). Accepts JPEG/PNG/WebP/GIF up to 10MB.
