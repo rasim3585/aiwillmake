@@ -1085,6 +1085,30 @@ app.post('/api/conversations', requireAuth, async (req, res) => {
     const data = await r.json();
     if (!r.ok) throw new Error(JSON.stringify(data));
     res.json(Array.isArray(data) ? data[0] : data);
+
+    // Keep at most 20 conversations per contact (fire-and-forget)
+    if (contact_id) {
+      const userId = req.user.id;
+      const token  = req.token;
+      setImmediate(async () => {
+        try {
+          const listRes = await fetch(
+            `${SUPABASE_REST}/conversations?contact_id=eq.${contact_id}&user_id=eq.${userId}&order=created_at.asc&select=id`,
+            { headers: sbHeaders(token) }
+          );
+          if (!listRes.ok) return;
+          const list = await listRes.json();
+          if (Array.isArray(list) && list.length > 20) {
+            const ids = list.slice(0, list.length - 20).map(c => c.id).join(',');
+            await fetch(
+              `${SUPABASE_REST}/conversations?id=in.(${ids})&user_id=eq.${userId}`,
+              { method: 'DELETE', headers: sbHeaders(token) }
+            );
+            console.log(`[conv cleanup] deleted ${list.length - 20} old conversation(s) for contact ${contact_id}`);
+          }
+        } catch { /* best-effort, ignore */ }
+      });
+    }
   } catch (e) {
     console.error('[conv POST]', e.message);
     res.status(500).json({ error: e.message });
@@ -1288,7 +1312,7 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
     const [cr, convr] = await Promise.all([
       fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,source,created_at,updated_at`,
         { headers: sbHeaders(req.token) }),
-      fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,created_at`,
+      fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,fields,created_at`,
         { headers: sbHeaders(req.token) })
     ]);
     const [contacts, convs] = await Promise.all([cr.json(), convr.json()]);

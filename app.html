@@ -3950,11 +3950,13 @@
               categoryId: 'personal',
               subcategoryId: null,
               fields: {
-                interest_level:   data.interest_level   || null,
-                emotional_tone:   data.emotional_tone   || null,
-                power_balance:    data.power_balance    || null,
-                key_moment:       data.key_moment       || null,
-                recommended_next: data.recommended_next || null
+                interest_level:    data.interest_level    || null,
+                emotional_tone:    data.emotional_tone    || null,
+                power_balance:     data.power_balance     || null,
+                key_moment:        data.key_moment        || null,
+                recommended_next:  data.recommended_next  || null,
+                observed_patterns: patterns.length ? patterns : null,
+                relationship_state: patchBody.relationship_state || null
               }
             })
           });
