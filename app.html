@@ -1467,6 +1467,39 @@
       padding-bottom: 12px; border-bottom: 1px solid var(--bord); margin-bottom: 12px;
     }
     .contact-detail-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+
+    /* ── Person Screen ── */
+    .person-name { font-size:1.25rem; font-weight:800; letter-spacing:-.02em; margin-bottom:8px; }
+    .person-badges { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .person-summary { font-size:.82rem; color:var(--sec); line-height:1.55; margin:0 0 16px; }
+    .btn-person-continue {
+      display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+      background:linear-gradient(95deg,var(--accent),var(--acc2));
+      border:none; color:#fff; padding:14px 22px;
+      border-radius:var(--r-md); font:inherit; font-size:.93rem; font-weight:700;
+      cursor:pointer; margin-bottom:18px;
+      box-shadow:0 4px 20px var(--glow); transition:transform .2s, box-shadow .2s;
+    }
+    .btn-person-continue:hover { transform:translateY(-1px); box-shadow:0 8px 28px var(--glow); }
+    .person-collapse {
+      background:var(--surf); border:1px solid var(--bord);
+      border-radius:var(--r-md); margin-bottom:10px; overflow:hidden;
+    }
+    .person-collapse summary {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 16px; cursor:pointer; list-style:none; user-select:none;
+      font-size:.82rem; font-weight:700;
+    }
+    .person-collapse summary::-webkit-details-marker { display:none; }
+    .person-collapse summary::after { content:'›'; color:var(--sec); font-size:1rem; transition:transform .2s; margin-left:auto; }
+    .person-collapse[open] summary::after { transform:rotate(90deg); }
+    .person-collapse[open] summary { border-bottom:1px solid var(--bord); }
+    .person-collapse-count { font-size:.72rem; font-weight:500; color:var(--muted); background:var(--surf2); padding:2px 8px; border-radius:99px; }
+    .person-collapse > div { padding:12px 16px; }
+    .person-recent-msg { padding:7px 10px; border-radius:8px; font-size:.83rem; line-height:1.5; margin-bottom:6px; }
+    .person-recent-msg.sent { background:rgba(212,113,90,.12); }
+    .person-recent-msg.received { background:var(--surf2); }
+    .person-recent-msg-role { display:block; font-size:.68rem; font-weight:700; color:var(--sec); margin-bottom:2px; text-transform:uppercase; letter-spacing:.05em; }
     .contacts-section-label {
       font-size: .69rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
@@ -1685,6 +1718,12 @@
       <button type="button" class="btn-new-conv" onclick="openNewConversation()">+ New conversation</button>
       <div class="home-conv-label">Recent</div>
       <div id="homeConvList" class="home-conv-list"></div>
+    </section>
+
+    <!-- Person Screen -->
+    <section id="personSection" class="hidden">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div id="personContent"></div>
     </section>
 
     <!-- New Conversation Wizard -->
@@ -2952,7 +2991,7 @@
           }
         });
 
-        const renderHomeCard = (conv, titleOverride) => {
+        const renderHomeCard = (conv, titleOverride, contactId = null) => {
           const msgs = conv.conversation_messages || [];
           const lastMsg = msgs[msgs.length - 1];
           let status = '';
@@ -2990,16 +3029,16 @@
               <span>${fmt(conv.created_at)}</span>
               ${status ? `<span class="home-conv-status">${escH(status)} →</span>` : ''}
             </div>`;
-          card.addEventListener('click', () => restoreConversation(conv.id));
+          card.addEventListener('click', () => contactId ? loadPersonSection(contactId) : restoreConversation(conv.id));
           listEl.appendChild(card);
         };
 
-        contactGroups.forEach(({ name, convs }) => {
+        contactGroups.forEach(({ name, convs }, contactId) => {
           convs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           const title = convs.length > 1
             ? escH(`${name} (${convs.length} conversations)`)
             : escH(name);
-          renderHomeCard(convs[0], title);
+          renderHomeCard(convs[0], title, contactId);
         });
 
         nameGroups.forEach((convs, name) => {
@@ -3431,7 +3470,7 @@
 
     // ── Screen Manager ───────────────────────────────────────────
     const _ALL_SECTIONS = [
-      'homeSection','newConvWizard',
+      'homeSection','newConvWizard','personSection',
       'smartStartSection','catSection','subcatSection','formCard',
       'continueSection','reviewSection','simulatorSection','convAnalysisResult'
     ];
@@ -3601,14 +3640,7 @@
               ${c.relationship_state ? `<span class="wiz-contact-state">${escH(c.relationship_state)}</span>` : ''}
             </div>
             <span class="wiz-contact-arrow">→</span>`;
-          btn.addEventListener('click', () => {
-            activeContactContext = {
-              id: c.id, name: c.name, type: c.type || null,
-              relationship_state: c.relationship_state || null,
-              observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
-            };
-            wizGoToStep2();
-          });
+          btn.addEventListener('click', () => loadPersonSection(c.id));
           el.appendChild(btn);
         });
         const newBtn = document.createElement('button');
@@ -3915,11 +3947,8 @@
           }
         } catch { /* patterns already saved; conversation record is a bonus */ }
 
-        if (patternsEl) {
-          patternsEl.innerHTML = renderContactPatterns(contactName, patterns.length ? patterns : null);
-          wireContactImportBtn(contactId, contactName);
-        }
         showToast(`✓ Saved to ${contactName}'s history`, 'success');
+        if (accessToken) loadPersonSection(contactId);
       } catch {
         if (patternsEl) {
           patternsEl.innerHTML = renderContactPatterns(contactName, null);
@@ -4003,7 +4032,7 @@
             </div>
             ${c.relationship_state ? `<span class="contact-state ${_stateClass(c.relationship_state)}">${escH(c.relationship_state)}</span>` : ''}
             ${c.relationship_summary ? `<span class="contact-meta">${escH(c.relationship_summary.slice(0,60))}${c.relationship_summary.length>60?'…':''}</span>` : ''}`;
-          div.addEventListener('click', () => loadContactDetail(c.id, c.name));
+          div.addEventListener('click', () => { hideContactsPanel(); loadPersonSection(c.id); });
           listEl.appendChild(div);
         });
       } catch {
@@ -4158,6 +4187,132 @@
       } catch {
         showToast('Could not save. Please try again.', 'error');
         btn.disabled = false; btn.textContent = 'Save →';
+      }
+    }
+
+    async function loadPersonSection(contactId) {
+      hideAllMainSections();
+      const el = document.getElementById('personContent');
+      el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(4);
+      document.getElementById('personSection').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      try {
+        const r = await fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const c = await r.json();
+        if (!r.ok) throw new Error(c.error);
+
+        activeContactContext = {
+          id: c.id, name: c.name, type: c.type || null,
+          relationship_state: c.relationship_state || null,
+          observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
+        };
+        updatePrevMsgFieldVisibility();
+
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const convs = c.conversations || [];
+        const latestConv = convs[0] || null;
+
+        // Fetch last 3 messages from most recent conversation
+        let recentMsgsHtml = '';
+        if (latestConv?.id && accessToken) {
+          try {
+            const mr = await fetch(`/api/conversations/${latestConv.id}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            if (mr.ok) {
+              const md = await mr.json();
+              const msgs = (md.conversation_messages || []).slice(-3);
+              if (msgs.length) {
+                recentMsgsHtml = `
+                  <details class="person-collapse" open>
+                    <summary>Recent messages <span class="person-collapse-count">${msgs.length}</span></summary>
+                    <div>${msgs.map(m => `
+                      <div class="person-recent-msg ${m.role}">
+                        <span class="person-recent-msg-role">${m.role === 'sent' ? 'You' : escH(c.name)}</span>
+                        ${escH(m.content)}
+                      </div>`).join('')}
+                    </div>
+                  </details>`;
+              }
+            }
+          } catch { /* skip messages on error */ }
+        }
+
+        el.innerHTML = `
+          <div class="person-name">${escH(c.name)}</div>
+          <div class="person-badges">
+            ${c.type ? `<span class="ctype-badge ${_typeClass(c.type)}">${escH(c.type)}</span>` : ''}
+            ${c.relationship_state ? `<span class="contact-state ${_stateClass(c.relationship_state)}">${escH(c.relationship_state)}</span>` : ''}
+          </div>
+          ${c.relationship_summary ? `<p class="person-summary">${escH(c.relationship_summary)}</p>` : ''}
+
+          <button type="button" class="btn-person-continue" id="personContinueBtn">
+            ${latestConv ? '→ Continue the conversation' : '✍️ Start a conversation'}
+          </button>
+
+          ${recentMsgsHtml}
+
+          <details class="person-collapse">
+            <summary>What we've learned <span class="person-collapse-count">${c.observed_patterns?.length || 0} patterns</span></summary>
+            <div id="patternsSectionEl">
+              ${renderContactPatterns(c.name, c.observed_patterns)}
+            </div>
+          </details>
+
+          <details class="person-collapse" open>
+            <summary>Conversation history <span class="person-collapse-count">${convs.length}</span></summary>
+            <div>
+              ${convs.length ? `<div class="contact-timeline">${convs.map(cv => {
+                const cat = appData?.categories?.find(x => x.id === cv.category_id);
+                const shortDate = new Date(cv.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+                const sit = (cv.situation || '').trim();
+                const sitPreview = sit.slice(0, 72) + (sit.length > 72 ? '…' : '');
+                return `<div class="tl-item" data-conv-id="${escH(cv.id)}">
+                  <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+                  <div class="tl-content">
+                    <div class="tl-meta">
+                      <span class="tl-date">${escH(shortDate)}</span>
+                      ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
+                    </div>
+                    ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
+                  </div>
+                </div>`;
+              }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem">No conversations yet.</p>`}
+            </div>
+          </details>
+
+          <button type="button" class="btn-del-contact" style="margin-top:8px" id="personDelBtn">Delete this person</button>`;
+
+        el.querySelectorAll('.tl-item[data-conv-id]').forEach(item => {
+          item.addEventListener('click', () => restoreConversation(item.dataset.convId));
+        });
+
+        document.getElementById('personContinueBtn').addEventListener('click', () => {
+          if (latestConv) {
+            restoreConversation(latestConv.id);
+          } else {
+            selectMode(1);
+            const si = document.getElementById('smartInput');
+            si.value = '';
+            si.placeholder = `What do you want to say to ${c.name}?`;
+            document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+
+        wireContactImportBtn(contactId, c.name);
+
+        document.getElementById('personDelBtn').addEventListener('click', async () => {
+          if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
+          try {
+            const dr = await fetch(`/api/contacts/${contactId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
+            if (!dr.ok) throw new Error();
+            activeContactContext = null;
+            loadHomeConvList();
+            goBack();
+          } catch { showToast('Could not delete. Please try again.', 'error'); }
+        });
+
+      } catch {
+        el.innerHTML = `<p style="color:#f87171;font-size:.84rem;margin-top:10px">Could not load. Please try again.</p>`;
       }
     }
 
