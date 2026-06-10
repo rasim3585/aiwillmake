@@ -986,7 +986,7 @@ Write in ${lang}.`;
 
 app.post('/api/analyze-conversation', limiter, async (req, res) => {
   try {
-    const { conversationText, language } = req.body;
+    const { conversationText, language, previousContext } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
 
     const lang = language || 'English';
@@ -996,7 +996,15 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
       ? conversationText.slice(0, HEAD) + '\n[...]\n' + conversationText.slice(-TAIL)
       : conversationText;
 
-    const systemPrompt = `Analyze this exported chat conversation. Extract:
+    const prevBlock = previousContext
+      ? `PREVIOUS CONTEXT (from analysis on ${previousContext.date}):\n- Interest: ${previousContext.interest_level || '?'} · Tone: ${previousContext.emotional_tone || '?'} · State: ${previousContext.relationship_state || '?'}${previousContext.patterns?.length ? `\n- Patterns observed then: ${previousContext.patterns.join(' | ')}` : ''}\n\n`
+      : '';
+
+    const whatChangedLine = previousContext
+      ? `\nWHAT_CHANGED: [2-3 sentences on concrete behavioral differences since the previous analysis. Compare: who initiates contact, response speed, engagement level, tone shifts. Observable changes only — no diagnoses, no labels. Example: "Previously initiated most conversations; now rarely starts contact. Response times have increased noticeably." Omit this line entirely if differences are minimal or unclear.]`
+      : '';
+
+    const systemPrompt = `${prevBlock}Analyze this exported chat conversation. Extract:
 PERSON_A: [who seems to be the user - the one asking for help]
 PERSON_B: [the other person's name if visible]
 TOTAL_MESSAGES: [count]
@@ -1010,7 +1018,7 @@ LAST_MESSAGE_BY: [A or B]
 DAYS_SINCE_LAST: [number of days if timestamps visible, otherwise omit]
 RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
-OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
+OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1023,7 +1031,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 2200,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Language context: ${lang}\n\nConversation:\n${snippet}` }]
       })
@@ -1042,8 +1050,9 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
     const observed_patterns = patternsRaw
       ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5)
       : [];
+    const what_changed = previousContext ? (extract('WHAT_CHANGED') || null) : null;
 
-    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| patterns:', observed_patterns.length);
+    console.log('[analyze-conversation] interest:', extract('INTEREST_LEVEL'), '| patterns:', observed_patterns.length, '| what_changed:', !!what_changed);
     res.json({
       person_a:           extract('PERSON_A'),
       person_b:           extract('PERSON_B'),
@@ -1058,7 +1067,8 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       days_since_last:    extract('DAYS_SINCE_LAST'),
       recommended_next:   extract('RECOMMENDED_NEXT'),
       biggest_risk:       extract('BIGGEST_RISK'),
-      observed_patterns
+      observed_patterns,
+      what_changed
     });
   } catch (e) {
     console.error('[analyze-conversation]', e.message);

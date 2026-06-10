@@ -1363,6 +1363,12 @@
       background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.18);
     }
     .conv-risk-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fb923c; display: block; margin-bottom: 4px; }
+    .conv-what-changed {
+      font-size: .82rem; line-height: 1.6; color: #fbbf24;
+      padding: 10px 13px; border-radius: 9px; margin-bottom: 8px;
+      background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2);
+    }
+    .conv-what-changed-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fbbf24; display: block; margin-bottom: 4px; }
     .btn-conv-generate {
       width: 100%; padding: 13px; border: none; border-radius: var(--r-lg);
       background: linear-gradient(95deg, var(--accent), var(--acc2));
@@ -3917,11 +3923,41 @@
 
       try {
         const text = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
+
+        // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
+        let previousContext = null;
+        if (accessToken) {
+          try {
+            const prevR = await fetch(`/api/contacts/${contactId}`, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            if (prevR.ok) {
+              const prevData = await prevR.json();
+              const lastImport = (prevData.conversations || []).find(c =>
+                c.situation?.startsWith('WhatsApp history') && c.fields?.observed_patterns
+              );
+              if (lastImport?.fields) {
+                previousContext = {
+                  date: new Date(lastImport.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+                  interest_level:     lastImport.fields.interest_level     || null,
+                  emotional_tone:     lastImport.fields.emotional_tone     || null,
+                  relationship_state: lastImport.fields.relationship_state || null,
+                  patterns: Array.isArray(lastImport.fields.observed_patterns) ? lastImport.fields.observed_patterns : null
+                };
+              }
+            }
+          } catch { /* previousContext stays null; analysis proceeds normally */ }
+        }
+
         const [analysisRes] = await Promise.all([
           fetch('/api/analyze-conversation', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ conversationText: text, language: lastFields.language || 'English' })
+            body: JSON.stringify({
+              conversationText: text,
+              language: lastFields.language || 'English',
+              ...(previousContext ? { previousContext } : {})
+            })
           }),
           new Promise(r => setTimeout(r, 2200)) // feel substantial
         ]);
@@ -3956,7 +3992,8 @@
                 key_moment:        data.key_moment        || null,
                 recommended_next:  data.recommended_next  || null,
                 observed_patterns: patterns.length ? patterns : null,
-                relationship_state: patchBody.relationship_state || null
+                relationship_state: patchBody.relationship_state || null,
+                what_changed:      data.what_changed || null
               }
             })
           });
@@ -4359,6 +4396,7 @@
           analysisEl.innerHTML = `
             <summary>Latest chat analysis <span class="person-collapse-count">${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span></summary>
             <div>
+              ${ad.what_changed ? `<div class="conv-what-changed"><span class="conv-what-changed-lbl">↑ What's different since last time</span>${escHa(ad.what_changed)}</div>` : ''}
               ${badges ? `<div class="conv-analysis-badges" style="flex-wrap:wrap;gap:5px;margin-bottom:8px">${badges}</div>` : ''}
               ${ad.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escHa(ad.power_balance)}</div>` : ''}
               ${ad.key_moment ? `<div class="conv-key-moment">${escHa(ad.key_moment)}</div>` : ''}
