@@ -1432,6 +1432,43 @@ app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
   }
 });
 
+app.post('/api/simulate-debrief', limiter, async (req, res) => {
+  try {
+    const { character, history, language } = req.body;
+    if (!character || !Array.isArray(history) || history.length < 2) {
+      return res.status(400).json({ error: 'character and history are required' });
+    }
+    const lang = language || 'English';
+    const name = character.name || 'the other person';
+    const transcript = history.map(m =>
+      `[${m.role === 'user' ? 'You' : name}]: ${m.content}`
+    ).join('\n');
+
+    const systemPrompt = `You are a communication coach reviewing a practice conversation. Analyse the transcript and write a short observational debrief of 3-4 sentences in ${lang}.
+
+Rules:
+- NO scores, percentages, or ratings (no "7/10", no "65%", no grades).
+- Observation-only language: describe what happened, not what the user "should" have done.
+- Cover: how the user's approach came across (e.g. warm, direct, hesitant), how ${name} responded (opened up, stayed guarded, warmed slightly), one concrete observation about what worked or felt off, and one gentle forward-looking suggestion.
+- Keep it conversational and kind — like a coach talking after a rehearsal, not an evaluation report.
+- Write entirely in ${lang}.`;
+
+    const userPrompt = `Practice transcript:\n${transcript}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '' });
+  } catch (e) {
+    console.error('[simulate-debrief]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/simulate-reply', limiter, async (req, res) => {
   try {
     const { character, history, language } = req.body;

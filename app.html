@@ -869,6 +869,33 @@
       cursor: pointer; flex-shrink: 0; align-self: flex-end; transition: opacity .15s;
     }
     .roleplay-send:disabled { opacity: .45; cursor: default; }
+    .rp-debrief-card {
+      margin: 0 16px 4px; padding: 14px 16px; border-radius: 12px;
+      background: rgba(212,113,90,.07); border: 1px solid rgba(212,113,90,.22);
+      font-size: .86rem; line-height: 1.65; color: var(--text);
+      animation: fadeUp .25s ease both; flex-shrink: 0;
+    }
+    .rp-debrief-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--accent); margin-bottom: 8px;
+    }
+    .rp-debrief-actions {
+      display: flex; gap: 8px; padding: 10px 16px 14px; flex-shrink: 0;
+    }
+    .rp-again-btn {
+      flex: 1; border: 1px solid var(--bord); border-radius: var(--r-sm);
+      padding: 8px 14px; background: transparent; color: var(--text);
+      font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .rp-again-btn:hover { background: var(--surf2); border-color: var(--bord2); }
+    .rp-done-btn {
+      flex: 1; border: 1px solid var(--borda); border-radius: var(--r-sm);
+      padding: 8px 14px; background: rgba(212,113,90,.1); color: var(--accent);
+      font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .rp-done-btn:hover { background: rgba(212,113,90,.2); }
     .practice-btn {
       border: 1px solid rgba(212,113,90,.35); border-radius: var(--r-sm);
       padding: 5px 11px; background: rgba(212,113,90,.08); color: var(--accent);
@@ -1876,7 +1903,15 @@
       <div class="roleplay-suggest hidden" id="rp-suggest">
         <button class="roleplay-suggest-btn" id="rp-suggest-btn">End &amp; see how it went →</button>
       </div>
-      <div class="roleplay-footer">
+      <div class="rp-debrief-card hidden" id="rp-debrief">
+        <div class="rp-debrief-label">How it went</div>
+        <div id="rp-debrief-text"></div>
+      </div>
+      <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
+        <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
+        <button class="rp-done-btn" id="rp-done-btn">Close</button>
+      </div>
+      <div class="roleplay-footer" id="rp-footer">
         <textarea class="roleplay-input" id="rp-input" placeholder="Write your next message…" rows="1"></textarea>
         <button class="roleplay-send" id="rp-send">Send →</button>
       </div>
@@ -5326,15 +5361,17 @@
     // ─────────────────────────────────────────────────────────────
 
     // ── Role-play practice simulator ──────────────────────────────────────────
-    let _simHistory   = [];
-    let _simCharacter = null;
-    let _simTurn      = 1;
+    let _simHistory    = [];
+    let _simCharacter  = null;
+    let _simTurn       = 1;
+    let _simInitialMsg = '';
 
     function openSimulator(msgText, contactCtx) {
       if (!msgText?.trim()) return;
       _simCharacter = contactCtx
         ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary }
         : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '' };
+      _simInitialMsg = msgText;
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;
 
@@ -5343,6 +5380,9 @@
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
       document.getElementById('rp-suggest').classList.add('hidden');
+      document.getElementById('rp-debrief').classList.add('hidden');
+      document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
       _rpAppendBubble('user', msgText);
@@ -5403,11 +5443,43 @@
 
     function _rpClose() {
       document.getElementById('simulationModal').classList.add('hidden');
-      _simHistory = []; _simCharacter = null;
+      _simHistory = []; _simCharacter = null; _simInitialMsg = '';
+    }
+
+    async function endSimulation() {
+      document.getElementById('rp-suggest').classList.add('hidden');
+      document.getElementById('rp-footer').classList.add('hidden');
+
+      const debriefEl     = document.getElementById('rp-debrief');
+      const debriefTextEl = document.getElementById('rp-debrief-text');
+      debriefEl.classList.remove('hidden');
+      debriefTextEl.textContent = '…';
+
+      try {
+        const lang = lastFields?.language || 'English';
+        const resp = await fetch('/api/simulate-debrief', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Failed');
+        debriefTextEl.textContent = data.debrief;
+      } catch (e) {
+        debriefTextEl.textContent = 'Could not load feedback — but great practice. Close and try again anytime.';
+        console.error('[simulate-debrief]', e);
+      }
+
+      document.getElementById('rp-debrief-actions').classList.remove('hidden');
+      document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
 
     document.getElementById('rp-close').addEventListener('click', _rpClose);
-    document.getElementById('rp-suggest-btn').addEventListener('click', _rpClose);
+    document.getElementById('rp-suggest-btn').addEventListener('click', endSimulation);
+    document.getElementById('rp-done-btn').addEventListener('click', _rpClose);
+    document.getElementById('rp-again-btn').addEventListener('click', () => {
+      openSimulator(_simInitialMsg, _simCharacter);
+    });
     document.getElementById('simulationModal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) _rpClose();
     });
