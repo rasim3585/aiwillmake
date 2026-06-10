@@ -3971,6 +3971,13 @@
       return 'Neutral';
     }
 
+    function trimConversation(text) {
+      const HEAD = 2000, TAIL = 12000;
+      return text.length > HEAD + TAIL
+        ? text.slice(0, HEAD) + '\n[...]\n' + text.slice(-TAIL)
+        : text;
+    }
+
     async function analyzeContactChat(fileOrText, contactId, contactName) {
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       showLoadingOverlay(`Analyzing your conversation with ${contactName}…`);
@@ -3985,7 +3992,7 @@
       }
 
       try {
-        const text = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
+        const text = trimConversation(typeof fileOrText === 'string' ? fileOrText : await fileOrText.text());
 
         // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
         let previousContext = null;
@@ -4085,12 +4092,12 @@
           _pendingContactAnalysis = { contactId, data };
           loadPersonSection(contactId);
         }
-      } catch {
+      } catch (err) {
         if (patternsEl) {
           patternsEl.innerHTML = renderContactPatterns(contactName, null);
           wireContactImportBtn(contactId, contactName);
         }
-        showToast('Could not analyze chat. Please try again.', 'error');
+        showToast(err.message || 'Could not analyze chat. Please try again.', 'error');
       } finally {
         hideLoadingOverlay();
         document.getElementById('contactImgInput').value = '';
@@ -4735,15 +4742,16 @@
         const resp = await fetch('/api/analyze-conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conversationText, language: lastFields.language || 'English' })
+          body: JSON.stringify({ conversationText: trimConversation(conversationText), language: lastFields.language || 'English' })
         });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.error || (resp.status === 413 ? 'File too large — please try a shorter conversation or paste the text.' : `Server error (${resp.status})`));
         renderConvAnalysis(data);
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (e) {
-        resultEl.innerHTML = `<p style="color:#f87171;font-size:.85rem">Could not analyze conversation: ${escH ? escH(e.message) : e.message}</p>`;
+        const escMsg = String(e.message || 'Unknown error').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        resultEl.innerHTML = `<p style="color:#f87171;font-size:.85rem">Could not analyze conversation: ${escMsg}</p>`;
       }
     }
     // ────────────────────────────────────────────────────────────
