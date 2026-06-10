@@ -1776,9 +1776,14 @@
         </div>
         <!-- Chat import: upload OR paste — shown when whatsapp is chosen -->
         <div id="wizChatInputPanel" class="hidden" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-          <button type="button" class="wiz-opt" id="wizUploadBtn" style="padding:12px 16px">
-            <span class="wiz-opt-icon" style="font-size:1.2rem">📂</span>
-            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt or screenshot</span></div>
+          <button type="button" class="wiz-opt" id="wizImgBtn" style="padding:12px 16px">
+            <span class="wiz-opt-icon" style="font-size:1.2rem">📷</span>
+            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload screenshot</span></div>
+            <span class="wiz-opt-arrow">→</span>
+          </button>
+          <button type="button" class="wiz-opt" id="wizTxtBtn" style="padding:12px 16px">
+            <span class="wiz-opt-icon" style="font-size:1.2rem">📄</span>
+            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt file</span></div>
             <span class="wiz-opt-arrow">→</span>
           </button>
           <div style="text-align:center;font-size:.76rem;color:var(--muted)">or</div>
@@ -1812,13 +1817,18 @@
           <button type="button" class="voice-btn hidden" id="voiceSmartBtn" title="Voice input" onclick="startVoice('smartInput','voiceSmartBtn')">🎤</button>
           <span class="smart-feedback hidden" id="smartFeedback"></span>
         </div>
-        <label class="import-link" for="convFileInput">↑ Or import a WhatsApp conversation (.txt or screenshot)</label>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <label class="import-link" for="convImgInput">📷 Import screenshot</label>
+          <label class="import-link" for="convTxtInput">📄 Import .txt file</label>
+        </div>
       </div>
     </section>
 
     <!-- File inputs live outside all mode sections so .click() always works -->
-    <input type="file" id="convFileInput" accept=".txt,.jpg,.jpeg,.png,.webp" style="display:none">
-    <input type="file" id="contactChatInput" accept=".txt,.jpg,.jpeg,.png,.webp" style="display:none">
+    <input type="file" id="convImgInput" accept="image/*" multiple style="display:none">
+    <input type="file" id="convTxtInput" accept=".txt" style="display:none">
+    <input type="file" id="contactImgInput" accept="image/*" multiple style="display:none">
+    <input type="file" id="contactTxtInput" accept=".txt" style="display:none">
 
     <!-- Mode 2: Continue a Conversation -->
     <section id="continueSection" class="hidden">
@@ -3579,19 +3589,8 @@
       currentConvId = null;
 
       if (type === 'whatsapp') {
-        hideAllMainSections();
-        updatePrevMsgFieldVisibility();
-        if (activeContactContext?.id) {
-          const inp = document.getElementById('contactChatInput');
-          inp.dataset.contactId = activeContactContext.id;
-          inp.dataset.contactName = activeContactContext.name;
-          document.getElementById('homeSection').classList.remove('hidden');
-          inp.click();
-        } else {
-          document.getElementById('continueSection').classList.remove('hidden');
-          setTimeout(() => document.getElementById('contImportOpt')?.click(), 0);
-          document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        document.getElementById('wizChatInputPanel').classList.remove('hidden');
+        document.getElementById('wizChatInputPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }
 
@@ -3690,14 +3689,18 @@
       document.querySelectorAll('.continue-opt').forEach(o => o.classList.remove('active'));
       document.getElementById('contImportOpt').classList.add('active');
       const existing = document.getElementById('waiBox');
-      if (existing) { existing.remove(); document.getElementById('convFileInput').click(); return; }
+      if (existing) { existing.remove(); return; }
       const box = document.createElement('div');
       box.id = 'waiBox'; box.className = 'wai-box';
       box.innerHTML = `
         <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file. Or upload a screenshot of the conversation.</p>
-        <button type="button" class="wai-btn" id="waiChooseBtn">Choose file →</button>`;
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="wai-btn" id="waiImgBtn">📷 Upload screenshot</button>
+          <button type="button" class="wai-btn" id="waiTxtBtn">📄 Upload .txt file</button>
+        </div>`;
       document.getElementById('continueSection').querySelector('.continue-card').appendChild(box);
-      document.getElementById('waiChooseBtn').addEventListener('click', () => document.getElementById('convFileInput').click());
+      document.getElementById('waiImgBtn').addEventListener('click', () => document.getElementById('convImgInput').click());
+      document.getElementById('waiTxtBtn').addEventListener('click', () => document.getElementById('convTxtInput').click());
     });
 
     document.getElementById('contHistoryOpt').addEventListener('click', () => {
@@ -3827,7 +3830,11 @@
           <div class="contacts-section-label">What we learned about ${escH(name)}</div>
           <div>${patterns.map(p => `<div class="contact-pattern-item">${escH(p)}</div>`).join('')}</div>
           <p class="contact-patterns-note">Based on conversation history — observations, not labels.</p>
-          <button class="btn-import-contact-chat" id="reimportChatBtn">↻ Update with new chat</button>`;
+          <button class="btn-import-contact-chat" id="reimportChatBtn">↻ Update with new chat</button>
+          <div id="reimportChoicePanel" class="hidden" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <button class="wai-btn" id="reimportImgBtn" style="flex:1;padding:6px 10px;font-size:.78rem">📷 Screenshot</button>
+            <button class="wai-btn" id="reimportTxtBtn" style="flex:1;padding:6px 10px;font-size:.78rem">📄 .txt file</button>
+          </div>`;
       }
       return `
         <div class="contacts-section-label">Observed patterns</div>
@@ -3835,31 +3842,38 @@
         <button class="btn-import-contact-chat" id="importChatBtn">Import WhatsApp chat →</button>
         <div id="contactImportInfo" class="wai-box hidden" style="margin-top:10px">
           <p class="wai-text"><strong>How to export:</strong> Open the chat → tap <em>⋮</em> → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file.</p>
-          <button class="wai-btn" id="contactChooseFileBtn">Choose file →</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="wai-btn" id="contactImgChooseBtn">📷 Screenshot</button>
+            <button class="wai-btn" id="contactTxtChooseBtn">📄 .txt file</button>
+          </div>
         </div>`;
     }
 
     function wireContactImportBtn(contactId, contactName) {
-      const showInfo = () => {
-        const info = document.getElementById('contactImportInfo');
-        if (info) {
-          info.classList.toggle('hidden');
-          if (!info.classList.contains('hidden')) {
-            document.getElementById('contactChooseFileBtn')?.addEventListener('click', () => {
-              const inp = document.getElementById('contactChatInput');
-              inp.dataset.contactId = contactId;
-              inp.dataset.contactName = contactName;
-              inp.click();
-            }, { once: true });
-          }
-        }
-      };
-      document.getElementById('importChatBtn')?.addEventListener('click', showInfo);
-      document.getElementById('reimportChatBtn')?.addEventListener('click', () => {
-        const inp = document.getElementById('contactChatInput');
+      const setAndClick = (inpId) => {
+        const inp = document.getElementById(inpId);
+        if (!inp) return;
         inp.dataset.contactId = contactId;
         inp.dataset.contactName = contactName;
         inp.click();
+      };
+      document.getElementById('importChatBtn')?.addEventListener('click', () => {
+        const info = document.getElementById('contactImportInfo');
+        if (!info) return;
+        info.classList.toggle('hidden');
+        if (!info.classList.contains('hidden')) {
+          document.getElementById('contactImgChooseBtn')?.addEventListener('click', () => setAndClick('contactImgInput'), { once: true });
+          document.getElementById('contactTxtChooseBtn')?.addEventListener('click', () => setAndClick('contactTxtInput'), { once: true });
+        }
+      });
+      document.getElementById('reimportChatBtn')?.addEventListener('click', () => {
+        const panel = document.getElementById('reimportChoicePanel');
+        if (!panel) return;
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+          document.getElementById('reimportImgBtn')?.addEventListener('click', () => setAndClick('contactImgInput'), { once: true });
+          document.getElementById('reimportTxtBtn')?.addEventListener('click', () => setAndClick('contactTxtInput'), { once: true });
+        }
       });
     }
 
@@ -3956,25 +3970,30 @@
         }
         showToast('Could not analyze chat. Please try again.', 'error');
       } finally {
-        document.getElementById('contactChatInput').value = '';
+        document.getElementById('contactImgInput').value = '';
+        document.getElementById('contactTxtInput').value = '';
       }
     }
 
-    document.getElementById('contactChatInput').addEventListener('change', async (e) => {
+    document.getElementById('contactImgInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const { contactId, contactName } = e.target.dataset;
       if (!contactId) return;
-      if (file.type.startsWith('image/')) {
-        try {
-          const text = await extractScreenshot(file);
-          await analyzeContactChat(text, contactId, contactName);
-        } catch (_) {
-          showToast("Couldn't read the screenshot — try a clearer image or paste the text.", 'error');
-        }
-      } else {
-        await analyzeContactChat(file, contactId, contactName);
+      try {
+        const text = await extractScreenshot(file);
+        await analyzeContactChat(text, contactId, contactName);
+      } catch (_) {
+        showToast("Couldn't read the screenshot — try a clearer image or paste the text.", 'error');
       }
+    });
+
+    document.getElementById('contactTxtInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const { contactId, contactName } = e.target.dataset;
+      if (!contactId) return;
+      await analyzeContactChat(file, contactId, contactName);
     });
 
     function showContactsPanel() {
@@ -4431,30 +4450,35 @@
       });
     }
 
-    document.getElementById('convFileInput').addEventListener('change', async (e) => {
+    document.getElementById('convImgInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       e.target.value = '';
       const resultEl = document.getElementById('convAnalysisResult');
       resultEl.classList.remove('hidden');
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      let text;
-      if (file.type.startsWith('image/')) {
-        resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading screenshot…</p>' +
-          '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
-        try {
-          text = await extractScreenshot(file);
-        } catch (_) {
-          resultEl.innerHTML = '<p style="color:#e55;font-size:.84rem">Couldn\'t read the screenshot — try a clearer image or paste the text.</p>';
-          return;
-        }
+      resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading screenshot…</p>' +
+        '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+      try {
+        const text = await extractScreenshot(file);
         resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Analyzing…</p>' +
           '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
-      } else {
-        resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading file…</p>' +
-          '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
-        text = await file.text();
+        analyzeConversation(text);
+      } catch (_) {
+        resultEl.innerHTML = '<p style="color:#e55;font-size:.84rem">Couldn\'t read the screenshot — try a clearer image or paste the text.</p>';
       }
+    });
+
+    document.getElementById('convTxtInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      e.target.value = '';
+      const resultEl = document.getElementById('convAnalysisResult');
+      resultEl.classList.remove('hidden');
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultEl.innerHTML = '<p style="font-size:.82rem;color:var(--sec);margin-bottom:10px">Reading file…</p>' +
+        '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px"></div>';
+      const text = await file.text();
       analyzeConversation(text);
     });
 
@@ -4733,20 +4757,20 @@
     }
 
     // ── Wizard chat-import panel ────────────────────────────────
-    document.getElementById('wizUploadBtn').addEventListener('click', () => {
+    const wizClickInput = (contactInpId, convInpId) => {
       if (activeContactContext?.id) {
-        hideAllMainSections();
-        const inp = document.getElementById('contactChatInput');
+        const inp = document.getElementById(contactInpId);
         inp.dataset.contactId = activeContactContext.id;
         inp.dataset.contactName = activeContactContext.name;
+        hideAllMainSections();
         document.getElementById('homeSection').classList.remove('hidden');
         inp.click();
       } else {
-        selectMode(2);
-        document.getElementById('contImportOpt').click();
-        document.getElementById('continueSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById(convInpId).click();
       }
-    });
+    };
+    document.getElementById('wizImgBtn').addEventListener('click', () => wizClickInput('contactImgInput', 'convImgInput'));
+    document.getElementById('wizTxtBtn').addEventListener('click', () => wizClickInput('contactTxtInput', 'convTxtInput'));
 
     document.getElementById('wizPasteAnalyzeBtn').addEventListener('click', () => {
       const text = document.getElementById('wizPasteArea').value.trim();
