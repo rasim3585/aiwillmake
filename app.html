@@ -4035,6 +4035,11 @@
         if (!analysisRes.ok) throw new Error(data.error);
 
         const patterns = data.observed_patterns || [];
+        // Prepend address style as an observable fact when it's a pet name (not just the formal name)
+        if (data.how_user_addresses &&
+            data.how_user_addresses.toLowerCase() !== contactName.toLowerCase()) {
+          patterns.unshift(`User naturally addresses them as '${data.how_user_addresses}'`);
+        }
         const patchBody = { observed_patterns: patterns.length ? patterns : null };
         if (data.emotional_tone) patchBody.relationship_state = mapToneToState(data.emotional_tone);
         if (data.recommended_next) patchBody.relationship_summary = data.recommended_next;

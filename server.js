@@ -168,11 +168,13 @@ app.get('/api/credits', async (req, res) => {
 
 function buildContactContext(contactContext) {
   if (!contactContext?.name) return '';
-  const patterns = Array.isArray(contactContext.observed_patterns) && contactContext.observed_patterns.length
-    ? contactContext.observed_patterns.join('; ')
-    : null;
+  const allPatterns = Array.isArray(contactContext.observed_patterns) && contactContext.observed_patterns.length
+    ? contactContext.observed_patterns : [];
+  const addressPattern = allPatterns.find(p => p.startsWith("User naturally addresses them as"));
+  const addressTerm = addressPattern ? (addressPattern.match(/'([^']+)'/) || [])[1] : null;
+  const patterns = allPatterns.length ? allPatterns.join('; ') : null;
   const summary = contactContext.relationship_summary || null;
-  return `\n\nCONTEXT about the recipient (${contactContext.name}): Based on past conversations, here's what we've observed: ${patterns || 'No specific patterns yet'}. Current relationship state: ${contactContext.relationship_state || 'Unknown'}.${summary ? ` Latest recommended action: ${summary}` : ''}
+  return `\n\nCONTEXT about the recipient (${contactContext.name}): Based on past conversations, here's what we've observed: ${patterns || 'No specific patterns yet'}. Current relationship state: ${contactContext.relationship_state || 'Unknown'}.${summary ? ` Latest recommended action: ${summary}` : ''}${addressTerm ? `\nADDRESS STYLE: The user naturally calls this person "${addressTerm}" — use this exact term when addressing them in messages, not their formal name.` : ''}
 Use these observations to make your strategies, predictions, and analysis more accurate and personal.
 STRICT RULES: Do not diagnose personality traits. Do not assume intent or label them psychologically. Use these observed tendencies only as soft probabilistic signals, never as certainties.`;
 }
@@ -1004,7 +1006,9 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
       ? `\nWHAT_CHANGED: [2-3 sentences on concrete behavioral differences since the previous analysis. Compare: who initiates contact, response speed, engagement level, tone shifts. Observable changes only — no diagnoses, no labels. Example: "Previously initiated most conversations; now rarely starts contact. Response times have increased noticeably." Omit this line entirely if differences are minimal or unclear.]`
       : '';
 
-    const systemPrompt = `${prevBlock}Analyze this exported chat conversation. Extract:
+    const systemPrompt = `${prevBlock}CRITICAL: Detect the language of this conversation. Write ALL values in that exact same language — labels (POWER_BALANCE:, KEY_MOMENT:, etc.) stay in English for parsing, but every value after the colon must be in the conversation's language. Turkish conversation → all values in Turkish. English → English. This rule overrides everything else.
+
+Analyze this exported chat conversation. Extract:
 PERSON_A: [who seems to be the user - the one asking for help]
 PERSON_B: [the other person's name if visible]
 TOTAL_MESSAGES: [count]
@@ -1018,9 +1022,9 @@ LAST_MESSAGE_BY: [A or B]
 DAYS_SINCE_LAST: [number of days if timestamps visible, otherwise omit]
 RECOMMENDED_NEXT: [what to do next based on the conversation — one sentence]
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
-OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]${whatChangedLine}
+OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
+ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]${whatChangedLine}
 
-IMPORTANT: Detect the language of the conversation and write ALL text output fields in that same language. If the conversation is in Turkish, every output field must be in Turkish. If in English, in English. Match the conversation's language exactly.
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1069,7 +1073,8 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       recommended_next:   extract('RECOMMENDED_NEXT'),
       biggest_risk:       extract('BIGGEST_RISK'),
       observed_patterns,
-      what_changed
+      what_changed,
+      how_user_addresses: extract('ADDRESS_STYLE') || null
     });
   } catch (e) {
     console.error('[analyze-conversation]', e.message);
