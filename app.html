@@ -2536,6 +2536,7 @@
     let lastGeneratedSig = null;
     let selectedMsgText = '';
     let activeContactContext = null;
+    let isGenerating = false;
     let currentConvId     = null;
     let allConvData       = [];
     let _recentMessages   = [];
@@ -2772,7 +2773,8 @@
       }
       if (gateEl) gateEl.classList.add('hidden');
 
-      if (btn.disabled) return; // skip label update during generation spinner
+      if (isGenerating) return; // spinner active — don't touch button state
+      btn.disabled = false;
       const lbl = btn.querySelector('.btn-label');
       const sig = getGenerateSig();
       if (sig && sig === lastGeneratedSig) {
@@ -2830,6 +2832,7 @@
       }
 
       const btn = document.getElementById('generateBtn');
+      isGenerating = true;
       btn.disabled = true;
       btn.classList.add('loading');
       const btnLabel = btn.querySelector('.btn-label');
@@ -2999,9 +3002,9 @@
         console.error('Generate error:', err);
         showToast('Something went wrong. Please try again.', 'error');
       } finally {
+        isGenerating = false;
         finishProgress();
         stopLoadingMessages(btn.querySelector('.btn-label'));
-        btn.disabled = false;
         btn.classList.remove('loading');
         setActionBtns(false);
         if (accessToken) fetchAndShowCredits();
