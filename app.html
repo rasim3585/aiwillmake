@@ -2147,7 +2147,6 @@
     let lastGeneratedSig = null;
     let selectedMsgText = '';
     let activeContactContext = null;
-    let _reviewContact    = null;
     let currentConvId     = null;
     let _recentMessages   = [];
 
@@ -3116,17 +3115,20 @@
 
         currentConvId = convId;
 
-        if (data.contacts?.id && !activeContactContext) {
+        if (data.contacts?.id) {
           activeContactContext = {
             id: data.contacts.id,
             name: data.contacts.name,
+            type: data.contacts.type || null,
             relationship_state: data.contacts.relationship_state || null,
             observed_patterns: Array.isArray(data.contacts.observed_patterns) && data.contacts.observed_patterns.length
               ? data.contacts.observed_patterns : null
           };
-          updatePrevMsgFieldVisibility();
-          renderCtxBadge(document.getElementById('contactContextBadge'));
+        } else {
+          activeContactContext = null;
         }
+        updatePrevMsgFieldVisibility();
+        renderCtxBadge(document.getElementById('contactContextBadge'));
 
         const isImport = !data.subcategory_id && (
           data.situation?.startsWith('WhatsApp history') ||
@@ -3433,12 +3435,12 @@
       document.querySelectorAll('.mode-card').forEach(c =>
         c.classList.toggle('active', parseInt(c.dataset.mode) === mode)
       );
-      if (mode !== 1 || clearContext) {
+      if (clearContext) {
         activeContactContext = null;
         ['contactContextBadge','likelyCtxBadge','replyCtxBadge'].forEach(id =>
           document.getElementById(id)?.classList.add('hidden'));
-        updatePrevMsgFieldVisibility();
       }
+      updatePrevMsgFieldVisibility();
       document.getElementById('smartStartSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('catSection').classList.toggle('hidden', mode !== 1);
       document.getElementById('continueSection').classList.toggle('hidden', mode !== 2);
@@ -3451,10 +3453,8 @@
     }
 
     // ── New Conversation Wizard ──────────────────────────────────
-    let _wizContact = null;
-
     function openNewConversation() {
-      _wizContact = null;
+      activeContactContext = null;
       document.getElementById('homeSection').classList.add('hidden');
       ['smartStartSection','catSection','subcatSection','formCard',
        'continueSection','reviewSection','convAnalysisResult'].forEach(id =>
@@ -3474,7 +3474,7 @@
     }
 
     function wizGoToStep1() {
-      _wizContact = null;
+      activeContactContext = null;
       document.getElementById('wizStep1').classList.remove('hidden');
       document.getElementById('wizStep2').classList.add('hidden');
       wizLoadContacts();
@@ -3483,7 +3483,7 @@
     async function wizGoToStep2() {
       document.getElementById('wizStep1').classList.add('hidden');
       document.getElementById('wizStep2').classList.remove('hidden');
-      document.getElementById('wizStep2Sub').textContent = _wizContact ? `Writing to ${_wizContact.name}` : '';
+      document.getElementById('wizStep2Sub').textContent = activeContactContext ? `Writing to ${activeContactContext.name}` : '';
       document.getElementById('wizChatInputPanel')?.classList.add('hidden');
       const pa = document.getElementById('wizPasteArea');
       if (pa) pa.value = '';
@@ -3492,9 +3492,9 @@
       // Remove any continue button left from a prior contact selection
       document.getElementById('wizContinueBtn')?.remove();
 
-      if (_wizContact?.id && accessToken) {
+      if (activeContactContext?.id && accessToken) {
         try {
-          const r = await fetch(`/api/contacts/${_wizContact.id}`, {
+          const r = await fetch(`/api/contacts/${activeContactContext.id}`, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
           });
           if (r.ok) {
@@ -3514,7 +3514,7 @@
               btn.innerHTML = `
                 <span class="wiz-opt-icon">↩</span>
                 <div class="wiz-opt-body">
-                  <span class="wiz-opt-title">Continue with ${escH(_wizContact.name)}</span>
+                  <span class="wiz-opt-title">Continue with ${escH(activeContactContext.name)}</span>
                   <span class="wiz-opt-desc">${desc}</span>
                 </div>
                 <span class="wiz-opt-arrow">→</span>`;
@@ -3534,12 +3534,6 @@
       // 'whatsapp': show inline paste/upload panel — keep wizard visible until user picks
       if (type === 'whatsapp') {
         currentConvId = null;
-        activeContactContext = _wizContact ? {
-          id: _wizContact.id, name: _wizContact.name,
-          relationship_state: _wizContact.relationship_state || null,
-          observed_patterns: Array.isArray(_wizContact.observed_patterns) && _wizContact.observed_patterns.length
-            ? _wizContact.observed_patterns : null
-        } : null;
         updatePrevMsgFieldVisibility();
         document.getElementById('wizChatInputPanel')?.classList.remove('hidden');
         setTimeout(() => document.getElementById('wizChatInputPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
@@ -3548,23 +3542,16 @@
 
       currentConvId = null;
       document.getElementById('newConvWizard').classList.add('hidden');
-      activeContactContext = _wizContact ? {
-        id: _wizContact.id,
-        name: _wizContact.name,
-        relationship_state: _wizContact.relationship_state || null,
-        observed_patterns: Array.isArray(_wizContact.observed_patterns) && _wizContact.observed_patterns.length
-          ? _wizContact.observed_patterns : null
-      } : null;
       updatePrevMsgFieldVisibility();
 
       if (type === 'start') {
         ['continueSection','reviewSection','subcatSection','formCard','convAnalysisResult'].forEach(id =>
           document.getElementById(id)?.classList.add('hidden'));
-        selectMode(1, !_wizContact);
+        selectMode(1, !activeContactContext);
         const smartIn = document.getElementById('smartInput');
         smartIn.value = '';
-        smartIn.placeholder = _wizContact
-          ? `What do you want to say to ${_wizContact.name}?`
+        smartIn.placeholder = activeContactContext
+          ? `What do you want to say to ${activeContactContext.name}?`
           : "What do you need to write? (e.g. 'I need to message my ex', 'write a complaint to BIM')";
         document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else if (type === 'decode') {
@@ -3604,7 +3591,14 @@
               ${c.relationship_state ? `<span class="wiz-contact-state">${escH(c.relationship_state)}</span>` : ''}
             </div>
             <span class="wiz-contact-arrow">→</span>`;
-          btn.addEventListener('click', () => { _wizContact = c; wizGoToStep2(); });
+          btn.addEventListener('click', () => {
+            activeContactContext = {
+              id: c.id, name: c.name, type: c.type || null,
+              relationship_state: c.relationship_state || null,
+              observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null
+            };
+            wizGoToStep2();
+          });
           el.appendChild(btn);
         });
         const newBtn = document.createElement('button');
@@ -3678,7 +3672,6 @@
     function refreshReviewContactHint() {
       const el = document.getElementById('reviewContactHint');
       if (!el || !accessToken) return;
-      _reviewContact = null;
       el.innerHTML = `
         <div class="review-contact-hint">
           <label for="reviewContactSel">Who's this for?</label>
@@ -3695,12 +3688,17 @@
             const opt = document.createElement('option');
             opt.value = c.id;
             opt.textContent = c.name;
-            opt.dataset.ctx = JSON.stringify({ name: c.name, type: c.type || null, relationship_state: c.relationship_state || null });
+            opt.dataset.ctx = JSON.stringify({ id: c.id, name: c.name, type: c.type || null, relationship_state: c.relationship_state || null, observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null });
             sel.appendChild(opt);
           });
+          // Pre-select current contact if set
+          if (activeContactContext?.id) {
+            const match = [...sel.options].find(o => o.value === activeContactContext.id);
+            if (match) sel.value = activeContactContext.id;
+          }
           sel.addEventListener('change', () => {
             const opt = sel.options[sel.selectedIndex];
-            _reviewContact = opt.value ? JSON.parse(opt.dataset.ctx || '{}') : null;
+            activeContactContext = opt.value ? JSON.parse(opt.dataset.ctx || '{}') : null;
           });
         })
         .catch(() => {});
@@ -3723,7 +3721,7 @@
           body: JSON.stringify({
             reply: message, categoryId: selectedCatId || 'general', situation: '',
             language: lastFields.language || 'English', senderType: 'review',
-            contactContext: _reviewContact || undefined
+            contactContext: activeContactContext || undefined
           })
         });
         const data = await resp.json();
@@ -4575,10 +4573,10 @@
     // ── Wizard chat-import panel ────────────────────────────────
     document.getElementById('wizUploadBtn').addEventListener('click', () => {
       document.getElementById('newConvWizard').classList.add('hidden');
-      if (_wizContact) {
+      if (activeContactContext?.id) {
         const inp = document.getElementById('contactChatInput');
-        inp.dataset.contactId = _wizContact.id;
-        inp.dataset.contactName = _wizContact.name;
+        inp.dataset.contactId = activeContactContext.id;
+        inp.dataset.contactName = activeContactContext.name;
         inp.click();
       } else {
         selectMode(2);
@@ -4593,8 +4591,8 @@
       const warning = document.getElementById('wizPasteWarning');
       warning.classList.toggle('hidden', text.length >= 50);
       document.getElementById('newConvWizard').classList.add('hidden');
-      if (_wizContact) {
-        analyzeContactChat(text, _wizContact.id, _wizContact.name);
+      if (activeContactContext?.id) {
+        analyzeContactChat(text, activeContactContext.id, activeContactContext.name);
       } else {
         selectMode(1, true);
         analyzeConversation(text);
