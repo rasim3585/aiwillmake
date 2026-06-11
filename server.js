@@ -1087,6 +1087,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
         const sd = await sr.json();
         if (sr.ok && sd.content?.[0]?.text) {
           const synthesisText = sd.content[0].text;
+          console.log('[synthesis-raw]', JSON.stringify(synthesisText.slice(0, 500)));
           console.log('[chunk-synthesis]', synthesisText);
           const extractSynth = key => {
             const clean = synthesisText.replace(/\*\*/g, '').replace(/\*/g, '');
