@@ -959,7 +959,12 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
     const lang = language || 'English';
     // Head (identity/context) + tail (recent dynamics) preserves both ends
     const FULL_THRESHOLD = 175000;
+    const CHUNK_SIZE    = 25000;
+    const CHUNK_OVERLAP = 500;
     let snippet;
+    let chunkDerivedPatterns             = null;
+    let chunkDerivedRelationshipSummary  = null;
+
     if (conversationText.length <= FULL_THRESHOLD) {
       snippet = conversationText;
     } else {
@@ -970,6 +975,59 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
         conversationText.slice(midStart, midStart + MID) + '\n[...]\n' +
         conversationText.slice(-TAIL)
       );
+
+      // Build overlapping chunks
+      const chunks = [];
+      let pos = 0;
+      while (pos < conversationText.length) {
+        chunks.push(conversationText.slice(pos, pos + CHUNK_SIZE));
+        if (pos + CHUNK_SIZE >= conversationText.length) break;
+        pos += CHUNK_SIZE - CHUNK_OVERLAP;
+      }
+      console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks`);
+
+      // Sequential Haiku pass — one summary per chunk
+      const summaries = [];
+      for (const chunk of chunks) {
+        try {
+          const cr = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 300,
+              system: 'Extract behavioral patterns from this chat excerpt. Focus on: communication style, emotional tone, how this person expresses themselves, relationship dynamics. Output 3-5 observations as plain sentences. No labels, no markdown.',
+              messages: [{ role: 'user', content: `Excerpt:\n${chunk}` }]
+            })
+          });
+          const cd = await cr.json();
+          if (cr.ok && cd.content?.[0]?.text) summaries.push(cd.content[0].text.trim());
+        } catch { /* skip failed chunk, continue */ }
+      }
+
+      // Synthesize all summaries with Sonnet
+      if (summaries.length) {
+        try {
+          const sr = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-6',
+              max_tokens: 600,
+              system: 'You are synthesizing behavioral observations about a person from multiple chat excerpts. Create a coherent character profile. Extract: 3-5 OBSERVED_PATTERNS (pipe-separated behavioral observations, not diagnoses), and a RELATIONSHIP_SUMMARY (2-3 sentences on who this person is and the relationship dynamic). Format: OBSERVED_PATTERNS: ...\nRELATIONSHIP_SUMMARY: ...',
+              messages: [{ role: 'user', content: `Observations from ${summaries.length} chunks:\n${summaries.join('\n---\n')}` }]
+            })
+          });
+          const sd = await sr.json();
+          if (sr.ok && sd.content?.[0]?.text) {
+            const st = sd.content[0].text;
+            const es = key => { const m = st.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
+            const rp = es('OBSERVED_PATTERNS');
+            if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
+            chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
+          }
+        } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
+      }
     }
 
     const prevBlock = previousContext
@@ -1029,33 +1087,35 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
     };
 
     const patternsRaw = extract('OBSERVED_PATTERNS');
-    const observed_patterns = patternsRaw
+    const snippetPatterns = patternsRaw
       ? patternsRaw.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5)
       : [];
+    const observed_patterns = chunkDerivedPatterns ?? snippetPatterns;
     const what_changed = previousContext ? (extract('WHAT_CHANGED') || null) : null;
 
     const action_detail = extract('ACTION_DETAIL') || null;
     res.json({
-      person_a:           extract('PERSON_A'),
-      person_b:           extract('PERSON_B'),
-      total_messages:     extract('TOTAL_MESSAGES'),
-      person_a_messages:  extract('PERSON_A_MESSAGES'),
-      person_b_messages:  extract('PERSON_B_MESSAGES'),
-      power_balance:      extract('POWER_BALANCE'),
-      interest_level:     extract('INTEREST_LEVEL'),
-      emotional_tone:     extract('EMOTIONAL_TONE'),
-      key_moment:         extract('KEY_MOMENT'),
-      last_message_by:    extract('LAST_MESSAGE_BY'),
-      days_since_last:    extract('DAYS_SINCE_LAST'),
-      action_type:        extract('ACTION_TYPE') || 'SEND_MESSAGE',
+      person_a:             extract('PERSON_A'),
+      person_b:             extract('PERSON_B'),
+      total_messages:       extract('TOTAL_MESSAGES'),
+      person_a_messages:    extract('PERSON_A_MESSAGES'),
+      person_b_messages:    extract('PERSON_B_MESSAGES'),
+      power_balance:        extract('POWER_BALANCE'),
+      interest_level:       extract('INTEREST_LEVEL'),
+      emotional_tone:       extract('EMOTIONAL_TONE'),
+      key_moment:           extract('KEY_MOMENT'),
+      last_message_by:      extract('LAST_MESSAGE_BY'),
+      days_since_last:      extract('DAYS_SINCE_LAST'),
+      action_type:          extract('ACTION_TYPE') || 'SEND_MESSAGE',
       action_detail,
-      recommended_next:   action_detail, // backward-compat: contact screen + generateFromContext
-      biggest_risk:       extract('BIGGEST_RISK'),
-      avoid:              extract('AVOID') || null,
-      signal_strength:    extract('SIGNAL_STRENGTH') || null,
+      recommended_next:     action_detail, // backward-compat: contact screen + generateFromContext
+      biggest_risk:         extract('BIGGEST_RISK'),
+      avoid:                extract('AVOID') || null,
+      signal_strength:      extract('SIGNAL_STRENGTH') || null,
       observed_patterns,
+      relationship_summary: chunkDerivedRelationshipSummary || null,
       what_changed,
-      how_user_addresses: extract('ADDRESS_STYLE') || null
+      how_user_addresses:   extract('ADDRESS_STYLE') || null
     });
   } catch (e) {
     console.error('[analyze-conversation]', e.message);
