@@ -4398,17 +4398,6 @@
       return 'Neutral';
     }
 
-    function trimConversation(text) {
-      if (text.length <= 175000) return text; // full conversation fits in 200K context
-      // Sample: beginning (identity) + middle (dynamics) + end (current state)
-      const HEAD = 3000, MID = 5000, TAIL = 6000;
-      const midStart = Math.floor((text.length - MID) / 2);
-      return (
-        text.slice(0, HEAD) + '\n[...]\n' +
-        text.slice(midStart, midStart + MID) + '\n[...]\n' +
-        text.slice(-TAIL)
-      );
-    }
 
     async function analyzeContactChat(fileOrText, contactId, contactName) {
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -4425,8 +4414,8 @@
 
       try {
         const rawText = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
-        const text = trimConversation(rawText);
-        const wasSampled = text.length < rawText.length;
+        const text = rawText;
+        const wasSampled = false;
 
         // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
         let previousContext = null;
@@ -5343,8 +5332,8 @@
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       try {
-        const trimmedConv = trimConversation(conversationText);
-        const wasSampled = trimmedConv.length < conversationText.length;
+        const trimmedConv = conversationText;
+        const wasSampled = false;
         const resp = await fetch('/api/analyze-conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
