@@ -1015,57 +1015,42 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
         buf += (buf ? '\n' : '') + line;
       }
       if (buf) chunks.push(buf);
-      console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, months sampled: ${monthMap.size}, chunks after sampling: ${chunks.length}`);
+      console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks → single Sonnet synthesis`);
 
-      // Sequential Haiku pass — one summary per chunk
-      const summaries = [];
-      for (let i = 0; i < chunks.length; i++) {
-        try {
-          const cr = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-            body: JSON.stringify({
-              model: 'claude-haiku-4-5-20251001',
-              max_tokens: 300,
-              system: 'Extract behavioral patterns from this chat excerpt. Focus ONLY on: how this person communicates (style, tone, length, language), recurring habits, relationship dynamics, names of people mentioned and their roles. Do NOT focus on any single dramatic event — if a crisis or tragedy appears, note it briefly but extract the person\'s general patterns around it, not the event itself. Output 4-6 observations as plain sentences in the same language as the conversation.',
-              messages: [{ role: 'user', content: `Excerpt:\n${chunks[i]}` }]
-            })
-          });
-          const cd = await cr.json();
-          if (cr.ok && cd.content?.[0]?.text) {
-            const chunkSummary = cd.content[0].text.trim();
-            summaries.push(chunkSummary);
-            console.log('[chunk-summary]', i + 1, '/', chunks.length, ':', chunkSummary.slice(0, 150));
-          }
-        } catch { /* skip failed chunk, continue */ }
-      }
+      // Build head+tail sample from each chunk, join for single Sonnet call
+      const chunkSamples = chunks.map(c =>
+        c.slice(0, 500) + (c.length > 1000 ? '\n...\n' + c.slice(-500) : '')
+      );
+      const combinedSamples = chunkSamples.join('\n===\n');
 
-      // Synthesize all summaries with Sonnet
-      if (summaries.length) {
-        try {
-          const sr = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-6',
-              max_tokens: 600,
-              system: 'You are synthesizing behavioral observations about a person from multiple chat excerpts. Create a coherent character profile. If you can identify the two people\'s actual names from the observations, use those names. If only relationship labels appear (like \'kardeşim\', \'ablam\'), use those as the name. Extract: 3-5 OBSERVED_PATTERNS (pipe-separated behavioral observations, not diagnoses), a RELATIONSHIP_SUMMARY (2-3 sentences on who this person is and the relationship dynamic), and PERSON_B_NAME: [the other person\'s name or label as it appears in the conversation]. Format: OBSERVED_PATTERNS: ...\nRELATIONSHIP_SUMMARY: ...\nPERSON_B_NAME: ...',
-              messages: [{ role: 'user', content: `Observations from ${summaries.length} chunks:\n${summaries.join('\n---\n')}` }]
-            })
-          });
-          const sd = await sr.json();
-          if (sr.ok && sd.content?.[0]?.text) {
-            const st = sd.content[0].text;
-            console.log('[chunk-synthesis]', st);
-            const es = key => { const m = st.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
-            const rp = es('OBSERVED_PATTERNS');
-            if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
-            chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
-            chunkDerivedPersonBName = es('PERSON_B_NAME');
-            console.log('[chunk-patterns]', chunkDerivedPatterns);
-          }
-        } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
-      }
+      try {
+        const sr = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 800,
+            system: `You are analyzing a long WhatsApp conversation exported as text. You will receive samples from multiple time periods across the full conversation. Your job is to build a behavioral profile of the OTHER person (not the user).
+
+Extract:
+OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. Include names of people close to them (spouse, kids, friends) if mentioned. Write patterns in the same language as the conversation. Never focus on a single dramatic event — capture the general, recurring character.
+RELATIONSHIP_SUMMARY: 2-3 sentences on who this person is and the relationship dynamic. Same language as conversation.
+PERSON_B_NAME: The other person's actual name or what the user calls them (not a label like 'kardeşim' — look for how they address each other directly)`,
+            messages: [{ role: 'user', content: `Conversation samples from ${chunks.length} time periods:\n${combinedSamples}` }]
+          })
+        });
+        const sd = await sr.json();
+        if (sr.ok && sd.content?.[0]?.text) {
+          const st = sd.content[0].text;
+          console.log('[chunk-synthesis]', st);
+          const es = key => { const m = st.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
+          const rp = es('OBSERVED_PATTERNS');
+          if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
+          chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
+          chunkDerivedPersonBName = es('PERSON_B_NAME');
+          console.log('[chunk-patterns]', chunkDerivedPatterns);
+        }
+      } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
     }
 
     const prevBlock = previousContext
