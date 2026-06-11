@@ -960,8 +960,6 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
     const lang = language || 'English';
     // Head (identity/context) + tail (recent dynamics) preserves both ends
     const FULL_THRESHOLD = 175000;
-    const CHUNK_SIZE    = 25000;
-    const CHUNK_OVERLAP = 500;
     let snippet;
     let chunkDerivedPatterns             = null;
     let chunkDerivedRelationshipSummary  = null;
@@ -978,15 +976,46 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
         conversationText.slice(-TAIL)
       );
 
-      // Build overlapping chunks
-      const chunks = [];
-      let pos = 0;
-      while (pos < conversationText.length) {
-        chunks.push(conversationText.slice(pos, pos + CHUNK_SIZE));
-        if (pos + CHUNK_SIZE >= conversationText.length) break;
-        pos += CHUNK_SIZE - CHUNK_OVERLAP;
+      // Date-aware sampling: group by month, take up to 80 lines per month
+      const lines = conversationText.split('\n');
+      const monthMap = new Map();
+      const dateRe = /^[\[\(]?(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/;
+      let currentMonth = 'unknown';
+      for (const line of lines) {
+        const m = line.match(dateRe);
+        if (m) {
+          const [, d, mo, y] = m;
+          currentMonth = `${y.length === 2 ? '20' + y : y}-${mo.padStart(2, '0')}`;
+        }
+        if (!monthMap.has(currentMonth)) monthMap.set(currentMonth, []);
+        monthMap.get(currentMonth).push(line);
       }
-      console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks`);
+      const LINES_PER_MONTH = 80;
+      const sampledLines = [];
+      for (const [, monthLines] of monthMap) {
+        if (monthLines.length <= LINES_PER_MONTH) {
+          sampledLines.push(...monthLines);
+        } else {
+          // Take evenly-spaced lines to preserve timeline shape
+          const step = monthLines.length / LINES_PER_MONTH;
+          for (let i = 0; i < LINES_PER_MONTH; i++) {
+            sampledLines.push(monthLines[Math.floor(i * step)]);
+          }
+        }
+      }
+      // Reassemble into ~20K char chunks
+      const SAMPLE_CHUNK = 20000;
+      const chunks = [];
+      let buf = '';
+      for (const line of sampledLines) {
+        if (buf.length + line.length + 1 > SAMPLE_CHUNK && buf.length > 0) {
+          chunks.push(buf);
+          buf = '';
+        }
+        buf += (buf ? '\n' : '') + line;
+      }
+      if (buf) chunks.push(buf);
+      console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, months sampled: ${monthMap.size}, chunks after sampling: ${chunks.length}`);
 
       // Sequential Haiku pass — one summary per chunk
       const summaries = [];
