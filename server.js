@@ -1025,8 +1025,8 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
           }
         }
       }
-      // Reassemble into ~20K char chunks
-      const SAMPLE_CHUNK = 20000;
+      // Reassemble into ~5K char chunks
+      const SAMPLE_CHUNK = 5000;
       const chunks = [];
       let buf = '';
       for (const line of sampledLines) {
@@ -1062,7 +1062,7 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
 
       // Build head+tail sample from each chunk, join for single Sonnet call
       const chunkSamples = chunks.map(c =>
-        c.slice(0, 500) + (c.length > 1000 ? '\n...\n' + c.slice(-500) : '')
+        c.slice(0, 400) + (c.length > 800 ? '\n...\n' + c.slice(-400) : '')
       );
       const combinedSamples = chunkSamples.join('\n===\n');
 
