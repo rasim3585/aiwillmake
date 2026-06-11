@@ -1630,8 +1630,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     }
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
-
-RELATIONSHIP CONTEXT:
+${ragContext ? ragContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -1641,8 +1640,8 @@ RULES:
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
-- Respond entirely in ${lang}${ragContext}`;
-    console.log('[sim-prompt]', systemPrompt.slice(0, 800));
+- Respond entirely in ${lang}`;
+    console.log('[sim-prompt]', systemPrompt.slice(0, 1500));
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
