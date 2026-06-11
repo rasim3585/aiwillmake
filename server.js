@@ -1097,7 +1097,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
             const firstLine = lines[startIdx].replace(new RegExp(`.*${key}:\\s*`, 'i'), '').trim();
             const subsequent = [];
             for (let i = startIdx + 1; i < lines.length; i++) {
-              if (lines[i].match(/^[A-Z_]{3,}:/) || lines[i].trim() === '---') break;
+              if (lines[i].match(/^[A-Z_]{3,}:/)) break;
               subsequent.push(lines[i]);
             }
             return [firstLine, ...subsequent].join('\n').trim() || null;
