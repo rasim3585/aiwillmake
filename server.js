@@ -1092,9 +1092,9 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
           const extractSynth = key => {
             const clean = synthesisText.replace(/\*\*/g, '').replace(/\*/g, '');
             const lines = clean.split('\n');
-            const startIdx = lines.findIndex(l => l.trim().toUpperCase().startsWith(key + ':'));
+            const startIdx = lines.findIndex(l => l.trim().toUpperCase().indexOf(key + ':') !== -1);
             if (startIdx === -1) return null;
-            const firstLine = lines[startIdx].replace(new RegExp(key + ':\\s*', 'i'), '').trim();
+            const firstLine = lines[startIdx].replace(new RegExp(`.*${key}:\\s*`, 'i'), '').trim();
             const subsequent = [];
             for (let i = startIdx + 1; i < lines.length; i++) {
               if (lines[i].match(/^[A-Z_]{3,}:/) || lines[i].trim() === '---') break;
