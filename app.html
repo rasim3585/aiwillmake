@@ -1701,6 +1701,13 @@
       box-shadow:0 4px 20px var(--glow); transition:transform .2s, box-shadow .2s;
     }
     .btn-person-continue:hover { transform:translateY(-1px); box-shadow:0 8px 28px var(--glow); }
+    .btn-person-practice {
+      display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+      background:none; border:1px solid rgba(212,113,90,.4); color:var(--accent);
+      padding:11px 18px; border-radius:var(--r-md); font:inherit; font-size:.85rem;
+      font-weight:600; cursor:pointer; margin-bottom:14px; transition:background .18s;
+    }
+    .btn-person-practice:hover { background:rgba(212,113,90,.08); }
     .person-collapse {
       background:var(--surf); border:1px solid var(--bord);
       border-radius:var(--r-md); margin-bottom:10px; overflow:hidden;
@@ -4835,6 +4842,11 @@
           <button type="button" class="btn-person-continue" id="personContinueBtn">
             ${latestConv ? '→ Continue the conversation' : '✍️ Start a conversation'}
           </button>
+          <button type="button" class="btn-person-practice" id="personPracticeBtn">⚡ Practice with ${escH(c.name)}</button>
+          <div id="personPracticeForm" class="hidden" style="padding:12px;background:var(--surf);border:1px solid var(--bord);border-radius:var(--r-md);margin-top:-8px;margin-bottom:14px">
+            <textarea id="personPracticeInput" placeholder="What do you want to practice saying to ${escH(c.name)}?" style="width:100%;min-height:80px;padding:9px 11px;border-radius:8px;border:1px solid var(--bord);background:var(--bg);color:var(--fg);font:inherit;font-size:.84rem;resize:vertical;box-sizing:border-box;margin-bottom:8px;display:block"></textarea>
+            <button type="button" id="personPracticeStartBtn" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font:inherit;font-size:.84rem;font-weight:600;cursor:pointer">Start practice →</button>
+          </div>
 
           ${recentMsgsHtml}
 
@@ -4922,6 +4934,23 @@
             si.placeholder = `What do you want to say to ${c.name}?`;
             document.getElementById('smartStartSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
+        });
+
+        document.getElementById('personPracticeBtn').addEventListener('click', () => {
+          const form = document.getElementById('personPracticeForm');
+          form.classList.toggle('hidden');
+          if (!form.classList.contains('hidden'))
+            setTimeout(() => document.getElementById('personPracticeInput').focus(), 50);
+        });
+
+        const _startPractice = () => {
+          const text = document.getElementById('personPracticeInput').value.trim();
+          if (!text) { document.getElementById('personPracticeInput').focus(); return; }
+          openSimulator(text, activeContactContext);
+        };
+        document.getElementById('personPracticeStartBtn').addEventListener('click', _startPractice);
+        document.getElementById('personPracticeInput').addEventListener('keydown', e => {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _startPractice();
         });
 
         wireContactImportBtn(contactId, c.name);
