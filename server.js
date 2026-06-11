@@ -1089,8 +1089,17 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
           const synthesisText = sd.content[0].text;
           console.log('[chunk-synthesis]', synthesisText);
           const extractSynth = key => {
-            const m = synthesisText.replace(/\*\*/g, '').match(new RegExp(`${key}:\\s*([\\s\\S]+?)(?=\\n[A-Z_]+:|\\n---|$)`, 'i'));
-            return m ? m[1].trim() : null;
+            const clean = synthesisText.replace(/\*\*/g, '').replace(/\*/g, '');
+            const lines = clean.split('\n');
+            const startIdx = lines.findIndex(l => l.trim().toUpperCase().startsWith(key + ':'));
+            if (startIdx === -1) return null;
+            const firstLine = lines[startIdx].replace(new RegExp(key + ':\\s*', 'i'), '').trim();
+            const subsequent = [];
+            for (let i = startIdx + 1; i < lines.length; i++) {
+              if (lines[i].match(/^[A-Z_]{3,}:/) || lines[i].trim() === '---') break;
+              subsequent.push(lines[i]);
+            }
+            return [firstLine, ...subsequent].join('\n').trim() || null;
           };
           const rp = extractSynth('OBSERVED_PATTERNS');
           if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
