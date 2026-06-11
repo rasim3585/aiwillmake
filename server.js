@@ -1642,6 +1642,7 @@ RULES:
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}${ragContext}`;
+    console.log('[sim-prompt]', systemPrompt.slice(0, 800));
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
