@@ -1600,7 +1600,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
 
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
-    if (character.contact_id && req.user && req.token) {
+    if (character.contact_id && req.token) {
+      console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', undefined);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
         const words = lastUserMsg.split(/\s+/).filter(w => w.length > 4);
@@ -1611,12 +1612,14 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
           );
           if (chunksR.ok) {
             const allChunks = await chunksR.json();
+            console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', allChunks?.length);
             if (Array.isArray(allChunks) && allChunks.length > 0) {
               const scored = allChunks
                 .map(c => ({ text: c.chunk_text, score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
                 .filter(c => c.score > 0)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 3);
+              console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
               if (scored.length > 0) {
                 ragContext = `\nRELEVANT CONVERSATION HISTORY (actual past conversations — use this as memory):\n${scored.map(c => c.text).join('\n---\n')}`;
               }
