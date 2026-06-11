@@ -952,9 +952,31 @@ Write in ${lang}.`;
   }
 });
 
-app.post('/api/analyze-conversation', limiter, async (req, res) => {
+app.post('/api/setup-chunks-table', requireAuth, async (req, res) => {
+  const sql = `CREATE TABLE IF NOT EXISTS conversation_chunks (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  contact_id uuid REFERENCES contacts(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  chunk_text text NOT NULL,
+  chunk_index integer NOT NULL,
+  date_range text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_chunks_contact ON conversation_chunks(contact_id);`;
   try {
-    const { conversationText, language, previousContext } = req.body;
+    const r = await fetch(`${SUPABASE_REST}/conversation_chunks?select=id&limit=0`, {
+      headers: sbHeaders(req.token)
+    });
+    if (r.ok || r.status === 406) return res.json({ ok: true, message: 'Table ready' });
+    res.status(503).json({ ok: false, message: 'Table not found — run the SQL below in your Supabase SQL Editor', sql });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) => {
+  try {
+    const { conversationText, language, previousContext, contact_id } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
 
     const lang = language || 'English';
@@ -1016,6 +1038,25 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
       }
       if (buf) chunks.push(buf);
       console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks → single Sonnet synthesis`);
+
+      // Best-effort: save chunks to Supabase for RAG
+      if (contact_id && req.user && req.token) {
+        (async () => {
+          try {
+            await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+              method: 'DELETE',
+              headers: sbHeaders(req.token)
+            });
+            for (let i = 0; i < chunks.length; i++) {
+              await fetch(`${SUPABASE_REST}/conversation_chunks`, {
+                method: 'POST',
+                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ contact_id, user_id: req.user.id, chunk_text: chunks[i], chunk_index: i })
+              });
+            }
+          } catch { /* best-effort */ }
+        })();
+      }
 
       // Build head+tail sample from each chunk, join for single Sonnet call
       const chunkSamples = chunks.map(c =>
@@ -1527,7 +1568,7 @@ Rules:
   }
 });
 
-app.post('/api/simulate-reply', limiter, async (req, res) => {
+app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
   try {
     const { character, history, language } = req.body;
     if (!character || !Array.isArray(history) || history.length === 0) {
@@ -1539,6 +1580,35 @@ app.post('/api/simulate-reply', limiter, async (req, res) => {
       ? character.observed_patterns.map((p, i) => `${i + 1}. ${p}`).join('\n')
       : null;
     const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
+
+    // RAG: retrieve relevant chunks from past conversations
+    let ragContext = '';
+    if (character.contact_id && req.user && req.token) {
+      try {
+        const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
+        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 4);
+        if (words.length > 0) {
+          const chunksR = await fetch(
+            `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
+            { headers: sbHeaders(req.token) }
+          );
+          if (chunksR.ok) {
+            const allChunks = await chunksR.json();
+            if (Array.isArray(allChunks) && allChunks.length > 0) {
+              const scored = allChunks
+                .map(c => ({ text: c.chunk_text, score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
+                .filter(c => c.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3);
+              if (scored.length > 0) {
+                ragContext = `\nRELEVANT CONVERSATION HISTORY (actual past conversations — use this as memory):\n${scored.map(c => c.text).join('\n---\n')}`;
+              }
+            }
+          }
+        }
+      } catch { /* RAG is best-effort */ }
+    }
+
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 
 RELATIONSHIP CONTEXT:
@@ -1551,7 +1621,7 @@ RULES:
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
-- Respond entirely in ${lang}`;
+- Respond entirely in ${lang}${ragContext}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },

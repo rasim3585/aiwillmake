@@ -4445,10 +4445,11 @@
         const [analysisRes] = await Promise.all([
           fetch('/api/analyze-conversation', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
             body: JSON.stringify({
               conversationText: text,
               language: lastFields.language || 'English',
+              contact_id: contactId || null,
               ...(previousContext ? { previousContext } : {})
             })
           }),
@@ -4465,7 +4466,7 @@
         }
         const patchBody = { observed_patterns: patterns.length ? patterns : null };
         if (data.emotional_tone) patchBody.relationship_state = mapToneToState(data.emotional_tone);
-        if (data.recommended_next) patchBody.relationship_summary = data.recommended_next;
+        if (data.relationship_summary || data.recommended_next) patchBody.relationship_summary = data.relationship_summary || data.recommended_next;
 
         await fetch(`/api/contacts/${contactId}`, {
           method: 'PATCH',
@@ -5667,8 +5668,8 @@
     function openSimulator(msgText, contactCtx) {
       if (!msgText?.trim()) return;
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary }
-        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '' };
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null }
+        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null };
       _simInitialMsg = msgText;
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;
@@ -5717,7 +5718,7 @@
         const lang = lastFields?.language || 'English';
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
           body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang })
         });
         const data = await resp.json();
