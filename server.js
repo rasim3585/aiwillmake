@@ -965,6 +965,7 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
     let snippet;
     let chunkDerivedPatterns             = null;
     let chunkDerivedRelationshipSummary  = null;
+    let chunkDerivedPersonBName          = null;
 
     if (conversationText.length <= FULL_THRESHOLD) {
       snippet = conversationText;
@@ -1019,7 +1020,7 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
             body: JSON.stringify({
               model: 'claude-sonnet-4-6',
               max_tokens: 600,
-              system: 'You are synthesizing behavioral observations about a person from multiple chat excerpts. Create a coherent character profile. Extract: 3-5 OBSERVED_PATTERNS (pipe-separated behavioral observations, not diagnoses), and a RELATIONSHIP_SUMMARY (2-3 sentences on who this person is and the relationship dynamic). Format: OBSERVED_PATTERNS: ...\nRELATIONSHIP_SUMMARY: ...',
+              system: 'You are synthesizing behavioral observations about a person from multiple chat excerpts. Create a coherent character profile. If you can identify the two people\'s actual names from the observations, use those names. If only relationship labels appear (like \'kardeşim\', \'ablam\'), use those as the name. Extract: 3-5 OBSERVED_PATTERNS (pipe-separated behavioral observations, not diagnoses), a RELATIONSHIP_SUMMARY (2-3 sentences on who this person is and the relationship dynamic), and PERSON_B_NAME: [the other person\'s name or label as it appears in the conversation]. Format: OBSERVED_PATTERNS: ...\nRELATIONSHIP_SUMMARY: ...\nPERSON_B_NAME: ...',
               messages: [{ role: 'user', content: `Observations from ${summaries.length} chunks:\n${summaries.join('\n---\n')}` }]
             })
           });
@@ -1031,6 +1032,7 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
             const rp = es('OBSERVED_PATTERNS');
             if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
             chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
+            chunkDerivedPersonBName = es('PERSON_B_NAME');
             console.log('[chunk-patterns]', chunkDerivedPatterns);
           }
         } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
@@ -1103,7 +1105,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
     const action_detail = extract('ACTION_DETAIL') || null;
     res.json({
       person_a:             extract('PERSON_A'),
-      person_b:             extract('PERSON_B'),
+      person_b:             chunkDerivedPersonBName || extract('PERSON_B'),
       total_messages:       extract('TOTAL_MESSAGES'),
       person_a_messages:    extract('PERSON_A_MESSAGES'),
       person_b_messages:    extract('PERSON_B_MESSAGES'),
