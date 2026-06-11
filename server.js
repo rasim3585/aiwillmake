@@ -1150,7 +1150,7 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
 app.get('/api/conversations/:id', requireAuth, async (req, res) => {
   try {
     const r = await fetch(
-      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,contact_id,contacts(id,name,relationship_state,observed_patterns),conversation_messages(id,role,content,strategy,created_at,outcome)`,
+      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,contact_id,contacts(id,name,type,relationship_state,relationship_summary,observed_patterns),conversation_messages(id,role,content,strategy,created_at,outcome)`,
       { headers: sbHeaders(req.token) }
     );
     const data = await r.json();
@@ -1451,11 +1451,24 @@ app.post('/api/simulate-reply', limiter, async (req, res) => {
       return res.status(400).json({ error: 'character and history are required' });
     }
     const lang = language || 'English';
-    const patterns = Array.isArray(character.observed_patterns) && character.observed_patterns.length
-      ? character.observed_patterns.join('; ')
-      : 'No specific patterns available';
-    const systemPrompt = `You ARE ${character.name || 'the other person'}. Respond exactly as ${character.name || 'they'} would, based on these behavioral patterns: ${patterns}. Relationship type: ${character.type || 'unknown'}. Relationship state: ${character.relationship_state || 'unknown'}.${character.relationship_summary ? ` Context: ${character.relationship_summary}` : ''}
-Stay in character. Write short, realistic replies: 1-3 sentences. No acting notes, no parentheticals, no quotation marks around your response. Respond in ${lang}.`;
+    const name = character.name || 'the other person';
+    const patternLines = Array.isArray(character.observed_patterns) && character.observed_patterns.length
+      ? character.observed_patterns.map((p, i) => `${i + 1}. ${p}`).join('\n')
+      : null;
+    const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
+    const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
+
+RELATIONSHIP CONTEXT:
+${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
+
+${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
+
+RULES:
+- Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
+- React naturally to what was just said — in character, with ${name}'s typical emotional tone
+- 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
+- Never explain yourself or add commentary outside the reply itself
+- Respond entirely in ${lang}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },

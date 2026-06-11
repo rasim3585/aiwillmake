@@ -2800,7 +2800,7 @@
       const input = document.getElementById('contextGateInput');
       const name  = input?.value?.trim();
       if (!name) { input?.focus(); return; }
-      activeContactContext = { name };
+      activeContactContext = { ...(activeContactContext || {}), name };
       updatePrevMsgFieldVisibility();
       updateGenerateBtnState();
     }
