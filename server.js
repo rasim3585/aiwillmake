@@ -1054,7 +1054,8 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
                 body: JSON.stringify({ contact_id, user_id: req.user.id, chunk_text: chunks[i], chunk_index: i })
               });
             }
-          } catch { /* best-effort */ }
+            console.log(`[chunk-save] Saved ${chunks.length} chunks for contact_id ${contact_id}`);
+          } catch (e) { console.error('[chunk-save-error]', e.message); }
         })();
       }
 
@@ -1073,6 +1074,8 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
             max_tokens: 800,
             system: `You are analyzing a long WhatsApp conversation exported as text. You will receive samples from multiple time periods across the full conversation. Your job is to build a behavioral profile of the OTHER person (not the user).
 
+CRITICAL: Do not use markdown. No bold (**), no headers. Plain text only. Start each field directly: OBSERVED_PATTERNS: ...
+
 Extract:
 OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. Include names of people close to them (spouse, kids, friends) if mentioned. Write patterns in the same language as the conversation. Never focus on a single dramatic event — capture the general, recurring character.
 RELATIONSHIP_SUMMARY: 2-3 sentences on who this person is and the relationship dynamic. Same language as conversation.
@@ -1082,13 +1085,16 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
         });
         const sd = await sr.json();
         if (sr.ok && sd.content?.[0]?.text) {
-          const st = sd.content[0].text;
-          console.log('[chunk-synthesis]', st);
-          const es = key => { const m = st.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
-          const rp = es('OBSERVED_PATTERNS');
+          const synthesisText = sd.content[0].text;
+          console.log('[chunk-synthesis]', synthesisText);
+          const extractSynth = key => {
+            const m = synthesisText.match(new RegExp(`\\*{0,2}${key}\\*{0,2}:?\\s*([\\s\\S]+?)(?=\\n\\*{0,2}[A-Z_]+\\*{0,2}:|$)`, 'i'));
+            return m ? m[1].trim() : null;
+          };
+          const rp = extractSynth('OBSERVED_PATTERNS');
           if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
-          chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
-          chunkDerivedPersonBName = es('PERSON_B_NAME');
+          chunkDerivedRelationshipSummary = extractSynth('RELATIONSHIP_SUMMARY');
+          chunkDerivedPersonBName = extractSynth('PERSON_B_NAME');
           console.log('[chunk-patterns]', chunkDerivedPatterns);
         }
       } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
