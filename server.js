@@ -19,6 +19,7 @@ const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TEST BYPASS - REMOVE BEFORE LAUNCH
