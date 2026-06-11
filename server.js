@@ -1601,7 +1601,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     if (character.contact_id && req.token) {
-      console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', undefined);
+      console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
         const words = lastUserMsg.split(/\s+/).filter(w => w.length > 4);
