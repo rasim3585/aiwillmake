@@ -1604,7 +1604,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
-        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 4);
+        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
         if (words.length > 0) {
           const chunksR = await fetch(
             `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
@@ -1614,14 +1614,24 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
             const allChunks = await chunksR.json();
             console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', allChunks?.length);
             if (Array.isArray(allChunks) && allChunks.length > 0) {
+              const extractRelevantLines = (text) => {
+                const lines = text.split('\n');
+                const kept = new Set();
+                lines.forEach((line, i) => {
+                  if (words.some(w => line.toLowerCase().includes(w.toLowerCase()))) {
+                    for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) kept.add(j);
+                  }
+                });
+                return [...kept].sort((a, b) => a - b).map(i => lines[i]).join('\n');
+              };
               const scored = allChunks
-                .map(c => ({ text: c.chunk_text, score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
-                .filter(c => c.score > 0)
+                .map(c => ({ snippet: extractRelevantLines(c.chunk_text), score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
+                .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 3);
               console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
               if (scored.length > 0) {
-                ragContext = `\nRELEVANT CONVERSATION HISTORY (actual past conversations — use this as memory):\n${scored.map(c => c.text).join('\n---\n')}`;
+                ragContext = `\nRELEVANT CONVERSATION HISTORY (actual past conversations — use this as memory):\n${scored.map(c => c.snippet).join('\n---\n')}`;
               }
             }
           }
