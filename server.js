@@ -989,7 +989,7 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
 
       // Sequential Haiku pass — one summary per chunk
       const summaries = [];
-      for (const chunk of chunks) {
+      for (let i = 0; i < chunks.length; i++) {
         try {
           const cr = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -998,11 +998,15 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
               model: 'claude-haiku-4-5-20251001',
               max_tokens: 300,
               system: 'Extract behavioral patterns from this chat excerpt. Focus on: communication style, emotional tone, how this person expresses themselves, relationship dynamics. Output 3-5 observations as plain sentences. No labels, no markdown.',
-              messages: [{ role: 'user', content: `Excerpt:\n${chunk}` }]
+              messages: [{ role: 'user', content: `Excerpt:\n${chunks[i]}` }]
             })
           });
           const cd = await cr.json();
-          if (cr.ok && cd.content?.[0]?.text) summaries.push(cd.content[0].text.trim());
+          if (cr.ok && cd.content?.[0]?.text) {
+            const chunkSummary = cd.content[0].text.trim();
+            summaries.push(chunkSummary);
+            console.log('[chunk-summary]', i + 1, '/', chunks.length, ':', chunkSummary.slice(0, 150));
+          }
         } catch { /* skip failed chunk, continue */ }
       }
 
@@ -1022,10 +1026,12 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
           const sd = await sr.json();
           if (sr.ok && sd.content?.[0]?.text) {
             const st = sd.content[0].text;
+            console.log('[chunk-synthesis]', st);
             const es = key => { const m = st.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
             const rp = es('OBSERVED_PATTERNS');
             if (rp) chunkDerivedPatterns = rp.split('|').map(p => p.trim()).filter(p => p.length > 4).slice(0, 5);
             chunkDerivedRelationshipSummary = es('RELATIONSHIP_SUMMARY');
+            console.log('[chunk-patterns]', chunkDerivedPatterns);
           }
         } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
       }
