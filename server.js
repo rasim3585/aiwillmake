@@ -998,7 +998,7 @@ app.post('/api/analyze-conversation', limiter, async (req, res) => {
             body: JSON.stringify({
               model: 'claude-haiku-4-5-20251001',
               max_tokens: 300,
-              system: 'Extract behavioral patterns from this chat excerpt. Focus on: communication style, emotional tone, how this person expresses themselves, relationship dynamics. Output 3-5 observations as plain sentences. No labels, no markdown.',
+              system: 'Extract behavioral patterns from this chat excerpt. Focus ONLY on: how this person communicates (style, tone, length, language), recurring habits, relationship dynamics, names of people mentioned and their roles. Do NOT focus on any single dramatic event — if a crisis or tragedy appears, note it briefly but extract the person\'s general patterns around it, not the event itself. Output 4-6 observations as plain sentences in the same language as the conversation.',
               messages: [{ role: 'user', content: `Excerpt:\n${chunks[i]}` }]
             })
           });
