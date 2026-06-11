@@ -1040,10 +1040,11 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
       console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks → single Sonnet synthesis`);
 
       // Best-effort: save chunks to Supabase for RAG
-      if (contact_id && req.user && req.token) {
+      console.log('[chunk-save] contact_id:', contact_id, 'user:', req.user?.id);
+      if (contact_id) {
         (async () => {
           try {
-            await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+            await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${contact_id}`, {
               method: 'DELETE',
               headers: sbHeaders(req.token)
             });
@@ -1051,7 +1052,7 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               await fetch(`${SUPABASE_REST}/conversation_chunks`, {
                 method: 'POST',
                 headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ contact_id, user_id: req.user.id, chunk_text: chunks[i], chunk_index: i })
+                body: JSON.stringify({ contact_id, user_id: req.user?.id, chunk_text: chunks[i], chunk_index: i })
               });
             }
             console.log(`[chunk-save] Saved ${chunks.length} chunks for contact_id ${contact_id}`);
@@ -1088,7 +1089,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
           const synthesisText = sd.content[0].text;
           console.log('[chunk-synthesis]', synthesisText);
           const extractSynth = key => {
-            const m = synthesisText.match(new RegExp(`\\*{0,2}${key}\\*{0,2}:?\\s*([\\s\\S]+?)(?=\\n\\*{0,2}[A-Z_]+\\*{0,2}:|$)`, 'i'));
+            const m = synthesisText.replace(/\*\*/g, '').match(new RegExp(`${key}:\\s*([\\s\\S]+?)(?=\\n[A-Z_]+:|\\n---|$)`, 'i'));
             return m ? m[1].trim() : null;
           };
           const rp = extractSynth('OBSERVED_PATTERNS');
