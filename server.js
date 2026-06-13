@@ -1038,7 +1038,7 @@ WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There a
 
 OWNERSHIP RULE: Possessive language tells you who owns the relationship. "Benim oğlum Kemal" said by the USER means Kemal is the USER's son — not the contact's. Do NOT assign the user's family members to the contact. Be precise about whose family/friends each person is.
 
-SAME-NAME RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after a grandfather). CRITICAL: if you detect this, EXPLICITLY distinguish them in the document — e.g. "There are two people named Kemal: Mert's father Kemal (mentioned in health contexts) and Ras's son Kemal (the contact asks about him). Do NOT conflate them."
+NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CRITICAL — look for this specifically: in this conversation there are likely TWO people named Kemal: (a) the CONTACT's father Kemal — older generation, health/land contexts; (b) the USER's son Kemal — a child, the contact is his uncle figure. EXPLICITLY add a "NAME COLLISION" note: "There are two people named Kemal: [contact]'s father Kemal ([context]) and [user]'s son Kemal ([context]). Never conflate them." Apply to ANY repeated name you detect.
 
 Write 3-5 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
@@ -1181,7 +1181,7 @@ You have access to the complete conversation. Use the ENTIRE context to infer re
 
 OWNERSHIP RULE: There are TWO senders — the CONTACT and the USER (chat owner). Do NOT assume everyone mentioned belongs to the contact. Infer from context: if the USER consistently refers to Kemal and Kerem in the context of their own family, they are the USER's children. Be precise: "Ras's sons Kemal and Kerem" vs "Mert's wife Yağmur."
 
-SAME-NAME RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after a grandfather). CRITICAL: if you detect this, EXPLICITLY distinguish them. Example: "There are two people named Kemal: Mert's father Kemal (mentioned in health/land contexts) and Ras's son Kemal (the contact asks about him, wants photos). Do NOT conflate them." Write both with their distinct context.
+NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CRITICAL — look for this specifically: in this conversation there are likely TWO people named Kemal: (a) the CONTACT's father Kemal — older generation, health issues, e-devlet/land/property contexts; (b) the USER's son Kemal — a child, school/photos context, the contact is his uncle figure. EXPLICITLY add a "NAME COLLISION" note in the document: "There are two people named Kemal: [contact]'s father Kemal ([context]) and [user]'s son Kemal ([context]). Never conflate them." Apply this logic to ANY repeated name you detect, not just Kemal.
 
 Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
@@ -1802,7 +1802,7 @@ RULES:
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: systemPrompt, messages: history })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages: history })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
