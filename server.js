@@ -1103,10 +1103,8 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
         })();
       }
 
-      // Build head+tail sample from each chunk, join for single Sonnet call
-      const chunkSamples = chunks.map(c =>
-        c.slice(0, 400) + (c.length > 800 ? '\n...\n' + c.slice(-400) : '')
-      );
+      // Take first 1500 chars of each chunk — covers ~30% of each, names distributed throughout
+      const chunkSamples = chunks.map(c => c.slice(0, 1500));
       const combinedSamples = chunkSamples.join('\n===\n');
 
       let synthesisText = null;
@@ -1163,21 +1161,21 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
       console.log('[profile-extract] STARTED (large)', contact_id, 'synthesis:', !!synthesisText, 'samples len:', combinedSamples.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount, '| slice used:', Math.min(28000, combinedSamples.length), 'of', combinedSamples.length);
             const profileInput = [
               synthesisText ? `BEHAVIORAL ANALYSIS:\n${synthesisText}` : '',
-              `CONVERSATION SAMPLES (from ${chunks.length} time periods):\n${combinedSamples.slice(0, 28000)}`
+              `CONVERSATION SAMPLES (from ${chunks.length} time periods):\n${combinedSamples.slice(0, 60000)}`
             ].filter(Boolean).join('\n\n');
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 1000,
+                max_tokens: 2000,
                 system: `You are reading a behavioral analysis and WhatsApp conversation samples, and writing a prose character profile of the CONTACT (the non-owner person, karşı taraf).
 
-Write 3-5 paragraphs (400-600 words) describing the CONTACT as if briefing someone who will roleplay as them. Cover:
+Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- People they mention: write names and relationships in natural prose (e.g. "Often mentions his two sons Kemal and Kerem", "Talks about his business partner frequently")
+- ALL people mentioned — include even minor ones. IMPORTANT: the same name may refer to DIFFERENT people (e.g. both the contact's father AND the chat owner's son might be named Kemal — distinguish them by context). Include the chat owner's children if mentioned. Name each person and their relationship clearly in prose.
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
@@ -1714,8 +1712,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 const t = l.trim();
                 if (!t || t.length < 5) return true;
                 if (/media omitted/i.test(t)) return true;
-                // Single message blocks >500 chars (video prompts, copy-paste)
-                if (t.length > 500) return true;
+                // Single message blocks >1500 chars (video prompts, copy-paste)
+                if (t.length > 1500) return true;
                 // Long English-heavy lines (cinematic/AI prompts)
                 if (t.length > 80 && /cinematic|volumetric|ultra.?realistic|lighting|prompt|render/i.test(t)) return true;
                 // Lines that are mostly English in a Turkish conversation
