@@ -914,8 +914,27 @@
       color: var(--accent); margin-bottom: 8px;
     }
     .rp-debrief-actions {
-      display: flex; gap: 8px; padding: 10px 16px 14px; flex-shrink: 0;
+      display: flex; gap: 8px; padding: 10px 16px 4px; flex-shrink: 0;
     }
+    .rp-correction {
+      margin: 0 16px 14px; padding: 12px 14px; border-radius: 10px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      animation: fadeUp .25s ease both;
+    }
+    .rp-correction-label {
+      font-size: .75rem; color: var(--sec); margin-bottom: 8px; line-height: 1.4;
+    }
+    .rp-correction-input {
+      width: 100%; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px; color: var(--text); font-size: .82rem; padding: 8px 10px;
+      resize: none; font-family: inherit; line-height: 1.5; box-sizing: border-box;
+    }
+    .rp-correction-save {
+      margin-top: 8px; padding: 6px 16px; border-radius: 7px; font-size: .78rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      color: var(--text); cursor: pointer;
+    }
+    .rp-correction-save:hover { background: rgba(255,255,255,.14); }
     .rp-again-btn {
       flex: 1; border: 1px solid var(--bord); border-radius: var(--r-sm);
       padding: 8px 14px; background: transparent; color: var(--text);
@@ -1993,6 +2012,11 @@
       <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
         <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
         <button class="rp-done-btn" id="rp-done-btn">Close</button>
+      </div>
+      <div class="rp-correction hidden" id="rp-correction">
+        <div class="rp-correction-label">Anything I got wrong about <span id="rp-correction-name"></span>? <span style="opacity:.55">(optional)</span></div>
+        <textarea id="rp-correction-input" class="rp-correction-input" placeholder='e.g. "Kemal is my son, not Mert&apos;s. Mert left his job last month."' rows="2"></textarea>
+        <button id="rp-correction-save" class="rp-correction-save">Save correction</button>
       </div>
       <div class="roleplay-footer" id="rp-footer">
         <textarea class="roleplay-input" id="rp-input" placeholder="Write your next message…" rows="1"></textarea>
@@ -5707,6 +5731,8 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-correction').classList.add('hidden');
+      document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
@@ -5774,6 +5800,8 @@
 
     function _rpClose() {
       document.getElementById('simulationModal').classList.add('hidden');
+      document.getElementById('rp-correction').classList.add('hidden');
+      document.getElementById('rp-correction-input').value = '';
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
     }
 
@@ -5802,6 +5830,10 @@
       }
 
       document.getElementById('rp-debrief-actions').classList.remove('hidden');
+      if (_simCharacter?.contact_id) {
+        document.getElementById('rp-correction-name').textContent = _simCharacter.name;
+        document.getElementById('rp-correction').classList.remove('hidden');
+      }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
 
@@ -5813,6 +5845,39 @@
     });
     document.getElementById('simulationModal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) _rpClose();
+    });
+
+    document.getElementById('rp-correction-save').addEventListener('click', async () => {
+      const input = document.getElementById('rp-correction-input');
+      const text = input.value.trim();
+      if (!text || !_simCharacter?.contact_id) return;
+      const btn = document.getElementById('rp-correction-save');
+      btn.disabled = true;
+      try {
+        const contactId = _simCharacter.contact_id;
+        const fetchR = await fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        if (!fetchR.ok) throw new Error('Could not fetch contact');
+        const contactData = await fetchR.json();
+        const existingProfile = contactData.character_profile || '';
+        const correctionBlock = '\n\n--- USER CORRECTIONS (most authoritative — override anything above that conflicts) ---\n' + text;
+        const updatedProfile = existingProfile + correctionBlock;
+        const patchR = await fetch(`/api/contacts/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ character_profile: updatedProfile })
+        });
+        if (!patchR.ok) throw new Error('Save failed');
+        _simCharacter.character_profile = updatedProfile;
+        if (activeContactContext?.id === contactId) activeContactContext.character_profile = updatedProfile;
+        input.value = '';
+        btn.textContent = 'Saved ✓';
+        setTimeout(() => { btn.textContent = 'Save correction'; btn.disabled = false; }, 2000);
+      } catch (e) {
+        console.error('[rp-correction]', e);
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+        setTimeout(() => { btn.textContent = 'Save correction'; }, 2500);
+      }
     });
 
     const _rpInput = document.getElementById('rp-input');
