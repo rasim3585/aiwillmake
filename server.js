@@ -1714,7 +1714,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       : null;
     const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
 
-    console.log('[simulate-reply] called — contact_id:', character.contact_id, 'has_token:', !!req.token, 'profile:', !!character.character_profile, 'people:', character.character_profile?.people?.length ?? 0);
+    console.log('[simulate-reply] called — contact_id:', character.contact_id, 'has_token:', !!req.token, 'profile:', !!character.character_profile, 'profile_len:', typeof character.character_profile === 'string' ? character.character_profile.length : (character.character_profile ? 'object' : 0));
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     let recentContext = '';
