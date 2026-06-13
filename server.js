@@ -1056,13 +1056,19 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (small)'); return; }
             console.log('[profile-extract] prose (small):', prose.slice(0, 200));
+            const relSummarySmall = (() => {
+              const para = prose.split(/\n\n/)[0].trim();
+              if (para.length <= 300) return para;
+              const sents = para.match(/[^.!?]+[.!?]+/g) || [];
+              return sents.slice(0, 2).join(' ').trim() || para.slice(0, 300);
+            })();
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: prose, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: prose, relationship_summary: relSummarySmall, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (small)', contact_id, prose.length, 'chars');
+            else console.log('[profile-extract] SAVED (small)', contact_id, prose.length, 'chars | rel_summary:', relSummarySmall.slice(0, 80));
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
@@ -1199,13 +1205,19 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (large)'); return; }
             console.log('[profile-extract] prose (large):', prose.slice(0, 200));
+            const relSummaryLarge = (() => {
+              const para = prose.split(/\n\n/)[0].trim();
+              if (para.length <= 300) return para;
+              const sents = para.match(/[^.!?]+[.!?]+/g) || [];
+              return sents.slice(0, 2).join(' ').trim() || para.slice(0, 300);
+            })();
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: prose, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: prose, relationship_summary: relSummaryLarge, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (large)', contact_id, prose.length, 'chars');
+            else console.log('[profile-extract] SAVED (large)', contact_id, prose.length, 'chars | rel_summary:', relSummaryLarge.slice(0, 80));
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
