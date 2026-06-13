@@ -1983,11 +1983,21 @@
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
     .landing-inner { max-width: 460px; width: 100%; text-align: center; }
-    .landing-brand { font-size: 1rem; font-weight: 800; letter-spacing: -.01em; color: var(--accent); margin-bottom: 28px; text-transform: uppercase; letter-spacing: .08em; }
+    .landing-brand { font-size: .88rem; font-weight: 800; color: var(--accent); margin-bottom: 28px; text-transform: uppercase; letter-spacing: .1em; }
+    .landing-chat { margin: 0 0 28px; padding: 14px 16px 10px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 14px; text-align: left; overflow: hidden; }
+    .landing-bubble { display: inline-block; max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: .88rem; line-height: 1.45; margin-bottom: 7px; }
+    .landing-bubble-user { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; float: right; clear: both; }
+    .landing-bubble-other { background: var(--surf2); color: var(--text); border-bottom-left-radius: 4px; float: left; clear: both; }
+    .landing-chat::after { content: ''; display: table; clear: both; }
+    .landing-chat-label { font-size: .71rem; color: var(--muted); text-align: center; margin-top: 8px; display: block; clear: both; }
     .landing-headline { font-size: 1.55rem; font-weight: 800; line-height: 1.3; letter-spacing: -.025em; color: var(--text); margin-bottom: 14px; }
-    .landing-sub { font-size: .92rem; color: var(--sec); line-height: 1.65; margin-bottom: 12px; }
-    .landing-diff { font-size: .84rem; color: var(--acc2); font-weight: 600; margin-bottom: 20px; }
-    .landing-trust { font-size: .78rem; color: var(--muted); margin-bottom: 28px; padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 10px; line-height: 1.6; }
+    .landing-sub { font-size: .91rem; color: var(--sec); line-height: 1.65; margin-bottom: 10px; }
+    .landing-diff { font-size: .83rem; color: var(--acc2); font-weight: 600; margin-bottom: 20px; }
+    .landing-values { display: flex; flex-direction: column; gap: 7px; margin-bottom: 22px; text-align: left; }
+    .landing-value { padding: 11px 14px; background: var(--surf); border: 1px solid var(--bord); border-radius: 11px; }
+    .landing-value-title { font-size: .85rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .landing-value-desc { font-size: .79rem; color: var(--sec); line-height: 1.5; }
+    .landing-trust { font-size: .77rem; color: var(--muted); margin-bottom: 24px; padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 10px; line-height: 1.6; }
     .landing-cta { width: 100%; font-size: .97rem; padding: 15px 24px; }
 
     /* ── Home add button ── */
@@ -2162,12 +2172,12 @@
         <div id="rp-debrief-text"></div>
       </div>
       <div class="rp-next-move-card hidden" id="rp-next-move">
-        <div class="rp-next-move-label">Gerçek hayatta ne yap</div>
+        <div class="rp-next-move-label">Your next real move</div>
         <div class="rp-next-move-message" id="rp-next-move-message"></div>
         <div class="rp-next-move-advice" id="rp-next-move-advice"></div>
         <div class="rp-next-move-btns">
-          <button type="button" class="rp-copy-btn" id="rp-copy-btn">Mesajı kopyala</button>
-          <button type="button" class="rp-tactic-btn" id="rp-tactic-btn">Farklı taktik dene</button>
+          <button type="button" class="rp-copy-btn" id="rp-copy-btn">Copy message</button>
+          <button type="button" class="rp-tactic-btn" id="rp-tactic-btn">Try a different tactic</button>
         </div>
       </div>
       <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
@@ -2203,13 +2213,36 @@
   <div id="screen-landing" class="screen-landing hidden">
     <div class="landing-inner">
       <div class="landing-brand">aiwillmake</div>
-      <h1 class="landing-headline">Hayatındaki gerçek insanların dijital ikizini oluştur. Zor konuşmaları önce onlarla prova et.</h1>
-      <p class="landing-sub">WhatsApp geçmişini yükle — kardeşin, patronun, sevgilin nasıl konuşuyorsa öyle cevap versin. Ne diyeceğini planla, tepkisini test et.</p>
-      <p class="landing-diff">Character.AI gibi hayali değil — gerçek konuşmalarından.</p>
-      <p class="landing-trust">🔒 Verilerin yapay zeka eğitmek için kullanılmaz &nbsp;·&nbsp; Analiz sonrası ham metin silinir</p>
+
+      <div class="landing-chat">
+        <div class="landing-bubble landing-bubble-user">Mert, I need to ask you something...</div>
+        <div class="landing-bubble landing-bubble-other">Tell me bro, everything okay?</div>
+        <span class="landing-chat-label">⚡ Simulated from real WhatsApp history</span>
+      </div>
+
+      <h1 class="landing-headline">The conversation before the conversation.</h1>
+      <p class="landing-sub">Upload your real WhatsApp history with someone in your life. Rehearse the hard conversation first — plan what to say, see how they'll react.</p>
+      <p class="landing-diff">Not a fictional character — someone you actually know.</p>
+
+      <div class="landing-values">
+        <div class="landing-value">
+          <div class="landing-value-title">Rehearse before it matters</div>
+          <div class="landing-value-desc">Practice difficult conversations before having them for real.</div>
+        </div>
+        <div class="landing-value">
+          <div class="landing-value-title">See different outcomes</div>
+          <div class="landing-value-desc">Explore how different approaches change the response.</div>
+        </div>
+        <div class="landing-value">
+          <div class="landing-value-title">Built from real history</div>
+          <div class="landing-value-desc">Uses your actual conversations, not a generic AI personality.</div>
+        </div>
+      </div>
+
+      <p class="landing-trust">🔒 Your conversations stay yours. Never used to train AI models. Delete anytime.</p>
       <button class="btn-google landing-cta" onclick="signInWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-        Google ile başla
+        Continue with Google
       </button>
     </div>
   </div>
@@ -2257,10 +2290,10 @@
     <!-- Home: Your Conversations -->
     <section id="homeSection" data-screen-id="home">
       <div class="home-section-header">
-        <h1 class="home-section-title">Kişilerim</h1>
-        <button type="button" class="btn-home-add" onclick="openNewConversation()">+ Yeni kişi</button>
+        <h1 class="home-section-title">My People</h1>
+        <button type="button" class="btn-home-add" onclick="openNewConversation()">+ New person</button>
       </div>
-      <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Kişi veya konuşma ara…" autocomplete="off" />
+      <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Search people or conversations…" autocomplete="off" />
       <div id="homeConvList" class="home-conv-list"></div>
     </section>
 
@@ -2579,62 +2612,62 @@
     <!-- Import Screen -->
     <section id="screen-import" class="hidden" data-screen-id="import">
       <div class="import-inner">
-        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Kimi ekleyeceksin?</h2>
-        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Konuşma verisi yükle, dijital ikizini oluşturalım.</p>
+        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who do you want to add?</h2>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Upload conversation data to build their digital twin.</p>
 
         <div class="import-tabs">
           <button class="import-tab active" id="importTab-whatsapp" onclick="switchImportTab('whatsapp',this)">WhatsApp</button>
-          <button class="import-tab" id="importTab-screenshot" onclick="switchImportTab('screenshot',this)">Ekran görüntüsü</button>
-          <button class="import-tab" id="importTab-text" onclick="switchImportTab('text',this)">Kendin tarif et</button>
+          <button class="import-tab" id="importTab-screenshot" onclick="switchImportTab('screenshot',this)">Screenshot</button>
+          <button class="import-tab" id="importTab-text" onclick="switchImportTab('text',this)">Describe them</button>
         </div>
 
         <div id="import-pane-whatsapp">
-          <p class="import-quality">★★★ En iyi: tam simülasyon + strateji</p>
+          <p class="import-quality">★★★ Best: full simulation + strategy</p>
           <div class="import-drop-zone" onclick="document.getElementById('importWaFile').click()">
-            <p>📤 WhatsApp sohbet dosyasını yükle<br><span style="font-size:.77rem;opacity:.65">.txt veya .zip</span></p>
+            <p>📤 Upload WhatsApp chat<br><span style="font-size:.77rem;opacity:.65">.txt or .zip</span></p>
             <input id="importWaFile" type="file" accept=".txt,.zip" style="display:none" onchange="handleImportFileSelect(this)">
           </div>
         </div>
 
         <div id="import-pane-screenshot" class="hidden">
-          <p class="import-quality">★★☆ Sınırlı: strateji iyi, simülatör yüzeysel</p>
+          <p class="import-quality">★★☆ Partial: strategy works, simulation limited</p>
           <div class="import-drop-zone" onclick="document.getElementById('importImgFile').click()">
-            <p>📸 Ekran görüntüsü yükle<br><span style="font-size:.77rem;opacity:.65">JPG, PNG</span></p>
+            <p>📸 Upload screenshot<br><span style="font-size:.77rem;opacity:.65">JPG, PNG</span></p>
             <input id="importImgFile" type="file" accept="image/*" style="display:none" onchange="handleImportFileSelect(this)">
           </div>
         </div>
 
         <div id="import-pane-text" class="hidden">
-          <p class="import-quality">★☆☆ Temel: sadece strateji</p>
-          <textarea id="importTextArea" placeholder="Bu kişiyi anlat… Kim olduğunu, nasıl konuştuğunu, aranızda neler olduğunu yaz." style="width:100%;min-height:140px;padding:12px;background:var(--card);border:1px solid var(--bord);border-radius:10px;color:var(--fg);font:inherit;font-size:.88rem;resize:vertical;box-sizing:border-box;margin-bottom:4px"></textarea>
+          <p class="import-quality">★☆☆ Basic: strategy only</p>
+          <textarea id="importTextArea" placeholder="Describe this person… who they are, how they communicate, what's happened between you." style="width:100%;min-height:140px;padding:12px;background:var(--card);border:1px solid var(--bord);border-radius:10px;color:var(--fg);font:inherit;font-size:.88rem;resize:vertical;box-sizing:border-box;margin-bottom:4px"></textarea>
         </div>
 
         <p class="import-file-note" id="importFileName"></p>
 
         <div class="import-meta">
-          <input id="importName" type="text" placeholder="İsmi (ör: Mert)" />
+          <input id="importName" type="text" placeholder="Name (e.g. Alex)" />
           <select id="importType">
-            <option value="">İlişki türü…</option>
-            <option>Kardeş</option>
-            <option>Eş</option>
-            <option>Eski sevgili</option>
-            <option>Patron</option>
-            <option>Anne-baba</option>
-            <option>Arkadaş</option>
+            <option value="">Relationship type…</option>
+            <option>Sibling</option>
+            <option>Partner/Spouse</option>
+            <option>Ex</option>
+            <option>Boss</option>
+            <option>Parent</option>
+            <option>Friend</option>
             <option>Partner</option>
-            <option>Diğer</option>
+            <option>Other</option>
           </select>
         </div>
 
-        <button class="btn-analyze" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analiz et →</button>
+        <button class="btn-analyze" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analyze →</button>
       </div>
     </section>
 
     <!-- Processing Screen -->
     <section id="screen-processing" class="hidden" data-screen-id="processing">
       <div class="processing-inner">
-        <p class="processing-label" id="processingLabel">Analiz başladı</p>
-        <p class="processing-msg" id="processingMsg">Konuşma okunuyor…</p>
+        <p class="processing-label" id="processingLabel">Analysis started</p>
+        <p class="processing-msg" id="processingMsg">Reading conversation…</p>
         <div class="processing-bar-wrap">
           <div class="processing-bar" id="processingBar"></div>
         </div>
@@ -2644,30 +2677,30 @@
     <!-- Goal Screen -->
     <section id="screen-goal" class="hidden" data-screen-id="goal">
       <div class="goal-inner">
-        <button type="button" class="back-btn" onclick="App.navigateTo('ready')">← Geri</button>
-        <h2 style="font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Ne yapmak istiyorsun?</h2>
+        <button type="button" class="back-btn" onclick="App.navigateTo('ready')">← Back</button>
+        <h2 style="font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">What do you want to do?</h2>
         <p class="goal-person" id="goalPersonLabel"></p>
         <div class="goal-chips" id="goalChips">
-          <button type="button" class="goal-chip" data-chip="Borç/para iste">Borç/para iste</button>
-          <button type="button" class="goal-chip" data-chip="Araya düzelt">Araya düzelt</button>
-          <button type="button" class="goal-chip" data-chip="Duygu ifade et">Duygu ifade et</button>
-          <button type="button" class="goal-chip" data-chip="Bir şey rica et">Bir şey rica et</button>
-          <button type="button" class="goal-chip" data-chip="Zam iste">Zam iste</button>
-          <button type="button" class="goal-chip" data-chip="Konuyu aç">Konuyu aç</button>
+          <button type="button" class="goal-chip" data-chip="Ask for money/a loan">Ask for money/a loan</button>
+          <button type="button" class="goal-chip" data-chip="Clear the air">Clear the air</button>
+          <button type="button" class="goal-chip" data-chip="Express how I feel">Express how I feel</button>
+          <button type="button" class="goal-chip" data-chip="Ask a favor">Ask a favor</button>
+          <button type="button" class="goal-chip" data-chip="Ask for a raise">Ask for a raise</button>
+          <button type="button" class="goal-chip" data-chip="Bring something up">Bring something up</button>
         </div>
-        <textarea id="goalInput" class="goal-input" placeholder="Ya da kendi amacını yaz… (ör: 'Geçen kavgamızı özür dileyerek çözmek istiyorum')"></textarea>
-        <button type="button" class="btn-get-strategy" id="goalSubmitBtn">Stratejimi al →</button>
+        <textarea id="goalInput" class="goal-input" placeholder="Or describe your goal… (e.g. 'I want to apologize and fix what happened last time')"></textarea>
+        <button type="button" class="btn-get-strategy" id="goalSubmitBtn">Get strategy →</button>
       </div>
     </section>
 
     <!-- Strategy Screen -->
     <section id="screen-strategy" class="hidden" data-screen-id="strategy">
       <div class="strategy-inner">
-        <button type="button" class="back-btn" onclick="App.navigateTo('goal')">← Geri</button>
+        <button type="button" class="back-btn" onclick="App.navigateTo('goal')">← Back</button>
         <p class="strategy-goal-label" id="strategyGoalLabel"></p>
-        <h2 style="font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-bottom:18px">Taktikler</h2>
+        <h2 style="font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-bottom:18px">Tactics</h2>
         <div id="strategyCards"></div>
-        <button type="button" class="btn-prova-all" id="provaAllBtn">Tüm konuşmayı prova et →</button>
+        <button type="button" class="btn-prova-all" id="provaAllBtn">Practice the full conversation →</button>
       </div>
     </section>
 
@@ -3735,9 +3768,9 @@
       if (!data.length) {
         const escQ = q.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         listEl.innerHTML = q
-          ? `<p class="home-conv-empty">Eşleşme yok: "${escQ}"</p>`
-          : `<p class="home-conv-empty" style="margin-bottom:12px">Henüz kişi eklemedin.</p>
-             <button onclick="openNewConversation()" class="home-new-person">+ İlk kişini ekle</button>`;
+          ? `<p class="home-conv-empty">No results for "${escQ}"</p>`
+          : `<p class="home-conv-empty" style="margin-bottom:12px">No people added yet.</p>
+             <button onclick="openNewConversation()" class="home-new-person">+ Add your first person</button>`;
         return;
       }
 
@@ -3845,7 +3878,7 @@
         const type = latestConv?.contacts?.type || '';
         const daysAgo = latestConv ? (() => {
           const d = Math.floor((Date.now() - new Date(latestConv.updated_at)) / 86400000);
-          return d === 0 ? 'bugün' : d === 1 ? 'dün' : `${d} gün önce`;
+          return d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
         })() : '';
         const row = document.createElement('div');
         row.className = 'home-person-row';
@@ -3855,7 +3888,7 @@
             <div class="home-person-name">${escH(name)}</div>
             <div class="home-person-meta">${type ? escH(type) + ' · ' : ''}${daysAgo}</div>
           </div>
-          <button type="button" class="home-person-cta">Konuş →</button>`;
+          <button type="button" class="home-person-cta">Talk →</button>`;
         row.querySelector('.home-person-cta').addEventListener('click', e => { e.stopPropagation(); loadPersonSection(contactId); });
         row.addEventListener('click', () => loadPersonSection(contactId));
         listEl.appendChild(row);
@@ -4366,14 +4399,14 @@
 
     async function runImportAnalysis() {
       const name = (document.getElementById('importName').value || '').trim();
-      if (!name) { showToast('İsim gerekli', 'error'); return; }
+      if (!name) { showToast('Name is required', 'error'); return; }
 
       let dataSource = null;
       if (_importMode === 'text') {
         dataSource = (document.getElementById('importTextArea').value || '').trim();
-        if (!dataSource) { showToast('Bir şeyler yaz', 'error'); return; }
+        if (!dataSource) { showToast('Write something first', 'error'); return; }
       } else {
-        if (!_importFile) { showToast('Dosya seç', 'error'); return; }
+        if (!_importFile) { showToast('Select a file first', 'error'); return; }
         dataSource = _importFile;
       }
 
@@ -4387,7 +4420,7 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
           body: JSON.stringify({ name, type: type || null })
         });
-        if (!cr.ok) throw new Error('Kişi oluşturulamadı');
+        if (!cr.ok) throw new Error('Could not create person');
         const contact = await cr.json();
 
         App.navigateTo('processing');
@@ -4411,17 +4444,17 @@
         stopProcessingAnimation();
         hideLoadingOverlay();
         App.navigateTo('import');
-        showToast(err.message || 'Analiz başarısız. Tekrar dene.', 'error');
+        showToast(err.message || 'Analysis failed. Try again.', 'error');
         btn.disabled = false;
       }
     }
 
     const _PROCESSING_MSGS = [
-      'Konuşma okunuyor…',
-      '{name}\'in tarzı öğreniliyor…',
-      'Hayatındaki kişiler çözülüyor…',
-      'İletişim kalıpları analiz ediliyor…',
-      'İkiz hazırlanıyor…',
+      'Reading conversation…',
+      'Learning {name}\'s style…',
+      'Mapping the people in their life…',
+      'Analyzing communication patterns…',
+      'Building the digital twin…',
     ];
 
     function startProcessingAnimation(name) {
@@ -4430,7 +4463,7 @@
       const msgEl = document.getElementById('processingMsg');
       const barEl = document.getElementById('processingBar');
       const labelEl = document.getElementById('processingLabel');
-      if (labelEl) labelEl.textContent = name + ' analiz ediliyor';
+      if (labelEl) labelEl.textContent = 'Analyzing ' + name + '…';
 
       function tick() {
         if (msgEl) {
@@ -4466,9 +4499,9 @@
       el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(3);
 
       const qualityMap = {
-        whatsapp:   { stars: '★★★', label: 'Güçlü profil — tam simülasyon' },
-        screenshot: { stars: '★★☆', label: 'Kısmi — strateji iyi, simülasyon sınırlı' },
-        text:       { stars: '★☆☆', label: 'Temel — sadece strateji' },
+        whatsapp:   { stars: '★★★', label: 'Strong profile — full simulation' },
+        screenshot: { stars: '★★☆', label: 'Partial — strategy works, simulation limited' },
+        text:       { stars: '★☆☆', label: 'Basic — strategy only' },
       };
       const quality = qualityMap[importMode] || qualityMap.screenshot;
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -4493,16 +4526,16 @@
       } catch { /* fall through, show what we have */ }
 
       el.innerHTML = `
-        <p class="ready-badge">Profil oluşturuldu</p>
-        <h1 class="ready-headline">${escH(name)} hazır</h1>
+        <p class="ready-badge">Profile created</p>
+        <h1 class="ready-headline">${escH(name)} is ready</h1>
         <p class="ready-quality">${quality.stars} <span style="font-size:.78rem;color:var(--muted);font-weight:400">${escH(quality.label)}</span></p>
         ${summary ? `<div class="ready-summary">${escH(summary)}</div>` : ''}
         ${patterns.length ? `<ul class="ready-patterns">${patterns.map(p => `<li>${escH(p)}</li>`).join('')}</ul>` : ''}
         <div class="ready-btns">
-          <button class="ready-btn-primary" id="readyTalkBtn">💬 Öylesine konuş</button>
-          <button class="ready-btn-secondary" id="readyIntentBtn">🎯 Bir şey söyleyeceğim</button>
+          <button class="ready-btn-primary" id="readyTalkBtn">💬 Just talk</button>
+          <button class="ready-btn-secondary" id="readyIntentBtn">🎯 I have something to say</button>
         </div>
-        <button class="ready-btn-profile" id="readyProfileBtn">tam profili gör →</button>
+        <button class="ready-btn-profile" id="readyProfileBtn">view full profile →</button>
       `;
       document.getElementById('readyTalkBtn').addEventListener('click', () => loadPersonSection(contactId));
       document.getElementById('readyProfileBtn').addEventListener('click', () => loadPersonSection(contactId));
@@ -4514,7 +4547,7 @@
     function openGoalScreen() {
       const name = activeContactContext?.name || '';
       const lbl = document.getElementById('goalPersonLabel');
-      if (lbl) lbl.textContent = name ? `${name} ile…` : '';
+      if (lbl) lbl.textContent = name ? `With ${name}…` : '';
       const inp = document.getElementById('goalInput');
       if (inp) inp.value = '';
       document.querySelectorAll('.goal-chip').forEach(c => c.classList.remove('active'));
@@ -4537,7 +4570,7 @@
 
     document.getElementById('goalSubmitBtn').addEventListener('click', () => {
       const goal = (document.getElementById('goalInput').value || '').trim();
-      if (!goal) { showToast('Amacını yaz veya bir seçenek seç', 'error'); return; }
+      if (!goal) { showToast('Enter a goal or select an option', 'error'); return; }
       App.state.activeIntent = goal;
       App.state.intentMode = 'strategic';
       fetchAndRenderStrategy(goal);
@@ -4548,7 +4581,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       const name = activeContactContext?.name || '';
       const lbl = document.getElementById('strategyGoalLabel');
-      if (lbl) lbl.textContent = `Amaç: ${goal}${name ? ` (${name} ile)` : ''}`;
+      if (lbl) lbl.textContent = `Goal: ${goal}${name ? ` (with ${name})` : ''}`;
       const cardsEl = document.getElementById('strategyCards');
       const provaAllBtn = document.getElementById('provaAllBtn');
       cardsEl.innerHTML = [1,2,3].map(() => `
@@ -4569,9 +4602,9 @@
           body: JSON.stringify({ mode: 'strategy', goal, fields: { language: lang }, contactContext: activeContactContext })
         });
         const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Strateji üretilemedi');
+        if (!r.ok) throw new Error(data.error || 'Strategy could not be generated');
         const cards = Array.isArray(data.cards) ? data.cards : [];
-        if (!cards.length) throw new Error('Strateji kartı gelmedi');
+        if (!cards.length) throw new Error('No strategy cards returned');
 
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         cardsEl.innerHTML = '';
@@ -4579,14 +4612,14 @@
           const div = document.createElement('div');
           div.className = 'strategy-card';
           div.innerHTML = `
-            <p class="strategy-tactic">${escH(card.tactic || `Taktik ${i+1}`)}</p>
+            <p class="strategy-tactic">${escH(card.tactic || `Tactic ${i+1}`)}</p>
             <div class="strategy-message">${escH(card.message || '')}</div>
             <p class="strategy-predicted">${escH(card.predicted_reply || '')}</p>
             <div class="strategy-meta">
-              <div class="strategy-meta-row"><strong>Neden işe yarar:</strong> ${escH(card.why || '')}</div>
+              <div class="strategy-meta-row"><strong>Why it works:</strong> ${escH(card.why || '')}</div>
               <div class="strategy-meta-row"><strong>Risk:</strong> ${escH(card.risk || '')}</div>
             </div>
-            <button type="button" class="btn-prova">Bu taktiği simülatörde prova et →</button>`;
+            <button type="button" class="btn-prova">Try this in the simulator →</button>`;
           div.querySelector('.btn-prova').addEventListener('click', () => {
             openSimulator(card.message || goal, activeContactContext, goal);
           });
@@ -4629,7 +4662,7 @@
       if (intentGoal) {
         const noteEl = document.createElement('div');
         noteEl.style.cssText = 'font-size:.77rem;color:var(--acc2);text-align:center;padding:10px 0 4px;opacity:.85;';
-        noteEl.textContent = `Amaç: ${intentGoal}`;
+        noteEl.textContent = `Goal: ${intentGoal}`;
         document.getElementById('rp-messages').appendChild(noteEl);
       }
     }
@@ -5464,9 +5497,9 @@
         const _daysAgo = (dateStr) => {
           if (!dateStr) return '';
           const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
-          if (d === 0) return 'bugün güncellendi';
-          if (d === 1) return 'dün güncellendi';
-          return `${d} gün önce güncellendi`;
+          if (d === 0) return 'updated today';
+          if (d === 1) return 'updated yesterday';
+          return `updated ${d} days ago`;
         };
 
         el.innerHTML = `
@@ -5483,29 +5516,29 @@
           </div>
 
           <div class="person-primary-btns">
-            <button type="button" class="person-primary-btn person-primary-btn-casual" id="personCasualBtn">💬 Öylesine konuş</button>
-            <button type="button" class="person-primary-btn person-primary-btn-goal" id="personGoalBtn">🎯 Bir şey söyleyeceğim</button>
+            <button type="button" class="person-primary-btn person-primary-btn-casual" id="personCasualBtn">💬 Just talk</button>
+            <button type="button" class="person-primary-btn person-primary-btn-goal" id="personGoalBtn">🎯 I have something to say</button>
           </div>
 
           <div class="person-actions-list">
             <button type="button" class="person-action-item" id="personAnalysisToggle">
               <div class="person-action-sub">
-                <span class="person-action-label">📊 İlişki analizi</span>
-                <span class="person-action-desc">${c.observed_patterns?.length || 0} gözlem</span>
+                <span class="person-action-label">📊 Relationship insights</span>
+                <span class="person-action-desc">${c.observed_patterns?.length || 0} observations</span>
               </div>
               <span class="person-action-arrow">›</span>
             </button>
             <button type="button" class="person-action-item" id="personUpdateBtn">
               <div class="person-action-sub">
-                <span class="person-action-label">🔄 Veriyi güncelle</span>
-                <span class="person-action-desc">Yeni WhatsApp / ekran görüntüsü ekle</span>
+                <span class="person-action-label">🔄 Update data</span>
+                <span class="person-action-desc">Upload new WhatsApp chat or screenshot</span>
               </div>
               <span class="person-action-arrow">›</span>
             </button>
             <button type="button" class="person-action-item" id="personHistoryToggle">
               <div class="person-action-sub">
-                <span class="person-action-label">💬 Geçmiş konuşmalar</span>
-                <span class="person-action-desc">${convs.length} konuşma</span>
+                <span class="person-action-label">💬 Past conversations</span>
+                <span class="person-action-desc">${convs.length} conversation${convs.length === 1 ? '' : 's'}</span>
               </div>
               <span class="person-action-arrow">›</span>
             </button>
@@ -5532,18 +5565,18 @@
                     <span class="tl-date">${escH(shortDate)}</span>
                     ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
                     ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
-                    <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Sil">Sil</button>
+                    <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Delete">Delete</button>
                   </div>
                   ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
                   ${cv.fields?.what_changed ? `<div class="tl-what-changed">${escH(cv.fields.what_changed)}</div>` : ''}
                 </div>
               </div>`;
-            }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem">Henüz konuşma yok.</p>`}
+            }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem">No conversations yet.</p>`}
           </div>
 
           <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-            <button type="button" class="btn-del-contact" id="personDelBtn">Sil</button>
-            <button type="button" class="btn-edit-contact" id="personEditBtn">Düzenle</button>
+            <button type="button" class="btn-del-contact" id="personDelBtn">Delete</button>
+            <button type="button" class="btn-edit-contact" id="personEditBtn">Edit</button>
           </div>
           <div id="personEditForm" class="hidden" style="margin-top:10px;padding:12px;background:var(--surface2,rgba(0,0,0,.04));border-radius:10px">
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -5560,8 +5593,8 @@
                 <option value="Client" ${c.type==='Client'?'selected':''}>Client</option>
               </select>
               <div style="display:flex;gap:8px">
-                <button type="button" id="personEditSaveBtn" style="flex:1;padding:8px 14px;border-radius:8px;background:var(--accent,#6366f1);color:#fff;border:none;font-size:.82rem;cursor:pointer">Kaydet</button>
-                <button type="button" id="personEditCancelBtn" style="padding:8px 14px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--fg,#000);border:none;font-size:.82rem;cursor:pointer">İptal</button>
+                <button type="button" id="personEditSaveBtn" style="flex:1;padding:8px 14px;border-radius:8px;background:var(--accent,#6366f1);color:#fff;border:none;font-size:.82rem;cursor:pointer">Save</button>
+                <button type="button" id="personEditCancelBtn" style="padding:8px 14px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--fg,#000);border:none;font-size:.82rem;cursor:pointer">Cancel</button>
               </div>
             </div>
           </div>`;
@@ -5573,13 +5606,13 @@
         el.querySelectorAll('.tl-del-btn[data-conv-id]').forEach(btn => {
           btn.addEventListener('click', async e => {
             e.stopPropagation();
-            if (!confirm('Bu konuşmayı sil? Geri alınamaz.')) return;
+            if (!confirm('Delete this conversation? This cannot be undone.')) return;
             try {
               const dr = await fetch(`/api/conversations/${btn.dataset.convId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
               if (!dr.ok) throw new Error();
               btn.closest('.tl-item').remove();
               allConvData = allConvData.filter(x => x.id !== btn.dataset.convId);
-            } catch { showToast('Silinemedi. Tekrar dene.', 'error'); }
+            } catch { showToast('Could not delete. Try again.', 'error'); }
           });
         });
 
@@ -5591,7 +5624,7 @@
               if (fr.ok) { const fc = await fr.json(); activeContactContext.character_profile = fc.character_profile || null; }
             } catch {}
             if (!activeContactContext.character_profile) {
-              showToast(`${activeContactContext.name || 'Profil'} hazırlanıyor — birkaç saniye sonra tekrar dene.`, 'info');
+              showToast(`${activeContactContext.name || 'Profile'} is still being prepared — try again in a few seconds.`, 'info');
               return;
             }
           }
@@ -5611,10 +5644,10 @@
           panel.classList.toggle('hidden');
           if (!panel.classList.contains('hidden') && panel.children.length === 0) {
             panel.innerHTML = `
-              <p style="font-size:.84rem;color:var(--sec);margin-bottom:10px">Yeni veri yükle:</p>
+              <p style="font-size:.84rem;color:var(--sec);margin-bottom:10px">Upload new data:</p>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button id="pUpdateImgBtn" class="wai-btn" style="flex:1">📷 Ekran görüntüsü</button>
-                <button id="pUpdateTxtBtn" class="wai-btn" style="flex:1">📄 .txt dosyası</button>
+                <button id="pUpdateImgBtn" class="wai-btn" style="flex:1">📷 Screenshot</button>
+                <button id="pUpdateTxtBtn" class="wai-btn" style="flex:1">📄 .txt file</button>
               </div>`;
             const _sc = (inpId) => {
               const inp = document.getElementById(inpId);
@@ -5648,12 +5681,12 @@
           analysisEl.className = 'person-section-panel';
           analysisEl.style.marginBottom = '10px';
           analysisEl.innerHTML = `
-            <p style="font-size:.75rem;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Son analiz — ${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}</p>
-            ${ad.what_changed ? `<div class="conv-what-changed"><span class="conv-what-changed-lbl">↑ Geçen seferden fark</span>${escHa(ad.what_changed)}</div>` : ''}
+            <p style="font-size:.75rem;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Latest analysis — ${new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})}</p>
+            ${ad.what_changed ? `<div class="conv-what-changed"><span class="conv-what-changed-lbl">↑ What changed</span>${escHa(ad.what_changed)}</div>` : ''}
             ${badges ? `<div class="conv-analysis-badges" style="flex-wrap:wrap;gap:5px;margin-bottom:8px">${badges}</div>` : ''}
-            ${ad.power_balance ? `<div class="conv-power"><strong>Dinamik</strong><br>${escHa(ad.power_balance)}</div>` : ''}
+            ${ad.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escHa(ad.power_balance)}</div>` : ''}
             ${ad.key_moment ? `<div class="conv-key-moment">${escHa(ad.key_moment)}</div>` : ''}
-            ${ad.biggest_risk ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ En büyük risk</span>${escHa(ad.biggest_risk)}</div>` : ''}`;
+            ${ad.biggest_risk ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk</span>${escHa(ad.biggest_risk)}</div>` : ''}`;
           document.getElementById('personAnalysisPanel').insertAdjacentElement('afterend', analysisEl);
           document.getElementById('personAnalysisPanel').classList.remove('hidden');
         }
@@ -5670,7 +5703,7 @@
           const newType = document.getElementById('personEditType').value;
           if (!newName) { document.getElementById('personEditName').focus(); return; }
           const saveBtn = document.getElementById('personEditSaveBtn');
-          saveBtn.disabled = true; saveBtn.textContent = 'Kaydediliyor…';
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
           try {
             const pr = await fetch(`/api/contacts/${contactId}`, {
               method: 'PATCH',
@@ -5686,22 +5719,22 @@
               (newType ? `<span class="ctype-badge ${_typeClass(newType)}">${escH(newType)}</span>` : '') +
               (updated.relationship_state ? `<span class="contact-state ${_stateClass(updated.relationship_state)}">${escH(updated.relationship_state)}</span>` : '');
             document.getElementById('personEditForm').classList.add('hidden');
-            showToast('Kaydedildi', 'success');
+            showToast('Saved', 'success');
           } catch {
-            showToast('Kaydedilemedi. Tekrar dene.', 'error');
+            showToast('Could not save. Try again.', 'error');
           } finally {
-            saveBtn.disabled = false; saveBtn.textContent = 'Kaydet';
+            saveBtn.disabled = false; saveBtn.textContent = 'Save';
           }
         });
         document.getElementById('personDelBtn').addEventListener('click', async () => {
-          if (!confirm(`${c.name} silinsin mi? Bu işlem geri alınamaz.`)) return;
+          if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
           try {
             const dr = await fetch(`/api/contacts/${contactId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
             if (!dr.ok) throw new Error();
             activeContactContext = null;
             loadHomeConvList();
             goBack();
-          } catch { showToast('Silinemedi. Tekrar dene.', 'error'); }
+          } catch { showToast('Could not delete. Try again.', 'error'); }
         });
 
       } catch {
@@ -6479,9 +6512,9 @@
           const msgToCopy = data.next_move.message;
           newCopy.addEventListener('click', () => {
             if (navigator.clipboard) {
-              navigator.clipboard.writeText(msgToCopy).then(() => showToast('Kopyalandı', 'success')).catch(() => showToast('Kopyalama başarısız', 'error'));
+              navigator.clipboard.writeText(msgToCopy).then(() => showToast('Copied', 'success')).catch(() => showToast('Copy failed', 'error'));
             } else {
-              showToast('Kopyalama desteklenmiyor', 'error');
+              showToast('Copying not supported', 'error');
             }
           });
           newTactic.addEventListener('click', () => {
