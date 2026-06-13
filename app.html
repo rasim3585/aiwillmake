@@ -4518,6 +4518,7 @@
         } catch { /* patterns already saved; conversation record is a bonus */ }
 
         showToast(`✓ Saved to ${contactName}'s history${wasSampled ? ' · sampled (beginning, middle & end)' : ''}`, 'success');
+        if (contactId) showToast(`Building ${contactName}'s profile in the background…`, 'info');
         if (accessToken) {
           _pendingContactAnalysis = { contactId, data };
           loadPersonSection(contactId);
@@ -5687,6 +5688,12 @@
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
+      if (!_simCharacter.character_profile && _simCharacter.contact_id) {
+        const noteEl = document.createElement('div');
+        noteEl.style.cssText = 'font-size:.72rem;color:var(--sec);text-align:center;padding:6px 0 2px;opacity:.7;';
+        noteEl.textContent = 'Profile still building — full context available after next import.';
+        document.getElementById('rp-messages').appendChild(noteEl);
+      }
       _rpAppendBubble('user', msgText);
       _rpCallSimulate();
     }
