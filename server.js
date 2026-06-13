@@ -1008,19 +1008,20 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               body: JSON.stringify({
                 model: 'claude-haiku-4-5-20251001',
                 max_tokens: 600,
-                system: `You are analyzing a WhatsApp conversation export to build a profile of the CONTACT (the non-owner person).
+                system: `You are analyzing a WhatsApp conversation export to build a rich simulation profile of the CONTACT (the non-owner person).
 WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
 There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
 Return ONLY valid JSON — no markdown, no code fences, no explanation:
-{"user_name":"Ras","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently"}],"topics":["work pressure","family visits"],"style_notes":["writes in short bursts","uses humor to deflect","addresses user as abi"],"key_moments":["discussed moving cities","had tension over finances"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+{"user_name":"Ras","personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty and hates wasted time. With Ras he's candid and slightly protective — the tone is equal but warm.","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently, source of stress"}],"topics":["work pressure","weekend plans","family tension"],"style_notes":["writes in short 1-3 word bursts","deflects with dark humor when stressed","rarely explains himself, assumes shared context"],"key_moments":["planned a move to Ankara in March and then cancelled","had a tense exchange about money around New Year","mentioned his father's health declining","helped Ras with a job connection"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz"]}
 Fill every field with REAL content from this conversation. Do NOT copy the example values above.
 - user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
+- personality: 2-3 sentences on who the CONTACT is as a person — their character, what they care about, how they relate to the chat owner. This is the most important field for simulation.
 - people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned by name.
-- topics: recurring subjects discussed (work, health, specific plans, family, etc.). List 2-4 if discernible.
-- style_notes: how the CONTACT writes — sentence length, slang, emoji use, directness, emotional tone. List 2-3 observations.
-- key_moments: up to 5 specific concrete events or discussions (e.g. "planned trip to İzmir", "argument about rent"). No generic summaries.
-- how_they_address_user: exact term the CONTACT uses to address the chat owner (abi, reis, their name, etc.). Empty string "" if not visible.
-- typical_phrases: 3-5 short recurring phrases the CONTACT uses. Empty array [] only if truly none visible.
+- topics: recurring subjects discussed (work, health, specific plans, family, etc.). List 3-5 if discernible.
+- style_notes: how the CONTACT writes — sentence length, slang/emoji use, emotional patterns, what they avoid, directness. List 3-4 specific observations.
+- key_moments: up to 8 specific concrete events or discussions visible in this conversation (e.g. "planned trip to İzmir", "argument about rent in October"). No generic summaries — real events only.
+- how_they_address_user: exact term the CONTACT uses to address the chat owner. Empty string "" if not visible.
+- typical_phrases: 4-6 short recurring phrases or responses the CONTACT uses. Empty array [] only if truly none visible.
 CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
                 messages: [{ role: 'user', content: conversationText }]
               })
@@ -1034,18 +1035,19 @@ CRITICAL: Never return "..." as a value. Return real extracted content or empty 
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 600,
-                system: `Build a final character profile from the extracted conversation data below. Return ONLY valid JSON — no markdown, no code fences:
-{"people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned often"}],"topics":["work","family plans"],"style":"Writes in short bursts, uses humor frequently, rarely shares feelings directly.","key_moments":["planned move to Ankara in March","discussed job promotion"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
-Fill every field with REAL content. Do NOT copy the example values above.
-- people: deduplicate third-party people (not the two chatters). Keep real names with context.
-- topics: merge and deduplicate subjects. At least 2 if any found.
-- style: ONE sentence summarizing the CONTACT's communication style from style_notes.
-- key_moments: top 5 most concrete specific events/discussions. Remove vague generalities.
-- how_they_address_user: how the CONTACT addresses the chat owner. Most consistent value.
-- address_term: how the chat owner addresses the CONTACT (nickname, title, name).
-- user_name: the chat owner's name/label (most consistent value).
-- typical_phrases: top 3-5 recurring short phrases the CONTACT uses.
+                max_tokens: 1000,
+                system: `Build a rich simulation-ready character profile from the extracted conversation data below. Return ONLY valid JSON — no markdown, no code fences:
+{"personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty above all — he'll go out of his way for close friends but shuts down quickly with anyone who wastes his time. With Ras the tone is warm and equal, occasionally protective.","people":[{"name":"Yağmur","relation":"wife of contact","context":"source of occasional tension, mentioned in work-life balance context"}],"topics":["work stress","weekend plans","family health"],"style":"Writes in rapid short bursts, often just 1-3 words. Deflects emotional topics with dark humor or a subject change. Direct and assumes shared context — rarely explains himself. When something bothers him, he goes quiet rather than confronting.","key_moments":["planned a move to Ankara in March, then cancelled without explanation","tense exchange about money around New Year","mentioned father's declining health twice","helped Ras with a job referral in autumn","argued about a cancelled plan but resolved it quickly"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz","söylerim"]}
+Fill every field with REAL content from the extracted data. Do NOT copy the example values above.
+- personality: 2-3 sentences capturing who the CONTACT is — character, values, emotional patterns, and their specific dynamic with the chat owner. This is the most important field.
+- people: deduplicate third-party people (not the two chatters). Keep only real names with clear context.
+- topics: deduplicated recurring subjects. At least 3 if any found.
+- style: 2-3 sentences covering HOW the CONTACT communicates — message length, tone, emotional deflection patterns, what they avoid, language register. Be specific and behavioral.
+- key_moments: top 8 most concrete specific events/discussions. No vague generalities — real events with detail.
+- how_they_address_user: most consistent term the CONTACT uses to address the chat owner.
+- address_term: how the chat owner addresses the CONTACT (nickname, title, or name).
+- user_name: the chat owner's name/label.
+- typical_phrases: top 4-6 recurring short phrases the CONTACT uses.
 Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
                 messages: [{ role: 'user', content: `Fragment: ${JSON.stringify(frag)}` }]
               })
@@ -1177,19 +1179,20 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
                 body: JSON.stringify({
                   model: 'claude-haiku-4-5-20251001',
                   max_tokens: 500,
-                  system: `You are analyzing a WhatsApp conversation excerpt to build a profile of the CONTACT (the non-owner person).
+                  system: `You are analyzing a WhatsApp conversation excerpt to build a rich simulation profile of the CONTACT (the non-owner person).
 WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
 There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
 Return ONLY valid JSON — no markdown, no code fences, no explanation:
-{"user_name":"Ras","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently"}],"topics":["work pressure","family visits"],"style_notes":["writes in short bursts","uses humor to deflect","addresses user as abi"],"key_moments":["discussed moving cities","had tension over finances"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+{"user_name":"Ras","personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty and hates wasted time. With Ras he's candid and slightly protective — the tone is equal but warm.","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently, source of stress"}],"topics":["work pressure","weekend plans","family tension"],"style_notes":["writes in short 1-3 word bursts","deflects with dark humor when stressed","rarely explains himself, assumes shared context"],"key_moments":["planned a move to Ankara in March and then cancelled","had a tense exchange about money around New Year","mentioned his father's health declining","helped Ras with a job connection"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz"]}
 Fill every field with REAL content from this excerpt. Do NOT copy the example values above.
 - user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
+- personality: 2-3 sentences on who the CONTACT is as a person — character, what they care about, their dynamic with the chat owner. Most important field.
 - people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned.
-- topics: subjects discussed in this excerpt. List any you can identify.
-- style_notes: how the CONTACT writes — sentence length, slang, emoji use, directness. 2-3 observations if visible.
-- key_moments: specific concrete events or discussions in this excerpt. No generic summaries.
+- topics: subjects discussed in this excerpt. List any you can identify (3-5 if possible).
+- style_notes: how the CONTACT writes — sentence length, slang/emoji, emotional patterns, directness. 3-4 specific observations if visible.
+- key_moments: up to 8 specific concrete events or discussions in this excerpt. No generic summaries.
 - how_they_address_user: exact term the CONTACT uses to address the chat owner. Empty string "" if not visible.
-- typical_phrases: short recurring phrases the CONTACT uses. Empty array [] if none visible.
+- typical_phrases: 4-6 short recurring phrases the CONTACT uses. Empty array [] if none visible.
 CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
                   messages: [{ role: 'user', content: chunk }]
                 })
@@ -1203,18 +1206,19 @@ CRITICAL: Never return "..." as a value. Return real extracted content or empty 
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 700,
-                system: `Merge these WhatsApp conversation analysis fragments into one character profile. Return ONLY valid JSON — no markdown, no code fences:
-{"people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned often"}],"topics":["work","family plans"],"style":"Writes in short bursts, uses humor frequently, rarely shares feelings directly.","key_moments":["planned move to Ankara in March","discussed job promotion"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+                max_tokens: 1000,
+                system: `Merge these WhatsApp conversation analysis fragments into one rich simulation-ready character profile. Return ONLY valid JSON — no markdown, no code fences:
+{"personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty above all — he'll go out of his way for close friends but shuts down quickly with anyone who wastes his time. With Ras the tone is warm and equal, occasionally protective.","people":[{"name":"Yağmur","relation":"wife of contact","context":"source of occasional tension, mentioned in work-life balance context"}],"topics":["work stress","weekend plans","family health"],"style":"Writes in rapid short bursts, often just 1-3 words. Deflects emotional topics with dark humor or a subject change. Direct and assumes shared context — rarely explains himself. When something bothers him, he goes quiet rather than confronting.","key_moments":["planned a move to Ankara in March, then cancelled without explanation","tense exchange about money around New Year","mentioned father's declining health twice","helped Ras with a job referral in autumn","argued about a cancelled plan but resolved it quickly"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz","söylerim"]}
 Fill every field with REAL content from the fragments. Do NOT copy the example values above.
+- personality: 2-3 sentences synthesizing who the CONTACT is — character, values, emotional patterns, and their specific dynamic with the chat owner. Draw from personality fragments across all parts.
 - people: deduplicate third-party people across all fragments (not the two chatters). Keep real names with context.
-- topics: merge and deduplicate all subjects found. At least 2-4 if any found.
-- style: ONE sentence summarizing the CONTACT's communication style from all style_notes.
-- key_moments: top 5 most concrete specific events across all fragments. Remove vague generalities.
-- how_they_address_user: how the CONTACT addresses the chat owner. Most consistent value across fragments.
-- address_term: how the chat owner addresses the CONTACT (nickname, title, name).
+- topics: merge and deduplicate all subjects found. At least 3-5 if any found.
+- style: 2-3 sentences covering HOW the CONTACT communicates — message length/format, emotional deflection patterns, what they avoid, language register. Be specific and behavioral.
+- key_moments: top 8 most concrete specific events across all fragments. Prefer detail over vague generalities.
+- how_they_address_user: most consistent term the CONTACT uses to address the chat owner across all fragments.
+- address_term: how the chat owner addresses the CONTACT (nickname, title, or name).
 - user_name: the chat owner's name/label (most consistent value across fragments).
-- typical_phrases: top 5 most recurring short phrases the CONTACT uses across all fragments.
+- typical_phrases: top 4-6 most recurring short phrases the CONTACT uses across all fragments.
 Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
                 messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
               })
@@ -1773,6 +1777,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     const filteredPeople = (character.character_profile?.people || [])
       .filter(p => p.name.toLowerCase() !== userLabel.toLowerCase());
     const profileBlock = character.character_profile ? [
+      (character.character_profile.personality ? `WHO ${name.toUpperCase()} IS: ${character.character_profile.personality}` : ''),
       (filteredPeople.length ? `KNOWN PEOPLE: ${filteredPeople.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
       (character.character_profile.topics?.length ? `RECURRING TOPICS: ${character.character_profile.topics.join(', ')}` : ''),
       (character.character_profile.style ? `COMMUNICATION STYLE: ${character.character_profile.style}` : ''),
