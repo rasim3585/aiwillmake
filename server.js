@@ -1158,7 +1158,9 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
-            console.log('[profile-extract] STARTED (large)', contact_id, 'synthesis:', !!synthesisText, 'samples len:', combinedSamples.length);
+            const _kemalCount = (combinedSamples.match(/kemal/gi) || []).length;
+      const _keremCount = (combinedSamples.match(/kerem/gi) || []).length;
+      console.log('[profile-extract] STARTED (large)', contact_id, 'synthesis:', !!synthesisText, 'samples len:', combinedSamples.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount, '| slice used:', Math.min(28000, combinedSamples.length), 'of', combinedSamples.length);
             const profileInput = [
               synthesisText ? `BEHAVIORAL ANALYSIS:\n${synthesisText}` : '',
               `CONVERSATION SAMPLES (from ${chunks.length} time periods):\n${combinedSamples.slice(0, 28000)}`
@@ -1740,9 +1742,12 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 6);
-              console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
+              console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5), '| snippets:', scored.map(c => c.snippet.length));
               if (scored.length > 0) {
                 ragContext = `\nRELEVANT EXCERPTS (tone/context examples, in these "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
+                console.log('[rag-context] total ragContext len:', ragContext.length);
+              } else {
+                console.log('[rag-context] ragContext EMPTY — all snippets filtered or no matches');
               }
             }
           }
