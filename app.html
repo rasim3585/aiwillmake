@@ -39,6 +39,8 @@
       --acc2:   #e8956e;
       --glow:   rgba(212,113,90,0.28);
       --ok:     #20d47a;
+      --fg:     var(--text);
+      --card:   var(--surf);
       --r-xl: 22px;
       --r-lg: 16px;
       --r-md: 12px;
@@ -943,7 +945,7 @@
     .rp-copy-btn { padding: 8px 14px; background: var(--accent); border: none; border-radius: 9px; color: #fff; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: opacity .18s; }
     .rp-copy-btn:hover { opacity: .85; }
     .rp-tactic-btn { padding: 8px 14px; background: transparent; border: 1px solid var(--bord); border-radius: 9px; color: var(--sec); font: inherit; font-size: .82rem; cursor: pointer; transition: border-color .15s, color .15s; }
-    .rp-tactic-btn:hover { border-color: var(--accent); color: var(--fg); }
+    .rp-tactic-btn:hover { border-color: var(--accent); color: var(--text); }
     .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
     .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-again-btn {
@@ -1980,13 +1982,17 @@
       background: var(--bg);
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
-    .landing-inner { max-width: 480px; width: 100%; text-align: center; }
-    .landing-brand { font-size: 1.05rem; font-weight: 800; letter-spacing: -.01em; color: var(--accent); margin-bottom: 32px; }
-    .landing-headline { font-size: 1.5rem; font-weight: 800; line-height: 1.35; letter-spacing: -.025em; color: var(--fg); margin-bottom: 18px; }
-    .landing-trust { font-size: .8rem; color: var(--muted); margin-bottom: 24px; padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 10px; line-height: 1.6; }
-    .landing-tiers { display: flex; flex-direction: column; gap: 7px; margin-bottom: 28px; text-align: left; }
-    .landing-tier { font-size: .84rem; color: var(--sec); padding: 10px 14px; background: var(--card); border: 1px solid var(--bord); border-radius: 10px; }
-    .landing-cta { width: 100%; font-size: .98rem; padding: 15px 24px; }
+    .landing-inner { max-width: 460px; width: 100%; text-align: center; }
+    .landing-brand { font-size: 1rem; font-weight: 800; letter-spacing: -.01em; color: var(--accent); margin-bottom: 28px; text-transform: uppercase; letter-spacing: .08em; }
+    .landing-headline { font-size: 1.55rem; font-weight: 800; line-height: 1.3; letter-spacing: -.025em; color: var(--text); margin-bottom: 14px; }
+    .landing-sub { font-size: .92rem; color: var(--sec); line-height: 1.65; margin-bottom: 12px; }
+    .landing-diff { font-size: .84rem; color: var(--acc2); font-weight: 600; margin-bottom: 20px; }
+    .landing-trust { font-size: .78rem; color: var(--muted); margin-bottom: 28px; padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 10px; line-height: 1.6; }
+    .landing-cta { width: 100%; font-size: .97rem; padding: 15px 24px; }
+
+    /* ── Home add button ── */
+    .btn-home-add { padding: 8px 16px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity .18s; flex-shrink: 0; }
+    .btn-home-add:hover { opacity: .85; }
 
     /* ── Import Screen ── */
     .import-inner { max-width: 520px; margin: 0 auto; padding: 40px 20px; }
@@ -2038,8 +2044,8 @@
     .person-primary-btn-goal { background: var(--card); border: 1px solid var(--bord); color: var(--fg); }
     .person-primary-btn-goal:hover { border-color: var(--accent); color: var(--accent); }
     .person-actions-list { display: flex; flex-direction: column; gap: 1px; margin-bottom: 16px; background: var(--bord); border-radius: 12px; overflow: hidden; border: 1px solid var(--bord); }
-    .person-action-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: var(--card); cursor: pointer; border: none; font: inherit; width: 100%; text-align: left; transition: background .15s; gap: 10px; }
-    .person-action-item:hover { background: rgba(255,255,255,.06); }
+    .person-action-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: var(--surf); color: var(--text); cursor: pointer; border: none; font: inherit; width: 100%; text-align: left; transition: background .15s; gap: 10px; }
+    .person-action-item:hover { background: var(--surf2); }
     .person-action-sub { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
     .person-action-label { font-size: .9rem; color: var(--fg); font-weight: 500; }
     .person-action-desc { font-size: .74rem; color: var(--muted); }
@@ -2086,7 +2092,28 @@
     .btn-prova { width: 100%; padding: 10px; background: rgba(212,113,90,.12); border: 1px solid var(--accent); border-radius: 9px; color: var(--accent); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-prova:hover { background: rgba(212,113,90,.22); }
     .btn-prova-all { width: 100%; padding: 13px; background: var(--card); border: 1px solid var(--bord); border-radius: 12px; color: var(--sec); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; margin-top: 8px; transition: border-color .15s, color .15s; }
-    .btn-prova-all:hover { border-color: var(--accent); color: var(--fg); }
+    .btn-prova-all:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .page { padding: 20px 14px 80px; gap: 24px; }
+      .landing-headline { font-size: 1.3rem; }
+      .landing-inner { padding: 0 4px; }
+      .person-primary-btns { grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
+      .person-primary-btn { padding: 14px 12px; }
+      .import-inner, .goal-inner, .strategy-inner, .ready-inner, .processing-inner { padding: 24px 14px; }
+      .import-meta { flex-direction: column; gap: 8px; }
+      .strategy-card { padding: 14px 12px; }
+      .ready-headline { font-size: 1.65rem; }
+      .home-person-row { padding: 11px 12px; gap: 9px; }
+      .home-person-cta { padding: 7px 11px; font-size: .79rem; }
+      .home-section-header { margin-bottom: 12px; }
+      .home-section-title { font-size: 1.3rem; }
+      .rp-next-move-card { margin: 8px 10px 4px; }
+      .goal-chips { gap: 6px; }
+      .goal-chip { padding: 7px 11px; font-size: .8rem; }
+      .person-actions-list { border-radius: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -2176,13 +2203,10 @@
   <div id="screen-landing" class="screen-landing hidden">
     <div class="landing-inner">
       <div class="landing-brand">aiwillmake</div>
-      <h1 class="landing-headline">Gerçek konuşmalarından birinin dijital versiyonunu oluştur, onunla konuş ve prova yap</h1>
-      <p class="landing-trust">🔒 Verilerin model eğitmez &nbsp;·&nbsp; Analiz sonrası ham metin silinir</p>
-      <div class="landing-tiers">
-        <div class="landing-tier">★★★ <strong>WhatsApp Export</strong> — tam simülasyon + strateji</div>
-        <div class="landing-tier">★★☆ <strong>Ekran görüntüsü</strong> — strateji iyi, simülatör yüzeysel</div>
-        <div class="landing-tier">★☆☆ <strong>Kendin tarif et</strong> — sadece strateji</div>
-      </div>
+      <h1 class="landing-headline">Hayatındaki gerçek insanların dijital ikizini oluştur. Zor konuşmaları önce onlarla prova et.</h1>
+      <p class="landing-sub">WhatsApp geçmişini yükle — kardeşin, patronun, sevgilin nasıl konuşuyorsa öyle cevap versin. Ne diyeceğini planla, tepkisini test et.</p>
+      <p class="landing-diff">Character.AI gibi hayali değil — gerçek konuşmalarından.</p>
+      <p class="landing-trust">🔒 Verilerin yapay zeka eğitmek için kullanılmaz &nbsp;·&nbsp; Analiz sonrası ham metin silinir</p>
       <button class="btn-google landing-cta" onclick="signInWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         Google ile başla
@@ -2234,7 +2258,7 @@
     <section id="homeSection" data-screen-id="home">
       <div class="home-section-header">
         <h1 class="home-section-title">Kişilerim</h1>
-        <button type="button" class="btn-new-conv" style="padding:9px 18px;font-size:.85rem;min-height:auto" onclick="openNewConversation()">+ Yeni kişi</button>
+        <button type="button" class="btn-home-add" onclick="openNewConversation()">+ Yeni kişi</button>
       </div>
       <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Kişi veya konuşma ara…" autocomplete="off" />
       <div id="homeConvList" class="home-conv-list"></div>
