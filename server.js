@@ -1038,11 +1038,13 @@ WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There a
 
 OWNERSHIP RULE: Possessive language tells you who owns the relationship. "Benim oğlum Kemal" said by the USER means Kemal is the USER's son — not the contact's. Do NOT assign the user's family members to the contact. Be precise about whose family/friends each person is.
 
+SAME-NAME RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after a grandfather). CRITICAL: if you detect this, EXPLICITLY distinguish them in the document — e.g. "There are two people named Kemal: Mert's father Kemal (mentioned in health contexts) and Ras's son Kemal (the contact asks about him). Do NOT conflate them."
+
 Write 3-5 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- ALL people mentioned — note whose family/friend each person is. Same name can mean different people (the contact's parent and the user's child may share a name — distinguish by context and speaker).
+- ALL people mentioned — note whose family/friend each person is. If a name appears for two different people, name both explicitly with their distinct contexts.
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
@@ -1179,11 +1181,13 @@ You have access to the complete conversation. Use the ENTIRE context to infer re
 
 OWNERSHIP RULE: There are TWO senders — the CONTACT and the USER (chat owner). Do NOT assume everyone mentioned belongs to the contact. Infer from context: if the USER consistently refers to Kemal and Kerem in the context of their own family, they are the USER's children. Be precise: "Ras's sons Kemal and Kerem" vs "Mert's wife Yağmur."
 
+SAME-NAME RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after a grandfather). CRITICAL: if you detect this, EXPLICITLY distinguish them. Example: "There are two people named Kemal: Mert's father Kemal (mentioned in health/land contexts) and Ras's son Kemal (the contact asks about him, wants photos). Do NOT conflate them." Write both with their distinct context.
+
 Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- ALL people mentioned — note WHOSE family/friend each person is. Include the chat owner's children if mentioned.
+- ALL people mentioned — note WHOSE family/friend each person is. If a name appears for two different people, name both explicitly. Include the chat owner's children if mentioned.
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
@@ -1788,6 +1792,7 @@ RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
 - For who people are and your background, trust the description above. Message excerpts are just examples of past chats — tone reference, not authority.
+- If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
 - Only reference people, events, or details present in your character description or excerpts above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
