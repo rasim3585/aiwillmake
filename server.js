@@ -1201,6 +1201,7 @@ CRITICAL: Never return "..." as a value. Return real extracted content or empty 
               .then(d => { try { return parseJsonSafe(d.content?.[0]?.text || '{}') || {}; } catch { return {}; } })
               .catch(() => ({}))
             ));
+            console.log('[profile-extract] fragments sample:', JSON.stringify(fragments.slice(0, 2)), 'total:', fragments.length);
             const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
