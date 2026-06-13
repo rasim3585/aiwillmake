@@ -974,6 +974,14 @@ CREATE INDEX IF NOT EXISTS idx_chunks_contact ON conversation_chunks(contact_id)
   }
 });
 
+function parseJsonSafe(text) {
+  if (!text) return null;
+  let s = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  const start = s.indexOf('{'), end = s.lastIndexOf('}');
+  if (start !== -1 && end > start) s = s.slice(start, end + 1);
+  return JSON.parse(s);
+}
+
 app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) => {
   try {
     const { conversationText, language, previousContext, contact_id } = req.body;
@@ -993,6 +1001,7 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
+            console.log('[profile-extract] STARTED', contact_id, 'user:', req.user?.id, 'token:', !!req.token, 'len:', conversationText.length);
             const hr = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -1010,9 +1019,10 @@ Rules:
                 messages: [{ role: 'user', content: conversationText }]
               })
             });
+            if (!hr.ok) { console.error('[profile-extract] Haiku API fail (small):', hr.status); return; }
             const hd = await hr.json();
             let frag = {};
-            try { frag = JSON.parse(hd.content?.[0]?.text || '{}'); } catch {}
+            try { frag = parseJsonSafe(hd.content?.[0]?.text || '{}') || {}; } catch {}
             const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -1032,17 +1042,20 @@ Rules:
                 messages: [{ role: 'user', content: `Fragment: ${JSON.stringify(frag)}` }]
               })
             });
+            if (!mergeR.ok) { console.error('[profile-extract] Merge API fail (small):', mergeR.status); return; }
             const md = await mergeR.json();
+            const rawSmall = md.content?.[0]?.text || '';
+            console.log('[profile-extract] raw merge output:', rawSmall.slice(0, 200));
             let cp = null;
-            try { cp = JSON.parse(md.content?.[0]?.text || 'null'); } catch {}
-            if (cp) {
-              await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
-                method: 'PATCH',
-                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
-              });
-              console.log('[profile-extract] Saved character_profile (small file) for', contact_id);
-            }
+            try { cp = parseJsonSafe(rawSmall); } catch {}
+            if (!cp) { console.warn('[profile-extract] cp NULL — invalid JSON:', rawSmall.slice(0, 300)); return; }
+            const pr = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+              method: 'PATCH',
+              headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+            });
+            if (!pr.ok) console.error('[profile-extract] PATCH FAILED (small):', pr.status, await pr.text());
+            else console.log('[profile-extract] SAVED (small)', contact_id, 'people:', cp.people?.length);
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
@@ -1148,7 +1161,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
               profileChunks.push(conversationText.slice(ps, ps + PROFILE_CHUNK));
               ps += PROFILE_CHUNK - PROFILE_OVERLAP;
             }
-            console.log(`[profile-extract] ${profileChunks.length} profile chunks from ${conversationText.length} chars`);
+            console.log('[profile-extract] STARTED', contact_id, 'user:', req.user?.id, 'token:', !!req.token, 'len:', conversationText.length, 'chunks:', profileChunks.length);
             const fragments = await Promise.all(profileChunks.map(chunk =>
               fetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
@@ -1168,7 +1181,7 @@ Rules:
                 })
               })
               .then(r => r.json())
-              .then(d => { try { return JSON.parse(d.content?.[0]?.text || '{}'); } catch { return {}; } })
+              .then(d => { try { return parseJsonSafe(d.content?.[0]?.text || '{}') || {}; } catch { return {}; } })
               .catch(() => ({}))
             ));
             const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1190,17 +1203,20 @@ Rules:
                 messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
               })
             });
+            if (!mergeR.ok) { console.error('[profile-extract] Merge API fail (large):', mergeR.status); return; }
             const mergeData = await mergeR.json();
+            const rawLarge = mergeData.content?.[0]?.text || '';
+            console.log('[profile-extract] raw merge output:', rawLarge.slice(0, 200));
             let cp = null;
-            try { cp = JSON.parse(mergeData.content?.[0]?.text || 'null'); } catch {}
-            if (cp) {
-              await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
-                method: 'PATCH',
-                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
-              });
-              console.log('[profile-extract] Saved for', contact_id, '— people:', cp.people?.length, 'topics:', cp.topics?.length, 'moments:', cp.key_moments?.length);
-            }
+            try { cp = parseJsonSafe(rawLarge); } catch {}
+            if (!cp) { console.warn('[profile-extract] cp NULL — invalid JSON:', rawLarge.slice(0, 300)); return; }
+            const pr = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+              method: 'PATCH',
+              headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+            });
+            if (!pr.ok) console.error('[profile-extract] PATCH FAILED (large):', pr.status, await pr.text());
+            else console.log('[profile-extract] SAVED (large)', contact_id, '— people:', cp.people?.length, 'topics:', cp.topics?.length, 'moments:', cp.key_moments?.length);
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
