@@ -1712,7 +1712,11 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 const t = l.trim();
                 if (!t || t.length < 5) return true;
                 if (/media omitted/i.test(t)) return true;
-                // Long English-only lines (video captions, AI prompts)
+                // Single message blocks >500 chars (video prompts, copy-paste)
+                if (t.length > 500) return true;
+                // Long English-heavy lines (cinematic/AI prompts)
+                if (t.length > 80 && /cinematic|volumetric|ultra.?realistic|lighting|prompt|render/i.test(t)) return true;
+                // Lines that are mostly English in a Turkish conversation
                 if (t.length > 150 && /^[a-zA-Z0-9\s.,!?'"()\-:;#@]+$/.test(t)) return true;
                 return false;
               };
@@ -1764,7 +1768,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — your primary reference for facts, relationships, and personality:\n${charDoc}\n\n` : ''}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -1772,7 +1776,7 @@ ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of the
 RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
-- Your character description above is your primary source for facts and relationships. The excerpts are tone/context examples only.
+- For who people are and your background, trust the description above. Message excerpts are just examples of past chats — tone reference, not authority.
 - Only reference people, events, or details present in your character description or excerpts above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
