@@ -2028,7 +2028,7 @@
   </div>
 
   <!-- Auth gate -->
-  <div id="authGate" class="auth-gate hidden">
+  <div id="authGate" class="auth-gate hidden" data-screen-id="auth">
     <div class="auth-card">
       <h2>Sign in to continue</h2>
       <p>Create an account or sign in to start generating personalized texts with AI.</p>
@@ -2081,7 +2081,7 @@
     </div>
 
     <!-- Home: Your Conversations -->
-    <section id="homeSection">
+    <section id="homeSection" data-screen-id="home">
       <h1 class="home-heading">Your <span>conversations</span></h1>
       <p class="home-sub">Pick up where you left off, or start something new.</p>
       <div class="home-import-hook">
@@ -2097,13 +2097,13 @@
     </section>
 
     <!-- Person Screen -->
-    <section id="personSection" class="hidden">
+    <section id="personSection" class="hidden" data-screen-id="person">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div id="personContent"></div>
     </section>
 
     <!-- New Conversation Wizard -->
-    <section id="newConvWizard" class="hidden">
+    <section id="newConvWizard" class="hidden" data-screen-id="wizard">
       <!-- Step 1: Who are you talking to? -->
       <div id="wizStep1">
         <button type="button" class="back-btn" onclick="closeWizard()">← Back</button>
@@ -2174,7 +2174,7 @@
     </section>
 
     <!-- Smart Start (Mode 1) -->
-    <section id="smartStartSection" class="hidden">
+    <section id="smartStartSection" class="hidden" data-screen-id="compose-smart">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="smart-card">
         <div class="smart-top">
@@ -2207,7 +2207,7 @@
     <input type="file" id="contactTxtInput" accept=".txt" style="display:none">
 
     <!-- Mode 2: Continue a Conversation -->
-    <section id="continueSection" class="hidden">
+    <section id="continueSection" class="hidden" data-screen-id="compose-continue">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="continue-card">
         <div class="continue-opts">
@@ -2244,10 +2244,10 @@
     </section>
 
     <!-- WhatsApp import analysis result — shared between mode 1 and mode 2 -->
-    <div id="convAnalysisResult" class="conv-analysis-result hidden"></div>
+    <div id="convAnalysisResult" class="conv-analysis-result hidden" data-screen-id="compose-analysis"></div>
 
     <!-- Mode 3: Review Before Sending -->
-    <section id="reviewSection" class="hidden">
+    <section id="reviewSection" class="hidden" data-screen-id="compose-review">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="review-card">
         <div class="review-header">
@@ -2268,7 +2268,7 @@
     </section>
 
     <!-- Step 1: Category -->
-    <section id="catSection" class="hidden">
+    <section id="catSection" class="hidden" data-screen-id="compose-cat">
       <div class="step-header">
         <div class="step-num">1</div>
         <div class="step-text">Choose a <strong>category</strong></div>
@@ -2281,7 +2281,7 @@
     </section>
 
     <!-- Step 2: Subcategory -->
-    <section id="subcatSection" class="hidden">
+    <section id="subcatSection" class="hidden" data-screen-id="compose-subcat">
       <div class="step-header">
         <div class="step-num">2</div>
         <div class="step-text">Select from <strong id="catTitle"></strong></div>
@@ -2290,7 +2290,7 @@
     </section>
 
     <!-- Step 3: Form -->
-    <section class="form-card hidden" id="formCard">
+    <section class="form-card hidden" id="formCard" data-screen-id="compose-form">
       <div class="step-header" style="margin-bottom:24px">
         <div class="step-num">3</div>
         <div class="step-text">Fill in the <strong>details</strong></div>
@@ -2325,7 +2325,7 @@
     </section>
 
     <!-- Results -->
-    <section id="resultsSection" class="results-section hidden">
+    <section id="resultsSection" class="results-section hidden" data-screen-id="compose-results">
       <div class="results-header">
         <h2 class="results-title">Communication strategies</h2>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -2345,7 +2345,7 @@
     </section>
 
     <!-- Likely Responses -->
-    <section id="likelySection" class="likely-section hidden">
+    <section id="likelySection" class="likely-section hidden" data-screen-id="compose-likely">
       <div id="likelyCtxBadge" class="contact-context-badge hidden"></div>
       <h2 class="likely-title">How might they respond?</h2>
       <p class="likely-sub">Likely reactions if you send this — and your next move. Estimates, not certainties.</p>
@@ -2360,7 +2360,7 @@
     </section>
 
     <!-- What Happens Next -->
-    <section id="nextStepsSection" class="next-steps-section hidden">
+    <section id="nextStepsSection" class="next-steps-section hidden" data-screen-id="compose-next">
       <div class="ns-header">
         <h2 class="ns-title">What happens next?</h2>
         <p class="ns-note" id="nsNote">Your next move depends on their response</p>
@@ -2374,7 +2374,7 @@
     </section>
 
     <!-- Conversation Simulator -->
-    <section id="simulatorSection" class="simulator-section hidden">
+    <section id="simulatorSection" class="simulator-section hidden" data-screen-id="compose-sim">
       <div class="sim-card-outer">
         <div class="sim-header">
           <div class="sim-header-left">
@@ -2584,6 +2584,23 @@
     let allConvData       = [];
     let _recentMessages   = [];
     let _pendingContactAnalysis = null;
+
+    // ── App State Machine (FAZ 0 skeleton) ──────────────────────
+    const App = {
+      state: {
+        currentScreen: null,
+        activeContactId: null,
+        activeIntent: null,
+        intentMode: null,
+        activeSessionId: null,
+      },
+      navigateTo(screenId) {
+        document.querySelectorAll('[data-screen-id]').forEach(el => el.classList.add('hidden'));
+        const target = document.querySelector(`[data-screen-id="${screenId}"]`);
+        if (target) target.classList.remove('hidden');
+        this.state.currentScreen = screenId;
+      },
+    };
 
     async function init() {
       try {
