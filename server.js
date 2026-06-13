@@ -1700,6 +1700,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       : null;
     const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
 
+    console.log('[simulate-reply] called — contact_id:', character.contact_id, 'has_token:', !!req.token, 'profile:', !!character.character_profile, 'people:', character.character_profile?.people?.length ?? 0);
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     if (character.contact_id && req.token) {
@@ -1739,6 +1740,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
           }
         }
       } catch { /* RAG is best-effort */ }
+    } else {
+      console.log('[rag] skipped — contact_id:', character.contact_id, 'has_token:', !!req.token);
     }
 
     const filteredPeople = (character.character_profile?.people || [])
@@ -1768,7 +1771,8 @@ RULES:
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}`;
-    console.log('[sim-prompt]', systemPrompt.slice(0, 1500));
+    console.log('[sim-prompt]', systemPrompt.slice(0, 3000));
+    console.log('[sim-profile-block]', profileBlock.slice(0, 500));
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
