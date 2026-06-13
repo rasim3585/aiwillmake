@@ -1008,14 +1008,20 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               body: JSON.stringify({
                 model: 'claude-haiku-4-5-20251001',
                 max_tokens: 600,
-                system: `Extract from this WhatsApp conversation. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."],"user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
-Rules:
-- people: real names of THIRD PARTIES only — NOT the chat owner, NOT the main contact. Empty array if none.
-- user_name: the chat owner's name/label as seen in sender lines
-- how_they_address_user: how the CONTACT addresses the chat owner (abi, reis, etc.). Empty string if not visible.
-- typical_phrases: 3-5 short phrases the CONTACT commonly uses. Empty array if not visible.
-- Use empty arrays/strings if nothing found.`,
+                system: `You are analyzing a WhatsApp conversation export to build a profile of the CONTACT (the non-owner person).
+WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
+There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
+Return ONLY valid JSON — no markdown, no code fences, no explanation:
+{"user_name":"Ras","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently"}],"topics":["work pressure","family visits"],"style_notes":["writes in short bursts","uses humor to deflect","addresses user as abi"],"key_moments":["discussed moving cities","had tension over finances"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+Fill every field with REAL content from this conversation. Do NOT copy the example values above.
+- user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
+- people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned by name.
+- topics: recurring subjects discussed (work, health, specific plans, family, etc.). List 2-4 if discernible.
+- style_notes: how the CONTACT writes — sentence length, slang, emoji use, directness, emotional tone. List 2-3 observations.
+- key_moments: up to 5 specific concrete events or discussions (e.g. "planned trip to İzmir", "argument about rent"). No generic summaries.
+- how_they_address_user: exact term the CONTACT uses to address the chat owner (abi, reis, their name, etc.). Empty string "" if not visible.
+- typical_phrases: 3-5 short recurring phrases the CONTACT uses. Empty array [] only if truly none visible.
+CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
                 messages: [{ role: 'user', content: conversationText }]
               })
             });
@@ -1029,16 +1035,18 @@ Rules:
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 600,
-                system: `Build a character profile from this conversation analysis. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"...","user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
-- people: THIRD PARTIES only (exclude chat owner). Deduplicate by name.
-- topics: recurring subjects/themes
-- style: one sentence describing communication style
-- key_moments: up to 5 specific memorable events (concrete, not general)
-- address_term: how the chat owner addresses the contact
-- user_name: the chat owner's name/label
-- how_they_address_user: how the contact addresses the chat owner (abi, reis, etc.)
-- typical_phrases: 3-5 short phrases the contact commonly uses`,
+                system: `Build a final character profile from the extracted conversation data below. Return ONLY valid JSON — no markdown, no code fences:
+{"people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned often"}],"topics":["work","family plans"],"style":"Writes in short bursts, uses humor frequently, rarely shares feelings directly.","key_moments":["planned move to Ankara in March","discussed job promotion"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+Fill every field with REAL content. Do NOT copy the example values above.
+- people: deduplicate third-party people (not the two chatters). Keep real names with context.
+- topics: merge and deduplicate subjects. At least 2 if any found.
+- style: ONE sentence summarizing the CONTACT's communication style from style_notes.
+- key_moments: top 5 most concrete specific events/discussions. Remove vague generalities.
+- how_they_address_user: how the CONTACT addresses the chat owner. Most consistent value.
+- address_term: how the chat owner addresses the CONTACT (nickname, title, name).
+- user_name: the chat owner's name/label (most consistent value).
+- typical_phrases: top 3-5 recurring short phrases the CONTACT uses.
+Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
                 messages: [{ role: 'user', content: `Fragment: ${JSON.stringify(frag)}` }]
               })
             });
@@ -1169,14 +1177,20 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
                 body: JSON.stringify({
                   model: 'claude-haiku-4-5-20251001',
                   max_tokens: 500,
-                  system: `Extract from this WhatsApp conversation excerpt. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."],"user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
-Rules:
-- people: real names of THIRD PARTIES only (e.g. Yağmur, Kemal) — NOT the chat owner, NOT the main contact being analyzed. Empty array if none.
-- user_name: the chat owner's name/label as seen in sender lines (the person whose phone this is)
-- how_they_address_user: how the CONTACT (person being analyzed) addresses the chat owner — greeting terms, direct address words (abi, reis, etc.). Empty string if not visible.
-- typical_phrases: 3-5 short phrases/responses the CONTACT commonly uses. Empty array if not visible.
-- Use empty arrays/strings if nothing found.`,
+                  system: `You are analyzing a WhatsApp conversation excerpt to build a profile of the CONTACT (the non-owner person).
+WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
+There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
+Return ONLY valid JSON — no markdown, no code fences, no explanation:
+{"user_name":"Ras","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently"}],"topics":["work pressure","family visits"],"style_notes":["writes in short bursts","uses humor to deflect","addresses user as abi"],"key_moments":["discussed moving cities","had tension over finances"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+Fill every field with REAL content from this excerpt. Do NOT copy the example values above.
+- user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
+- people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned.
+- topics: subjects discussed in this excerpt. List any you can identify.
+- style_notes: how the CONTACT writes — sentence length, slang, emoji use, directness. 2-3 observations if visible.
+- key_moments: specific concrete events or discussions in this excerpt. No generic summaries.
+- how_they_address_user: exact term the CONTACT uses to address the chat owner. Empty string "" if not visible.
+- typical_phrases: short recurring phrases the CONTACT uses. Empty array [] if none visible.
+CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
                   messages: [{ role: 'user', content: chunk }]
                 })
               })
@@ -1190,16 +1204,18 @@ Rules:
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 700,
-                system: `Merge these conversation analysis fragments into one character profile. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"...","user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
-- people: THIRD PARTIES only — deduplicate by name; exclude the chat owner (user_name)
-- topics: deduplicate, merge similar subjects
-- style: one sentence summarizing communication style from all style_notes
-- key_moments: top 5 most specific memorable events (concrete, not general)
-- address_term: how the chat owner addresses the contact (pet name, title, or name)
-- user_name: the chat owner's name (most consistent value across fragments)
-- how_they_address_user: how the contact addresses the chat owner (abi, reis, etc.)
-- typical_phrases: top 5 short phrases the contact commonly uses`,
+                system: `Merge these WhatsApp conversation analysis fragments into one character profile. Return ONLY valid JSON — no markdown, no code fences:
+{"people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned often"}],"topics":["work","family plans"],"style":"Writes in short bursts, uses humor frequently, rarely shares feelings directly.","key_moments":["planned move to Ankara in March","discussed job promotion"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim","haha neyse"]}
+Fill every field with REAL content from the fragments. Do NOT copy the example values above.
+- people: deduplicate third-party people across all fragments (not the two chatters). Keep real names with context.
+- topics: merge and deduplicate all subjects found. At least 2-4 if any found.
+- style: ONE sentence summarizing the CONTACT's communication style from all style_notes.
+- key_moments: top 5 most concrete specific events across all fragments. Remove vague generalities.
+- how_they_address_user: how the CONTACT addresses the chat owner. Most consistent value across fragments.
+- address_term: how the chat owner addresses the CONTACT (nickname, title, name).
+- user_name: the chat owner's name/label (most consistent value across fragments).
+- typical_phrases: top 5 most recurring short phrases the CONTACT uses across all fragments.
+Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
                 messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
               })
             });
