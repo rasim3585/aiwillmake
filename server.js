@@ -979,7 +979,32 @@ function parseJsonSafe(text) {
   let s = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
   const start = s.indexOf('{'), end = s.lastIndexOf('}');
   if (start !== -1 && end > start) s = s.slice(start, end + 1);
-  return JSON.parse(s);
+  // First try: clean parse
+  try { return JSON.parse(s); } catch {}
+  // Second try: repair truncated JSON (e.g. max_tokens cut mid-string)
+  try {
+    const src = start !== -1
+      ? text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim().slice(start)
+      : s;
+    // Remove trailing dangling key (comma + partial "key" without value)
+    let r = src.replace(/,\s*"[^"]*$/, '').replace(/,\s*$/, '');
+    // Walk to track open structures and string state
+    const stack = [];
+    let inStr = false, esc = false;
+    for (const c of r) {
+      if (esc)        { esc = false; continue; }
+      if (c === '\\') { if (inStr) { esc = true; } continue; }
+      if (c === '"')  { inStr = !inStr; continue; }
+      if (!inStr) {
+        if (c === '{' || c === '[') stack.push(c === '{' ? '}' : ']');
+        else if ((c === '}' || c === ']') && stack.length) stack.pop();
+      }
+    }
+    if (inStr) r += '"';           // close open string value
+    r += stack.reverse().join(''); // close open arrays/objects
+    return JSON.parse(r);
+  } catch {}
+  return null;
 }
 
 app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) => {
@@ -1007,7 +1032,7 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 1000,
+                max_tokens: 2000,
                 system: `Build a structured character profile from this WhatsApp conversation. The CONTACT is the non-owner person. The USER is the chat owner.
 WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
 Return ONLY valid JSON — no markdown, no code fences:
@@ -1148,7 +1173,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 1000,
+                max_tokens: 2000,
                 system: `Build a structured character profile from the conversation analysis and samples below. The CONTACT is the non-owner person (karşı taraf). The USER is the chat owner.
 Return ONLY valid JSON — no markdown, no code fences:
 {"personality":"...","people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"how_they_address_user":"...","address_term":"...","user_name":"...","typical_phrases":["..."]}
