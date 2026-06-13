@@ -1708,18 +1708,28 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
             const allChunks = await chunksR.json();
             console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', allChunks?.length);
             if (Array.isArray(allChunks) && allChunks.length > 0) {
-              // Last 2 chunks = most recent messages in the original conversation
-              const recentSnippet = allChunks.slice(-2).map(c => c.chunk_text.slice(-1500)).join('\n');
-              if (recentSnippet.trim()) recentContext = `\nRECENT CONVERSATION (your most recent exchanges with ${userLabel} — use for current mood and rapport):\n${recentSnippet}`;
+              const isJunkLine = (l) => {
+                const t = l.trim();
+                if (!t || t.length < 5) return true;
+                if (/media omitted/i.test(t)) return true;
+                // Long English-only lines (video captions, AI prompts)
+                if (t.length > 150 && /^[a-zA-Z0-9\s.,!?'"()\-:;#@]+$/.test(t)) return true;
+                return false;
+              };
+              // Last 2 chunks = most recent messages, junk filtered
+              const recentSnippet = allChunks.slice(-2)
+                .map(c => c.chunk_text.slice(-1500).split('\n').filter(l => !isJunkLine(l)).join('\n'))
+                .join('\n');
+              if (recentSnippet.trim()) recentContext = `\nRECENT EXCHANGES (tone/context examples, in these "${name}" = you):\n${recentSnippet}`;
               const extractRelevantLines = (text) => {
                 const lines = text.split('\n');
                 const kept = new Set();
                 lines.forEach((line, i) => {
-                  if (words.some(w => line.toLowerCase().includes(w.toLowerCase()))) {
+                  if (!isJunkLine(line) && words.some(w => line.toLowerCase().includes(w.toLowerCase()))) {
                     for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) kept.add(j);
                   }
                 });
-                return [...kept].sort((a, b) => a - b).map(i => lines[i]).join('\n');
+                return [...kept].sort((a, b) => a - b).map(i => lines[i]).filter(l => !isJunkLine(l)).join('\n');
               };
               const scored = allChunks
                 .map(c => ({ snippet: extractRelevantLines(c.chunk_text), score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
@@ -1728,7 +1738,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 .slice(0, 6);
               console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
               if (scored.length > 0) {
-                ragContext = `\nACTUAL PAST MESSAGES — primary source of truth (in these, "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
+                ragContext = `\nRELEVANT EXCERPTS (tone/context examples, in these "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
               }
             }
           }
@@ -1754,7 +1764,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${recentContext ? recentContext + '\n\n' : ''}${ragContext ? ragContext + '\n\n' : ''}${charDoc ? `ABOUT ${name.toUpperCase()} (character reference — if the past messages above say something different about any fact, trust the messages):\n${charDoc}\n\n` : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — your primary reference for facts, relationships, and personality:\n${charDoc}\n\n` : ''}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -1762,8 +1772,8 @@ ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of the
 RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
-- If past messages conflict with the character reference on any fact (names, relationships), trust the past messages — they are the real source.
-- Only reference people, events, or details present in the messages or character reference above. Do not invent specific facts.
+- Your character description above is your primary source for facts and relationships. The excerpts are tone/context examples only.
+- Only reference people, events, or details present in your character description or excerpts above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}`;
