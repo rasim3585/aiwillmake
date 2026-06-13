@@ -4324,8 +4324,12 @@
       const el = document.getElementById('readyContent');
       el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(3);
 
-      const qualityMap = { whatsapp: '★★★', screenshot: '★★☆', text: '★☆☆' };
-      const quality = qualityMap[importMode] || '★★☆';
+      const qualityMap = {
+        whatsapp:   { stars: '★★★', label: 'Güçlü profil — tam simülasyon' },
+        screenshot: { stars: '★★☆', label: 'Kısmi — strateji iyi, simülasyon sınırlı' },
+        text:       { stars: '★☆☆', label: 'Temel — sadece strateji' },
+      };
+      const quality = qualityMap[importMode] || qualityMap.screenshot;
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
       let summary = '';
@@ -4350,15 +4354,18 @@
       el.innerHTML = `
         <p class="ready-badge">Profil oluşturuldu</p>
         <h1 class="ready-headline">${escH(name)} hazır</h1>
-        <p class="ready-quality">${quality}</p>
+        <p class="ready-quality">${quality.stars} <span style="font-size:.78rem;color:var(--muted);font-weight:400">${escH(quality.label)}</span></p>
         ${summary ? `<div class="ready-summary">${escH(summary)}</div>` : ''}
         ${patterns.length ? `<ul class="ready-patterns">${patterns.map(p => `<li>${escH(p)}</li>`).join('')}</ul>` : ''}
         <div class="ready-btns">
-          <button class="ready-btn-primary" onclick="loadPersonSection(${contactId})">💬 Öylesine konuş</button>
-          <button class="ready-btn-secondary" onclick="showToast('Yakında! Şimdilik simülatörü dene.', 'info')">🎯 Bir şey söyleyeceğim</button>
+          <button class="ready-btn-primary" id="readyTalkBtn">💬 Öylesine konuş</button>
+          <button class="ready-btn-secondary" id="readyIntentBtn">🎯 Bir şey söyleyeceğim</button>
         </div>
-        <button class="ready-btn-profile" onclick="loadPersonSection(${contactId})">tam profili gör →</button>
+        <button class="ready-btn-profile" id="readyProfileBtn">tam profili gör →</button>
       `;
+      document.getElementById('readyTalkBtn').addEventListener('click', () => loadPersonSection(contactId));
+      document.getElementById('readyProfileBtn').addEventListener('click', () => loadPersonSection(contactId));
+      document.getElementById('readyIntentBtn').addEventListener('click', () => showToast('Yakında! Şimdilik simülatörü dene.', 'info'));
     }
     // ────────────────────────────────────────────────────────────────
 
