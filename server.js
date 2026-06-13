@@ -997,74 +997,47 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
 
     if (conversationText.length <= FULL_THRESHOLD) {
       snippet = conversationText;
-      // Fire-and-forget: extract character profile (small file — single Haiku + Sonnet merge)
+      // Fire-and-forget: extract character profile (small file — direct Sonnet on full text)
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
-            console.log('[profile-extract] STARTED', contact_id, 'user:', req.user?.id, 'token:', !!req.token, 'len:', conversationText.length);
-            const hr = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-              body: JSON.stringify({
-                model: 'claude-haiku-4-5-20251001',
-                max_tokens: 600,
-                system: `You are analyzing a WhatsApp conversation export to build a rich simulation profile of the CONTACT (the non-owner person).
-WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
-There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
-Return ONLY valid JSON — no markdown, no code fences, no explanation:
-{"user_name":"Ras","personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty and hates wasted time. With Ras he's candid and slightly protective — the tone is equal but warm.","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently, source of stress"}],"topics":["work pressure","weekend plans","family tension"],"style_notes":["writes in short 1-3 word bursts","deflects with dark humor when stressed","rarely explains himself, assumes shared context"],"key_moments":["planned a move to Ankara in March and then cancelled","had a tense exchange about money around New Year","mentioned his father's health declining","helped Ras with a job connection"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz"]}
-Fill every field with REAL content from this conversation. Do NOT copy the example values above.
-- user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
-- personality: 2-3 sentences on who the CONTACT is as a person — their character, what they care about, how they relate to the chat owner. This is the most important field for simulation.
-- people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned by name.
-- topics: recurring subjects discussed (work, health, specific plans, family, etc.). List 3-5 if discernible.
-- style_notes: how the CONTACT writes — sentence length, slang/emoji use, emotional patterns, what they avoid, directness. List 3-4 specific observations.
-- key_moments: up to 8 specific concrete events or discussions visible in this conversation (e.g. "planned trip to İzmir", "argument about rent in October"). No generic summaries — real events only.
-- how_they_address_user: exact term the CONTACT uses to address the chat owner. Empty string "" if not visible.
-- typical_phrases: 4-6 short recurring phrases or responses the CONTACT uses. Empty array [] only if truly none visible.
-CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
-                messages: [{ role: 'user', content: conversationText }]
-              })
-            });
-            if (!hr.ok) { console.error('[profile-extract] Haiku API fail (small):', hr.status); return; }
-            const hd = await hr.json();
-            let frag = {};
-            try { frag = parseJsonSafe(hd.content?.[0]?.text || '{}') || {}; } catch {}
-            const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
+            console.log('[profile-extract] STARTED (small)', contact_id, 'len:', conversationText.length);
+            const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 1000,
-                system: `Build a rich simulation-ready character profile from the extracted conversation data below. Return ONLY valid JSON — no markdown, no code fences:
-{"personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty above all — he'll go out of his way for close friends but shuts down quickly with anyone who wastes his time. With Ras the tone is warm and equal, occasionally protective.","people":[{"name":"Yağmur","relation":"wife of contact","context":"source of occasional tension, mentioned in work-life balance context"}],"topics":["work stress","weekend plans","family health"],"style":"Writes in rapid short bursts, often just 1-3 words. Deflects emotional topics with dark humor or a subject change. Direct and assumes shared context — rarely explains himself. When something bothers him, he goes quiet rather than confronting.","key_moments":["planned a move to Ankara in March, then cancelled without explanation","tense exchange about money around New Year","mentioned father's declining health twice","helped Ras with a job referral in autumn","argued about a cancelled plan but resolved it quickly"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz","söylerim"]}
-Fill every field with REAL content from the extracted data. Do NOT copy the example values above.
-- personality: 2-3 sentences capturing who the CONTACT is — character, values, emotional patterns, and their specific dynamic with the chat owner. This is the most important field.
-- people: deduplicate third-party people (not the two chatters). Keep only real names with clear context.
-- topics: deduplicated recurring subjects. At least 3 if any found.
-- style: 2-3 sentences covering HOW the CONTACT communicates — message length, tone, emotional deflection patterns, what they avoid, language register. Be specific and behavioral.
-- key_moments: top 8 most concrete specific events/discussions. No vague generalities — real events with detail.
-- how_they_address_user: most consistent term the CONTACT uses to address the chat owner.
-- address_term: how the chat owner addresses the CONTACT (nickname, title, or name).
-- user_name: the chat owner's name/label.
-- typical_phrases: top 4-6 recurring short phrases the CONTACT uses.
-Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
-                messages: [{ role: 'user', content: `Fragment: ${JSON.stringify(frag)}` }]
+                system: `Build a structured character profile from this WhatsApp conversation. The CONTACT is the non-owner person. The USER is the chat owner.
+WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
+Return ONLY valid JSON — no markdown, no code fences:
+{"personality":"...","people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"how_they_address_user":"...","address_term":"...","user_name":"...","typical_phrases":["..."]}
+- personality: 2-3 sentences on who the CONTACT is — character, values, emotional patterns, dynamic with the user.
+- people: ONLY third parties mentioned (not the two chatters). Real names, relation to CONTACT, context.
+- topics: recurring subjects discussed. 3-5 if found.
+- style: 2-3 sentences on HOW the CONTACT communicates — message length, emotional patterns, what they avoid.
+- key_moments: up to 5 specific concrete events. No generic summaries.
+- how_they_address_user: exact term the CONTACT uses for the chat owner.
+- address_term: what the chat owner calls the CONTACT.
+- user_name: the chat owner's name/label from sender lines.
+- typical_phrases: 4-6 short recurring phrases the CONTACT uses.
+Never return "..." placeholders. Real content or empty array/string only.`,
+                messages: [{ role: 'user', content: conversationText }]
               })
             });
-            if (!mergeR.ok) { console.error('[profile-extract] Merge API fail (small):', mergeR.status); return; }
-            const md = await mergeR.json();
-            const rawSmall = md.content?.[0]?.text || '';
-            console.log('[profile-extract] raw merge output:', rawSmall.slice(0, 200));
+            if (!pr_r.ok) { console.error('[profile-extract] API fail (small):', pr_r.status); return; }
+            const pr_d = await pr_r.json();
+            const raw = pr_d.content?.[0]?.text || '';
+            console.log('[profile-extract] raw output (small):', raw.slice(0, 200));
             let cp = null;
-            try { cp = parseJsonSafe(rawSmall); } catch {}
-            if (!cp) { console.warn('[profile-extract] cp NULL — invalid JSON:', rawSmall.slice(0, 300)); return; }
-            const pr = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+            try { cp = parseJsonSafe(raw); } catch {}
+            if (!cp) { console.warn('[profile-extract] cp NULL (small):', raw.slice(0, 300)); return; }
+            const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
               body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
             });
-            if (!pr.ok) console.error('[profile-extract] PATCH FAILED (small):', pr.status, await pr.text());
+            if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
             else console.log('[profile-extract] SAVED (small)', contact_id, 'people:', cp.people?.length);
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
@@ -1116,6 +1089,7 @@ Never return "..." as a value. Return empty array [] or "" only when genuinely n
       );
       const combinedSamples = chunkSamples.join('\n===\n');
 
+      let synthesisText = null;
       try {
         const sr = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -1136,7 +1110,7 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
         });
         const sd = await sr.json();
         if (sr.ok && sd.content?.[0]?.text) {
-          const synthesisText = sd.content[0].text;
+          synthesisText = sd.content[0].text;
           console.log('[synthesis-raw]', JSON.stringify(synthesisText.slice(0, 500)));
           console.log('[chunk-synthesis]', synthesisText);
           const extractSynth = key => {
@@ -1160,84 +1134,51 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
         }
       } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
 
-      // Fire-and-forget: extract character profile — 30K chunks, 100% coverage
+      // Fire-and-forget: extract character profile from synthesis output + conversation samples
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
-            const PROFILE_CHUNK = 30000, PROFILE_OVERLAP = 500;
-            const profileChunks = [];
-            let ps = 0;
-            while (ps < conversationText.length) {
-              profileChunks.push(conversationText.slice(ps, ps + PROFILE_CHUNK));
-              ps += PROFILE_CHUNK - PROFILE_OVERLAP;
-            }
-            console.log('[profile-extract] STARTED', contact_id, 'user:', req.user?.id, 'token:', !!req.token, 'len:', conversationText.length, 'chunks:', profileChunks.length);
-            const fragments = await Promise.all(profileChunks.map(chunk =>
-              fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-                body: JSON.stringify({
-                  model: 'claude-haiku-4-5-20251001',
-                  max_tokens: 500,
-                  system: `You are analyzing a WhatsApp conversation excerpt to build a rich simulation profile of the CONTACT (the non-owner person).
-WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
-There are TWO senders. Identify user_name (the chat OWNER) and the CONTACT (the other person).
-Return ONLY valid JSON — no markdown, no code fences, no explanation:
-{"user_name":"Ras","personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty and hates wasted time. With Ras he's candid and slightly protective — the tone is equal but warm.","people":[{"name":"Yağmur","relation":"wife of contact","context":"mentioned frequently, source of stress"}],"topics":["work pressure","weekend plans","family tension"],"style_notes":["writes in short 1-3 word bursts","deflects with dark humor when stressed","rarely explains himself, assumes shared context"],"key_moments":["planned a move to Ankara in March and then cancelled","had a tense exchange about money around New Year","mentioned his father's health declining","helped Ras with a job connection"],"how_they_address_user":"abi","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz"]}
-Fill every field with REAL content from this excerpt. Do NOT copy the example values above.
-- user_name: the chat owner's label from sender lines (e.g. "Rasim", "Ras", a phone number)
-- personality: 2-3 sentences on who the CONTACT is as a person — character, what they care about, their dynamic with the chat owner. Most important field.
-- people: OTHER people MENTIONED (not the two senders) — real names, relation to the CONTACT, brief context. Empty array [] only if truly no one mentioned.
-- topics: subjects discussed in this excerpt. List any you can identify (3-5 if possible).
-- style_notes: how the CONTACT writes — sentence length, slang/emoji, emotional patterns, directness. 3-4 specific observations if visible.
-- key_moments: up to 8 specific concrete events or discussions in this excerpt. No generic summaries.
-- how_they_address_user: exact term the CONTACT uses to address the chat owner. Empty string "" if not visible.
-- typical_phrases: 4-6 short recurring phrases the CONTACT uses. Empty array [] if none visible.
-CRITICAL: Never return "..." as a value. Return real extracted content or empty array/string.`,
-                  messages: [{ role: 'user', content: chunk }]
-                })
-              })
-              .then(r => r.json())
-              .then(d => { try { return parseJsonSafe(d.content?.[0]?.text || '{}') || {}; } catch { return {}; } })
-              .catch(() => ({}))
-            ));
-            console.log('[profile-extract] fragments sample:', JSON.stringify(fragments.slice(0, 2)), 'total:', fragments.length);
-            const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
+            console.log('[profile-extract] STARTED (large)', contact_id, 'synthesis:', !!synthesisText, 'samples len:', combinedSamples.length);
+            const profileInput = [
+              synthesisText ? `BEHAVIORAL ANALYSIS:\n${synthesisText}` : '',
+              `CONVERSATION SAMPLES (from ${chunks.length} time periods):\n${combinedSamples.slice(0, 28000)}`
+            ].filter(Boolean).join('\n\n');
+            const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 1000,
-                system: `Merge these WhatsApp conversation analysis fragments into one rich simulation-ready character profile. Return ONLY valid JSON — no markdown, no code fences:
-{"personality":"Mert is pragmatic and direct, gets to the point fast. He values loyalty above all — he'll go out of his way for close friends but shuts down quickly with anyone who wastes his time. With Ras the tone is warm and equal, occasionally protective.","people":[{"name":"Yağmur","relation":"wife of contact","context":"source of occasional tension, mentioned in work-life balance context"}],"topics":["work stress","weekend plans","family health"],"style":"Writes in rapid short bursts, often just 1-3 words. Deflects emotional topics with dark humor or a subject change. Direct and assumes shared context — rarely explains himself. When something bothers him, he goes quiet rather than confronting.","key_moments":["planned a move to Ankara in March, then cancelled without explanation","tense exchange about money around New Year","mentioned father's declining health twice","helped Ras with a job referral in autumn","argued about a cancelled plan but resolved it quickly"],"how_they_address_user":"abi","address_term":"kardeşim","user_name":"Ras","typical_phrases":["tamam abi","ne diyim ki","haha neyse","olur hallederiz","söylerim"]}
-Fill every field with REAL content from the fragments. Do NOT copy the example values above.
-- personality: 2-3 sentences synthesizing who the CONTACT is — character, values, emotional patterns, and their specific dynamic with the chat owner. Draw from personality fragments across all parts.
-- people: deduplicate third-party people across all fragments (not the two chatters). Keep real names with context.
-- topics: merge and deduplicate all subjects found. At least 3-5 if any found.
-- style: 2-3 sentences covering HOW the CONTACT communicates — message length/format, emotional deflection patterns, what they avoid, language register. Be specific and behavioral.
-- key_moments: top 8 most concrete specific events across all fragments. Prefer detail over vague generalities.
-- how_they_address_user: most consistent term the CONTACT uses to address the chat owner across all fragments.
-- address_term: how the chat owner addresses the CONTACT (nickname, title, or name).
-- user_name: the chat owner's name/label (most consistent value across fragments).
-- typical_phrases: top 4-6 most recurring short phrases the CONTACT uses across all fragments.
-Never return "..." as a value. Return empty array [] or "" only when genuinely nothing was found.`,
-                messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
+                system: `Build a structured character profile from the conversation analysis and samples below. The CONTACT is the non-owner person (karşı taraf). The USER is the chat owner.
+Return ONLY valid JSON — no markdown, no code fences:
+{"personality":"...","people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"how_they_address_user":"...","address_term":"...","user_name":"...","typical_phrases":["..."]}
+- personality: 2-3 sentences on who the CONTACT is — character, values, emotional patterns, dynamic with the user.
+- people: ONLY third parties mentioned (not the two chatters — exclude the user). Real names, relation to CONTACT, context. Include people like Yağmur, Kemal, etc. if mentioned.
+- topics: recurring subjects discussed. 3-5 if found.
+- style: 2-3 sentences on HOW the CONTACT communicates — message length, emotional patterns, what they avoid.
+- key_moments: up to 5 specific concrete events from the data. No generic summaries.
+- how_they_address_user: exact term the CONTACT uses for the chat owner.
+- address_term: what the chat owner calls the CONTACT.
+- user_name: the chat owner's name/label.
+- typical_phrases: 4-6 short recurring phrases the CONTACT uses.
+Never return "..." placeholders. Real content or empty array/string only.`,
+                messages: [{ role: 'user', content: profileInput }]
               })
             });
-            if (!mergeR.ok) { console.error('[profile-extract] Merge API fail (large):', mergeR.status); return; }
-            const mergeData = await mergeR.json();
-            const rawLarge = mergeData.content?.[0]?.text || '';
-            console.log('[profile-extract] raw merge output:', rawLarge.slice(0, 200));
+            if (!pr_r.ok) { console.error('[profile-extract] API fail (large):', pr_r.status); return; }
+            const pr_d = await pr_r.json();
+            const raw = pr_d.content?.[0]?.text || '';
+            console.log('[profile-extract] raw output (large):', raw.slice(0, 200));
             let cp = null;
-            try { cp = parseJsonSafe(rawLarge); } catch {}
-            if (!cp) { console.warn('[profile-extract] cp NULL — invalid JSON:', rawLarge.slice(0, 300)); return; }
-            const pr = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+            try { cp = parseJsonSafe(raw); } catch {}
+            if (!cp) { console.warn('[profile-extract] cp NULL (large):', raw.slice(0, 300)); return; }
+            const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
               body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
             });
-            if (!pr.ok) console.error('[profile-extract] PATCH FAILED (large):', pr.status, await pr.text());
-            else console.log('[profile-extract] SAVED (large)', contact_id, '— people:', cp.people?.length, 'topics:', cp.topics?.length, 'moments:', cp.key_moments?.length);
+            if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
+            else console.log('[profile-extract] SAVED (large)', contact_id, 'people:', cp.people?.length, 'topics:', cp.topics?.length, 'moments:', cp.key_moments?.length);
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
