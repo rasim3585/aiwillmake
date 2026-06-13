@@ -3669,7 +3669,8 @@
             observed_patterns: Array.isArray(data.contacts.observed_patterns) && data.contacts.observed_patterns.length
               ? data.contacts.observed_patterns : null,
             relationship_summary: data.contacts.relationship_summary || null,
-            character_profile: data.contacts.character_profile || null
+            character_profile: data.contacts.character_profile || null,
+            person_a: data.contacts.character_profile?.user_name || null
           };
         } else {
           activeContactContext = null;
@@ -4790,7 +4791,8 @@
           relationship_state: c.relationship_state || null,
           observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null,
           relationship_summary: c.relationship_summary || null,
-          character_profile: c.character_profile || null
+          character_profile: c.character_profile || null,
+          person_a: c.character_profile?.user_name || null
         };
         updatePrevMsgFieldVisibility();
 
@@ -4951,6 +4953,7 @@
         if (_pendingContactAnalysis?.contactId === contactId) {
           const ad = _pendingContactAnalysis.data;
           _pendingContactAnalysis = null;
+          if (ad.person_a && activeContactContext) activeContactContext.person_a = ad.person_a;
           const escHa = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
           const lvla = v => ({ 'High':'cb-high','Medium':'cb-mid','Low':'cb-low' }[v] || 'cb-mid');
           const badges = [
@@ -5093,7 +5096,8 @@
             relationship_state: c.relationship_state || null,
             observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null,
             relationship_summary: c.relationship_summary || null,
-            character_profile: c.character_profile || null
+            character_profile: c.character_profile || null,
+            person_a: c.character_profile?.user_name || null
           };
           updatePrevMsgFieldVisibility();
           selectMode(1); // clearContext=false → context preserved
@@ -5672,8 +5676,8 @@
     function openSimulator(msgText, contactCtx) {
       if (!msgText?.trim()) return;
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null }
-        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null };
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null }
+        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null };
       _simInitialMsg = msgText;
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;

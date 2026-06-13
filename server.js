@@ -1000,8 +1000,13 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
                 model: 'claude-haiku-4-5-20251001',
                 max_tokens: 600,
                 system: `Extract from this WhatsApp conversation. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."]}
-Only include what you actually see. Use empty arrays if nothing found.`,
+{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."],"user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
+Rules:
+- people: real names of THIRD PARTIES only — NOT the chat owner, NOT the main contact. Empty array if none.
+- user_name: the chat owner's name/label as seen in sender lines
+- how_they_address_user: how the CONTACT addresses the chat owner (abi, reis, etc.). Empty string if not visible.
+- typical_phrases: 3-5 short phrases the CONTACT commonly uses. Empty array if not visible.
+- Use empty arrays/strings if nothing found.`,
                 messages: [{ role: 'user', content: conversationText }]
               })
             });
@@ -1015,12 +1020,15 @@ Only include what you actually see. Use empty arrays if nothing found.`,
                 model: 'claude-sonnet-4-6',
                 max_tokens: 600,
                 system: `Build a character profile from this conversation analysis. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"..."}
-- people: real names + relation + brief context. Deduplicate.
+{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"...","user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
+- people: THIRD PARTIES only (exclude chat owner). Deduplicate by name.
 - topics: recurring subjects/themes
 - style: one sentence describing communication style
 - key_moments: up to 5 specific memorable events (concrete, not general)
-- address_term: how the user addresses this person`,
+- address_term: how the chat owner addresses the contact
+- user_name: the chat owner's name/label
+- how_they_address_user: how the contact addresses the chat owner (abi, reis, etc.)
+- typical_phrases: 3-5 short phrases the contact commonly uses`,
                 messages: [{ role: 'user', content: `Fragment: ${JSON.stringify(frag)}` }]
               })
             });
@@ -1149,8 +1157,13 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
                   model: 'claude-haiku-4-5-20251001',
                   max_tokens: 500,
                   system: `Extract from this WhatsApp conversation excerpt. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."]}
-Only include what you actually see. Real names only (not labels like 'kardeşim'). Use empty arrays if nothing found.`,
+{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."],"user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
+Rules:
+- people: real names of THIRD PARTIES only (e.g. Yağmur, Kemal) — NOT the chat owner, NOT the main contact being analyzed. Empty array if none.
+- user_name: the chat owner's name/label as seen in sender lines (the person whose phone this is)
+- how_they_address_user: how the CONTACT (person being analyzed) addresses the chat owner — greeting terms, direct address words (abi, reis, etc.). Empty string if not visible.
+- typical_phrases: 3-5 short phrases/responses the CONTACT commonly uses. Empty array if not visible.
+- Use empty arrays/strings if nothing found.`,
                   messages: [{ role: 'user', content: chunk }]
                 })
               })
@@ -1165,12 +1178,15 @@ Only include what you actually see. Real names only (not labels like 'kardeşim'
                 model: 'claude-sonnet-4-6',
                 max_tokens: 700,
                 system: `Merge these conversation analysis fragments into one character profile. Return ONLY valid JSON, no other text:
-{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"..."}
-- people: deduplicate by name — same person across fragments = one entry, keep most informative relation+context
-- topics: deduplicate, merge similar subjects, keep most specific
+{"people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"address_term":"...","user_name":"...","how_they_address_user":"...","typical_phrases":["..."]}
+- people: THIRD PARTIES only — deduplicate by name; exclude the chat owner (user_name)
+- topics: deduplicate, merge similar subjects
 - style: one sentence summarizing communication style from all style_notes
-- key_moments: top 5 most specific memorable events/discussions (concrete, not general)
-- address_term: how the user addresses this person (pet name, title, or name)`,
+- key_moments: top 5 most specific memorable events (concrete, not general)
+- address_term: how the chat owner addresses the contact (pet name, title, or name)
+- user_name: the chat owner's name (most consistent value across fragments)
+- how_they_address_user: how the contact addresses the chat owner (abi, reis, etc.)
+- typical_phrases: top 5 short phrases the contact commonly uses`,
                 messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
               })
             });
@@ -1675,6 +1691,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     }
     const lang = language || 'English';
     const name = character.name || 'the other person';
+    const userLabel = character.user_name || character.character_profile?.user_name || 'the user';
     const patternLines = Array.isArray(character.observed_patterns) && character.observed_patterns.length
       ? character.observed_patterns.map((p, i) => `${i + 1}. ${p}`).join('\n')
       : null;
@@ -1686,7 +1703,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
-        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
+        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 5);
         if (words.length > 0) {
           const chunksR = await fetch(
             `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
@@ -1713,7 +1730,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 .slice(0, 3);
               console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
               if (scored.length > 0) {
-                ragContext = `\nRELEVANT CONVERSATION HISTORY (actual past conversations — use this as memory):\n${scored.map(c => c.snippet).join('\n---\n')}`;
+                ragContext = `\nPAST CONVERSATION SNIPPETS (in these, "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
               }
             }
           }
@@ -1721,15 +1738,20 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       } catch { /* RAG is best-effort */ }
     }
 
+    const filteredPeople = (character.character_profile?.people || [])
+      .filter(p => p.name.toLowerCase() !== userLabel.toLowerCase());
     const profileBlock = character.character_profile ? [
-      (character.character_profile.people?.length ? `KNOWN PEOPLE: ${character.character_profile.people.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
+      (filteredPeople.length ? `KNOWN PEOPLE: ${filteredPeople.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
       (character.character_profile.topics?.length ? `RECURRING TOPICS: ${character.character_profile.topics.join(', ')}` : ''),
       (character.character_profile.style ? `COMMUNICATION STYLE: ${character.character_profile.style}` : ''),
-      (character.character_profile.address_term ? `HOW THEY ADDRESS USER: ${character.character_profile.address_term}` : ''),
+      (character.character_profile.address_term ? `HOW USER ADDRESSES ${name.toUpperCase()}: ${character.character_profile.address_term}` : ''),
+      (character.character_profile.how_they_address_user ? `HOW ${name.toUpperCase()} ADDRESSES YOU: ${character.character_profile.how_they_address_user}` : ''),
+      (character.character_profile.typical_phrases?.length ? `TYPICAL PHRASES: ${character.character_profile.typical_phrases.join(' / ')}` : ''),
       (character.character_profile.key_moments?.length ? `SHARED MEMORIES: ${character.character_profile.key_moments.join(' | ')}` : '')
     ].filter(Boolean).join('\n') : '';
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
+The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
 ${ragContext ? ragContext + '\n\n' : ''}${profileBlock ? profileBlock + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
@@ -1738,6 +1760,7 @@ ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of the
 RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
+- Only reference people, events, or details present in the profile or snippets above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}`;
