@@ -1160,12 +1160,12 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
-            const _kemalCount = (combinedSamples.match(/kemal/gi) || []).length;
-      const _keremCount = (combinedSamples.match(/kerem/gi) || []).length;
-      console.log('[profile-extract] STARTED (large)', contact_id, 'synthesis:', !!synthesisText, 'samples len:', combinedSamples.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount, '| slice used:', Math.min(28000, combinedSamples.length), 'of', combinedSamples.length);
+            const _kemalCount = (conversationText.match(/kemal/gi) || []).length;
+            const _keremCount = (conversationText.match(/kerem/gi) || []).length;
+            console.log('[profile-extract] STARTED (large)', contact_id, 'full conv len:', conversationText.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount);
             const profileInput = [
               synthesisText ? `BEHAVIORAL ANALYSIS:\n${synthesisText}` : '',
-              `CONVERSATION SAMPLES (from ${chunks.length} time periods):\n${combinedSamples.slice(0, 60000)}`
+              `FULL CONVERSATION:\n${conversationText.slice(0, 180000)}`
             ].filter(Boolean).join('\n\n');
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
@@ -1173,15 +1173,17 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 2000,
-                system: `You are reading a behavioral analysis and WhatsApp conversation samples, and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
+                system: `You are reading the FULL WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
 
-OWNERSHIP RULE: There are TWO senders in this chat — the CONTACT and the USER (chat owner). Possessive language tells you who owns the relationship: "benim oğlum Kemal" (my son Kemal) said by the USER means Kemal is the USER's son, not the contact's. Do NOT assign the user's family members to the contact. Be precise: "Ras's son Kemal" vs "Mert's wife Yağmur."
+You have access to the complete conversation. Use the ENTIRE context to infer relationships and ownership — even when ownership is never explicitly stated, patterns across the full conversation will reveal it (e.g. whose children are whose, whose spouse, who is mentioned by which sender).
+
+OWNERSHIP RULE: There are TWO senders — the CONTACT and the USER (chat owner). Do NOT assume everyone mentioned belongs to the contact. Infer from context: if the USER consistently refers to Kemal and Kerem in the context of their own family, they are the USER's children. Be precise: "Ras's sons Kemal and Kerem" vs "Mert's wife Yağmur."
 
 Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- ALL people mentioned — note WHOSE family/friend each person is. IMPORTANT: the same name may refer to DIFFERENT people (e.g. the contact's father AND the user's son might both be named Kemal — distinguish by context and speaker). Include the chat owner's children if they are mentioned.
+- ALL people mentioned — note WHOSE family/friend each person is. Include the chat owner's children if mentioned.
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
