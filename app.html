@@ -935,6 +935,8 @@
       color: var(--text); cursor: pointer;
     }
     .rp-correction-save:hover { background: rgba(255,255,255,.14); }
+    .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
+    .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-again-btn {
       flex: 1; border: 1px solid var(--bord); border-radius: var(--r-sm);
       padding: 8px 14px; background: transparent; color: var(--text);
@@ -5731,6 +5733,7 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-footer').classList.remove('hidden');
@@ -5800,6 +5803,7 @@
 
     function _rpClose() {
       document.getElementById('simulationModal').classList.add('hidden');
+      document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
@@ -5830,9 +5834,12 @@
       }
 
       document.getElementById('rp-debrief-actions').classList.remove('hidden');
+      document.querySelector('.roleplay-card').classList.add('debrief-active');
       if (_simCharacter?.contact_id) {
         document.getElementById('rp-correction-name').textContent = _simCharacter.name;
-        document.getElementById('rp-correction').classList.remove('hidden');
+        const corrEl = document.getElementById('rp-correction');
+        corrEl.classList.remove('hidden');
+        setTimeout(() => corrEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
       }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
