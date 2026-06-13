@@ -2648,7 +2648,7 @@
             document.getElementById('authGate').classList.add('hidden');
             document.getElementById('screen-landing').classList.add('hidden');
             fetchAndShowCredits();
-            if (event === 'SIGNED_IN') await checkFirstRunAndRoute();
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') await checkFirstRunAndRoute();
             else loadHomeConvList();
           } else {
             accessToken = null;
@@ -2665,6 +2665,7 @@
     }
 
     async function checkFirstRunAndRoute() {
+      if (App.state.currentScreen !== null) return;
       try {
         const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (r.ok) {
@@ -2674,7 +2675,7 @@
             return;
           }
         }
-      } catch { /* fall through to home */ }
+      } catch (e) { console.warn('[checkFirstRunAndRoute]', e); }
       App.navigateTo('home');
       loadHomeConvList();
     }
@@ -4388,12 +4389,26 @@
     // ── New Conversation Wizard ──────────────────────────────────
     function openNewConversation() {
       activeContactContext = null;
-      App.navigateTo('wizard');
-      document.getElementById('wizStep1').classList.remove('hidden');
-      document.getElementById('wizStep2').classList.add('hidden');
-      document.getElementById('wizStep2Sub').textContent = '';
-      wizLoadContacts();
-      document.getElementById('newConvWizard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      _importFile = null;
+      _importMode = 'whatsapp';
+      const els = {
+        fn: document.getElementById('importFileName'),
+        name: document.getElementById('importName'),
+        type: document.getElementById('importType'),
+        text: document.getElementById('importTextArea'),
+        btn: document.getElementById('importAnalyzeBtn'),
+      };
+      if (els.fn)   els.fn.textContent = '';
+      if (els.name) els.name.value = '';
+      if (els.type) els.type.value = '';
+      if (els.text) els.text.value = '';
+      if (els.btn)  els.btn.disabled = false;
+      ['whatsapp','screenshot','text'].forEach(t => {
+        document.getElementById('import-pane-' + t)?.classList.toggle('hidden', t !== 'whatsapp');
+        document.getElementById('importTab-' + t)?.classList.toggle('active', t === 'whatsapp');
+      });
+      App.navigateTo('import');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function closeWizard() {
@@ -4966,7 +4981,7 @@
       listEl.innerHTML =
         '<button type="button" class="btn-add-contact" id="showAddContactBtn">+ Add someone</button>' +
         '<div class="ns-skeleton skeleton" style="height:60px;border-radius:10px;margin-top:10px"></div>'.repeat(3);
-      document.getElementById('showAddContactBtn').addEventListener('click', showAddContactForm);
+      document.getElementById('showAddContactBtn').addEventListener('click', () => { hideContactsPanel(); openNewConversation(); });
 
       try {
         const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
@@ -4974,7 +4989,7 @@
         if (!r.ok) throw new Error(contacts.error);
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         listEl.innerHTML = '<button type="button" class="btn-add-contact" id="showAddContactBtn2">+ Add someone</button>';
-        document.getElementById('showAddContactBtn2').addEventListener('click', showAddContactForm);
+        document.getElementById('showAddContactBtn2').addEventListener('click', () => { hideContactsPanel(); openNewConversation(); });
         if (!contacts.length) {
           listEl.insertAdjacentHTML('beforeend', '<p style="color:var(--sec);font-size:.84rem;text-align:center;padding:24px 0">No people added yet.<br>Tap "+ Add someone" to get started.</p>');
           return;
