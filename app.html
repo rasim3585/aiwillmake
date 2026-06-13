@@ -2986,7 +2986,13 @@
             const open  = panel.classList.toggle('open');
             e.target.textContent = open ? 'Hide analysis ▴' : 'Show analysis ▾';
           });
-          card.querySelector('.practice-btn').addEventListener('click', () => {
+          card.querySelector('.practice-btn').addEventListener('click', async () => {
+            if (!activeContactContext?.character_profile && activeContactContext?.id && accessToken) {
+              try {
+                const fr = await fetch(`/api/contacts/${activeContactContext.id}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+                if (fr.ok) { const fc = await fr.json(); activeContactContext.character_profile = fc.character_profile || null; }
+              } catch {}
+            }
             openSimulator(text, activeContactContext);
           });
           container.appendChild(card);
@@ -4939,9 +4945,20 @@
             setTimeout(() => document.getElementById('personPracticeInput').focus(), 50);
         });
 
-        const _startPractice = () => {
+        const _startPractice = async () => {
           const text = document.getElementById('personPracticeInput').value.trim();
           if (!text) { document.getElementById('personPracticeInput').focus(); return; }
+          // Refresh character_profile if stale (prose fire-and-forget may have completed since loadPersonSection)
+          if (!activeContactContext?.character_profile && activeContactContext?.id && accessToken) {
+            try {
+              const fr = await fetch(`/api/contacts/${activeContactContext.id}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+              if (fr.ok) { const fc = await fr.json(); activeContactContext.character_profile = fc.character_profile || null; }
+            } catch {}
+            if (!activeContactContext.character_profile) {
+              showToast(`${activeContactContext.name || 'Profile'} is still being prepared — please try again in a few seconds.`, 'info');
+              return;
+            }
+          }
           openSimulator(text, activeContactContext);
         };
         document.getElementById('personPracticeStartBtn').addEventListener('click', _startPractice);
