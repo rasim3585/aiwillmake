@@ -2595,7 +2595,7 @@
         activeSessionId: null,
       },
       navigateTo(screenId) {
-        document.querySelectorAll('[data-screen-id]').forEach(el => el.classList.add('hidden'));
+        _ALL_SECTIONS.forEach(id => document.getElementById(id)?.classList.add('hidden'));
         const target = document.querySelector(`[data-screen-id="${screenId}"]`);
         if (target) target.classList.remove('hidden');
         this.state.currentScreen = screenId;
@@ -3702,6 +3702,7 @@
     async function restoreConversation(convId) {
       hideConvPanel();
       hideAllMainSections();
+      App.state.currentScreen = 'compose';
       try {
         const r = await fetch(`/api/conversations/${convId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         const data = await r.json();
@@ -4038,6 +4039,8 @@
 
     function selectMode(mode, clearContext = false) {
       hideAllMainSections();
+      App.state.currentScreen = 'compose';
+      App.state.intentMode = mode;
       document.querySelectorAll('.mode-card').forEach(c =>
         c.classList.toggle('active', parseInt(c.dataset.mode) === mode)
       );
@@ -4061,8 +4064,7 @@
     // ── New Conversation Wizard ──────────────────────────────────
     function openNewConversation() {
       activeContactContext = null;
-      hideAllMainSections();
-      document.getElementById('newConvWizard').classList.remove('hidden');
+      App.navigateTo('wizard');
       document.getElementById('wizStep1').classList.remove('hidden');
       document.getElementById('wizStep2').classList.add('hidden');
       document.getElementById('wizStep2Sub').textContent = '';
@@ -4071,8 +4073,7 @@
     }
 
     function closeWizard() {
-      hideAllMainSections();
-      document.getElementById('homeSection').classList.remove('hidden');
+      App.navigateTo('home');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4207,8 +4208,7 @@
 
     function goBack() {
       document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
-      hideAllMainSections();
-      document.getElementById('homeSection').classList.remove('hidden');
+      App.navigateTo('home');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4825,10 +4825,9 @@
     }
 
     async function loadPersonSection(contactId) {
-      hideAllMainSections();
+      App.navigateTo('person');
       const el = document.getElementById('personContent');
       el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(4);
-      document.getElementById('personSection').classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       try {
@@ -5621,8 +5620,7 @@
         const inp = document.getElementById(contactInpId);
         inp.dataset.contactId = activeContactContext.id;
         inp.dataset.contactName = activeContactContext.name;
-        hideAllMainSections();
-        document.getElementById('homeSection').classList.remove('hidden');
+        App.navigateTo('home');
         inp.click();
       } else {
         document.getElementById(convInpId).click();
