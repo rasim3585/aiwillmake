@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AIWILLMAKE — Navigate every conversation that matters</title>
-  <meta name="description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <title>AIWILLMAKE — The conversation before the conversation.</title>
+  <meta name="description" content="Build a digital twin of someone you know. Upload your real WhatsApp history and rehearse hard conversations before they happen — see exactly how they'll react." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://aiwillmake.com/" />
-  <meta property="og:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
-  <meta property="og:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <meta property="og:title"       content="AIWILLMAKE — The conversation before the conversation." />
+  <meta property="og:description" content="Build a digital twin of someone you know. Upload your real WhatsApp history and rehearse hard conversations before they happen." />
   <!-- TODO: og:image 1200x630 -->
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
-  <meta name="twitter:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <meta name="twitter:title"       content="AIWILLMAKE — The conversation before the conversation." />
+  <meta name="twitter:description" content="Build a digital twin of someone you know. Upload your real WhatsApp history and rehearse hard conversations before they happen." />
   <!-- TODO: twitter:image -->
   <link rel="canonical" href="https://aiwillmake.com/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -157,6 +157,19 @@
       padding: 0 16px; border-right: 1px solid var(--bord);
     }
     .trust-item:last-child { border-right: none; }
+    /* hero chat bubble */
+    .hero-chat { margin: 0 auto 32px; max-width: 360px; padding: 14px 16px 10px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 14px; text-align: left; overflow: hidden; }
+    .hero-bubble { display: inline-block; max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: .87rem; line-height: 1.45; margin-bottom: 7px; }
+    .hero-bubble-user { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; float: right; clear: both; }
+    .hero-bubble-other { background: var(--surf2,#2c2a28); color: var(--text); border-bottom-left-radius: 4px; float: left; clear: both; }
+    .hero-chat::after { content: ''; display: table; clear: both; }
+    .hero-chat-label { font-size: .71rem; color: var(--muted); text-align: center; margin-top: 8px; display: block; clear: both; }
+    .hero-diff { font-size: .86rem; color: var(--acc2); font-weight: 600; margin-bottom: 32px; }
+    /* hero value cards */
+    .hero-values { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 0 auto 40px; max-width: 700px; }
+    .hero-value { padding: 10px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 11px; text-align: left; flex: 1; min-width: 150px; }
+    .hero-value-title { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .hero-value-desc { font-size: .76rem; color: var(--sec); line-height: 1.45; }
 
     /* ════════ DIVIDER ════════ */
     .hr {
@@ -483,29 +496,50 @@
       </div>
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
-        AI Communication Coach
+        AI Conversation Rehearsal
       </div>
-      <h1>Navigate every conversation that matters.</h1>
-      <p class="hero-h2">Know what to do next.</p>
-      <h2 class="hero-sub">Not just a message writer — a conversation navigator. We read their replies, remember what's been said, and keep you moving forward.</h2>
+      <h1>The conversation before the conversation.</h1>
+      <p class="hero-h2">Rehearse it with their digital twin.</p>
+      <h2 class="hero-sub">Upload your real WhatsApp history with someone in your life. Rehearse the hard conversation first — plan what to say, see how they'll react.</h2>
+
+      <div class="hero-chat">
+        <div class="hero-bubble hero-bubble-user">Mert, I need to ask you something...</div>
+        <div class="hero-bubble hero-bubble-other">Tell me bro, everything okay?</div>
+        <span class="hero-chat-label">⚡ Simulated from real WhatsApp history</span>
+      </div>
+
+      <p class="hero-diff">Not a fictional character — someone you actually know.</p>
+
+      <div class="hero-values">
+        <div class="hero-value">
+          <div class="hero-value-title">Rehearse before it matters</div>
+          <div class="hero-value-desc">Practice difficult conversations before having them for real.</div>
+        </div>
+        <div class="hero-value">
+          <div class="hero-value-title">See different outcomes</div>
+          <div class="hero-value-desc">Explore how different approaches change the response.</div>
+        </div>
+        <div class="hero-value">
+          <div class="hero-value-title">Built from real history</div>
+          <div class="hero-value-desc">Uses your actual conversations, not a generic AI personality.</div>
+        </div>
+      </div>
+
       <div>
         <a href="app.html" class="hero-cta" id="ctaBtn">
           Open App →
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <p style="font-size:.82rem;color:var(--muted);margin-top:14px;margin-bottom:0">Used for apologies, raises, breakups, complaints, and more.</p>
         <button class="btn-google" id="googleBtn" onclick="signInWithGoogle()" style="display:none;margin-left:12px">
           <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-          Sign in with Google
+          Continue with Google
         </button>
         <span id="authStatus" style="display:block;margin-top:12px"></span>
       </div>
       <div class="hero-trust" style="margin-top:32px">
-        <span class="trust-item">No account needed</span>
-        <span class="trust-item">3 free generations</span>
-        <span class="trust-item">9 categories</span>
-        <span class="trust-item">7 languages</span>
-        <span class="trust-item">~30 seconds</span>
+        <span class="trust-item">Your conversations stay yours</span>
+        <span class="trust-item">Never used to train AI</span>
+        <span class="trust-item">Delete anytime</span>
       </div>
     </div>
   </div>
