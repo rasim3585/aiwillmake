@@ -1047,7 +1047,10 @@ Write 3-5 paragraphs describing the CONTACT as if briefing someone who will role
 - ALL people mentioned — note whose family/friend each person is. If a name appears for two different people, name both explicitly with their distinct contexts.
 - How they address the chat owner; recurring phrases they use
 
-Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
+Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
+
+After the full description, on a new line write exactly:
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>`,
                 messages: [{ role: 'user', content: conversationText }]
               })
             });
@@ -1055,20 +1058,23 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
             const pr_d = await pr_r.json();
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (small)'); return; }
-            console.log('[profile-extract] prose (small):', prose.slice(0, 200));
-            const relSummarySmall = (() => {
-              const para = prose.split(/\n\n/)[0].trim();
+            const relOneLineMatch = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
+            const cleanProseSmall = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+            const relSummarySmall = relOneLineMatch?.[1]?.trim() || (() => {
+              const para = cleanProseSmall.split(/\n\n/)[0].trim();
               if (para.length <= 300) return para;
               const sents = para.match(/[^.!?]+[.!?]+/g) || [];
               return sents.slice(0, 2).join(' ').trim() || para.slice(0, 300);
             })();
+            console.log('[profile-extract] prose (small):', cleanProseSmall.slice(0, 200));
+            console.log('[profile-extract] rel_oneline (small):', relOneLineMatch ? relSummarySmall : '(fallback)');
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: prose, relationship_summary: relSummarySmall, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseSmall, relationship_summary: relSummarySmall, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (small)', contact_id, prose.length, 'chars | rel_summary:', relSummarySmall.slice(0, 80));
+            else console.log('[profile-extract] SAVED (small)', contact_id, cleanProseSmall.length, 'chars | rel_summary:', relSummarySmall.slice(0, 80));
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
@@ -1196,7 +1202,10 @@ Write 4-6 paragraphs describing the CONTACT as if briefing someone who will role
 - ALL people mentioned — note WHOSE family/friend each person is. If a name appears for two different people, name both explicitly. Include the chat owner's children if mentioned.
 - How they address the chat owner; recurring phrases they use
 
-Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
+Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
+
+After the full description, on a new line write exactly:
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>`,
                 messages: [{ role: 'user', content: profileInput }]
               })
             });
@@ -1204,20 +1213,23 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
             const pr_d = await pr_r.json();
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (large)'); return; }
-            console.log('[profile-extract] prose (large):', prose.slice(0, 200));
-            const relSummaryLarge = (() => {
-              const para = prose.split(/\n\n/)[0].trim();
+            const relOneLineMatchL = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
+            const cleanProseLarge = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+            const relSummaryLarge = relOneLineMatchL?.[1]?.trim() || (() => {
+              const para = cleanProseLarge.split(/\n\n/)[0].trim();
               if (para.length <= 300) return para;
               const sents = para.match(/[^.!?]+[.!?]+/g) || [];
               return sents.slice(0, 2).join(' ').trim() || para.slice(0, 300);
             })();
+            console.log('[profile-extract] prose (large):', cleanProseLarge.slice(0, 200));
+            console.log('[profile-extract] rel_oneline (large):', relOneLineMatchL ? relSummaryLarge : '(fallback)');
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: prose, relationship_summary: relSummaryLarge, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseLarge, relationship_summary: relSummaryLarge, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (large)', contact_id, prose.length, 'chars | rel_summary:', relSummaryLarge.slice(0, 80));
+            else console.log('[profile-extract] SAVED (large)', contact_id, cleanProseLarge.length, 'chars | rel_summary:', relSummaryLarge.slice(0, 80));
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
