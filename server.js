@@ -1707,7 +1707,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
-        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 5);
+        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
         if (words.length > 0) {
           const chunksR = await fetch(
             `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
@@ -1731,10 +1731,10 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 .map(c => ({ snippet: extractRelevantLines(c.chunk_text), score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
                 .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
-                .slice(0, 3);
+                .slice(0, 6);
               console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5));
               if (scored.length > 0) {
-                ragContext = `\nPAST CONVERSATION SNIPPETS (in these, "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
+                ragContext = `\nACTUAL PAST MESSAGES — primary source of truth (in these, "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
               }
             }
           }
@@ -1748,7 +1748,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       .filter(p => p.name.toLowerCase() !== userLabel.toLowerCase());
     const profileBlock = character.character_profile ? [
       (character.character_profile.personality ? `WHO ${name.toUpperCase()} IS: ${character.character_profile.personality}` : ''),
-      (filteredPeople.length ? `KNOWN PEOPLE: ${filteredPeople.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
+      (filteredPeople.length ? `PEOPLE MENTIONED (rough summary — verify from messages above): ${filteredPeople.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
       (character.character_profile.topics?.length ? `RECURRING TOPICS: ${character.character_profile.topics.join(', ')}` : ''),
       (character.character_profile.style ? `COMMUNICATION STYLE: ${character.character_profile.style}` : ''),
       (character.character_profile.address_term ? `HOW USER ADDRESSES ${name.toUpperCase()}: ${character.character_profile.address_term}` : ''),
@@ -1759,7 +1759,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${ragContext ? ragContext + '\n\n' : ''}${profileBlock ? profileBlock + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${ragContext ? ragContext + '\n\n' : ''}${profileBlock ? `BACKGROUND NOTES (rough summary — may be incomplete or wrong; if the ACTUAL PAST MESSAGES above say something different, trust the messages):\n${profileBlock}\n\n` : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -1767,7 +1767,8 @@ ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of the
 RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
-- Only reference people, events, or details present in the profile or snippets above. Do not invent specific facts.
+- If ACTUAL PAST MESSAGES and BACKGROUND NOTES conflict on any fact (who someone is, a name, a relationship), trust the ACTUAL PAST MESSAGES — they are the real source.
+- Only reference people, events, or details present in the messages or notes above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}`;
