@@ -989,6 +989,41 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
 
     if (conversationText.length <= FULL_THRESHOLD) {
       snippet = conversationText;
+      // Fire-and-forget: extract character profile (full text fits — single Sonnet call)
+      if (contact_id && req.user?.id && req.token) {
+        (async () => {
+          try {
+            const pr = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-6',
+                max_tokens: 600,
+                system: `Extract a character profile from this WhatsApp conversation. Return ONLY valid JSON, no other text:
+{"people":[{"name":"...","relation":"..."}],"topics":["..."],"style":"...","memories":["..."],"address_term":"..."}
+- people: real names + their relation (eş/spouse, oğul/son, arkadaş/friend, etc.) — only if clear from context
+- topics: recurring subjects/themes in the conversation
+- style: one sentence describing this person's communication style
+- memories: up to 5 specific memorable events/discussions (concrete, not general observations)
+- address_term: how the user addresses this person (pet name, title, or given name)
+Respond in the same language as the conversation.`,
+                messages: [{ role: 'user', content: conversationText }]
+              })
+            });
+            const pd = await pr.json();
+            let cp = null;
+            try { cp = JSON.parse(pd.content?.[0]?.text || 'null'); } catch {}
+            if (cp) {
+              await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+                method: 'PATCH',
+                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+              });
+              console.log('[profile-extract] Saved character_profile (small file) for', contact_id);
+            }
+          } catch (e) { console.error('[profile-extract-error]', e.message); }
+        })();
+      }
     } else {
       const HEAD = 3000, MID = 5000, TAIL = 6000;
       const midStart = Math.floor((conversationText.length - MID) / 2);
@@ -1079,6 +1114,59 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
           console.log('[chunk-patterns]', chunkDerivedPatterns);
         }
       } catch { /* synthesis failed — snippet-based patterns used as fallback */ }
+
+      // Fire-and-forget: extract character profile from ALL chunks (100% coverage)
+      if (contact_id && req.user?.id && req.token) {
+        (async () => {
+          try {
+            console.log(`[profile-extract] Extracting from ${chunks.length} chunks`);
+            const fragments = await Promise.all(chunks.map((chunk, i) =>
+              fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({
+                  model: 'claude-haiku-4-5-20251001',
+                  max_tokens: 400,
+                  system: `Extract from this WhatsApp conversation excerpt. Return ONLY valid JSON, no other text:
+{"people":[{"name":"...","relation":"..."}],"topics":["..."],"style_notes":["..."],"key_moments":["..."]}
+Only include what you actually see. Use empty arrays if nothing found for a field.`,
+                  messages: [{ role: 'user', content: chunk }]
+                })
+              })
+              .then(r => r.json())
+              .then(d => { try { return JSON.parse(d.content?.[0]?.text || '{}'); } catch { return {}; } })
+              .catch(() => ({}))
+            ));
+            const mergeR = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-6',
+                max_tokens: 600,
+                system: `Merge these conversation analysis fragments into one character profile. Return ONLY valid JSON, no other text:
+{"people":[{"name":"...","relation":"..."}],"topics":["..."],"style":"...","memories":["..."],"address_term":"..."}
+- people: deduplicate by name — same person across fragments = one entry, keep most informative relation
+- topics: deduplicate and merge similar subjects
+- style: single sentence summarizing communication style from all style_notes
+- memories: top 5 most specific memorable events/discussions
+- address_term: how the user addresses this person (pet name, title, or given name)`,
+                messages: [{ role: 'user', content: fragments.map((f, i) => `Part ${i + 1}: ${JSON.stringify(f)}`).join('\n') }]
+              })
+            });
+            const mergeData = await mergeR.json();
+            let cp = null;
+            try { cp = JSON.parse(mergeData.content?.[0]?.text || 'null'); } catch {}
+            if (cp) {
+              await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
+                method: 'PATCH',
+                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+              });
+              console.log('[profile-extract] Saved character_profile for', contact_id, '— people:', cp.people?.length, 'topics:', cp.topics?.length);
+            }
+          } catch (e) { console.error('[profile-extract-error]', e.message); }
+        })();
+      }
     }
 
     const prevBlock = previousContext
@@ -1261,7 +1349,7 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
 app.get('/api/conversations/:id', requireAuth, async (req, res) => {
   try {
     const r = await fetch(
-      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,contact_id,contacts(id,name,type,relationship_state,relationship_summary,observed_patterns),conversation_messages(id,role,content,strategy,created_at,outcome)`,
+      `${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,category_id,subcategory_id,situation,fields,created_at,contact_id,contacts(id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile),conversation_messages(id,role,content,strategy,created_at,outcome)`,
       { headers: sbHeaders(req.token) }
     );
     const data = await r.json();
@@ -1324,12 +1412,14 @@ app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
 //     user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 //     name text NOT NULL, type text, relationship_summary text,
 //     relationship_state text, observed_patterns jsonb DEFAULT NULL,
+//     character_profile jsonb DEFAULT NULL,
 //     source text DEFAULT 'manual',
 //     created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now()
 //   );
 //   ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 //   CREATE POLICY "contacts_owner" ON contacts FOR ALL USING (auth.uid() = user_id);
 //   ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_id uuid REFERENCES contacts(id) ON DELETE SET NULL;
+//   ALTER TABLE contacts ADD COLUMN IF NOT EXISTS character_profile jsonb DEFAULT NULL;
 
 app.post('/api/contacts/from-text', requireAuth, limiter, async (req, res) => {
   try {
@@ -1430,7 +1520,7 @@ app.get('/api/contacts', requireAuth, async (req, res) => {
 app.get('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
     const [cr, convr] = await Promise.all([
-      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,source,created_at,updated_at`,
+      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile,source,created_at,updated_at`,
         { headers: sbHeaders(req.token) }),
       fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,fields,created_at`,
         { headers: sbHeaders(req.token) })
@@ -1444,13 +1534,14 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
     if (relationship_summary !== undefined) updates.relationship_summary = relationship_summary;
     if (relationship_state !== undefined) updates.relationship_state = relationship_state;
     if (observed_patterns !== undefined) updates.observed_patterns = observed_patterns;
+    if (character_profile !== undefined) updates.character_profile = character_profile;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -1609,8 +1700,15 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       } catch { /* RAG is best-effort */ }
     }
 
+    const profileBlock = character.character_profile ? [
+      (character.character_profile.people?.length ? `KNOWN PEOPLE: ${character.character_profile.people.map(p => `${p.name} (${p.relation})`).join(', ')}` : ''),
+      (character.character_profile.topics?.length ? `RECURRING TOPICS: ${character.character_profile.topics.join(', ')}` : ''),
+      (character.character_profile.address_term ? `HOW THEY ADDRESS USER: ${character.character_profile.address_term}` : ''),
+      (character.character_profile.memories?.length ? `SHARED MEMORIES: ${character.character_profile.memories.join(' | ')}` : '')
+    ].filter(Boolean).join('\n') : '';
+
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
-${ragContext ? ragContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${ragContext ? ragContext + '\n\n' : ''}${profileBlock ? profileBlock + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
