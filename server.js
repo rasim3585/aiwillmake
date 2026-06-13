@@ -1032,38 +1032,33 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 2000,
-                system: `Build a structured character profile from this WhatsApp conversation. The CONTACT is the non-owner person. The USER is the chat owner.
-WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text"
-Return ONLY valid JSON — no markdown, no code fences:
-{"personality":"...","people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"how_they_address_user":"...","address_term":"...","user_name":"...","typical_phrases":["..."]}
-- personality: 2-3 sentences on who the CONTACT is — character, values, emotional patterns, dynamic with the user.
-- people: ONLY third parties mentioned (not the two chatters). Real names, relation to CONTACT, context.
-- topics: recurring subjects discussed. 3-5 if found.
-- style: 2-3 sentences on HOW the CONTACT communicates — message length, emotional patterns, what they avoid.
-- key_moments: up to 5 specific concrete events. No generic summaries.
-- how_they_address_user: exact term the CONTACT uses for the chat owner.
-- address_term: what the chat owner calls the CONTACT.
-- user_name: the chat owner's name/label from sender lines.
-- typical_phrases: 4-6 short recurring phrases the CONTACT uses.
-Never return "..." placeholders. Real content or empty array/string only.`,
+                max_tokens: 1000,
+                system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (the non-owner person).
+WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There are TWO senders: the chat OWNER and the CONTACT.
+
+Write 3-5 paragraphs (400-600 words) describing the CONTACT as if briefing someone who will roleplay as them. Cover:
+- Who they are: personality, values, energy, what they care about
+- Their relationship with the chat owner: dynamic, tone, history
+- How they communicate: message length, style, slang, emoji, what they avoid
+- People they mention: write names and relationships in natural prose (e.g. "Often mentions his two sons Kemal and Kerem", "Talks about his business partner Kerem frequently")
+- How they address the chat owner; recurring phrases they use
+
+Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
                 messages: [{ role: 'user', content: conversationText }]
               })
             });
             if (!pr_r.ok) { console.error('[profile-extract] API fail (small):', pr_r.status); return; }
             const pr_d = await pr_r.json();
-            const raw = pr_d.content?.[0]?.text || '';
-            console.log('[profile-extract] raw output (small):', raw.slice(0, 200));
-            let cp = null;
-            try { cp = parseJsonSafe(raw); } catch {}
-            if (!cp) { console.warn('[profile-extract] cp NULL (small):', raw.slice(0, 300)); return; }
+            const prose = pr_d.content?.[0]?.text?.trim() || '';
+            if (!prose) { console.warn('[profile-extract] empty prose (small)'); return; }
+            console.log('[profile-extract] prose (small):', prose.slice(0, 200));
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: prose, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (small)', contact_id, 'people:', cp.people?.length);
+            else console.log('[profile-extract] SAVED (small)', contact_id, prose.length, 'chars');
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
@@ -1173,37 +1168,32 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 2000,
-                system: `Build a structured character profile from the conversation analysis and samples below. The CONTACT is the non-owner person (karşı taraf). The USER is the chat owner.
-Return ONLY valid JSON — no markdown, no code fences:
-{"personality":"...","people":[{"name":"...","relation":"...","context":"..."}],"topics":["..."],"style":"...","key_moments":["..."],"how_they_address_user":"...","address_term":"...","user_name":"...","typical_phrases":["..."]}
-- personality: 2-3 sentences on who the CONTACT is — character, values, emotional patterns, dynamic with the user.
-- people: ONLY third parties mentioned (not the two chatters — exclude the user). Real names, relation to CONTACT, context. Include people like Yağmur, Kemal, etc. if mentioned.
-- topics: recurring subjects discussed. 3-5 if found.
-- style: 2-3 sentences on HOW the CONTACT communicates — message length, emotional patterns, what they avoid.
-- key_moments: up to 5 specific concrete events from the data. No generic summaries.
-- how_they_address_user: exact term the CONTACT uses for the chat owner.
-- address_term: what the chat owner calls the CONTACT.
-- user_name: the chat owner's name/label.
-- typical_phrases: 4-6 short recurring phrases the CONTACT uses.
-Never return "..." placeholders. Real content or empty array/string only.`,
+                max_tokens: 1000,
+                system: `You are reading a behavioral analysis and WhatsApp conversation samples, and writing a prose character profile of the CONTACT (the non-owner person, karşı taraf).
+
+Write 3-5 paragraphs (400-600 words) describing the CONTACT as if briefing someone who will roleplay as them. Cover:
+- Who they are: personality, values, energy, what they care about
+- Their relationship with the chat owner: dynamic, tone, history
+- How they communicate: message length, style, slang, emoji, what they avoid
+- People they mention: write names and relationships in natural prose (e.g. "Often mentions his two sons Kemal and Kerem", "Talks about his business partner frequently")
+- How they address the chat owner; recurring phrases they use
+
+Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
                 messages: [{ role: 'user', content: profileInput }]
               })
             });
             if (!pr_r.ok) { console.error('[profile-extract] API fail (large):', pr_r.status); return; }
             const pr_d = await pr_r.json();
-            const raw = pr_d.content?.[0]?.text || '';
-            console.log('[profile-extract] raw output (large):', raw.slice(0, 200));
-            let cp = null;
-            try { cp = parseJsonSafe(raw); } catch {}
-            if (!cp) { console.warn('[profile-extract] cp NULL (large):', raw.slice(0, 300)); return; }
+            const prose = pr_d.content?.[0]?.text?.trim() || '';
+            if (!prose) { console.warn('[profile-extract] empty prose (large)'); return; }
+            console.log('[profile-extract] prose (large):', prose.slice(0, 200));
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cp, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: prose, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
-            else console.log('[profile-extract] SAVED (large)', contact_id, 'people:', cp.people?.length, 'topics:', cp.topics?.length, 'moments:', cp.key_moments?.length);
+            else console.log('[profile-extract] SAVED (large)', contact_id, prose.length, 'chars');
           } catch (e) { console.error('[profile-extract-error]', e.message); }
         })();
       }
@@ -1703,6 +1693,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     console.log('[simulate-reply] called — contact_id:', character.contact_id, 'has_token:', !!req.token, 'profile:', !!character.character_profile, 'people:', character.character_profile?.people?.length ?? 0);
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
+    let recentContext = '';
     if (character.contact_id && req.token) {
       console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
@@ -1717,6 +1708,9 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
             const allChunks = await chunksR.json();
             console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', allChunks?.length);
             if (Array.isArray(allChunks) && allChunks.length > 0) {
+              // Last 2 chunks = most recent messages in the original conversation
+              const recentSnippet = allChunks.slice(-2).map(c => c.chunk_text.slice(-1500)).join('\n');
+              if (recentSnippet.trim()) recentContext = `\nRECENT CONVERSATION (your most recent exchanges with ${userLabel} — use for current mood and rapport):\n${recentSnippet}`;
               const extractRelevantLines = (text) => {
                 const lines = text.split('\n');
                 const kept = new Set();
@@ -1744,22 +1738,23 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       console.log('[rag] skipped — contact_id:', character.contact_id, 'has_token:', !!req.token);
     }
 
-    const filteredPeople = (character.character_profile?.people || [])
-      .filter(p => p.name.toLowerCase() !== userLabel.toLowerCase());
-    const profileBlock = character.character_profile ? [
-      (character.character_profile.personality ? `WHO ${name.toUpperCase()} IS: ${character.character_profile.personality}` : ''),
-      (filteredPeople.length ? `PEOPLE MENTIONED (rough summary — verify from messages above): ${filteredPeople.map(p => `${p.name} (${p.relation}${p.context ? ', ' + p.context : ''})`).join(', ')}` : ''),
-      (character.character_profile.topics?.length ? `RECURRING TOPICS: ${character.character_profile.topics.join(', ')}` : ''),
-      (character.character_profile.style ? `COMMUNICATION STYLE: ${character.character_profile.style}` : ''),
-      (character.character_profile.address_term ? `HOW USER ADDRESSES ${name.toUpperCase()}: ${character.character_profile.address_term}` : ''),
-      (character.character_profile.how_they_address_user ? `HOW ${name.toUpperCase()} ADDRESSES YOU: ${character.character_profile.how_they_address_user}` : ''),
-      (character.character_profile.typical_phrases?.length ? `TYPICAL PHRASES: ${character.character_profile.typical_phrases.join(' / ')}` : ''),
-      (character.character_profile.key_moments?.length ? `SHARED MEMORIES: ${character.character_profile.key_moments.join(' | ')}` : '')
-    ].filter(Boolean).join('\n') : '';
+    // Prose character document — handles string (new) and old JSON profiles
+    const charDoc = (() => {
+      const cp = character.character_profile;
+      if (!cp) return '';
+      if (typeof cp === 'string') return cp.trim();
+      // Backward compat: old JSON profile → flatten to prose
+      const parts = [];
+      if (cp.personality) parts.push(cp.personality);
+      if (cp.style) parts.push(cp.style);
+      if (cp.people?.length) parts.push(`People mentioned: ${cp.people.map(p => `${p.name} (${p.relation})`).join(', ')}.`);
+      if (cp.typical_phrases?.length) parts.push(`Typical phrases: ${cp.typical_phrases.join(', ')}.`);
+      return parts.join(' ');
+    })();
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${ragContext ? ragContext + '\n\n' : ''}${profileBlock ? `BACKGROUND NOTES (rough summary — may be incomplete or wrong; if the ACTUAL PAST MESSAGES above say something different, trust the messages):\n${profileBlock}\n\n` : ''}RELATIONSHIP CONTEXT:
+${recentContext ? recentContext + '\n\n' : ''}${ragContext ? ragContext + '\n\n' : ''}${charDoc ? `ABOUT ${name.toUpperCase()} (character reference — if the past messages above say something different about any fact, trust the messages):\n${charDoc}\n\n` : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -1767,13 +1762,13 @@ ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of the
 RULES:
 - Match ${name}'s energy level, word choice, and sentence length exactly as their patterns describe
 - React naturally to what was just said — in character, with ${name}'s typical emotional tone
-- If ACTUAL PAST MESSAGES and BACKGROUND NOTES conflict on any fact (who someone is, a name, a relationship), trust the ACTUAL PAST MESSAGES — they are the real source.
-- Only reference people, events, or details present in the messages or notes above. Do not invent specific facts.
+- If past messages conflict with the character reference on any fact (names, relationships), trust the past messages — they are the real source.
+- Only reference people, events, or details present in the messages or character reference above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}`;
     console.log('[sim-prompt]', systemPrompt.slice(0, 3000));
-    console.log('[sim-profile-block]', profileBlock.slice(0, 500));
+    console.log('[sim-chardoc]', charDoc.slice(0, 200));
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
