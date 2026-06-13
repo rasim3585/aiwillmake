@@ -1734,14 +1734,46 @@ Rules:
 
     const userPrompt = `Practice transcript:\n${transcript}`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
-    });
+    const nmSystemPrompt = character.intent_goal
+      ? `You are a strategic communication coach. Based on a practice transcript and the user's goal, write a concrete real-world recommendation in ${lang}.
+Return ONLY a JSON object with exactly these two fields:
+- message: the exact first message to send in real life (in ${lang}, 1-3 sentences, specific and personal, informed by how the practice went — not generic)
+- advice: one sentence on what approach to take, followed by a dash, then one sentence on what to avoid (in ${lang})
+No markdown, no extra text, just the JSON.`
+      : null;
+
+    const [response, nmResponse] = await Promise.all([
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      }),
+      nmSystemPrompt
+        ? fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500, system: nmSystemPrompt,
+              messages: [{ role: 'user', content: `Goal: ${character.intent_goal}\nPerson: ${name}\n\nPractice transcript:\n${transcript}` }] })
+          })
+        : Promise.resolve(null)
+    ]);
+
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
-    res.json({ debrief: data.content?.[0]?.text?.trim() || '' });
+
+    let next_move = null;
+    if (nmResponse) {
+      try {
+        const nmData = await nmResponse.json();
+        if (nmResponse.ok) {
+          const nmText = nmData.content?.[0]?.text?.trim() || '{}';
+          const m = nmText.match(/\{[\s\S]*\}/);
+          next_move = JSON.parse(m ? m[0] : nmText);
+        }
+      } catch { /* next_move stays null */ }
+    }
+
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move });
   } catch (e) {
     console.error('[simulate-debrief]', e.message);
     res.status(500).json({ error: e.message });

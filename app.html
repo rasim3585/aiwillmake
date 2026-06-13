@@ -935,6 +935,15 @@
       color: var(--text); cursor: pointer;
     }
     .rp-correction-save:hover { background: rgba(255,255,255,.14); }
+    .rp-next-move-card { background: rgba(212,113,90,.08); border: 1px solid rgba(212,113,90,.3); border-radius: 12px; padding: 14px 16px; margin: 10px 16px 6px; }
+    .rp-next-move-label { font-size: .71rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+    .rp-next-move-message { font-size: .93rem; color: var(--fg); line-height: 1.55; margin-bottom: 8px; padding: 10px 12px; background: rgba(0,0,0,.15); border-radius: 8px; border-left: 2px solid var(--accent); }
+    .rp-next-move-advice { font-size: .81rem; color: var(--sec); line-height: 1.5; margin-bottom: 12px; }
+    .rp-next-move-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rp-copy-btn { padding: 8px 14px; background: var(--accent); border: none; border-radius: 9px; color: #fff; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; transition: opacity .18s; }
+    .rp-copy-btn:hover { opacity: .85; }
+    .rp-tactic-btn { padding: 8px 14px; background: transparent; border: 1px solid var(--bord); border-radius: 9px; color: var(--sec); font: inherit; font-size: .82rem; cursor: pointer; transition: border-color .15s, color .15s; }
+    .rp-tactic-btn:hover { border-color: var(--accent); color: var(--fg); }
     .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
     .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-again-btn {
@@ -2124,6 +2133,15 @@
       <div class="rp-debrief-card hidden" id="rp-debrief">
         <div class="rp-debrief-label">How it went</div>
         <div id="rp-debrief-text"></div>
+      </div>
+      <div class="rp-next-move-card hidden" id="rp-next-move">
+        <div class="rp-next-move-label">Gerçek hayatta ne yap</div>
+        <div class="rp-next-move-message" id="rp-next-move-message"></div>
+        <div class="rp-next-move-advice" id="rp-next-move-advice"></div>
+        <div class="rp-next-move-btns">
+          <button type="button" class="rp-copy-btn" id="rp-copy-btn">Mesajı kopyala</button>
+          <button type="button" class="rp-tactic-btn" id="rp-tactic-btn">Farklı taktik dene</button>
+        </div>
       </div>
       <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
         <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
@@ -4578,6 +4596,7 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -6324,6 +6343,7 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -6419,6 +6439,33 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Failed');
         debriefTextEl.textContent = data.debrief;
+
+        // ── Strategic next move ──────────────────────────────────────
+        if (_simCharacter?.intent_goal && data.next_move?.message) {
+          document.getElementById('rp-next-move-message').textContent = data.next_move.message;
+          document.getElementById('rp-next-move-advice').textContent = data.next_move.advice || '';
+          document.getElementById('rp-next-move').classList.remove('hidden');
+
+          const copyBtn = document.getElementById('rp-copy-btn');
+          const tacticBtn = document.getElementById('rp-tactic-btn');
+          const newCopy = copyBtn.cloneNode(true);
+          const newTactic = tacticBtn.cloneNode(true);
+          copyBtn.replaceWith(newCopy);
+          tacticBtn.replaceWith(newTactic);
+          const msgToCopy = data.next_move.message;
+          newCopy.addEventListener('click', () => {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(msgToCopy).then(() => showToast('Kopyalandı', 'success')).catch(() => showToast('Kopyalama başarısız', 'error'));
+            } else {
+              showToast('Kopyalama desteklenmiyor', 'error');
+            }
+          });
+          newTactic.addEventListener('click', () => {
+            document.getElementById('simulationModal').classList.add('hidden');
+            App.navigateTo('strategy');
+          });
+        }
+        // ────────────────────────────────────────────────────────────
       } catch (e) {
         debriefTextEl.textContent = 'Could not load feedback — but great practice. Close and try again anytime.';
         console.error('[simulate-debrief]', e);
