@@ -1009,7 +1009,7 @@ function parseJsonSafe(text) {
 
 app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) => {
   try {
-    const { conversationText, language, previousContext, contact_id } = req.body;
+    const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
 
     const lang = language || 'English';
@@ -1033,14 +1033,16 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 1000,
-                system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (the non-owner person).
-WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There are TWO senders: the chat OWNER and the CONTACT.
+                system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
+WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There are TWO senders: the chat OWNER (USER) and the CONTACT.
 
-Write 3-5 paragraphs (400-600 words) describing the CONTACT as if briefing someone who will roleplay as them. Cover:
+OWNERSHIP RULE: Possessive language tells you who owns the relationship. "Benim oğlum Kemal" said by the USER means Kemal is the USER's son — not the contact's. Do NOT assign the user's family members to the contact. Be precise about whose family/friends each person is.
+
+Write 3-5 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- People they mention: write names and relationships in natural prose (e.g. "Often mentions his two sons Kemal and Kerem", "Talks about his business partner Kerem frequently")
+- ALL people mentioned — note whose family/friend each person is. Same name can mean different people (the contact's parent and the user's child may share a name — distinguish by context and speaker).
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
@@ -1115,14 +1117,16 @@ Write in plain prose — no bullet points, no JSON, no headers. Refer to the CON
           body: JSON.stringify({
             model: 'claude-sonnet-4-6',
             max_tokens: 800,
-            system: `You are analyzing a long WhatsApp conversation exported as text. You will receive samples from multiple time periods across the full conversation. Your job is to build a behavioral profile of the OTHER person (not the user).
+            system: `You are analyzing a long WhatsApp conversation exported as text. Your job is to build a behavioral profile of the CONTACT (${contact_name ? `the person named "${contact_name}"` : 'the non-owner person'}).
+
+OWNERSHIP RULE: There are exactly TWO senders. The CONTACT and the USER (chat owner). When someone uses possessive language ("benim oğlum" = my son, "karım" = my wife, "babam" = my father), that person belongs to WHOEVER IS SPEAKING. Read carefully: if the USER says "oğlum Kemal", Kemal is the USER's son — NOT the contact's. Do not assign the user's family members to the contact.
 
 CRITICAL: Do not use markdown. No bold (**), no headers. Plain text only. Start each field directly: OBSERVED_PATTERNS: ...
 
 Extract:
-OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. Include names of people close to them (spouse, kids, friends) if mentioned. Write patterns in the same language as the conversation. Never focus on a single dramatic event — capture the general, recurring character.
+OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. When mentioning people, note whose family/friend they are (e.g. "user's son Kemal"). Write patterns in the same language as the conversation.
 RELATIONSHIP_SUMMARY: 2-3 sentences on who this person is and the relationship dynamic. Same language as conversation.
-PERSON_B_NAME: The other person's actual name or what the user calls them (not a label like 'kardeşim' — look for how they address each other directly)`,
+PERSON_B_NAME: The contact's actual name or what the user calls them (not a label like 'kardeşim' — look for how they address each other directly)`,
             messages: [{ role: 'user', content: `Conversation samples from ${chunks.length} time periods:\n${combinedSamples}` }]
           })
         });
@@ -1169,13 +1173,15 @@ PERSON_B_NAME: The other person's actual name or what the user calls them (not a
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 2000,
-                system: `You are reading a behavioral analysis and WhatsApp conversation samples, and writing a prose character profile of the CONTACT (the non-owner person, karşı taraf).
+                system: `You are reading a behavioral analysis and WhatsApp conversation samples, and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
+
+OWNERSHIP RULE: There are TWO senders in this chat — the CONTACT and the USER (chat owner). Possessive language tells you who owns the relationship: "benim oğlum Kemal" (my son Kemal) said by the USER means Kemal is the USER's son, not the contact's. Do NOT assign the user's family members to the contact. Be precise: "Ras's son Kemal" vs "Mert's wife Yağmur."
 
 Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
 - Their relationship with the chat owner: dynamic, tone, history
 - How they communicate: message length, style, slang, emoji, what they avoid
-- ALL people mentioned — include even minor ones. IMPORTANT: the same name may refer to DIFFERENT people (e.g. both the contact's father AND the chat owner's son might be named Kemal — distinguish them by context). Include the chat owner's children if mentioned. Name each person and their relationship clearly in prose.
+- ALL people mentioned — note WHOSE family/friend each person is. IMPORTANT: the same name may refer to DIFFERENT people (e.g. the contact's father AND the user's son might both be named Kemal — distinguish by context and speaker). Include the chat owner's children if they are mentioned.
 - How they address the chat owner; recurring phrases they use
 
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.`,
