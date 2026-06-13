@@ -167,7 +167,43 @@ STRICT RULES: Do not diagnose personality traits. Do not assume intent or label 
 
 app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
   try {
-    const { categoryId, subcategoryId, fields, variation, contactContext } = req.body;
+    const { categoryId, subcategoryId, fields, variation, contactContext, mode, goal } = req.body;
+
+    // ── Strategy card mode (Faz 3: goal → next-move) ──────────────────────────
+    if (mode === 'strategy') {
+      if (!goal) return res.status(400).json({ error: 'goal is required' });
+      const lang = fields?.language || 'Turkish';
+      const name = contactContext?.name || 'the other person';
+      const charDoc = (() => {
+        const cp = contactContext?.character_profile;
+        if (!cp) return '';
+        return typeof cp === 'string' ? cp.trim() : '';
+      })();
+      const contactCtxStr = buildContactContext(contactContext);
+      const systemPrompt = `You are a strategic communication coach. Generate EXACTLY 3 strategy cards as a JSON array.
+Each card must have:
+- tactic: short strategy name (2-4 words, in ${lang})
+- message: the exact message to send (in ${lang}, 1-3 sentences, realistic human tone, not generic)
+- predicted_reply: realistic response from ${name} (in ${lang}, 1-2 sentences, their perspective)
+- why: why this works for THIS specific goal and person (in ${lang}, 1 sentence)
+- risk: what could go wrong (in ${lang}, 1 sentence)
+Return ONLY the JSON array. No markdown, no extra text.
+${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr}`;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1400, system: systemPrompt,
+          messages: [{ role: 'user', content: `Goal: ${goal}\nPerson: ${name}` }] })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'API error');
+      const text = data.content?.[0]?.text?.trim() || '[]';
+      let cards = [];
+      try { const m = text.match(/\[[\s\S]*\]/); cards = JSON.parse(m ? m[0] : text); } catch { cards = []; }
+      return res.json({ cards });
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
     const variationPrompts = {
       different: 'Generate 6 NEW outputs that are DIFFERENT from a previous attempt. Use different sentence structures, vocabulary and emotional angles.',
       completely_new: 'IGNORE everything about the previous outputs. Use a completely different tone, style and creative approach. Be bold and unexpected.'
@@ -1821,7 +1857,7 @@ RULES:
 - Only reference people, events, or details present in your character description or excerpts above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
-- Respond entirely in ${lang}`;
+- Respond entirely in ${lang}${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
     console.log('[sim-prompt]', systemPrompt.slice(0, 3000));
     console.log('[sim-chardoc]', charDoc.slice(0, 200));
     const response = await fetch('https://api.anthropic.com/v1/messages', {
