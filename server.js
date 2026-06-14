@@ -1907,6 +1907,8 @@ RULES:
   }
 });
 
+app.get('/health', (_, res) => res.json({ ok: true }));
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on ${port}`));
