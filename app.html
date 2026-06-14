@@ -2101,6 +2101,26 @@
     .strategy-meta-row strong { color: var(--fg); font-weight: 600; }
     .btn-prova { width: 100%; padding: 10px; background: rgba(212,113,90,.12); border: 1px solid var(--accent); border-radius: 9px; color: var(--accent); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-prova:hover { background: rgba(212,113,90,.22); }
+    /* ── Share Preview Modal ── */
+    .share-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.65); }
+    .share-overlay.hidden { display: none; }
+    .share-panel { background: var(--surf); border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; animation: fadeUp .2s ease both; }
+    .share-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 14px; border-bottom: 1px solid var(--bord); flex-shrink: 0; }
+    .share-panel-title { font-size: .95rem; font-weight: 700; color: var(--fg); }
+    .share-panel-close { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 2px 6px; }
+    .share-notice { margin: 12px 20px 0; padding: 8px 12px; background: rgba(234,179,8,.1); border: 1px solid rgba(234,179,8,.25); border-radius: 8px; font-size: .75rem; color: #eab308; line-height: 1.4; flex-shrink: 0; }
+    .share-settings { padding: 12px 20px 0; flex-shrink: 0; }
+    .share-toggle-label { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--sec); cursor: pointer; }
+    .share-msgs-section { padding: 12px 20px 0; overflow-y: auto; flex: 1; }
+    .share-msgs-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+    .share-msg-row { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; }
+    .share-msg-who { font-size: .75rem; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; min-width: 36px; }
+    .share-msg-text { font-size: .8rem; color: var(--sec); line-height: 1.4; flex: 1; }
+    .share-generate-btn { margin: 14px 20px 28px; padding: 13px; background: var(--accent); border: none; border-radius: 11px; color: #fff; font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; transition: opacity .15s; flex-shrink: 0; }
+    .share-generate-btn:disabled { opacity: .55; cursor: default; }
+    .rp-share-row { padding: 2px 16px 6px; flex-shrink: 0; }
+    .rp-share-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--bord); border-radius: 9px; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; transition: border-color .15s, color .15s; }
+    .rp-share-btn:hover { border-color: var(--accent); color: var(--sec); }
     /* ── Prediction Bet ── */
     .prediction-bet-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.6); }
     .prediction-bet-overlay.hidden { display: none; }
@@ -2174,6 +2194,28 @@
     </div>
   </div>
 
+  <!-- Share Preview Modal -->
+  <div id="sharePreviewModal" class="share-overlay hidden">
+    <div class="share-panel">
+      <div class="share-panel-header">
+        <span class="share-panel-title">Share as card</span>
+        <button type="button" class="share-panel-close" id="sharePreviewClose">✕</button>
+      </div>
+      <div class="share-notice">⚠ This is a simulated conversation — not real messages. Review before sharing.</div>
+      <div class="share-settings">
+        <label class="share-toggle-label">
+          <input type="checkbox" id="shareAnonToggle" checked>
+          Anonymous names (recommended)
+        </label>
+      </div>
+      <div class="share-msgs-section">
+        <div class="share-msgs-title">Include in card</div>
+        <div id="shareMessagesList"></div>
+      </div>
+      <button type="button" class="share-generate-btn" id="shareGenerateBtn">📤 Generate &amp; Share</button>
+    </div>
+  </div>
+
   <!-- Reaction Bet Modal -->
   <div id="predictionBetModal" class="prediction-bet-overlay hidden">
     <div class="prediction-bet-sheet">
@@ -2215,6 +2257,9 @@
       <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
         <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
         <button class="rp-done-btn" id="rp-done-btn">Close</button>
+      </div>
+      <div class="rp-share-row hidden" id="rp-share-row">
+        <button type="button" class="rp-share-btn" id="rp-share-btn">📤 Share this simulation</button>
       </div>
       <div class="rp-correction hidden" id="rp-correction">
         <div class="rp-correction-label">Anything I got wrong about <span id="rp-correction-name"></span>? <span style="opacity:.55">(optional)</span></div>
@@ -2749,6 +2794,7 @@
 
   </div><!-- /.page -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     // Sticky header
@@ -4701,6 +4747,7 @@
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-prediction-result').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
@@ -6484,6 +6531,7 @@
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-prediction-result').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
@@ -6555,9 +6603,11 @@
 
     function _rpClose() {
       document.getElementById('simulationModal').classList.add('hidden');
+      document.getElementById('sharePreviewModal').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
+      document.getElementById('rp-share-row').classList.add('hidden');
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
     }
 
@@ -6632,6 +6682,7 @@
       }
 
       document.getElementById('rp-debrief-actions').classList.remove('hidden');
+      document.getElementById('rp-share-row').classList.remove('hidden');
       document.querySelector('.roleplay-card').classList.add('debrief-active');
       if (_simCharacter?.contact_id) {
         document.getElementById('rp-correction-name').textContent = _simCharacter.name;
@@ -6641,6 +6692,104 @@
       }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
+
+    // ── Share card ────────────────────────────────────────────────────────────
+    function showSharePreview() {
+      const msgs = (_simHistory || []).slice(-6);
+      if (!msgs.length) { showToast('Nothing to share yet', 'error'); return; }
+      const name = _simCharacter?.name || 'them';
+      const rel  = _simCharacter?.type  || 'them';
+      const listEl = document.getElementById('shareMessagesList');
+      listEl.innerHTML = '';
+      msgs.forEach((msg, i) => {
+        const isUser = msg.role === 'user';
+        const row = document.createElement('label');
+        row.className = 'share-msg-row';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.className = 'share-msg-check'; cb.dataset.idx = i; cb.checked = true;
+        const who = document.createElement('span');
+        who.className = 'share-msg-who'; who.textContent = isUser ? 'Me' : `[${rel}]`;
+        const txt = document.createElement('span');
+        txt.className = 'share-msg-text';
+        txt.textContent = (msg.content || '').slice(0, 90) + (msg.content?.length > 90 ? '…' : '');
+        row.appendChild(cb); row.appendChild(who); row.appendChild(txt);
+        listEl.appendChild(row);
+      });
+      const genBtn = document.getElementById('shareGenerateBtn');
+      const freshBtn = genBtn.cloneNode(true);
+      genBtn.replaceWith(freshBtn);
+      freshBtn.addEventListener('click', () => generateShareCard(msgs));
+      document.getElementById('sharePreviewModal').classList.remove('hidden');
+    }
+
+    async function generateShareCard(allMsgs) {
+      const anon    = document.getElementById('shareAnonToggle').checked;
+      const checks  = document.querySelectorAll('.share-msg-check');
+      const selected = allMsgs.filter((_, i) => checks[i]?.checked);
+      if (!selected.length) { showToast('Select at least one message', 'error'); return; }
+      if (typeof html2canvas === 'undefined') { showToast('Image library not loaded — try refreshing', 'error'); return; }
+
+      const realName   = _simCharacter?.name || 'them';
+      const rel        = _simCharacter?.type || 'them';
+      const displayName = anon ? rel : realName;
+      const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      const bubbles = selected.map(msg => {
+        const isUser = msg.role === 'user';
+        const text = esc((msg.content || '').slice(0, 140));
+        return isUser
+          ? `<div style="text-align:right;margin-bottom:9px;"><span style="background:#d4715a;color:#fff;padding:9px 13px;border-radius:16px 16px 4px 16px;font-size:13px;line-height:1.45;display:inline-block;max-width:82%;text-align:left;">${text}</span></div>`
+          : `<div style="margin-bottom:9px;"><span style="background:rgba(255,255,255,0.13);color:#e2e8f0;padding:9px 13px;border-radius:16px 16px 16px 4px;font-size:13px;line-height:1.45;display:inline-block;max-width:82%;">${text}</span></div>`;
+      }).join('');
+
+      const card = document.createElement('div');
+      card.style.cssText = 'position:fixed;left:-9999px;top:0;width:360px;padding:26px 22px;background:linear-gradient(145deg,#1e1b4b 0%,#1a1a2e 55%,#0f172a 100%);font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;';
+      card.innerHTML = `
+        <div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:.1em;margin-bottom:10px;">SIMULATED CONVERSATION</div>
+        <div style="font-size:14px;color:#f1f5f9;font-weight:700;margin-bottom:18px;line-height:1.4;">This actually sounds like <em style="color:#d4715a;font-style:normal;">${esc(anon ? `my ${displayName}` : displayName)}</em></div>
+        <div style="margin-bottom:18px;">${bubbles}</div>
+        <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:flex-end;">
+          <div style="font-size:10px;color:#475569;line-height:1.5;">Simulated from real chat history<br>Not actual messages</div>
+          <div style="text-align:right;"><div style="font-size:12px;color:#94a3b8;font-weight:800;letter-spacing:.05em;">AIWILLMAKE</div><div style="font-size:9px;color:#64748b;">aiwillmake.com</div></div>
+        </div>`;
+      document.body.appendChild(card);
+
+      const btn = document.getElementById('shareGenerateBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+      try {
+        const canvas = await html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#0f172a', logging: false });
+        document.body.removeChild(card);
+        canvas.toBlob(async (blob) => {
+          if (btn) { btn.disabled = false; btn.textContent = '📤 Generate & Share'; }
+          if (!blob) { showToast('Image generation failed', 'error'); return; }
+          const file = new File([blob], 'simulation.png', { type: 'image/png' });
+          if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'My AI simulation', text: 'Tried this on aiwillmake.com' });
+              document.getElementById('sharePreviewModal').classList.add('hidden');
+            } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'simulation-card.png'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            document.getElementById('sharePreviewModal').classList.add('hidden');
+            showToast('Image downloaded', 'success');
+          }
+        }, 'image/png');
+      } catch (e) {
+        if (card.parentNode) document.body.removeChild(card);
+        if (btn) { btn.disabled = false; btn.textContent = '📤 Generate & Share'; }
+        showToast('Could not generate card', 'error');
+        console.error('[share-card]', e);
+      }
+    }
+
+    document.getElementById('sharePreviewClose').addEventListener('click', () => {
+      document.getElementById('sharePreviewModal').classList.add('hidden');
+    });
+    document.getElementById('rp-share-btn').addEventListener('click', showSharePreview);
+    // ─────────────────────────────────────────────────────────────────────────
 
     document.getElementById('rp-close').addEventListener('click', _rpClose);
     document.getElementById('rp-suggest-btn').addEventListener('click', endSimulation);
