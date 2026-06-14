@@ -2101,6 +2101,20 @@
     .strategy-meta-row strong { color: var(--fg); font-weight: 600; }
     .btn-prova { width: 100%; padding: 10px; background: rgba(212,113,90,.12); border: 1px solid var(--accent); border-radius: 9px; color: var(--accent); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-prova:hover { background: rgba(212,113,90,.22); }
+    /* ── Prediction Bet ── */
+    .prediction-bet-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.6); }
+    .prediction-bet-overlay.hidden { display: none; }
+    .prediction-bet-sheet { background: var(--surf); border-radius: 20px 20px 0 0; padding: 26px 20px 36px; width: 100%; max-width: 520px; animation: fadeUp .2s ease both; }
+    .prediction-bet-title { font-size: .98rem; font-weight: 700; margin-bottom: 16px; text-align: center; color: var(--fg); }
+    .prediction-bet-options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 12px; }
+    .prediction-bet-option { padding: 11px 16px; background: rgba(255,255,255,.05); border: 1px solid var(--bord); border-radius: 10px; color: var(--fg); font: inherit; font-size: .9rem; cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
+    .prediction-bet-option:hover { border-color: var(--accent); background: rgba(212,113,90,.08); }
+    .prediction-bet-skip { background: none; border: none; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; width: 100%; text-align: center; padding: 6px; }
+    /* ── Prediction Result (in debrief) ── */
+    .rp-prediction-result { margin: 0 16px 4px; padding: 11px 14px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); font-size: .82rem; color: var(--sec); animation: fadeUp .25s ease both; flex-shrink: 0; }
+    .rp-prediction-result-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+    .rp-prediction-match { font-weight: 700; color: #22c55e; }
+    .rp-prediction-miss { font-weight: 700; color: #eab308; }
     .strategy-likelihood-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .strategy-likelihood-label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
     .strategy-likelihood-pct { font-size: .82rem; font-weight: 800; }
@@ -2160,6 +2174,15 @@
     </div>
   </div>
 
+  <!-- Reaction Bet Modal -->
+  <div id="predictionBetModal" class="prediction-bet-overlay hidden">
+    <div class="prediction-bet-sheet">
+      <p class="prediction-bet-title" id="predictionBetTitle">Sence nasıl tepki verir?</p>
+      <div class="prediction-bet-options" id="predictionBetOptions"></div>
+      <button type="button" class="prediction-bet-skip" id="predictionBetSkip">Skip →</button>
+    </div>
+  </div>
+
   <!-- Role-play practice modal -->
   <div id="simulationModal" class="roleplay-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rp-title">
     <div class="roleplay-card">
@@ -2175,6 +2198,10 @@
       <div class="rp-debrief-card hidden" id="rp-debrief">
         <div class="rp-debrief-label">How it went</div>
         <div id="rp-debrief-text"></div>
+      </div>
+      <div class="rp-prediction-result hidden" id="rp-prediction-result">
+        <div class="rp-prediction-result-label">Your prediction</div>
+        <div id="rp-prediction-result-text"></div>
       </div>
       <div class="rp-next-move-card hidden" id="rp-next-move">
         <div class="rp-next-move-label">Your next real move</div>
@@ -4636,7 +4663,11 @@
             </div>
             <button type="button" class="btn-prova">Try this in the simulator →</button>`;
           div.querySelector('.btn-prova').addEventListener('click', () => {
-            openSimulator(card.message || goal, activeContactContext, goal);
+            if (goal) {
+              showPredictionBet(card.message || goal, activeContactContext, goal);
+            } else {
+              openSimulator(card.message || goal, activeContactContext, goal);
+            }
           });
           cardsEl.appendChild(div);
         });
@@ -4665,8 +4696,10 @@
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
+      _userPrediction = null;
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
+      document.getElementById('rp-prediction-result').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
@@ -6398,6 +6431,41 @@
     let _simCharacter  = null;
     let _simTurn       = 1;
     let _simInitialMsg = '';
+    let _userPrediction = null; // { key: 'positive'|'resistant'|'deflect', label: string }
+
+    const PREDICTION_OPTIONS = [
+      { key: 'positive',  label: 'Olumlu karşılar' },
+      { key: 'resistant', label: 'Direnç gösterir' },
+      { key: 'deflect',   label: 'Konuyu geçiştirir' },
+    ];
+
+    function showPredictionBet(msgText, contactCtx, intentGoal) {
+      const name = contactCtx?.name || 'karşı taraf';
+      document.getElementById('predictionBetTitle').textContent = `Sence ${name} nasıl tepki verir?`;
+      const optEl = document.getElementById('predictionBetOptions');
+      optEl.innerHTML = '';
+      PREDICTION_OPTIONS.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'prediction-bet-option';
+        btn.textContent = opt.label;
+        btn.addEventListener('click', () => {
+          _userPrediction = opt;
+          document.getElementById('predictionBetModal').classList.add('hidden');
+          openSimulator(msgText, contactCtx, intentGoal);
+        });
+        optEl.appendChild(btn);
+      });
+      const skipBtn = document.getElementById('predictionBetSkip');
+      const freshSkip = skipBtn.cloneNode(true);
+      skipBtn.replaceWith(freshSkip);
+      freshSkip.addEventListener('click', () => {
+        _userPrediction = null;
+        document.getElementById('predictionBetModal').classList.add('hidden');
+        openSimulator(msgText, contactCtx, intentGoal);
+      });
+      document.getElementById('predictionBetModal').classList.remove('hidden');
+    }
 
     function openSimulator(msgText, contactCtx, intentGoal = null) {
       if (!msgText?.trim()) return;
@@ -6414,6 +6482,7 @@
       document.getElementById('rp-input').value = '';
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
+      document.getElementById('rp-prediction-result').classList.add('hidden');
       document.getElementById('rp-debrief-actions').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
@@ -6511,6 +6580,25 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Failed');
         debriefTextEl.textContent = data.debrief;
+
+        // ── Reaction Bet result ──────────────────────────────────────
+        if (_userPrediction) {
+          const debriefLower = (data.debrief || '').toLowerCase();
+          const positiveHints = ['warm', 'opened up', 'receptive', 'engaged', 'connected', 'responded well', 'sıcak', 'olumlu', 'açıldı', 'positive'];
+          const resistantHints = ['guarded', 'resistant', 'defensive', 'pushed back', 'reluctant', 'cold', 'direndi', 'mesafeli', 'kapalı', 'resistance'];
+          let outcomeKey = 'deflect';
+          if (positiveHints.some(w => debriefLower.includes(w))) outcomeKey = 'positive';
+          else if (resistantHints.some(w => debriefLower.includes(w))) outcomeKey = 'resistant';
+          const outcomeLabelMap = { positive: 'Olumlu karşıladı', resistant: 'Direnç gösterdi', deflect: 'Konuyu geçiştirdi' };
+          const personName = _simCharacter?.name || 'Karşı taraf';
+          const isMatch = outcomeKey === _userPrediction.key;
+          const predEl = document.getElementById('rp-prediction-result');
+          document.getElementById('rp-prediction-result-text').innerHTML =
+            `<p style="margin:0 0 5px">Sen: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simülasyon: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
+            `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `${personName}'i iyi tanıyorsun! ✓` : `${personName} seni şaşırttı.`}</p>`;
+          predEl.classList.remove('hidden');
+        }
+        // ────────────────────────────────────────────────────────────
 
         // ── Strategic next move ──────────────────────────────────────
         if (_simCharacter?.intent_goal && data.next_move?.message) {
