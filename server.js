@@ -187,12 +187,13 @@ Each card must have:
 - predicted_reply: realistic response from ${name} (in ${lang}, 1-2 sentences, their perspective)
 - why: why this works for THIS specific goal and person (in ${lang}, 1 sentence)
 - risk: what could go wrong (in ${lang}, 1 sentence)
+- success_likelihood: integer 0-100 estimating how likely THIS approach achieves the goal, based on this person's character and behavior patterns. Be realistic — do NOT inflate scores. If the risk is high or the person is avoidant/resistant, give a low number. Spread scores across different ranges; not everything should be 70+.
 Return ONLY the JSON array. No markdown, no extra text.
 ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr}`;
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2000, system: systemPrompt,
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2500, system: systemPrompt,
           messages: [{ role: 'user', content: `Goal: ${goal}\nPerson: ${name}` }] })
       });
       const data = await response.json();
