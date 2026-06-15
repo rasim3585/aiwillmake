@@ -2143,6 +2143,16 @@
     .person-practice-btn { display: block; width: 100%; padding: 16px 20px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; text-align: center; letter-spacing: -.01em; transition: opacity .18s, transform .15s; box-shadow: 0 4px 20px rgba(212,113,90,.30); }
     .person-practice-btn:hover { opacity: .88; transform: translateY(-1px); }
     .person-practice-btn:active { transform: translateY(0); }
+    .person-share-profile-btn {
+      display: block; width: 100%; padding: 10px 16px; background: transparent;
+      color: var(--sec); border: 1px solid var(--bord); border-radius: 11px;
+      font: inherit; font-size: .83rem; font-weight: 600; cursor: pointer;
+      text-align: center; transition: border-color .15s, color .15s, background .15s;
+      margin-bottom: 14px;
+    }
+    .person-share-profile-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(212,113,90,.05); }
+    .profile-card-inline-panel { display: none; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; margin-bottom: 14px; }
+    .profile-card-inline-panel.visible { display: block; }
     .person-secondary-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
     .person-secondary-btn { padding: 11px 10px; background: transparent; color: var(--sec); border: 1px solid var(--bord); border-radius: 11px; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; text-align: center; transition: border-color .15s, color .15s, background .15s; line-height: 1.35; }
     .person-secondary-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(212,113,90,.05); }
@@ -5865,6 +5875,15 @@
             <button type="button" class="person-practice-btn" id="personPracticeBtn">🎭 Practice Conversation</button>
           </div>
 
+          <button type="button" class="person-share-profile-btn" id="personShareProfileBtn">📊 Share Profile Card</button>
+          <div class="profile-card-inline-panel" id="profileCardPanel">
+            <label class="share-toggle-label" style="margin-bottom:10px;display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--sec);cursor:pointer;">
+              <input type="checkbox" id="profileCardShowName">
+              Show their name (default: anonymous)
+            </label>
+            <button type="button" id="profileCardGenBtn" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font:inherit;font-size:.87rem;font-weight:700;cursor:pointer;transition:opacity .15s;">Generate Card →</button>
+          </div>
+
           <div class="person-secondary-btns">
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
@@ -6015,6 +6034,13 @@
             }
           }
           openSimulatorFresh(activeContactContext, null);
+        });
+        document.getElementById('personShareProfileBtn').addEventListener('click', () => {
+          document.getElementById('profileCardPanel').classList.toggle('visible');
+        });
+        document.getElementById('profileCardGenBtn').addEventListener('click', () => {
+          const showName = document.getElementById('profileCardShowName').checked;
+          generateRelationshipCard(activeContactContext, showName);
         });
         document.getElementById('personGoalBtn').addEventListener('click', () => openGoalScreen());
         document.getElementById('personGenerateBtn').addEventListener('click', () => App.navigateTo('home'));
@@ -7094,6 +7120,90 @@
       document.getElementById('sharePreviewModal').classList.add('hidden');
     });
     document.getElementById('rp-share-btn').addEventListener('click', showSharePreview);
+
+    // ── Relationship Profile Card ─────────────────────────────────────────────
+    async function generateRelationshipCard(contactCtx, showName) {
+      if (typeof html2canvas === 'undefined') { showToast('Image library not loaded — try refreshing', 'error'); return; }
+      if (!contactCtx) { showToast('No contact data', 'error'); return; }
+
+      const esc      = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const type     = contactCtx.type || 'Contact';
+      const name     = contactCtx.name || 'them';
+      const patterns = Array.isArray(contactCtx.observed_patterns) ? contactCtx.observed_patterns : [];
+      const summary  = (contactCtx.relationship_summary || '').slice(0, 120);
+      const state    = contactCtx.relationship_state || '';
+
+      const firstPattern = (patterns[0] || '').slice(0, 80);
+      const topPatterns  = patterns.slice(0, 3).map(p => p.slice(0, 70));
+
+      const statePill = state
+        ? `<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:rgba(212,113,90,0.2);border:1px solid #d4715a;font-size:11px;color:#d4715a;font-weight:700;margin-bottom:16px;">${esc(state)}</div>`
+        : '';
+
+      const patternItems = topPatterns.map(p =>
+        `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+           <span style="color:#d4715a;font-size:10px;margin-top:3px;flex-shrink:0;">●</span>
+           <span style="font-size:12px;color:#e2e8f0;line-height:1.45;">${esc(p)}${p.length >= 70 ? '…' : ''}</span>
+         </div>`
+      ).join('');
+
+      const card = document.createElement('div');
+      card.style.cssText = 'position:fixed;left:-9999px;top:0;width:360px;padding:26px 22px;background:linear-gradient(145deg,#1e1b4b 0%,#1a1a2e 55%,#0f172a 100%);font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;';
+      card.innerHTML = `
+        <div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:.1em;margin-bottom:6px;">RELATIONSHIP PROFILE</div>
+        <div style="font-size:15px;color:#f1f5f9;font-weight:700;margin-bottom:14px;">Your ${esc(showName ? `${type} · ${name}` : type)}</div>
+        ${statePill}
+        ${firstPattern ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">How they communicate:</div>
+          <div style="font-size:14px;color:#d4715a;font-weight:700;line-height:1.45;">${esc(firstPattern)}</div>
+        </div>` : ''}
+        ${topPatterns.length ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">Observed patterns:</div>
+          ${patternItems}
+        </div>` : ''}
+        ${summary ? `
+        <div style="margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;border-left:2px solid rgba(212,113,90,0.4);">
+          <div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.5;">${esc(summary)}${summary.length >= 120 ? '…' : ''}</div>
+        </div>` : ''}
+        <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:flex-end;">
+          <div style="font-size:10px;color:#475569;line-height:1.5;">Built from real conversation history</div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;color:#94a3b8;font-weight:800;letter-spacing:.05em;">AIWILLMAKE</div>
+            <div style="font-size:9px;color:#64748b;">aiwillmake.com</div>
+          </div>
+        </div>`;
+      document.body.appendChild(card);
+
+      const btn = document.getElementById('profileCardGenBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+      try {
+        const canvas = await html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#0f172a', logging: false });
+        document.body.removeChild(card);
+        canvas.toBlob(async (blob) => {
+          if (btn) { btn.disabled = false; btn.textContent = 'Generate Card →'; }
+          if (!blob) { showToast('Image generation failed', 'error'); return; }
+          const file = new File([blob], 'relationship-profile.png', { type: 'image/png' });
+          if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'Relationship Profile', text: 'Generated on aiwillmake.com' });
+            } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'relationship-profile.png'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            showToast('Image downloaded', 'success');
+          }
+        }, 'image/png');
+      } catch (e) {
+        if (card.parentNode) document.body.removeChild(card);
+        if (btn) { btn.disabled = false; btn.textContent = 'Generate Card →'; }
+        showToast('Could not generate card', 'error');
+        console.error('[profile-card]', e);
+      }
+    }
     // ─────────────────────────────────────────────────────────────────────────
 
     document.getElementById('rp-close').addEventListener('click', _rpClose);
