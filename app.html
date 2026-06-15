@@ -2224,7 +2224,7 @@
     .btn-prova { width: 100%; padding: 10px; background: rgba(212,113,90,.12); border: 1px solid var(--accent); border-radius: 9px; color: var(--accent); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-prova:hover { background: rgba(212,113,90,.22); }
     /* ── Share Preview Modal ── */
-    .share-overlay { position: fixed; inset: 0; z-index: 500; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.65); }
+    .share-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.65); }
     .share-overlay.hidden { display: none; }
     .share-panel { background: var(--surf); border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; animation: fadeUp .2s ease both; }
     .share-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 14px; border-bottom: 1px solid var(--bord); flex-shrink: 0; }
@@ -2317,28 +2317,6 @@
       <p>Upgrade to keep writing — more generations, all 9 categories, and faster results.</p>
       <a href="index.html#pricing" class="btn-upgrade">Upgrade to continue →</a>
       <button class="btn-later" onclick="closeCreditsModal()">Maybe later</button>
-    </div>
-  </div>
-
-  <!-- Share Preview Modal -->
-  <div id="sharePreviewModal" class="share-overlay hidden">
-    <div class="share-panel">
-      <div class="share-panel-header">
-        <span class="share-panel-title">Share as card</span>
-        <button type="button" class="share-panel-close" id="sharePreviewClose">✕</button>
-      </div>
-      <div class="share-notice">⚠ This is a simulated conversation — not real messages. Review before sharing.</div>
-      <div class="share-settings">
-        <label class="share-toggle-label">
-          <input type="checkbox" id="shareAnonToggle" checked>
-          Anonymous names (recommended)
-        </label>
-      </div>
-      <div class="share-msgs-section">
-        <div class="share-msgs-title">Include in card</div>
-        <div id="shareMessagesList"></div>
-      </div>
-      <button type="button" class="share-generate-btn" id="shareGenerateBtn">📤 Generate &amp; Share</button>
     </div>
   </div>
 
@@ -7564,5 +7542,27 @@
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); initConvSearch(); });
   </script>
+
+  <!-- Share Preview Modal -->
+  <div id="sharePreviewModal" class="share-overlay hidden">
+    <div class="share-panel">
+      <div class="share-panel-header">
+        <span class="share-panel-title">Share as card</span>
+        <button type="button" class="share-panel-close" id="sharePreviewClose">✕</button>
+      </div>
+      <div class="share-notice">⚠ This is a simulated conversation — not real messages. Review before sharing.</div>
+      <div class="share-settings">
+        <label class="share-toggle-label">
+          <input type="checkbox" id="shareAnonToggle" checked>
+          Anonymous names (recommended)
+        </label>
+      </div>
+      <div class="share-msgs-section">
+        <div class="share-msgs-title">Include in card</div>
+        <div id="shareMessagesList"></div>
+      </div>
+      <button type="button" class="share-generate-btn" id="shareGenerateBtn">📤 Generate &amp; Share</button>
+    </div>
+  </div>
 </body>
 </html>
