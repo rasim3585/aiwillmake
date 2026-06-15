@@ -2320,6 +2320,28 @@
     </div>
   </div>
 
+  <!-- Share Preview Modal -->
+  <div id="sharePreviewModal" class="share-overlay hidden">
+    <div class="share-panel">
+      <div class="share-panel-header">
+        <span class="share-panel-title">Share as card</span>
+        <button type="button" class="share-panel-close" id="sharePreviewClose">✕</button>
+      </div>
+      <div class="share-notice">⚠ This is a simulated conversation — not real messages. Review before sharing.</div>
+      <div class="share-settings">
+        <label class="share-toggle-label">
+          <input type="checkbox" id="shareAnonToggle" checked>
+          Anonymous names (recommended)
+        </label>
+      </div>
+      <div class="share-msgs-section">
+        <div class="share-msgs-title">Include in card</div>
+        <div id="shareMessagesList"></div>
+      </div>
+      <button type="button" class="share-generate-btn" id="shareGenerateBtn">📤 Generate &amp; Share</button>
+    </div>
+  </div>
+
   <!-- Reaction Bet Modal -->
   <div id="predictionBetModal" class="prediction-bet-overlay hidden">
     <div class="prediction-bet-sheet">
@@ -7542,27 +7564,5 @@
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); initConvSearch(); });
   </script>
-
-  <!-- Share Preview Modal -->
-  <div id="sharePreviewModal" class="share-overlay hidden">
-    <div class="share-panel">
-      <div class="share-panel-header">
-        <span class="share-panel-title">Share as card</span>
-        <button type="button" class="share-panel-close" id="sharePreviewClose">✕</button>
-      </div>
-      <div class="share-notice">⚠ This is a simulated conversation — not real messages. Review before sharing.</div>
-      <div class="share-settings">
-        <label class="share-toggle-label">
-          <input type="checkbox" id="shareAnonToggle" checked>
-          Anonymous names (recommended)
-        </label>
-      </div>
-      <div class="share-msgs-section">
-        <div class="share-msgs-title">Include in card</div>
-        <div id="shareMessagesList"></div>
-      </div>
-      <button type="button" class="share-generate-btn" id="shareGenerateBtn">📤 Generate &amp; Share</button>
-    </div>
-  </div>
 </body>
 </html>
