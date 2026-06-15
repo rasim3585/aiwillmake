@@ -2052,12 +2052,14 @@
     .person-header { margin-bottom: 20px; }
     .person-header-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
     .person-date { font-size: .76rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
-    .person-primary-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-    .person-primary-btn { padding: 14px 8px; border: none; border-radius: 12px; font: inherit; font-size: .88rem; font-weight: 700; cursor: pointer; text-align: center; transition: opacity .18s, border-color .18s, color .18s; line-height: 1.35; }
-    .person-primary-btn-casual { background: var(--accent); color: #fff; }
-    .person-primary-btn-casual:hover { opacity: .88; }
-    .person-primary-btn-goal { background: var(--card); border: 1px solid var(--bord); color: var(--fg); }
-    .person-primary-btn-goal:hover { border-color: var(--accent); color: var(--accent); }
+    .person-tagline { font-size: .82rem; color: var(--sec); margin: 0 0 18px; line-height: 1.5; }
+    .person-practice-wrap { margin-bottom: 12px; }
+    .person-practice-btn { display: block; width: 100%; padding: 16px 20px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; text-align: center; letter-spacing: -.01em; transition: opacity .18s, transform .15s; box-shadow: 0 4px 20px rgba(212,113,90,.30); }
+    .person-practice-btn:hover { opacity: .88; transform: translateY(-1px); }
+    .person-practice-btn:active { transform: translateY(0); }
+    .person-secondary-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .person-secondary-btn { padding: 11px 10px; background: transparent; color: var(--sec); border: 1px solid var(--bord); border-radius: 11px; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; text-align: center; transition: border-color .15s, color .15s, background .15s; line-height: 1.35; }
+    .person-secondary-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(212,113,90,.05); }
     .person-actions-list { display: flex; flex-direction: column; gap: 1px; margin-bottom: 16px; background: var(--bord); border-radius: 12px; overflow: hidden; border: 1px solid var(--bord); }
     .person-action-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: var(--surf); color: var(--text); cursor: pointer; border: none; font: inherit; width: 100%; text-align: left; transition: background .15s; gap: 10px; }
     .person-action-item:hover { background: var(--surf2); }
@@ -2153,8 +2155,9 @@
       .page { padding: 20px 14px 80px; gap: 24px; }
       .landing-headline { font-size: 1.3rem; }
       .landing-inner { padding: 0 4px; }
-      .person-primary-btns { grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
-      .person-primary-btn { padding: 14px 12px; }
+      .person-secondary-btns { grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+      .person-secondary-btn { padding: 9px 8px; font-size: .76rem; }
+      .person-practice-btn { padding: 15px 16px; }
       .import-inner, .goal-inner, .strategy-inner, .ready-inner, .processing-inner { padding: 24px 14px; }
       .import-meta { flex-direction: column; gap: 8px; }
       .strategy-card { padding: 14px 12px; }
@@ -5629,9 +5632,17 @@
             ${c.relationship_summary ? `<p class="person-summary">${escH(c.relationship_summary)}</p>` : ''}
           </div>
 
-          <div class="person-primary-btns">
-            <button type="button" class="person-primary-btn person-primary-btn-casual" id="personCasualBtn">💬 Just talk</button>
-            <button type="button" class="person-primary-btn person-primary-btn-goal" id="personGoalBtn">🎯 I have something to say</button>
+          <p class="person-tagline">Practice a conversation with AI ${escH(c.name)} before the real thing.</p>
+
+          <div class="person-practice-wrap">
+            <button type="button" class="person-practice-btn" id="personPracticeBtn">🎭 Practice Conversation</button>
+          </div>
+
+          <div class="person-secondary-btns">
+            <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
+            <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
+            <button type="button" class="person-secondary-btn" id="personAnalyzeBtn">📩 Analyze reply</button>
+            <button type="button" class="person-secondary-btn" id="personBriefBtn">🔍 Decision brief</button>
           </div>
 
           <div class="person-actions-list">
@@ -5731,7 +5742,7 @@
         });
 
         // ── Primary buttons ──
-        document.getElementById('personCasualBtn').addEventListener('click', async () => {
+        document.getElementById('personPracticeBtn').addEventListener('click', async () => {
           if (!activeContactContext?.character_profile && activeContactContext?.id && accessToken) {
             try {
               const fr = await fetch(`/api/contacts/${activeContactContext.id}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
@@ -5745,6 +5756,9 @@
           openSimulatorFresh(activeContactContext, null);
         });
         document.getElementById('personGoalBtn').addEventListener('click', () => openGoalScreen());
+        document.getElementById('personGenerateBtn').addEventListener('click', () => App.navigateTo('home'));
+        document.getElementById('personAnalyzeBtn').addEventListener('click', () => App.navigateTo('home'));
+        document.getElementById('personBriefBtn').addEventListener('click', () => App.navigateTo('home'));
 
         // ── Panel toggles ──
         document.getElementById('personAnalysisToggle').addEventListener('click', () => {

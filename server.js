@@ -1162,10 +1162,14 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
               headers: sbHeaders(req.token)
             });
             for (let i = 0; i < chunks.length; i++) {
+              const _dates = chunks[i].match(/\d{2}[\/\.]\d{2}[\/\.]\d{4}/g) || [];
+              const date_range = _dates.length > 0
+                ? (_dates[0] === _dates[_dates.length - 1] ? _dates[0] : `${_dates[0]} – ${_dates[_dates.length - 1]}`)
+                : null;
               await fetch(`${SUPABASE_REST}/conversation_chunks`, {
                 method: 'POST',
                 headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ contact_id, user_id: req.user?.id, chunk_text: chunks[i], chunk_index: i })
+                body: JSON.stringify({ contact_id, user_id: req.user?.id, chunk_text: chunks[i], chunk_index: i, date_range })
               });
             }
             console.log(`[chunk-save] Saved ${chunks.length} chunks for contact_id ${contact_id}`);
