@@ -1715,6 +1715,11 @@
     .cstate-distant, .cstate-neutral { color: var(--muted); }
     .contact-state { font-size: .76rem; }
     .contact-meta  { font-size: .72rem; color: var(--muted); }
+    .conf-badge { display:inline-flex; align-items:center; gap:4px; font-size:.68rem; font-weight:700; padding:2px 9px 2px 7px; border-radius:20px; letter-spacing:.04em; cursor:default; }
+    .conf-badge-high   { background:rgba(32,212,122,.12);  color:#20d47a; }
+    .conf-badge-medium { background:rgba(245,158,11,.12);  color:#f59e0b; }
+    .conf-badge-low    { background:rgba(148,163,184,.12); color:#94a3b8; }
+    .ready-confidence  { font-size:.82rem; color:var(--sec); margin-bottom:20px; }
     .contact-detail-head {
       padding-bottom: 12px; border-bottom: 1px solid var(--bord); margin-bottom: 12px;
     }
@@ -4586,12 +4591,14 @@
 
       let summary = '';
       let patterns = [];
+      let readyConfidenceScore = 0;
       try {
         const r = await fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (r.ok) {
           const c = await r.json();
           summary = c.relationship_summary || '';
           patterns = Array.isArray(c.observed_patterns) ? c.observed_patterns.slice(0, 2) : [];
+          readyConfidenceScore = c.confidence_score || 0;
           activeContactContext = {
             id: c.id, name: c.name, type: c.type || null,
             relationship_state: c.relationship_state || null,
@@ -4607,6 +4614,7 @@
         <p class="ready-badge">Profile created</p>
         <h1 class="ready-headline">${escH(name)} is ready</h1>
         <p class="ready-quality">${quality.stars} <span style="font-size:.78rem;color:var(--muted);font-weight:400">${escH(quality.label)}</span></p>
+        ${readyConfidenceScore > 0 ? `<p class="ready-confidence">Profile built · Confidence: <strong>${readyConfidenceScore >= 80 ? 'High' : readyConfidenceScore >= 50 ? 'Medium' : 'Low'}</strong> (${readyConfidenceScore}/100)</p>` : ''}
         ${summary ? `<div class="ready-summary">${escH(summary)}</div>` : ''}
         ${patterns.length ? `<ul class="ready-patterns">${patterns.map(p => `<li>${escH(p)}</li>`).join('')}</ul>` : ''}
         <div class="ready-btns">
@@ -5259,6 +5267,7 @@
         const patchBody = { observed_patterns: patterns.length ? patterns : null };
         if (data.emotional_tone) patchBody.relationship_state = mapToneToState(data.emotional_tone);
         if (data.relationship_summary || data.recommended_next) patchBody.relationship_summary = data.relationship_summary || data.recommended_next;
+        if (data.confidence_score !== undefined) patchBody.confidence_score = data.confidence_score;
 
         await fetch(`/api/contacts/${contactId}`, {
           method: 'PATCH',
@@ -5370,6 +5379,15 @@
 
     const _typeClass  = t => 'ctype-' + (t || '').toLowerCase();
     const _stateClass = s => 'cstate-' + (s || 'neutral').toLowerCase();
+    const _confBadge  = (score, messageCount, charCount) => {
+      if (score === undefined || score === null || score === 0) return '';
+      const cls  = score >= 80 ? 'conf-badge-high' : score >= 50 ? 'conf-badge-medium' : 'conf-badge-low';
+      const dot  = score >= 80 ? '●' : score >= 50 ? '●' : '●';
+      const lbl  = score >= 80 ? 'High confidence' : score >= 50 ? 'Medium confidence' : 'Low confidence';
+      const hint = score < 50 ? ' · Import more history to improve' : '';
+      const tip  = [messageCount && `${messageCount} messages`, charCount && `${(charCount/1000).toFixed(0)}K characters`].filter(Boolean).join(' · ') || `${score}/100`;
+      return `<span class="conf-badge ${cls}" title="Based on ${tip}">${dot} ${lbl}${hint}</span>`;
+    };
 
     async function loadContactsList() {
       const listEl   = document.getElementById('contactsListEl');
@@ -5604,6 +5622,7 @@
               <div class="person-badges">
                 ${c.type ? `<span class="ctype-badge ${_typeClass(c.type)}">${escH(c.type)}</span>` : ''}
                 ${c.relationship_state ? `<span class="contact-state ${_stateClass(c.relationship_state)}">${escH(c.relationship_state)}</span>` : ''}
+                ${_confBadge(c.confidence_score)}
               </div>
               ${latestConv ? `<span class="person-date">${escH(_daysAgo(latestConv.updated_at))}</span>` : ''}
             </div>

@@ -1049,6 +1049,23 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
     const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
 
+    const totalChars = conversationText.length;
+    const messageCount = (conversationText.match(/^\d{2}[\/\.]\d{2}[\/\.]\d{4}/gm) || []).length;
+    const chunkCount = Math.max(1, Math.ceil(totalChars / 4800));
+    let confidence = 0;
+    if (totalChars > 5000)   confidence += 10;
+    if (totalChars > 20000)  confidence += 10;
+    if (totalChars > 50000)  confidence += 10;
+    if (totalChars > 100000) confidence += 10;
+    if (totalChars > 200000) confidence += 10;
+    if (messageCount > 50)   confidence += 10;
+    if (messageCount > 200)  confidence += 10;
+    if (messageCount > 500)  confidence += 10;
+    if (chunkCount > 5)      confidence += 10;
+    if (chunkCount > 20)     confidence += 10;
+    confidence = Math.min(confidence, 100);
+    const confidenceLabel = confidence >= 80 ? 'High' : confidence >= 50 ? 'Medium' : 'Low';
+
     const lang = language || 'English';
     // Head (identity/context) + tail (recent dynamics) preserves both ends
     const FULL_THRESHOLD = 175000;
@@ -1108,7 +1125,7 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cleanProseSmall, relationship_summary: relSummarySmall, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseSmall, relationship_summary: relSummarySmall, confidence_score: confidence, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
             else console.log('[profile-extract] SAVED (small)', contact_id, cleanProseSmall.length, 'chars | rel_summary:', relSummarySmall.slice(0, 80));
@@ -1263,7 +1280,7 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cleanProseLarge, relationship_summary: relSummaryLarge, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseLarge, relationship_summary: relSummaryLarge, confidence_score: confidence, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
             else console.log('[profile-extract] SAVED (large)', contact_id, cleanProseLarge.length, 'chars | rel_summary:', relSummaryLarge.slice(0, 80));
@@ -1357,7 +1374,11 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       observed_patterns,
       relationship_summary: chunkDerivedRelationshipSummary || null,
       what_changed,
-      how_user_addresses:   extract('ADDRESS_STYLE') || null
+      how_user_addresses:   extract('ADDRESS_STYLE') || null,
+      confidence_score:     confidence,
+      confidence_label:     confidenceLabel,
+      message_count:        messageCount,
+      char_count:           totalChars
     });
   } catch (e) {
     console.error('[analyze-conversation]', e.message);
@@ -1637,7 +1658,7 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
@@ -1645,6 +1666,7 @@ app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
     if (relationship_state !== undefined) updates.relationship_state = relationship_state;
     if (observed_patterns !== undefined) updates.observed_patterns = observed_patterns;
     if (character_profile !== undefined) updates.character_profile = character_profile;
+    if (confidence_score !== undefined) updates.confidence_score = confidence_score;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -1911,4 +1933,5 @@ app.get('/health', (_, res) => res.json({ ok: true }));
 
 process.stdin.resume();
 const port = process.env.PORT || 3000;
+console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');
 app.listen(port, () => console.log(`Server running on ${port}`));
