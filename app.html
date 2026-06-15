@@ -2221,9 +2221,12 @@
     .share-msg-text { font-size: .8rem; color: var(--sec); line-height: 1.4; flex: 1; }
     .share-generate-btn { margin: 14px 20px 28px; padding: 13px; background: var(--accent); border: none; border-radius: 11px; color: #fff; font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; transition: opacity .15s; flex-shrink: 0; }
     .share-generate-btn:disabled { opacity: .55; cursor: default; }
-    .rp-share-row { padding: 2px 16px 6px; flex-shrink: 0; }
+    .rp-share-row { padding: 2px 16px 6px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
     .rp-share-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--bord); border-radius: 9px; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; transition: border-color .15s, color .15s; }
     .rp-share-btn:hover { border-color: var(--accent); color: var(--sec); }
+    .rp-strategy-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--bord); border-radius: 9px; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; transition: border-color .15s, color .15s; }
+    .rp-strategy-btn:hover { border-color: var(--accent); color: var(--sec); }
+    .rp-strategy-btn:disabled { opacity: .45; cursor: not-allowed; }
     /* ── Prediction Bet ── */
     .prediction-bet-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.6); }
     .prediction-bet-overlay.hidden { display: none; }
@@ -2377,6 +2380,7 @@
       </div>
       <div class="rp-share-row hidden" id="rp-share-row">
         <button type="button" class="rp-share-btn" id="rp-share-btn">📤 Share this simulation</button>
+        <button type="button" class="rp-strategy-btn" id="rp-strategy-btn">📋 Download Strategy Card</button>
       </div>
       <div class="rp-correction hidden" id="rp-correction">
         <div class="rp-correction-label">Anything I got wrong about <span id="rp-correction-name"></span>? <span style="opacity:.55">(optional)</span></div>
@@ -7120,6 +7124,7 @@
       document.getElementById('sharePreviewModal').classList.add('hidden');
     });
     document.getElementById('rp-share-btn').addEventListener('click', showSharePreview);
+    document.getElementById('rp-strategy-btn').addEventListener('click', generateStrategyCard);
 
     // ── Relationship Profile Card ─────────────────────────────────────────────
     async function generateRelationshipCard(contactCtx, showName) {
@@ -7202,6 +7207,108 @@
         if (btn) { btn.disabled = false; btn.textContent = 'Generate Card →'; }
         showToast('Could not generate card', 'error');
         console.error('[profile-card]', e);
+      }
+    }
+    // ── Strategy Card ─────────────────────────────────────────────────────────
+    async function generateStrategyCard() {
+      if (typeof html2canvas === 'undefined') { showToast('Image library not loaded — try refreshing', 'error'); return; }
+
+      const esc        = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const name       = _simCharacter?.name || 'them';
+      const role       = _simCharacter?.type || '';
+      const goal       = _simCharacter?.intent_goal || '';
+      const patterns   = Array.isArray(_simCharacter?.observed_patterns) ? _simCharacter.observed_patterns.slice(0, 3) : [];
+      const debrief    = document.getElementById('rp-debrief-text')?.textContent?.trim() || '';
+      const nextMsg    = document.getElementById('rp-next-move-message')?.textContent?.trim() || '';
+      const nextAdvice = document.getElementById('rp-next-move-advice')?.textContent?.trim() || '';
+      const turnCount  = _simTurn || 0;
+      const today      = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const patternsHtml = patterns.length ? patterns.map(p =>
+        `<div style="display:flex;gap:8px;margin-bottom:6px;">
+          <span style="color:#d4715a;flex-shrink:0;">•</span>
+          <span style="font-size:12px;color:#94a3b8;line-height:1.5;">${esc(p.slice(0, 80))}${p.length > 80 ? '…' : ''}</span>
+        </div>`
+      ).join('') : '';
+
+      const nextHtml = nextMsg ? `
+        <div style="background:rgba(212,113,90,0.1);border:1px solid rgba(212,113,90,0.3);border-radius:10px;padding:12px;margin-top:12px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#d4715a;margin-bottom:6px;text-transform:uppercase;">Your next real message</div>
+          <div style="font-size:13px;color:#f1f5f9;line-height:1.5;">"${esc(nextMsg)}"</div>
+          ${nextAdvice ? `<div style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.4;">${esc(nextAdvice)}</div>` : ''}
+        </div>` : '';
+
+      const card = document.createElement('div');
+      card.style.cssText = 'position:fixed;left:-9999px;top:0;width:380px;padding:28px 24px;background:linear-gradient(145deg,#1e1b4b 0%,#1a1a2e 55%,#0f172a 100%);font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;';
+
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+          <div>
+            <div style="font-size:9px;color:#818cf8;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;">STRATEGY CARD</div>
+            <div style="font-size:18px;font-weight:800;color:#f1f5f9;line-height:1.2;">Conversation with<br><span style="color:#d4715a;">${esc(name)}</span></div>
+            ${role ? `<div style="font-size:11px;color:#475569;margin-top:3px;">${esc(role)}</div>` : ''}
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:11px;color:#475569;">${today}</div>
+            <div style="font-size:10px;color:#334155;margin-top:2px;">${turnCount} turns practiced</div>
+          </div>
+        </div>
+        ${goal ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#818cf8;text-transform:uppercase;margin-bottom:6px;">Goal</div>
+          <div style="font-size:13px;color:#cbd5e1;line-height:1.5;">${esc(goal.slice(0, 100))}${goal.length > 100 ? '…' : ''}</div>
+        </div>` : ''}
+        ${debrief ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#818cf8;text-transform:uppercase;margin-bottom:6px;">How it went</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.6;">${esc(debrief.slice(0, 200))}${debrief.length > 200 ? '…' : ''}</div>
+        </div>` : ''}
+        ${patterns.length ? `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:9px;letter-spacing:2px;color:#818cf8;text-transform:uppercase;margin-bottom:8px;">How ${esc(name)} communicates</div>
+          ${patternsHtml}
+        </div>` : ''}
+        ${nextHtml}
+        <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:10px;color:#334155;">Practiced on AI twin · Not real messages</div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;color:#94a3b8;font-weight:800;letter-spacing:.05em;">AIWILLMAKE</div>
+            <div style="font-size:9px;color:#475569;">aiwillmake.com</div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(card);
+
+      const btn = document.getElementById('rp-strategy-btn');
+      const originalText = btn.textContent;
+      btn.textContent = 'Generating…';
+      btn.disabled = true;
+
+      try {
+        const canvas = await html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#0f172a', logging: false });
+        document.body.removeChild(card);
+        canvas.toBlob(async (blob) => {
+          btn.disabled = false; btn.textContent = originalText;
+          if (!blob) { showToast('Image generation failed', 'error'); return; }
+          const file = new File([blob], 'strategy-card.png', { type: 'image/png' });
+          if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'Strategy Card', text: 'Practice debrief from aiwillmake.com' });
+            } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'strategy-card.png'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            showToast('Strategy card downloaded', 'success');
+          }
+        }, 'image/png');
+      } catch (e) {
+        if (card.parentNode) document.body.removeChild(card);
+        btn.disabled = false; btn.textContent = originalText;
+        showToast('Could not generate card', 'error');
+        console.error('[strategy-card]', e);
       }
     }
     // ─────────────────────────────────────────────────────────────────────────
