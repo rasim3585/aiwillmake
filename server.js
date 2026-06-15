@@ -1833,9 +1833,14 @@ No markdown, no extra text, just the JSON.`
 
 app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
   try {
-    const { character, history, language } = req.body;
+    const { character, language } = req.body;
+    let history = req.body.history;
     if (!character || !Array.isArray(history) || history.length === 0) {
       return res.status(400).json({ error: 'character and history are required' });
+    }
+    if (history.length > 30) history = history.slice(-30);
+    if (history[history.length - 1]?.role !== 'user') {
+      return res.status(400).json({ error: 'Last message must be from user' });
     }
     const lang = language || 'English';
     const name = character.name || 'the other person';
@@ -1941,9 +1946,6 @@ RULES:
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - Respond entirely in ${lang}${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
-    console.log('[sim-prompt]', systemPrompt.slice(0, 3000));
-    console.log('[sim-chardoc]', charDoc.slice(0, 200));
-    console.log('[sim-prompt-length]', systemPrompt.length, 'chars | charDoc:', charDoc.length, 'chars | rag:', ragContext.length, 'chars | recent:', recentContext.length, 'chars');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
