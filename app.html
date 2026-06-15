@@ -962,6 +962,37 @@
       transition: background .15s;
     }
     .rp-done-btn:hover { background: rgba(212,113,90,.2); }
+    .rp-real-outcome {
+      margin: 10px 16px 0; padding: 12px 14px; border-radius: 10px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      animation: fadeUp .25s ease both;
+    }
+    .rp-real-outcome-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--sec); margin-bottom: 10px;
+    }
+    .rp-real-outcome-btns { display: flex; gap: 7px; flex-wrap: wrap; }
+    .rp-outcome-btn {
+      flex: 1; min-width: 0; padding: 7px 8px; font: inherit; font-size: .73rem; font-weight: 600;
+      border-radius: 20px; border: 1px solid var(--bord); background: transparent;
+      color: var(--sec); cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+      text-align: center; white-space: nowrap;
+    }
+    .rp-outcome-btn:hover { border-color: var(--accent); color: var(--text); }
+    .rp-outcome-btn.selected { background: rgba(212,113,90,.12); border-color: var(--borda); color: var(--text); }
+    .rp-real-outcome-detail { margin-top: 10px; animation: fadeUp .2s ease both; }
+    .rp-real-outcome-detail textarea {
+      width: 100%; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px; color: var(--text); font-size: .82rem; padding: 8px 10px;
+      resize: none; font-family: inherit; line-height: 1.5; box-sizing: border-box;
+    }
+    .rp-real-outcome-save {
+      margin-top: 8px; padding: 6px 16px; border-radius: 7px; font-size: .78rem;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      color: var(--text); cursor: pointer; transition: background .15s;
+    }
+    .rp-real-outcome-save:hover { background: rgba(255,255,255,.14); }
+    .rp-real-outcome-saved { font-size: .77rem; color: var(--ok); margin-top: 8px; }
     .practice-btn {
       border: 1px solid rgba(212,113,90,.35); border-radius: var(--r-sm);
       padding: 5px 11px; background: rgba(212,113,90,.08); color: var(--accent);
@@ -2265,6 +2296,19 @@
       <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
         <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
         <button class="rp-done-btn" id="rp-done-btn">Close</button>
+      </div>
+      <div class="rp-real-outcome hidden" id="rp-real-outcome">
+        <div class="rp-real-outcome-label">Had the real conversation?</div>
+        <div class="rp-real-outcome-btns">
+          <button class="rp-outcome-btn" data-outcome="accurate">✅ AI was right</button>
+          <button class="rp-outcome-btn" data-outcome="partial">⚠️ Partially right</button>
+          <button class="rp-outcome-btn" data-outcome="inaccurate">❌ AI was wrong</button>
+        </div>
+        <div class="rp-real-outcome-detail hidden" id="rp-real-outcome-detail">
+          <textarea id="rp-real-outcome-text" placeholder="What was different in real life? (optional)" rows="3"></textarea>
+          <button id="rp-real-outcome-save" class="rp-real-outcome-save">Save &amp; improve AI twin</button>
+          <div class="rp-real-outcome-saved hidden" id="rp-real-outcome-saved">✓ Saved — AI twin updated</div>
+        </div>
       </div>
       <div class="rp-share-row hidden" id="rp-share-row">
         <button type="button" class="rp-share-btn" id="rp-share-btn">📤 Share this simulation</button>
@@ -4763,6 +4807,11 @@
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
+      document.getElementById('rp-real-outcome').classList.add('hidden');
+      document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-real-outcome-text').value = '';
+      document.getElementById('rp-real-outcome-saved').classList.add('hidden');
+      document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
       if (intentGoal) {
@@ -6569,6 +6618,11 @@
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
+      document.getElementById('rp-real-outcome').classList.add('hidden');
+      document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-real-outcome-text').value = '';
+      document.getElementById('rp-real-outcome-saved').classList.add('hidden');
+      document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
@@ -6641,6 +6695,11 @@
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-share-row').classList.add('hidden');
+      document.getElementById('rp-real-outcome').classList.add('hidden');
+      document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-real-outcome-text').value = '';
+      document.getElementById('rp-real-outcome-saved').classList.add('hidden');
+      document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
     }
 
@@ -6721,6 +6780,7 @@
         document.getElementById('rp-correction-name').textContent = _simCharacter.name;
         const corrEl = document.getElementById('rp-correction');
         corrEl.classList.remove('hidden');
+        document.getElementById('rp-real-outcome').classList.remove('hidden');
         setTimeout(() => corrEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
       }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
@@ -6866,6 +6926,54 @@
         setTimeout(() => { btn.textContent = 'Save correction'; }, 2500);
       }
     });
+
+    // ── Real Life Outcome ────────────────────────────────────────────────────
+    let _selectedOutcome = null;
+    document.querySelectorAll('.rp-outcome-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        _selectedOutcome = btn.dataset.outcome;
+        document.getElementById('rp-real-outcome-detail').classList.remove('hidden');
+      });
+    });
+
+    document.getElementById('rp-real-outcome-save').addEventListener('click', async () => {
+      if (!_selectedOutcome || !_simCharacter?.contact_id) return;
+      const saveBtn  = document.getElementById('rp-real-outcome-save');
+      const savedEl  = document.getElementById('rp-real-outcome-saved');
+      const noteText = (document.getElementById('rp-real-outcome-text').value || '').trim();
+      saveBtn.disabled = true;
+      try {
+        const contactId = _simCharacter.contact_id;
+        const date = new Date().toLocaleDateString('en-GB');
+        const outcomeLabels = { accurate: 'Accurate', partial: 'Partially accurate', inaccurate: 'Inaccurate' };
+        const outcomeLabel  = outcomeLabels[_selectedOutcome] || _selectedOutcome;
+        const block = `\n\n--- REAL LIFE OUTCOME (${date}) ---\nAI prediction accuracy: ${outcomeLabel}${noteText ? `\nNotes: ${noteText}` : ''}`;
+        const existingProfile = _simCharacter.character_profile || '';
+        const updatedProfile  = existingProfile + block;
+        const patchR = await fetch(`/api/contacts/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({
+            character_profile: updatedProfile,
+            last_outcome: _selectedOutcome,
+            last_outcome_at: new Date().toISOString()
+          })
+        });
+        if (!patchR.ok) throw new Error('Save failed');
+        _simCharacter.character_profile = updatedProfile;
+        if (activeContactContext?.id === contactId) activeContactContext.character_profile = updatedProfile;
+        saveBtn.classList.add('hidden');
+        savedEl.classList.remove('hidden');
+      } catch (e) {
+        console.error('[real-outcome]', e);
+        saveBtn.textContent = 'Error — try again';
+        saveBtn.disabled = false;
+        setTimeout(() => { saveBtn.textContent = 'Save & improve AI twin'; }, 2500);
+      }
+    });
+    // ─────────────────────────────────────────────────────────────────────────
 
     const _rpInput = document.getElementById('rp-input');
     const _rpSend  = document.getElementById('rp-send');

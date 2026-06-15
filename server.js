@@ -1662,7 +1662,7 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score, last_outcome, last_outcome_at } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
@@ -1671,6 +1671,8 @@ app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
     if (observed_patterns !== undefined) updates.observed_patterns = observed_patterns;
     if (character_profile !== undefined) updates.character_profile = character_profile;
     if (confidence_score !== undefined) updates.confidence_score = confidence_score;
+    if (last_outcome !== undefined) updates.last_outcome = last_outcome;
+    if (last_outcome_at !== undefined) updates.last_outcome_at = last_outcome_at;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -1938,4 +1940,5 @@ app.get('/health', (_, res) => res.json({ ok: true }));
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');
+console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome text; ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome_at timestamptz;');
 app.listen(port, () => console.log(`Server running on ${port}`));
