@@ -7087,6 +7087,7 @@
       const freshBtn = genBtn.cloneNode(true);
       genBtn.replaceWith(freshBtn);
       freshBtn.addEventListener('click', () => generateShareCard(msgs));
+      showToast('Opening share modal...', 'info');
       document.getElementById('sharePreviewModal').classList.remove('hidden');
     }
 
