@@ -1943,6 +1943,7 @@ RULES:
 - Respond entirely in ${lang}${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
     console.log('[sim-prompt]', systemPrompt.slice(0, 3000));
     console.log('[sim-chardoc]', charDoc.slice(0, 200));
+    console.log('[sim-prompt-length]', systemPrompt.length, 'chars | charDoc:', charDoc.length, 'chars | rag:', ragContext.length, 'chars | recent:', recentContext.length, 'chars');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
