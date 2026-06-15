@@ -7062,9 +7062,8 @@
 
     // ── Share card ────────────────────────────────────────────────────────────
     function showSharePreview() {
-      showToast('Share: ' + (_simHistory||[]).length + ' messages', 'info');
       const msgs = (_simHistory || []).slice(-6);
-      if (!msgs.length) { console.log('[share] no messages — _simHistory:', _simHistory); showToast('Nothing to share yet', 'error'); return; }
+      if (!msgs.length) { showToast('Nothing to share yet', 'error'); return; }
       const name = _simCharacter?.name || 'them';
       const rel  = _simCharacter?.type  || 'them';
       const listEl = document.getElementById('shareMessagesList');
@@ -7088,7 +7087,6 @@
       const freshBtn = genBtn.cloneNode(true);
       genBtn.replaceWith(freshBtn);
       freshBtn.addEventListener('click', () => generateShareCard(msgs));
-      showToast('Opening share modal...', 'info');
       document.getElementById('sharePreviewModal').classList.remove('hidden');
     }
 
