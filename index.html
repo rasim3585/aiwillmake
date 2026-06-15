@@ -466,8 +466,7 @@
     }
 
     /* ════════ SANDBOX ════════ */
-    .sandbox-section { padding: 80px 20px; background: #0d0d0d; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
-    .sandbox-inner { max-width: 560px; margin: 0 auto; }
+    .sandbox-inner { max-width: 560px; margin: 32px auto 0; }
     .sandbox-header { text-align: center; margin-bottom: 36px; }
     .sandbox-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #ff6b35; margin-bottom: 12px; }
     .sandbox-title { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 10px; }
@@ -585,81 +584,77 @@
         </button>
         <span id="authStatus" style="display:block;margin-top:12px"></span>
       </div>
+
+      <div class="sandbox-inner">
+        <div class="sandbox-header">
+          <div class="sandbox-label">Try it now — no signup</div>
+          <h2 class="sandbox-title">Talk to an AI version of the people in your life</h2>
+          <p class="sandbox-sub">Pick a character. Have a real conversation. See how the AI handles it before the real thing.</p>
+        </div>
+
+        <!-- Character picker -->
+        <div class="sandbox-characters" id="sandboxCharPicker">
+          <button class="sandbox-char-btn" data-char="boss">
+            <div class="sandbox-char-emoji">💼</div>
+            <div class="sandbox-char-name">Michael, Your Boss</div>
+            <div class="sandbox-char-desc">Wants results, not excuses. Practice asking for a raise or explaining a delay.</div>
+          </button>
+          <button class="sandbox-char-btn" data-char="mom">
+            <div class="sandbox-char-emoji">👩‍👦</div>
+            <div class="sandbox-char-name">Mom</div>
+            <div class="sandbox-char-desc">Loving but can guilt-trip. Practice setting limits without hurting feelings.</div>
+          </button>
+          <button class="sandbox-char-btn" data-char="partner">
+            <div class="sandbox-char-emoji">💑</div>
+            <div class="sandbox-char-name">Jordan, Your Partner</div>
+            <div class="sandbox-char-desc">Emotionally intelligent but conflict-avoidant. Practice tough conversations.</div>
+          </button>
+          <button class="sandbox-char-btn" data-char="client">
+            <div class="sandbox-char-emoji">🤝</div>
+            <div class="sandbox-char-name">David, Difficult Client</div>
+            <div class="sandbox-char-desc">Demanding and skeptical. Practice handling scope creep or missed deadlines.</div>
+          </button>
+          <button class="sandbox-char-btn" data-char="ex">
+            <div class="sandbox-char-emoji">💔</div>
+            <div class="sandbox-char-name">Alex, Your Ex</div>
+            <div class="sandbox-char-desc">Complicated history. Practice saying what you actually mean — or letting go.</div>
+          </button>
+        </div>
+
+        <!-- Chat window -->
+        <div class="sandbox-chat hidden" id="sandboxChat">
+          <div class="sandbox-chat-header">
+            <button class="sandbox-back-btn" id="sandboxBack">← Back</button>
+            <div class="sandbox-chat-who">
+              <span id="sandboxCharEmoji"></span>
+              <div>
+                <div class="sandbox-chat-name" id="sandboxCharLabel"></div>
+                <div class="sandbox-chat-role" id="sandboxCharRole"></div>
+              </div>
+            </div>
+            <div class="sandbox-ai-badge">AI</div>
+          </div>
+          <div class="sandbox-messages" id="sandboxMessages"></div>
+          <div class="sandbox-typing hidden" id="sandboxTyping">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="sandbox-upgrade hidden" id="sandboxUpgrade">
+            <div class="sandbox-upgrade-text">
+              <strong>That was a taste.</strong> The real app remembers this person across every conversation — their patterns, history, what changed since last time. The AI plays them with actual context, not a generic script. <em>Try 5 full analyses free.</em>
+            </div>
+            <a href="app.html" class="sandbox-upgrade-btn">Start free — no card needed →</a>
+          </div>
+          <div class="sandbox-input-row" id="sandboxInputRow">
+            <textarea id="sandboxInput" placeholder="Type your message…" rows="1"></textarea>
+            <button id="sandboxSend">Send</button>
+          </div>
+        </div>
+      </div>
+
       <div class="hero-trust" style="margin-top:32px">
         <span class="trust-item">Your conversations stay yours</span>
         <span class="trust-item">Never used to train AI</span>
         <span class="trust-item">Delete anytime</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-<!-- Sandbox -->
-<section class="sandbox-section">
-  <div class="sandbox-inner">
-    <div class="sandbox-header">
-      <div class="sandbox-label">Try it now — no signup</div>
-      <h2 class="sandbox-title">Talk to an AI version of the people in your life</h2>
-      <p class="sandbox-sub">Pick a character. Have a real conversation. See how the AI handles it before the real thing.</p>
-    </div>
-
-    <!-- Character picker -->
-    <div class="sandbox-characters" id="sandboxCharPicker">
-      <button class="sandbox-char-btn" data-char="boss">
-        <div class="sandbox-char-emoji">💼</div>
-        <div class="sandbox-char-name">Michael, Your Boss</div>
-        <div class="sandbox-char-desc">Wants results, not excuses. Practice asking for a raise or explaining a delay.</div>
-      </button>
-      <button class="sandbox-char-btn" data-char="mom">
-        <div class="sandbox-char-emoji">👩‍👦</div>
-        <div class="sandbox-char-name">Mom</div>
-        <div class="sandbox-char-desc">Loving but can guilt-trip. Practice setting limits without hurting feelings.</div>
-      </button>
-      <button class="sandbox-char-btn" data-char="partner">
-        <div class="sandbox-char-emoji">💑</div>
-        <div class="sandbox-char-name">Jordan, Your Partner</div>
-        <div class="sandbox-char-desc">Emotionally intelligent but conflict-avoidant. Practice tough conversations.</div>
-      </button>
-      <button class="sandbox-char-btn" data-char="client">
-        <div class="sandbox-char-emoji">🤝</div>
-        <div class="sandbox-char-name">David, Difficult Client</div>
-        <div class="sandbox-char-desc">Demanding and skeptical. Practice handling scope creep or missed deadlines.</div>
-      </button>
-      <button class="sandbox-char-btn" data-char="ex">
-        <div class="sandbox-char-emoji">💔</div>
-        <div class="sandbox-char-name">Alex, Your Ex</div>
-        <div class="sandbox-char-desc">Complicated history. Practice saying what you actually mean — or letting go.</div>
-      </button>
-    </div>
-
-    <!-- Chat window -->
-    <div class="sandbox-chat hidden" id="sandboxChat">
-      <div class="sandbox-chat-header">
-        <button class="sandbox-back-btn" id="sandboxBack">← Back</button>
-        <div class="sandbox-chat-who">
-          <span id="sandboxCharEmoji"></span>
-          <div>
-            <div class="sandbox-chat-name" id="sandboxCharLabel"></div>
-            <div class="sandbox-chat-role" id="sandboxCharRole"></div>
-          </div>
-        </div>
-        <div class="sandbox-ai-badge">AI</div>
-      </div>
-      <div class="sandbox-messages" id="sandboxMessages"></div>
-      <div class="sandbox-typing hidden" id="sandboxTyping">
-        <span></span><span></span><span></span>
-      </div>
-      <div class="sandbox-upgrade hidden" id="sandboxUpgrade">
-        <div class="sandbox-upgrade-text">
-          <strong>That was a taste.</strong> The real app remembers this person across every conversation — their patterns, history, what changed since last time. The AI plays them with actual context, not a generic script. <em>Try 5 full analyses free.</em>
-        </div>
-        <a href="app.html" class="sandbox-upgrade-btn">Start free — no card needed →</a>
-      </div>
-      <div class="sandbox-input-row" id="sandboxInputRow">
-        <textarea id="sandboxInput" placeholder="Type your message…" rows="1"></textarea>
-        <button id="sandboxSend">Send</button>
       </div>
     </div>
   </div>
