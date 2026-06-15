@@ -877,6 +877,12 @@
       align-self: flex-start; background: var(--surf2); color: var(--text);
       border: 1px solid var(--bord); border-bottom-left-radius: 4px;
     }
+    .rp-bubble.system {
+      background: transparent; border: 1px solid rgba(255,255,255,.1);
+      color: var(--muted); font-style: italic; font-size: .78rem;
+      text-align: center; border-radius: 8px; padding: 8px 12px;
+      margin: 8px auto; max-width: 90%; align-self: center; white-space: pre-line;
+    }
     .rp-typing {
       align-self: flex-start; background: var(--surf2); border: 1px solid var(--bord);
       padding: 10px 14px; border-radius: 14px; border-bottom-left-radius: 4px;
@@ -2024,6 +2030,42 @@
     }
     .tl-item:hover .tl-del-btn { opacity: 1; }
     .tl-del-btn:hover { color: #f87171; background: rgba(248,113,113,0.10); }
+    .tl-replay-btn {
+      font-size: .7rem; color: var(--accent); background: none;
+      border: 1px solid rgba(212,113,90,.35); cursor: pointer; font: inherit;
+      font-weight: 600; padding: 2px 7px; border-radius: 5px;
+      opacity: 0; transition: opacity .15s, background .15s;
+    }
+    .tl-item:hover .tl-replay-btn { opacity: 1; }
+    .tl-replay-btn:hover { background: rgba(212,113,90,.1); }
+    /* ── Replay Picker ── */
+    .replay-picker { padding: 4px 0; }
+    .replay-picker-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .replay-picker-header button { background: none; border: none; cursor: pointer; color: var(--sec); font: inherit; font-size: .82rem; padding: 4px 8px; border-radius: 6px; }
+    .replay-picker-header button:hover { background: var(--surf2); }
+    .replay-picker-title { font-size: .82rem; font-weight: 700; color: var(--fg); }
+    .replay-picker-context { background: var(--surf2); border: 1px solid var(--bord); border-radius: 9px; padding: 10px 12px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+    .replay-context-label { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .replay-context-date { font-size: .78rem; font-weight: 700; color: var(--accent); }
+    .replay-context-moment { font-size: .77rem; color: var(--fg); }
+    .replay-context-state { font-size: .72rem; color: var(--sec); }
+    .replay-scenarios { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+    .replay-scenario-label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+    .replay-scenario-btn {
+      width: 100%; text-align: left; padding: 11px 13px; border-radius: 9px;
+      border: 1px solid var(--bord); background: var(--surf2); color: var(--fg);
+      cursor: pointer; font: inherit; font-size: .83rem; transition: border-color .15s, background .15s;
+    }
+    .replay-scenario-btn:hover { border-color: var(--accent); background: rgba(212,113,90,.06); }
+    .replay-scenario-btn.selected { border-color: var(--accent); background: rgba(212,113,90,.12); color: var(--accent); font-weight: 600; }
+    #replay-custom-input { margin-top: 4px; }
+    #replay-custom-input textarea { width: 100%; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf2); color: var(--fg); font: inherit; font-size: .83rem; padding: 8px 10px; resize: none; box-sizing: border-box; }
+    #replay-start-btn {
+      width: 100%; padding: 12px; border-radius: 9px; border: none;
+      background: var(--accent); color: #fff; cursor: pointer; font: inherit;
+      font-size: .87rem; font-weight: 700; margin-top: 4px; transition: opacity .15s;
+    }
+    #replay-start-btn:hover { opacity: .88; }
 
     /* ── Landing Screen ── */
     .screen-landing {
@@ -4836,6 +4878,125 @@
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    function openReplayPicker(convId, contactCtx, convData) {
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const cv = (convData || []).find(c => c.id === convId);
+      if (!cv) return;
+      const km    = (cv.fields?.key_moment || '').slice(0, 100);
+      const state = cv.fields?.relationship_state || '';
+      const date  = new Date(cv.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+
+      const panel = document.getElementById('personHistoryPanel');
+      Array.from(panel.children).forEach(ch => { ch._replayHide = true; ch.style.display = 'none'; });
+
+      const picker = document.createElement('div');
+      picker.id = 'replay-picker';
+      picker.className = 'replay-picker';
+      picker.innerHTML = `
+        <div class="replay-picker-header">
+          <button id="replay-back" type="button">← Back</button>
+          <div class="replay-picker-title">Choose a turning point</div>
+        </div>
+        <div class="replay-picker-context">
+          <div class="replay-context-label">From this conversation:</div>
+          <div class="replay-context-date">${escH(date)}</div>
+          ${km    ? `<div class="replay-context-moment">💡 ${escH(km)}</div>`    : ''}
+          ${state ? `<div class="replay-context-state">${escH(state)}</div>` : ''}
+        </div>
+        <div class="replay-scenarios">
+          <div class="replay-scenario-label">What do you want to practice?</div>
+          <button class="replay-scenario-btn" data-scenario="different_approach" type="button">🔄 I said something wrong — try a different approach</button>
+          <button class="replay-scenario-btn" data-scenario="difficult_topic" type="button">💬 Bring up something I avoided</button>
+          <button class="replay-scenario-btn" data-scenario="repair" type="button">🤝 Repair after a bad exchange</button>
+          <button class="replay-scenario-btn" data-scenario="custom" type="button">✏️ Custom starting point...</button>
+        </div>
+        <div id="replay-custom-input" class="hidden">
+          <textarea id="replay-custom-text" placeholder="Describe the moment you want to replay from..." rows="2"></textarea>
+        </div>
+        <button id="replay-start-btn" type="button" class="hidden">Start Replay →</button>
+      `;
+      panel.insertBefore(picker, panel.firstChild);
+
+      let selectedScenario = null;
+
+      document.getElementById('replay-back').addEventListener('click', () => {
+        picker.remove();
+        Array.from(panel.children).forEach(ch => { if (ch._replayHide) { ch.style.display = ''; delete ch._replayHide; } });
+      });
+
+      picker.querySelectorAll('.replay-scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          picker.querySelectorAll('.replay-scenario-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedScenario = btn.dataset.scenario;
+          const customDiv = document.getElementById('replay-custom-input');
+          selectedScenario === 'custom' ? customDiv.classList.remove('hidden') : customDiv.classList.add('hidden');
+          document.getElementById('replay-start-btn').classList.remove('hidden');
+        });
+      });
+
+      document.getElementById('replay-start-btn').addEventListener('click', () => {
+        if (!selectedScenario) return;
+        const customText = (document.getElementById('replay-custom-text')?.value || '').trim();
+        if (selectedScenario === 'custom' && !customText) {
+          document.getElementById('replay-custom-text').focus();
+          return;
+        }
+        picker.remove();
+        Array.from(panel.children).forEach(ch => { if (ch._replayHide) { ch.style.display = ''; delete ch._replayHide; } });
+        openReplaySimulator(contactCtx, selectedScenario, km, customText);
+      });
+    }
+
+    function openReplaySimulator(contactCtx, scenario, keyMoment, customText) {
+      const scenarioLabels = {
+        different_approach: 'Try a different approach to: ' + (keyMoment || 'the previous conversation'),
+        difficult_topic:    'Bring up something that was avoided in: ' + (keyMoment || 'the previous conversation'),
+        repair:             'Repair the relationship after: ' + (keyMoment || 'the previous conversation'),
+        custom:             customText || 'Replay a past conversation'
+      };
+      const intentGoal = scenarioLabels[scenario] || customText || 'Replay';
+
+      _simCharacter = {
+        name:                 contactCtx.name,
+        type:                 contactCtx.type,
+        relationship_state:   contactCtx.relationship_state,
+        observed_patterns:    contactCtx.observed_patterns,
+        relationship_summary: contactCtx.relationship_summary,
+        contact_id:           contactCtx.id || null,
+        character_profile:    contactCtx.character_profile || null,
+        user_name:            contactCtx.person_a || null,
+        intent_goal:          intentGoal
+      };
+      _simInitialMsg = '';
+      _simHistory    = [];
+      _simTurn       = 0;
+
+      document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
+      document.getElementById('rp-turn').textContent = '';
+      document.getElementById('rp-messages').innerHTML = '';
+      document.getElementById('rp-input').value = '';
+      _userPrediction = null;
+      document.getElementById('rp-suggest').classList.add('hidden');
+      document.getElementById('rp-debrief').classList.add('hidden');
+      document.getElementById('rp-prediction-result').classList.add('hidden');
+      document.getElementById('rp-debrief-actions').classList.add('hidden');
+      document.getElementById('rp-share-row').classList.add('hidden');
+      document.getElementById('rp-next-move').classList.add('hidden');
+      document.querySelector('.roleplay-card').classList.remove('debrief-active');
+      document.getElementById('rp-correction').classList.add('hidden');
+      document.getElementById('rp-correction-input').value = '';
+      document.getElementById('rp-real-outcome').classList.add('hidden');
+      document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-real-outcome-text').value = '';
+      document.getElementById('rp-real-outcome-saved').classList.add('hidden');
+      document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('rp-footer').classList.remove('hidden');
+      document.getElementById('simulationModal').classList.remove('hidden');
+
+      _rpAppendBubble('system', `↩ Replay mode: "${keyMoment || 'past conversation'}"\nGoal: ${intentGoal}`);
+    }
+
     function selectMode(mode, clearContext = false) {
       hideAllMainSections();
       App.state.currentScreen = 'compose';
@@ -5773,6 +5934,7 @@
                       <span class="tl-date">${escH(shortDate)}</span>
                       ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
                       ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
+                      ${(cv.fields?.emotional_tone || cv.fields?.key_moment) ? `<button class="tl-replay-btn" data-conv-id="${escH(cv.id)}" title="Replay from this point">↩ Replay</button>` : ''}
                       <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Delete">Delete</button>
                     </div>
                     ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
@@ -5830,6 +5992,13 @@
               btn.closest('.tl-item').remove();
               allConvData = allConvData.filter(x => x.id !== btn.dataset.convId);
             } catch { showToast('Could not delete. Try again.', 'error'); }
+          });
+        });
+
+        el.querySelectorAll('.tl-replay-btn[data-conv-id]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            openReplayPicker(btn.dataset.convId, activeContactContext, convs);
           });
         });
 
