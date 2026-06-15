@@ -7062,7 +7062,7 @@
 
     // ── Share card ────────────────────────────────────────────────────────────
     function showSharePreview() {
-      console.log('[share] showSharePreview called, _simHistory length:', (_simHistory||[]).length);
+      showToast('Share: ' + (_simHistory||[]).length + ' messages', 'info');
       const msgs = (_simHistory || []).slice(-6);
       if (!msgs.length) { console.log('[share] no messages — _simHistory:', _simHistory); showToast('Nothing to share yet', 'error'); return; }
       const name = _simCharacter?.name || 'them';
