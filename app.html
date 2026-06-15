@@ -1882,6 +1882,19 @@
     .tl-sit { font-size: .79rem; color: var(--fg); line-height: 1.5; }
     .tl-state { font-size: .64rem; font-weight: 700; }
     .tl-what-changed { font-size: .72rem; color: var(--sec); margin-top: 4px; line-height: 1.5; font-style: italic; }
+    .tl-key-moment { font-size: .71rem; color: var(--muted); margin-top: 4px; line-height: 1.5; font-style: italic; }
+    .tl-badges-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+    .tl-timeline-header { font-size: .69rem; color: var(--muted); margin-bottom: 10px; }
+    .tl-outcome-badge { font-size: .67rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+    .tl-outcome-accurate { background: rgba(32,212,122,.15); color: #20d47a; }
+    .tl-outcome-partial { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .tl-outcome-inaccurate { background: rgba(239,68,68,.15); color: #ef4444; }
+    .tl-confidence-badge { font-size: .67rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+    .tl-conf-high { background: rgba(32,212,122,.12); color: #20d47a; }
+    .tl-conf-medium { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .tl-conf-low { background: rgba(148,163,184,.12); color: #94a3b8; }
+    .tl-import-badge { font-size: .67rem; padding: 2px 8px; border-radius: 20px; background: rgba(96,165,250,.12); color: #60a5fa; font-weight: 600; }
+    .tl-emotion { font-size: .67rem; padding: 2px 8px; border-radius: 20px; background: rgba(255,255,255,.06); color: var(--sec); }
 
     /* ── Relationship Journey ── */
     .journey-bar {
@@ -5345,7 +5358,11 @@
                 recommended_next:  data.recommended_next  || null,
                 observed_patterns: patterns.length ? patterns : null,
                 relationship_state: patchBody.relationship_state || null,
-                what_changed:      data.what_changed || null
+                what_changed:      data.what_changed      || null,
+                confidence_score:  data.confidence_score  || null,
+                confidence_label:  data.confidence_label  || null,
+                char_count:        data.char_count        || null,
+                message_count:     data.message_count     || null
               }
             })
           });
@@ -5727,25 +5744,51 @@
           <div id="personUpdatePanel" class="person-section-panel hidden"></div>
 
           <div id="personHistoryPanel" class="person-section-panel hidden">
-            ${convs.length ? `<div class="contact-timeline">${convs.map(cv => {
-              const cat = appData?.categories?.find(x => x.id === cv.category_id);
-              const shortDate = new Date(cv.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
-              const sit = (cv.situation || '').trim();
-              const sitPreview = sit.slice(0, 72) + (sit.length > 72 ? '…' : '');
-              return `<div class="tl-item" data-conv-id="${escH(cv.id)}">
-                <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
-                <div class="tl-content">
-                  <div class="tl-meta">
-                    <span class="tl-date">${escH(shortDate)}</span>
-                    ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
-                    ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
-                    <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Delete">Delete</button>
+            ${(() => {
+              if (!convs.length) return `<p style="color:var(--sec);font-size:.82rem">No conversations yet.</p>`;
+              const importCount = convs.filter(c => (c.situation||'').startsWith('WhatsApp history')).length;
+              const allDates = convs.map(c => new Date(c.created_at)).filter(d => !isNaN(d));
+              const fmtD = d => d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+              const earliest = allDates.length ? fmtD(new Date(Math.min(...allDates))) : '';
+              const latest   = allDates.length ? fmtD(new Date(Math.max(...allDates))) : '';
+              const tlHeader = `<div class="tl-timeline-header">${convs.length} snapshot${convs.length!==1?'s':''}`
+                + (importCount ? ` · ${importCount} import${importCount!==1?'s':''}` : '')
+                + ` · ${earliest} → ${latest}</div>`;
+              const outcomePills = { accurate:['tl-outcome-accurate','✅ Accurate'], partial:['tl-outcome-partial','⚠️ Partial'], inaccurate:['tl-outcome-inaccurate','❌ Off'] };
+              const items = convs.map(cv => {
+                const cat = appData?.categories?.find(x => x.id === cv.category_id);
+                const shortDate = new Date(cv.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+                const sit = (cv.situation || '').trim();
+                const sitPreview = sit.slice(0,72) + (sit.length>72?'…':'');
+                const isImport = sit.startsWith('WhatsApp history');
+                const score = cv.fields?.confidence_score;
+                const confCls = score>=80?'tl-conf-high':score>=50?'tl-conf-medium':'tl-conf-low';
+                const confLbl = score>=80?'● High':score>=50?'● Med':'● Low';
+                const [outCls,outLbl] = outcomePills[cv.fields?.last_outcome]||[];
+                const km = (cv.fields?.key_moment||'').slice(0,100);
+                return `<div class="tl-item" data-conv-id="${escH(cv.id)}">
+                  <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+                  <div class="tl-content">
+                    <div class="tl-meta">
+                      <span class="tl-date">${escH(shortDate)}</span>
+                      ${cat ? `<span class="tl-cat-badge">${escH(cat.icon||'')} ${escH(cat.name)}</span>` : ''}
+                      ${cv.fields?.relationship_state ? `<span class="tl-state ${_stateClass(cv.fields.relationship_state)}">${escH(cv.fields.relationship_state)}</span>` : ''}
+                      <button class="tl-del-btn" data-conv-id="${escH(cv.id)}" title="Delete">Delete</button>
+                    </div>
+                    ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
+                    ${km ? `<div class="tl-key-moment">💡 ${escH(km)}</div>` : ''}
+                    ${cv.fields?.what_changed ? `<div class="tl-what-changed">${escH(cv.fields.what_changed)}</div>` : ''}
+                    <div class="tl-badges-row">
+                      ${isImport ? '<span class="tl-import-badge">📱 Import</span>' : ''}
+                      ${score ? `<span class="tl-confidence-badge ${confCls}">${confLbl}</span>` : ''}
+                      ${cv.fields?.emotional_tone ? `<span class="tl-emotion">${escH(cv.fields.emotional_tone)}</span>` : ''}
+                      ${outCls ? `<span class="tl-outcome-badge ${outCls}">${outLbl}</span>` : ''}
+                    </div>
                   </div>
-                  ${sitPreview ? `<div class="tl-sit">${escH(sitPreview)}</div>` : ''}
-                  ${cv.fields?.what_changed ? `<div class="tl-what-changed">${escH(cv.fields.what_changed)}</div>` : ''}
-                </div>
-              </div>`;
-            }).join('')}</div>` : `<p style="color:var(--sec);font-size:.82rem">No conversations yet.</p>`}
+                </div>`;
+              }).join('');
+              return `${tlHeader}<div class="contact-timeline">${items}</div>`;
+            })()}
           </div>
 
           <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
@@ -6964,6 +7007,21 @@
         if (!patchR.ok) throw new Error('Save failed');
         _simCharacter.character_profile = updatedProfile;
         if (activeContactContext?.id === contactId) activeContactContext.character_profile = updatedProfile;
+        // Fire-and-forget: record outcome on the most recent WhatsApp import conversation
+        fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            const latest = (d?.conversations || [])
+              .filter(c => (c.situation||'').startsWith('WhatsApp history'))
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+            if (latest?.id) {
+              fetch(`/api/conversations/${latest.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                body: JSON.stringify({ fields: { last_outcome: _selectedOutcome } })
+              }).catch(() => {});
+            }
+          }).catch(() => {});
         saveBtn.classList.add('hidden');
         savedEl.classList.remove('hidden');
       } catch (e) {

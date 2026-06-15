@@ -1533,6 +1533,28 @@ app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
   } catch (e) { console.error('[conv DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
 
+app.patch('/api/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+    if (!fields || typeof fields !== 'object') return res.status(400).json({ error: 'fields required' });
+    const cur = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=fields`, {
+      headers: sbHeaders(req.token)
+    });
+    if (!cur.ok) return res.status(404).json({ error: 'not found' });
+    const rows = await cur.json();
+    if (!Array.isArray(rows) || !rows.length) return res.status(404).json({ error: 'not found' });
+    const merged = { ...(rows[0].fields || {}), ...fields };
+    const r = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify({ fields: merged })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) { console.error('[conv PATCH]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 // ── Contacts ───────────────────────────────────────────────────
 // SQL to run in Supabase SQL Editor before using these endpoints:
 //   CREATE TABLE IF NOT EXISTS contacts (
@@ -1648,7 +1670,7 @@ app.get('/api/contacts', requireAuth, async (req, res) => {
 app.get('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
     const [cr, convr] = await Promise.all([
-      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile,source,created_at,updated_at`,
+      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile,source,created_at,updated_at,confidence_score,last_outcome,last_outcome_at`,
         { headers: sbHeaders(req.token) }),
       fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,fields,created_at`,
         { headers: sbHeaders(req.token) })
