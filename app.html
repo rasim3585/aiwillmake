@@ -7062,8 +7062,9 @@
 
     // ── Share card ────────────────────────────────────────────────────────────
     function showSharePreview() {
+      console.log('[share] showSharePreview called, _simHistory length:', (_simHistory||[]).length);
       const msgs = (_simHistory || []).slice(-6);
-      if (!msgs.length) { showToast('Nothing to share yet', 'error'); return; }
+      if (!msgs.length) { console.log('[share] no messages — _simHistory:', _simHistory); showToast('Nothing to share yet', 'error'); return; }
       const name = _simCharacter?.name || 'them';
       const rel  = _simCharacter?.type  || 'them';
       const listEl = document.getElementById('shareMessagesList');
@@ -7078,7 +7079,7 @@
         who.className = 'share-msg-who'; who.textContent = isUser ? 'Me' : `[${rel}]`;
         const txt = document.createElement('span');
         txt.className = 'share-msg-text';
-        txt.textContent = (msg.content || '').slice(0, 90) + (msg.content?.length > 90 ? '…' : '');
+        txt.textContent = (msg.content || '').slice(0, 90) + ((msg.content?.length || 0) > 90 ? '…' : '');
         row.appendChild(cb); row.appendChild(who); row.appendChild(txt);
         listEl.appendChild(row);
       });
