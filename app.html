@@ -7084,6 +7084,7 @@
         listEl.appendChild(row);
       });
       const genBtn = document.getElementById('shareGenerateBtn');
+      if (!genBtn) { showToast('Share error: button not found', 'error'); return; }
       const freshBtn = genBtn.cloneNode(true);
       genBtn.replaceWith(freshBtn);
       freshBtn.addEventListener('click', () => generateShareCard(msgs));
