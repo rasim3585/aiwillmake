@@ -911,6 +911,25 @@
       cursor: pointer; flex-shrink: 0; align-self: flex-end; transition: opacity .15s;
     }
     .roleplay-send:disabled { opacity: .45; cursor: default; }
+    .rp-mic-btn {
+      background: transparent; border: 1px solid #2a2a2a; color: #555;
+      border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 16px;
+      flex-shrink: 0; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    }
+    .rp-mic-btn:hover { border-color: #ff6b35; color: #ff6b35; }
+    .rp-mic-btn.listening { background: rgba(255,107,53,0.15); border-color: #ff6b35; color: #ff6b35; animation: micPulse 1s infinite; }
+    .rp-mic-btn.disabled-mic { opacity: 0.3; cursor: not-allowed; }
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(255,107,53,0); }
+    }
+    .rp-tts-btn {
+      background: transparent; border: 1px solid #2a2a2a; color: #555;
+      border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 14px;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .rp-tts-btn.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
+    .rp-tts-btn:hover { border-color: #818cf8; color: #818cf8; }
     .rp-debrief-card {
       margin: 0 16px 4px; padding: 14px 16px; border-radius: 12px;
       background: rgba(212,113,90,.07); border: 1px solid rgba(212,113,90,.22);
@@ -2388,8 +2407,10 @@
         <button id="rp-correction-save" class="rp-correction-save">Save correction</button>
       </div>
       <div class="roleplay-footer" id="rp-footer">
-        <textarea class="roleplay-input" id="rp-input" placeholder="Write your next message…" rows="1"></textarea>
+        <button class="rp-mic-btn" id="rp-mic-btn" title="Hold to speak">🎤</button>
+        <textarea class="roleplay-input" id="rp-input" placeholder="Type or speak your message…" rows="1"></textarea>
         <button class="roleplay-send" id="rp-send">Send →</button>
+        <button class="rp-tts-btn" id="rp-tts-btn" title="Toggle voice replies">🔊</button>
       </div>
     </div>
   </div>
@@ -4881,6 +4902,11 @@
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      if (_isListening && _recognition) _recognition.stop();
+      window.speechSynthesis.cancel();
+      _ttsEnabled = false;
+      const _ttsBtnElFresh = document.getElementById('rp-tts-btn');
+      if (_ttsBtnElFresh) _ttsBtnElFresh.classList.remove('active');
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
       if (intentGoal) {
@@ -6916,6 +6942,7 @@
         if (!resp.ok) throw new Error(data.error || 'Failed');
         _simHistory.push({ role: 'assistant', content: data.reply });
         _rpAppendBubble('other', data.reply);
+        _rpSpeak(data.reply);
         _simTurn++;
         document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
@@ -6943,6 +6970,11 @@
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
+      if (_isListening && _recognition) _recognition.stop();
+      window.speechSynthesis.cancel();
+      _ttsEnabled = false;
+      const _ttsBtnEl = document.getElementById('rp-tts-btn');
+      if (_ttsBtnEl) _ttsBtnEl.classList.remove('active');
     }
 
     async function endSimulation() {
@@ -7433,6 +7465,100 @@
       _rpInput.value = '';
       _rpCallSimulate();
     });
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Voice Input (Speech Recognition) ─────────────────────────────────────
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let _recognition = null;
+    let _ttsEnabled = false;
+    let _isListening = false;
+
+    const micBtn = document.getElementById('rp-mic-btn');
+    const ttsBtn = document.getElementById('rp-tts-btn');
+
+    if (!SpeechRecognition) {
+      micBtn.classList.add('disabled-mic');
+      micBtn.title = 'Voice input not supported in this browser';
+      micBtn.style.pointerEvents = 'none';
+    } else {
+      _recognition = new SpeechRecognition();
+      _recognition.continuous = false;
+      _recognition.interimResults = true;
+      _recognition.lang = 'en-US';
+
+      _recognition.onstart = () => {
+        _isListening = true;
+        micBtn.classList.add('listening');
+        micBtn.textContent = '🔴';
+        document.getElementById('rp-input').placeholder = 'Listening…';
+      };
+
+      _recognition.onresult = (event) => {
+        const transcript = Array.from(event.results).map(r => r[0].transcript).join('');
+        const inp = document.getElementById('rp-input');
+        inp.value = transcript;
+        inp.style.height = 'auto';
+        inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+      };
+
+      _recognition.onend = () => {
+        _isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤';
+        document.getElementById('rp-input').placeholder = 'Type or speak your message…';
+        const val = document.getElementById('rp-input').value.trim();
+        if (val) setTimeout(() => _rpSend.click(), 400);
+      };
+
+      _recognition.onerror = (event) => {
+        _isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤';
+        if (event.error !== 'no-speech') showToast('Voice input error: ' + event.error, 'error');
+      };
+
+      micBtn.addEventListener('click', () => {
+        if (_isListening) {
+          _recognition.stop();
+        } else {
+          const lang = (typeof lastFields !== 'undefined' && lastFields.language) || 'English';
+          const langMap = {
+            'Turkish': 'tr-TR', 'English': 'en-US', 'Spanish': 'es-ES',
+            'French': 'fr-FR', 'German': 'de-DE', 'Italian': 'it-IT',
+            'Portuguese': 'pt-BR', 'Arabic': 'ar-SA'
+          };
+          _recognition.lang = langMap[lang] || 'en-US';
+          try { _recognition.start(); } catch(e) { showToast('Could not start voice input', 'error'); }
+        }
+      });
+    }
+
+    // ── Text-to-Speech (AI replies read aloud) ────────────────────────────────
+    ttsBtn.addEventListener('click', () => {
+      _ttsEnabled = !_ttsEnabled;
+      ttsBtn.classList.toggle('active', _ttsEnabled);
+      ttsBtn.title = _ttsEnabled ? 'Voice replies: ON' : 'Voice replies: OFF';
+      if (!_ttsEnabled) {
+        window.speechSynthesis.cancel();
+      } else {
+        showToast('Voice replies on — AI will speak', 'info');
+      }
+    });
+
+    function _rpSpeak(text) {
+      if (!_ttsEnabled || !text) return;
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Natural'))
+      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+      if (preferred) utt.voice = preferred;
+      utt.rate = 0.95; utt.pitch = 1.0; utt.volume = 1.0;
+      window.speechSynthesis.speak(utt);
+    }
+
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     // ─────────────────────────────────────────────────────────────────────────
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); initConvSearch(); });
