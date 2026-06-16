@@ -526,9 +526,11 @@
     #sandboxSend:disabled { opacity: .4; cursor: not-allowed; }
     .sandbox-upgrade { border-top: 1px solid #1e1e1e; padding: 16px; background: rgba(255,107,53,0.04); }
     .sandbox-upgrade.hidden { display: none; }
-    .sandbox-upgrade-text { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 12px; }
-    .sandbox-upgrade-text strong { color: #fff; }
-    .sandbox-upgrade-text em { color: #ff6b35; font-style: normal; }
+    .sandbox-upgrade-hook { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .sandbox-upgrade-real { font-size: 14px; color: #888; margin-bottom: 8px; }
+    .sandbox-upgrade-real span { color: #ff6b35; font-weight: 700; }
+    .sandbox-upgrade-desc { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+    .sandbox-upgrade-desc em { color: #fff; font-style: normal; font-weight: 700; }
     .sandbox-upgrade-btn { display: block; background: #ff6b35; color: #000; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
   </style>
 </head>
@@ -623,10 +625,10 @@
             <span></span><span></span><span></span>
           </div>
           <div class="sandbox-upgrade hidden" id="sandboxUpgrade">
-            <div class="sandbox-upgrade-text">
-              <strong>That was a taste.</strong> The real app remembers this person across every conversation — their patterns, history, what changed since last time. The AI plays them with actual context, not a generic script. <em>Try 5 full analyses free.</em>
-            </div>
-            <a href="app.html" class="sandbox-upgrade-btn">Start free — no card needed →</a>
+            <div class="sandbox-upgrade-hook">🔥 This is just a generic AI.</div>
+            <div class="sandbox-upgrade-real">Your real <span id="sandbox-upgrade-type"></span> would be completely different.</div>
+            <div class="sandbox-upgrade-desc">Upload your actual WhatsApp history → the AI becomes <em>them</em>. Their words. Their patterns. Their exact reactions.</div>
+            <a href="app.html" class="sandbox-upgrade-btn">Start with your real person →</a>
           </div>
           <div class="sandbox-input-row" id="sandboxInputRow">
             <textarea id="sandboxInput" placeholder="Type your message…" rows="1"></textarea>
@@ -801,7 +803,8 @@
     client:  { emoji: '🤝', name: 'David',   role: 'Difficult Client', startMsg: "I'm not happy with where this project is heading. We need to discuss the timeline." },
     ex:      { emoji: '💔', name: 'Alex',    role: 'Your Ex', startMsg: "Hey. I've been thinking about us. Do you have a minute to talk?" }
   };
-  const LIMIT = 6;
+  const LIMIT = 4;
+  const CHAR_ROLES = { boss: 'boss', mom: 'mom', partner: 'partner', client: 'client', ex: 'ex' };
 
   let currentChar = null;
   let sandboxHistory = [];
@@ -894,6 +897,7 @@
       appendMsg('ai', reply);
 
       if (turnCount >= LIMIT) {
+        document.getElementById('sandbox-upgrade-type').textContent = CHAR_ROLES[currentChar] || 'person';
         upgrade.classList.remove('hidden');
         inputRow.style.display = 'none';
       }
