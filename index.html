@@ -532,6 +532,9 @@
     .sandbox-upgrade-desc { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 16px; }
     .sandbox-upgrade-desc em { color: #fff; font-style: normal; font-weight: 700; }
     .sandbox-upgrade-btn { display: block; background: #ff6b35; color: #000; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
+    .sandbox-char-real { border-color: #ff6b35 !important; background: rgba(255,107,53,0.06) !important; grid-column: 1 / -1; }
+    .sandbox-char-real .sandbox-char-name { color: #ff6b35 !important; }
+    .sandbox-char-real:hover { background: rgba(255,107,53,0.12) !important; }
   </style>
 </head>
 <body>
@@ -604,6 +607,11 @@
             <div class="sandbox-char-emoji">💔</div>
             <div class="sandbox-char-name">Alex, Your Ex</div>
             <div class="sandbox-char-desc">Complicated history. Practice saying what you actually mean — or letting go.</div>
+          </button>
+          <button class="sandbox-char-btn sandbox-char-real" data-char="real">
+            <span class="sandbox-char-emoji">👤</span>
+            <span class="sandbox-char-name">Someone You Know</span>
+            <span class="sandbox-char-desc">Upload your real chat history. The AI becomes them.</span>
           </button>
         </div>
 
@@ -837,6 +845,7 @@
   }
 
   function openChar(key) {
+    if (key === 'real') { window.location.href = 'app.html'; return; }
     const c = CHARS[key];
     currentChar = key;
     sandboxHistory = [];
