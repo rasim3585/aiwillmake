@@ -930,19 +930,21 @@
     }
     .rp-tts-btn.active { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.1); }
     .rp-tts-btn:hover { border-color: #818cf8; color: #818cf8; }
-    .rp-debrief-card {
-      margin: 0 16px 4px; padding: 14px 16px; border-radius: 12px;
-      background: rgba(212,113,90,.07); border: 1px solid rgba(212,113,90,.22);
-      font-size: .86rem; line-height: 1.65; color: var(--text);
-      animation: fadeUp .25s ease both; flex-shrink: 0;
-    }
-    .rp-debrief-label {
-      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-      color: var(--accent); margin-bottom: 8px;
-    }
-    .rp-debrief-actions {
-      display: flex; gap: 8px; padding: 10px 16px 4px; flex-shrink: 0;
-    }
+    .rp-debrief-primary { padding: 20px; border-bottom: 1px solid var(--bord); }
+    .rp-debrief-coaching { font-size: 15px; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
+    .rp-debrief-secondary { padding: 16px 20px; border-bottom: 1px solid var(--bord); display: flex; flex-direction: column; gap: 16px; }
+    .rp-accuracy-row { display: flex; align-items: center; justify-content: space-between; }
+    .rp-accuracy-label { font-size: 13px; color: var(--sec); }
+    .rp-stars { display: flex; gap: 4px; }
+    .rp-star { background: none; border: none; font-size: 22px; color: #333; cursor: pointer; transition: color 0.15s; padding: 0 2px; font-family: inherit; }
+    .rp-star.selected, .rp-star:hover { color: #ff6b35; }
+    .rp-debrief-tertiary { padding: 12px 20px; border-bottom: 1px solid var(--bord); }
+    .rp-correction-toggle { background: none; border: none; color: #444; font-size: 12px; cursor: pointer; padding: 0; font-family: inherit; }
+    .rp-correction-toggle:hover { color: var(--accent); }
+    .rp-debrief-actions { padding: 16px 20px; display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+    .rp-debrief-actions button { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--bord); background: transparent; color: var(--sec); transition: all 0.15s; font-family: inherit; }
+    #rp-again-btn { background: var(--accent) !important; color: #000 !important; border-color: var(--accent) !important; }
+    #rp-done-btn { color: #555 !important; }
     .rp-correction {
       margin: 0 16px 14px; padding: 12px 14px; border-radius: 10px;
       background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
@@ -973,20 +975,12 @@
     .rp-tactic-btn:hover { border-color: var(--accent); color: var(--text); }
     .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
     .roleplay-card.debrief-active { overflow-y: auto; }
-    .rp-again-btn {
-      flex: 1; border: 1px solid var(--bord); border-radius: var(--r-sm);
-      padding: 8px 14px; background: transparent; color: var(--text);
-      font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
-      transition: background .15s, border-color .15s;
-    }
-    .rp-again-btn:hover { background: var(--surf2); border-color: var(--bord2); }
-    .rp-done-btn {
-      flex: 1; border: 1px solid var(--borda); border-radius: var(--r-sm);
-      padding: 8px 14px; background: rgba(212,113,90,.1); color: var(--accent);
-      font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
-      transition: background .15s;
-    }
-    .rp-done-btn:hover { background: rgba(212,113,90,.2); }
+    .rp-bubble-history { opacity: 0.45; font-size: 13px; }
+    .rp-date-divider { text-align: center; font-size: 11px; color: #444; letter-spacing: 1px; padding: 8px 0; position: relative; }
+    .rp-date-divider::before, .rp-date-divider::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: #222; }
+    .rp-date-divider::before { left: 0; }
+    .rp-date-divider::after { right: 0; }
+    .rp-new-session { color: #ff6b35; }
     .rp-real-outcome {
       margin: 10px 16px 0; padding: 12px 14px; border-radius: 10px;
       background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
@@ -2363,48 +2357,58 @@
       <div class="roleplay-suggest hidden" id="rp-suggest">
         <button class="roleplay-suggest-btn" id="rp-suggest-btn">End &amp; see how it went →</button>
       </div>
-      <div class="rp-debrief-card hidden" id="rp-debrief">
-        <div class="rp-debrief-label">How it went</div>
-        <div id="rp-debrief-text"></div>
-      </div>
-      <div class="rp-prediction-result hidden" id="rp-prediction-result">
-        <div class="rp-prediction-result-label">Your prediction</div>
-        <div id="rp-prediction-result-text"></div>
-      </div>
-      <div class="rp-next-move-card hidden" id="rp-next-move">
-        <div class="rp-next-move-label">Your next real move</div>
-        <div class="rp-next-move-message" id="rp-next-move-message"></div>
-        <div class="rp-next-move-advice" id="rp-next-move-advice"></div>
-        <div class="rp-next-move-btns">
-          <button type="button" class="rp-copy-btn" id="rp-copy-btn">Copy message</button>
-          <button type="button" class="rp-tactic-btn" id="rp-tactic-btn">Try a different tactic</button>
+      <div id="rp-debrief" class="hidden">
+        <div class="rp-prediction-result hidden" id="rp-prediction-result">
+          <div class="rp-prediction-result-label">Your prediction</div>
+          <div id="rp-prediction-result-text"></div>
         </div>
-      </div>
-      <div class="rp-debrief-actions hidden" id="rp-debrief-actions">
-        <button class="rp-again-btn" id="rp-again-btn">Practice again</button>
-        <button class="rp-done-btn" id="rp-done-btn">Close</button>
-      </div>
-      <div class="rp-real-outcome hidden" id="rp-real-outcome">
-        <div class="rp-real-outcome-label">Had the real conversation?</div>
-        <div class="rp-real-outcome-btns">
-          <button class="rp-outcome-btn" data-outcome="accurate">✅ AI was right</button>
-          <button class="rp-outcome-btn" data-outcome="partial">⚠️ Partially right</button>
-          <button class="rp-outcome-btn" data-outcome="inaccurate">❌ AI was wrong</button>
+        <div class="rp-debrief-primary">
+          <div class="rp-debrief-coaching" id="rp-debrief-text"></div>
+          <div class="rp-next-move-card hidden" id="rp-next-move">
+            <div class="rp-next-move-label">Your next message</div>
+            <div class="rp-next-move-message" id="rp-next-move-message"></div>
+            <div class="rp-next-move-advice" id="rp-next-move-advice"></div>
+            <button type="button" class="rp-copy-btn" id="rp-copy-btn">Copy message</button>
+          </div>
         </div>
-        <div class="rp-real-outcome-detail hidden" id="rp-real-outcome-detail">
-          <textarea id="rp-real-outcome-text" placeholder="What was different in real life? (optional)" rows="3"></textarea>
-          <button id="rp-real-outcome-save" class="rp-real-outcome-save">Save &amp; improve AI twin</button>
-          <div class="rp-real-outcome-saved hidden" id="rp-real-outcome-saved">✓ Saved — AI twin updated</div>
+        <div class="rp-debrief-secondary">
+          <div class="rp-accuracy-row">
+            <span class="rp-accuracy-label">How accurate was the AI?</span>
+            <div class="rp-stars" id="rp-accuracy-stars">
+              <button class="rp-star" data-val="1">★</button>
+              <button class="rp-star" data-val="2">★</button>
+              <button class="rp-star" data-val="3">★</button>
+              <button class="rp-star" data-val="4">★</button>
+              <button class="rp-star" data-val="5">★</button>
+            </div>
+          </div>
+          <div class="rp-real-outcome hidden" id="rp-real-outcome">
+            <div class="rp-real-outcome-label">Had the real conversation?</div>
+            <div class="rp-real-outcome-btns">
+              <button class="rp-outcome-btn" data-outcome="accurate">✅ AI was right</button>
+              <button class="rp-outcome-btn" data-outcome="partial">⚠️ Partially right</button>
+              <button class="rp-outcome-btn" data-outcome="inaccurate">❌ AI was wrong</button>
+            </div>
+            <div class="rp-real-outcome-detail hidden" id="rp-real-outcome-detail">
+              <textarea id="rp-real-outcome-text" placeholder="What was different?" rows="2"></textarea>
+              <button id="rp-real-outcome-save" class="rp-real-outcome-save">Save &amp; improve AI twin</button>
+              <div class="rp-real-outcome-saved hidden" id="rp-real-outcome-saved">✓ Saved</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="rp-share-row hidden" id="rp-share-row">
-        <button type="button" class="rp-share-btn" id="rp-share-btn">📤 Share this simulation</button>
-        <button type="button" class="rp-strategy-btn" id="rp-strategy-btn">📋 Download Strategy Card</button>
-      </div>
-      <div class="rp-correction hidden" id="rp-correction">
-        <div class="rp-correction-label">Anything I got wrong about <span id="rp-correction-name"></span>? <span style="opacity:.55">(optional)</span></div>
-        <textarea id="rp-correction-input" class="rp-correction-input" placeholder='e.g. "Kemal is my son, not Mert&apos;s. Mert left his job last month."' rows="2"></textarea>
-        <button id="rp-correction-save" class="rp-correction-save">Save correction</button>
+        <div class="rp-debrief-tertiary">
+          <button class="rp-correction-toggle" id="rp-correction-toggle">+ Add a correction about them</button>
+          <div class="rp-correction hidden" id="rp-correction">
+            <textarea id="rp-correction-input" class="rp-correction-input" placeholder='e.g. "Yağmur is his wife, not his sister"' rows="2"></textarea>
+            <button id="rp-correction-save" class="rp-correction-save">Save correction</button>
+          </div>
+        </div>
+        <div class="rp-debrief-actions" id="rp-debrief-actions">
+          <button id="rp-again-btn">Practice again</button>
+          <button id="rp-share-btn">Share</button>
+          <button id="rp-strategy-btn">Strategy card</button>
+          <button id="rp-done-btn">Close</button>
+        </div>
       </div>
       <div class="roleplay-footer" id="rp-footer">
         <button class="rp-mic-btn" id="rp-mic-btn" title="Hold to speak">🎤</button>
@@ -4876,7 +4880,7 @@
       }
     }
 
-    function openSimulatorFresh(contactCtx, intentGoal) {
+    async function openSimulatorFresh(contactCtx, intentGoal) {
       _simCharacter = contactCtx
         ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null }
         : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null };
@@ -4890,9 +4894,6 @@
       _userPrediction = null;
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
-      document.getElementById('rp-prediction-result').classList.add('hidden');
-      document.getElementById('rp-debrief-actions').classList.add('hidden');
-      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
@@ -4902,12 +4903,43 @@
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       if (_isListening && _recognition) _recognition.stop();
       window.speechSynthesis.cancel();
       _ttsEnabled = false;
       const _ttsBtnElFresh = document.getElementById('rp-tts-btn');
       if (_ttsBtnElFresh) _ttsBtnElFresh.classList.remove('active');
       document.getElementById('rp-footer').classList.remove('hidden');
+
+      if (_simCharacter.contact_id && accessToken) {
+        try {
+          const r = await fetch(`/api/contacts/${_simCharacter.contact_id}/simulations`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+          if (r.ok) {
+            const sessions = await r.json();
+            const container = document.getElementById('rp-messages');
+            for (const session of sessions) {
+              const date = new Date(session.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+              const divider = document.createElement('div');
+              divider.className = 'rp-date-divider';
+              divider.textContent = date;
+              container.appendChild(divider);
+              for (const msg of (session.messages || [])) {
+                const el = document.createElement('div');
+                el.className = `rp-bubble rp-bubble-history ${msg.role === 'sent' ? 'user' : 'other'}`;
+                el.textContent = msg.content;
+                container.appendChild(el);
+              }
+            }
+            if (sessions.length > 0) {
+              const newDiv = document.createElement('div');
+              newDiv.className = 'rp-date-divider rp-new-session';
+              newDiv.textContent = 'Today — New practice';
+              container.appendChild(newDiv);
+            }
+          }
+        } catch (e) { /* silent */ }
+      }
+
       document.getElementById('simulationModal').classList.remove('hidden');
       if (intentGoal) {
         const noteEl = document.createElement('div');
@@ -5019,9 +5051,6 @@
       _userPrediction = null;
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
-      document.getElementById('rp-prediction-result').classList.add('hidden');
-      document.getElementById('rp-debrief-actions').classList.add('hidden');
-      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
@@ -5031,6 +5060,7 @@
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
@@ -6896,9 +6926,6 @@
       document.getElementById('rp-input').value = '';
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
-      document.getElementById('rp-prediction-result').classList.add('hidden');
-      document.getElementById('rp-debrief-actions').classList.add('hidden');
-      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
@@ -6908,6 +6935,7 @@
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
 
@@ -6978,14 +7006,16 @@
       document.getElementById('simulationModal').classList.add('hidden');
       document.getElementById('sharePreviewModal').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
+      document.getElementById('rp-debrief').classList.add('hidden');
+      document.getElementById('rp-next-move').classList.add('hidden');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
-      document.getElementById('rp-share-row').classList.add('hidden');
       document.getElementById('rp-real-outcome').classList.add('hidden');
       document.getElementById('rp-real-outcome-detail').classList.add('hidden');
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
       if (_isListening && _recognition) _recognition.stop();
       window.speechSynthesis.cancel();
@@ -7014,7 +7044,7 @@
         if (!resp.ok) throw new Error(data.error || 'Failed');
         debriefTextEl.textContent = data.debrief;
 
-        // ── Reaction Bet result ──────────────────────────────────────
+        // ── Reaction Bet result (internal only, not displayed) ───────
         if (_userPrediction) {
           const debriefLower = (data.debrief || '').toLowerCase();
           const positiveHints = ['warm', 'opened up', 'receptive', 'engaged', 'connected', 'responded well', 'sıcak', 'olumlu', 'açıldı', 'positive'];
@@ -7025,11 +7055,9 @@
           const outcomeLabelMap = { positive: 'Olumlu karşıladı', resistant: 'Direnç gösterdi', deflect: 'Konuyu geçiştirdi' };
           const personName = _simCharacter?.name || 'Karşı taraf';
           const isMatch = outcomeKey === _userPrediction.key;
-          const predEl = document.getElementById('rp-prediction-result');
           document.getElementById('rp-prediction-result-text').innerHTML =
             `<p style="margin:0 0 5px">Sen: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simülasyon: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
             `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `${personName}'i iyi tanıyorsun! ✓` : `${personName} seni şaşırttı.`}</p>`;
-          predEl.classList.remove('hidden');
         }
         // ────────────────────────────────────────────────────────────
 
@@ -7038,13 +7066,9 @@
           document.getElementById('rp-next-move-message').textContent = data.next_move.message;
           document.getElementById('rp-next-move-advice').textContent = data.next_move.advice || '';
           document.getElementById('rp-next-move').classList.remove('hidden');
-
           const copyBtn = document.getElementById('rp-copy-btn');
-          const tacticBtn = document.getElementById('rp-tactic-btn');
           const newCopy = copyBtn.cloneNode(true);
-          const newTactic = tacticBtn.cloneNode(true);
           copyBtn.replaceWith(newCopy);
-          tacticBtn.replaceWith(newTactic);
           const msgToCopy = data.next_move.message;
           newCopy.addEventListener('click', () => {
             if (navigator.clipboard) {
@@ -7053,10 +7077,38 @@
               showToast('Copying not supported', 'error');
             }
           });
-          newTactic.addEventListener('click', () => {
-            document.getElementById('simulationModal').classList.add('hidden');
-            App.navigateTo('strategy');
-          });
+        }
+        // ────────────────────────────────────────────────────────────
+
+        // ── Fire-and-forget: save session to Supabase ────────────────
+        if (accessToken && _simHistory.length > 0) {
+          (async () => {
+            try {
+              const convResp = await fetch('/api/conversations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                body: JSON.stringify({
+                  contact_id: _simCharacter.contact_id || null,
+                  categoryId: 'simulation',
+                  situation: `Practice session with ${_simCharacter.name}`,
+                  fields: { session_type: 'simulation', turn_count: _simTurn, intent_goal: _simCharacter.intent_goal || null }
+                })
+              });
+              if (!convResp.ok) return;
+              const convData = await convResp.json();
+              for (const msg of _simHistory) {
+                await fetch(`/api/conversations/${convData.id}/messages`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                  body: JSON.stringify({
+                    role: msg.role === 'user' ? 'sent' : 'received',
+                    content: msg.content,
+                    strategy: msg.role === 'assistant' ? `AI ${_simCharacter.name}` : 'user'
+                  })
+                });
+              }
+            } catch (e) { /* silent */ }
+          })();
         }
         // ────────────────────────────────────────────────────────────
       } catch (e) {
@@ -7064,15 +7116,10 @@
         console.error('[simulate-debrief]', e);
       }
 
-      document.getElementById('rp-debrief-actions').classList.remove('hidden');
-      document.getElementById('rp-share-row').classList.remove('hidden');
       document.querySelector('.roleplay-card').classList.add('debrief-active');
+      document.getElementById('rp-correction-toggle').textContent = `+ Add a correction about ${_simCharacter?.name || 'them'}`;
       if (_simCharacter?.contact_id) {
-        document.getElementById('rp-correction-name').textContent = _simCharacter.name;
-        const corrEl = document.getElementById('rp-correction');
-        corrEl.classList.remove('hidden');
         document.getElementById('rp-real-outcome').classList.remove('hidden');
-        setTimeout(() => corrEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
       }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
@@ -7371,6 +7418,41 @@
     });
     document.getElementById('simulationModal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) _rpClose();
+    });
+
+    // ── Star rating ───────────────────────────────────────────────────────────
+    document.getElementById('rp-accuracy-stars').addEventListener('click', async (e) => {
+      const btn = e.target.closest('.rp-star');
+      if (!btn || !_simCharacter?.contact_id) return;
+      const val = parseInt(btn.dataset.val, 10);
+      document.querySelectorAll('.rp-star').forEach(s => s.classList.toggle('selected', parseInt(s.dataset.val, 10) <= val));
+      try {
+        const contactId = _simCharacter.contact_id;
+        const date = new Date().toLocaleDateString('en-GB');
+        const fetchR = await fetch(`/api/contacts/${contactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const contactData = fetchR.ok ? await fetchR.json() : {};
+        const existingProfile = contactData.character_profile || '';
+        const ratingBlock = `\n\n--- ACCURACY RATING (${date}) ---\nUser rated this simulation ${val}/5 stars`;
+        await fetch(`/api/contacts/${contactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ sim_accuracy_rating: val, character_profile: existingProfile + ratingBlock })
+        });
+        if (_simCharacter) _simCharacter.character_profile = existingProfile + ratingBlock;
+        if (activeContactContext?.id === contactId) activeContactContext.character_profile = existingProfile + ratingBlock;
+      } catch (e) { /* silent */ }
+    });
+
+    // ── Correction toggle ─────────────────────────────────────────────────────
+    document.getElementById('rp-correction-toggle').addEventListener('click', () => {
+      const corrEl = document.getElementById('rp-correction');
+      const toggleBtn = document.getElementById('rp-correction-toggle');
+      const isHidden = corrEl.classList.toggle('hidden');
+      const name = _simCharacter?.name || 'them';
+      toggleBtn.textContent = isHidden ? `+ Add a correction about ${name}` : `- Hide correction`;
+      if (!isHidden) {
+        document.getElementById('rp-correction-input').placeholder = `e.g. "${name} always texts back within minutes"`;
+      }
     });
 
     document.getElementById('rp-correction-save').addEventListener('click', async () => {

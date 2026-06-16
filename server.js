@@ -1667,6 +1667,30 @@ app.get('/api/contacts', requireAuth, async (req, res) => {
   } catch (e) { console.error('[contacts GET list]', e.message); res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/contacts/:id/simulations', requireAuth, async (req, res) => {
+  try {
+    const convsR = await fetch(
+      `${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&category_id=eq.simulation&order=created_at.desc&limit=3&select=id,created_at,fields`,
+      { headers: sbHeaders(req.token) }
+    );
+    const convs = await convsR.json();
+    if (!convsR.ok) throw new Error(JSON.stringify(convs));
+    if (!Array.isArray(convs) || !convs.length) return res.json([]);
+    const sessions = await Promise.all(convs.map(async (conv) => {
+      const msgsR = await fetch(
+        `${SUPABASE_REST}/conversation_messages?conversation_id=eq.${conv.id}&order=created_at.asc&select=role,content`,
+        { headers: sbHeaders(req.token) }
+      );
+      const msgs = msgsR.ok ? await msgsR.json() : [];
+      return { id: conv.id, created_at: conv.created_at, intent_goal: conv.fields?.intent_goal || null, messages: Array.isArray(msgs) ? msgs : [] };
+    }));
+    res.json(sessions);
+  } catch (e) {
+    console.error('[contacts simulations GET]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
     const [cr, convr] = await Promise.all([
@@ -2025,4 +2049,5 @@ process.stdin.resume();
 const port = process.env.PORT || 3000;
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome text; ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome_at timestamptz;');
+console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim_accuracy_rating integer;');
 app.listen(port, () => console.log(`Server running on ${port}`));
