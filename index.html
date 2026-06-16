@@ -610,6 +610,11 @@
             <div class="sandbox-char-name">Alex, Your Ex</div>
             <div class="sandbox-char-desc">Complicated history. Practice saying what you actually mean — or letting go.</div>
           </button>
+          <button class="sandbox-char-btn" data-char="bestie">
+            <span class="sandbox-char-emoji">🫂</span>
+            <span class="sandbox-char-name">Best Friend</span>
+            <span class="sandbox-char-desc">Knows everything. Says it like it is.</span>
+          </button>
           <button class="sandbox-char-btn sandbox-char-real" data-char="real">
             <span class="sandbox-char-emoji">👤</span>
             <span class="sandbox-char-name">Someone You Know</span>
@@ -852,10 +857,11 @@
     mom:     { emoji: '👩‍👦', name: 'Mom',     role: 'Your Mom',  startMsg: "You never call anymore. I was worried sick about you." },
     partner: { emoji: '💑', name: 'Jordan',  role: 'Your Partner', startMsg: "Can we talk? I feel like we've been disconnected lately." },
     client:  { emoji: '🤝', name: 'David',   role: 'Difficult Client', startMsg: "I'm not happy with where this project is heading. We need to discuss the timeline." },
-    ex:      { emoji: '💔', name: 'Alex',    role: 'Your Ex', startMsg: "Hey. I've been thinking about us. Do you have a minute to talk?" }
+    ex:      { emoji: '💔', name: 'Alex',    role: 'Your Ex', startMsg: "Hey. I've been thinking about us. Do you have a minute to talk?" },
+    bestie:  { emoji: '🫂', name: 'Sam',     role: 'Your Best Friend', startMsg: "ok wait i need to tell you something first — i've been thinking about you all day. what's going on with you lately??" }
   };
   const LIMIT = 4;
-  const CHAR_ROLES = { boss: 'boss', mom: 'mom', partner: 'partner', client: 'client', ex: 'ex' };
+  const CHAR_ROLES = { boss: 'boss', mom: 'mom', partner: 'partner', client: 'client', ex: 'ex', bestie: 'Your Best Friend' };
 
   let currentChar = null;
   let sandboxHistory = [];
