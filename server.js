@@ -1081,6 +1081,14 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
         (async () => {
           try {
             console.log('[profile-extract] STARTED (small)', contact_id, 'len:', conversationText.length);
+            const existingProfileR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&select=character_profile`, {
+              headers: sbHeaders(req.token)
+            });
+            const existingData = await existingProfileR.json();
+            const existingProfile = existingData?.[0]?.character_profile || null;
+            const userContentSmall = existingProfile
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 3000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
+              : conversationText;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -1104,8 +1112,13 @@ Write 3-5 paragraphs describing the CONTACT as if briefing someone who will role
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
 
 After the full description, on a new line write exactly:
-RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>`,
-                messages: [{ role: 'user', content: conversationText }]
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>
+
+After RELATIONSHIP_ONELINE, on a new line write exactly:
+CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] | Humor & Tone:[0-100] | Conflict Behavior:[0-100] | Work & Finance:[0-100] | Romantic & Emotional:[0-100]
+
+Score each area 0-100 based ONLY on evidence in the conversation. If a topic never appears, score it 0. Be honest — do not inflate scores.`,
+                messages: [{ role: 'user', content: userContentSmall }]
               })
             });
             if (!pr_r.ok) { console.error('[profile-extract] API fail (small):', pr_r.status); return; }
@@ -1113,7 +1126,9 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (small)'); return; }
             const relOneLineMatch = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
-            const cleanProseSmall = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+            const confScoresMatchSmall = prose.match(/CONFIDENCE_SCORES:\s*(.+)/);
+            const confidence_areas_small = confScoresMatchSmall ? confScoresMatchSmall[1].trim() : null;
+            const cleanProseSmall = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').replace(/\n*CONFIDENCE_SCORES:.*$/m, '').trim();
             const relSummarySmall = relOneLineMatch?.[1]?.trim() || (() => {
               const para = cleanProseSmall.split(/\n\n/)[0].trim();
               if (para.length <= 300) return para;
@@ -1125,7 +1140,7 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cleanProseSmall, relationship_summary: relSummarySmall, confidence_score: confidence, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseSmall, relationship_summary: relSummarySmall, confidence_score: confidence, confidence_areas: confidence_areas_small, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (small):', patchR.status, await patchR.text());
             else console.log('[profile-extract] SAVED (small)', contact_id, cleanProseSmall.length, 'chars | rel_summary:', relSummarySmall.slice(0, 80));
@@ -1235,10 +1250,18 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
             const _kemalCount = (conversationText.match(/kemal/gi) || []).length;
             const _keremCount = (conversationText.match(/kerem/gi) || []).length;
             console.log('[profile-extract] STARTED (large)', contact_id, 'full conv len:', conversationText.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount);
+            const existingProfileRLarge = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&select=character_profile`, {
+              headers: sbHeaders(req.token)
+            });
+            const existingDataLarge = await existingProfileRLarge.json();
+            const existingProfileLarge = existingDataLarge?.[0]?.character_profile || null;
             const profileInput = [
               synthesisText ? `BEHAVIORAL ANALYSIS:\n${synthesisText}` : '',
               `FULL CONVERSATION:\n${conversationText.slice(0, 180000)}`
             ].filter(Boolean).join('\n\n');
+            const userContentLarge = existingProfileLarge
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 3000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
+              : profileInput;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -1263,8 +1286,13 @@ Write 4-6 paragraphs describing the CONTACT as if briefing someone who will role
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
 
 After the full description, on a new line write exactly:
-RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>`,
-                messages: [{ role: 'user', content: profileInput }]
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>
+
+After RELATIONSHIP_ONELINE, on a new line write exactly:
+CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] | Humor & Tone:[0-100] | Conflict Behavior:[0-100] | Work & Finance:[0-100] | Romantic & Emotional:[0-100]
+
+Score each area 0-100 based ONLY on evidence in the conversation. If a topic never appears, score it 0. Be honest — do not inflate scores.`,
+                messages: [{ role: 'user', content: userContentLarge }]
               })
             });
             if (!pr_r.ok) { console.error('[profile-extract] API fail (large):', pr_r.status); return; }
@@ -1272,7 +1300,9 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (large)'); return; }
             const relOneLineMatchL = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
-            const cleanProseLarge = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+            const confScoresMatchLarge = prose.match(/CONFIDENCE_SCORES:\s*(.+)/);
+            const confidence_areas_large = confScoresMatchLarge ? confScoresMatchLarge[1].trim() : null;
+            const cleanProseLarge = prose.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').replace(/\n*CONFIDENCE_SCORES:.*$/m, '').trim();
             const relSummaryLarge = relOneLineMatchL?.[1]?.trim() || (() => {
               const para = cleanProseLarge.split(/\n\n/)[0].trim();
               if (para.length <= 300) return para;
@@ -1284,7 +1314,7 @@ RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user an
             const patchR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&user_id=eq.${req.user.id}`, {
               method: 'PATCH',
               headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-              body: JSON.stringify({ character_profile: cleanProseLarge, relationship_summary: relSummaryLarge, confidence_score: confidence, updated_at: new Date().toISOString() })
+              body: JSON.stringify({ character_profile: cleanProseLarge, relationship_summary: relSummaryLarge, confidence_score: confidence, confidence_areas: confidence_areas_large, updated_at: new Date().toISOString() })
             });
             if (!patchR.ok) console.error('[profile-extract] PATCH FAILED (large):', patchR.status, await patchR.text());
             else console.log('[profile-extract] SAVED (large)', contact_id, cleanProseLarge.length, 'chars | rel_summary:', relSummaryLarge.slice(0, 80));
@@ -1381,6 +1411,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       how_user_addresses:   extract('ADDRESS_STYLE') || null,
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
+      confidence_areas:     null, // populated async in Supabase after profile extraction completes
       message_count:        messageCount,
       char_count:           totalChars
     });
@@ -2051,4 +2082,5 @@ const port = process.env.PORT || 3000;
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome text; ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome_at timestamptz;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim_accuracy_rating integer;');
+console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_areas text;');
 app.listen(port, () => console.log(`Server running on ${port}`));
