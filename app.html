@@ -2540,6 +2540,14 @@
     <section id="personSection" class="hidden" data-screen-id="person">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div id="personContent"></div>
+      <button type="button" class="person-share-profile-btn" id="personShareProfileBtn">📊 Share Profile Card</button>
+      <div class="profile-card-inline-panel" id="profileCardPanel">
+        <label class="share-toggle-label" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--txt);cursor:pointer;padding:10px 0;">
+          <input type="checkbox" id="profileCardShowName" style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
+          Show their name (default: anonymous)
+        </label>
+        <button type="button" id="profileCardGenBtn" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font:inherit;font-size:.87rem;font-weight:700;cursor:pointer;">Generate Card →</button>
+      </div>
     </section>
 
     <!-- New Conversation Wizard -->
@@ -5953,15 +5961,6 @@
             <button type="button" class="person-practice-btn" id="personPracticeBtn">🎭 Practice Conversation</button>
           </div>
 
-          <button type="button" class="person-share-profile-btn" id="personShareProfileBtn">📊 Share Profile Card</button>
-          <div class="profile-card-inline-panel" id="profileCardPanel">
-            <label class="share-toggle-label" style="margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--txt);cursor:pointer;padding:10px 0;">
-              <input type="checkbox" id="profileCardShowName" style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
-              Show their name (default: anonymous)
-            </label>
-            <button type="button" id="profileCardGenBtn" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font:inherit;font-size:.87rem;font-weight:700;cursor:pointer;transition:opacity .15s;">Generate Card →</button>
-          </div>
-
           <div class="person-secondary-btns">
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
@@ -6112,13 +6111,6 @@
             }
           }
           openSimulatorFresh(activeContactContext, null);
-        });
-        document.getElementById('personShareProfileBtn').addEventListener('click', () => {
-          document.getElementById('profileCardPanel').classList.toggle('visible');
-        });
-        document.getElementById('profileCardGenBtn').addEventListener('click', () => {
-          const showName = document.getElementById('profileCardShowName').checked;
-          generateRelationshipCard(activeContactContext, showName);
         });
         document.getElementById('personGoalBtn').addEventListener('click', () => openGoalScreen());
         document.getElementById('personGenerateBtn').addEventListener('click', () => {
@@ -7518,6 +7510,14 @@
       }
     }
     // ─────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('personShareProfileBtn').addEventListener('click', () => {
+      document.getElementById('profileCardPanel').classList.toggle('visible');
+    });
+    document.getElementById('profileCardGenBtn').addEventListener('click', () => {
+      const showName = document.getElementById('profileCardShowName').checked;
+      generateRelationshipCard(activeContactContext, showName);
+    });
 
     document.getElementById('rp-close').addEventListener('click', _rpClose);
     document.getElementById('rp-suggest-btn').addEventListener('click', endSimulation);
