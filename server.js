@@ -2228,13 +2228,12 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 150,
-            system: `You evaluate how close a user is to achieving their conversation goal. Given the goal and conversation so far, score progress 0-100. Return JSON only: { "score": 0-100, "outcome": "success" | "partial" | "fail", "signal": "one very short phrase describing current state, max 5 words" }. Score 71-100 = success (goal achieved), 31-70 = partial (making progress), 0-30 = fail (not working). Be honest and dynamic — score should go up AND down based on how conversation flows.`,
+            system: `You evaluate conversation progress toward a goal. Return ONLY a JSON object, nothing else — no markdown, no analysis, no explanation. Just the JSON.\n\nFormat: {"score": 0-100, "outcome": "success" | "partial" | "fail", "signal": "max 5 words"}\n\nScore guide: 0-30 = fail, 31-70 = partial, 71-100 = success. Score changes each turn based on conversation flow — can go up or down.`,
             messages: [{ role: 'user', content: `Goal: "${challenge?.goal || 'have a good conversation'}"\n\nConversation so far:\n${[...history, {role:'assistant', content: reply}].map(m => `${m.role === 'user' ? 'User' : 'Them'}: ${m.content}`).join('\n')}` }]
           })
         });
         const evalData = await evalResp.json();
         const evalText = evalData.content?.[0]?.text || '{}';
-        console.log('[sandbox-eval]', evalText);
         evaluation = parseJsonSafe(evalText);
       } catch (e) { evaluation = null; }
     }
