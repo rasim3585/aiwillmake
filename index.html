@@ -524,6 +524,31 @@
     .sandbox-char-real { border-color: #ff6b35 !important; background: rgba(255,107,53,0.06) !important; grid-column: 1 / -1; }
     .sandbox-char-real .sandbox-char-name { color: #ff6b35 !important; }
     .sandbox-char-real:hover { background: rgba(255,107,53,0.12) !important; }
+    .sandbox-challenge-header { background: #111; border-bottom: 1px solid #1e1e1e; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .sandbox-challenge-who { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .sandbox-challenge-name { font-size: 14px; font-weight: 700; color: #fff; }
+    .sandbox-challenge-sub { font-size: 11px; color: #555; }
+    .sandbox-challenges-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .sandbox-challenge-item { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; text-align: left; width: 100%; }
+    .sandbox-challenge-item:hover { border-color: #ff6b35; background: rgba(255,107,53,0.06); }
+    .sandbox-challenge-item-label { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .sandbox-challenge-item-turns { font-size: 11px; color: #444; }
+    .sandbox-challenge-goal { font-size: 12px; color: #ff6b35; padding: 6px 16px; background: rgba(255,107,53,0.06); border-bottom: 1px solid rgba(255,107,53,0.15); display: none; }
+    .sandbox-turns-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid #1e1e1e; }
+    .sandbox-turns-label { font-size: 11px; color: #444; }
+    .sandbox-turns-dots { display: flex; gap: 4px; }
+    .sandbox-turn-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff6b35; transition: background 0.3s; }
+    .sandbox-turn-dot.used { background: #222; }
+    .sandbox-outcome { padding: 20px 16px; text-align: center; border-top: 1px solid #1e1e1e; }
+    .sandbox-outcome.hidden { display: none; }
+    .sandbox-outcome-icon { font-size: 40px; margin-bottom: 12px; }
+    .sandbox-outcome-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    .sandbox-outcome-reason { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 8px; }
+    .sandbox-outcome-tip { font-size: 12px; color: #ff6b35; background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; line-height: 1.6; }
+    .sandbox-outcome-actions { display: flex; flex-direction: column; gap: 8px; }
+    .sandbox-outcome-retry { background: transparent; border: 1px solid #2a2a2a; color: #888; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; }
+    .sandbox-outcome-cta { display: block; background: #ff6b35; color: #000; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 10px; text-decoration: none; text-align: center; }
+    #sandboxChallengePicker { background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 20px; overflow: hidden; }
     .how-wrap { max-width: 560px; margin: 0 auto; padding: 80px 0; }
     .how-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #555; margin-bottom: 16px; text-align: center; }
     .how-headline { font-size: 26px; font-weight: 700; color: #fff; text-align: center; line-height: 1.4; margin-bottom: 56px; }
@@ -581,7 +606,7 @@
         </div>
 
         <!-- Character picker -->
-        <div class="sandbox-characters" id="sandboxCharPicker">
+        <div class="sandbox-characters" id="sandboxCharacters">
           <button class="sandbox-char-btn" data-char="boss">
             <div class="sandbox-char-emoji">💼</div>
             <div class="sandbox-char-name">Michael, Your Boss</div>
@@ -619,6 +644,21 @@
           </button>
         </div>
 
+        <!-- Challenge picker -->
+        <div id="sandboxChallengePicker" class="hidden">
+          <div class="sandbox-challenge-header">
+            <button class="sandbox-back-btn" id="sandboxChallengeBack">← Change</button>
+            <div class="sandbox-challenge-who">
+              <span id="sandboxChallengeEmoji"></span>
+              <div>
+                <div class="sandbox-challenge-name" id="sandboxChallengeName"></div>
+                <div class="sandbox-challenge-sub">Choose your challenge</div>
+              </div>
+            </div>
+          </div>
+          <div class="sandbox-challenges-list" id="sandboxChallengesList"></div>
+        </div>
+
         <!-- Chat window -->
         <div class="sandbox-chat hidden" id="sandboxChat">
           <div class="sandbox-chat-header">
@@ -626,11 +666,16 @@
             <div class="sandbox-chat-who">
               <span id="sandboxCharEmoji"></span>
               <div>
-                <div class="sandbox-chat-name" id="sandboxCharLabel"></div>
+                <div class="sandbox-chat-name" id="sandboxCharName"></div>
                 <div class="sandbox-chat-role" id="sandboxCharRole"></div>
               </div>
             </div>
             <div class="sandbox-ai-badge">AI</div>
+          </div>
+          <div class="sandbox-challenge-goal" id="sandboxChallengeGoal"></div>
+          <div class="sandbox-turns-bar" id="sandboxTurnsBar" style="display:none">
+            <span class="sandbox-turns-label">Attempts left:</span>
+            <div class="sandbox-turns-dots" id="sandboxTurnsDots"></div>
           </div>
           <div class="sandbox-messages" id="sandboxMessages"></div>
           <div class="sandbox-typing hidden" id="sandboxTyping">
@@ -641,6 +686,16 @@
             <div class="sandbox-upgrade-real">Your real <span id="sandbox-upgrade-type"></span> would be completely different.</div>
             <div class="sandbox-upgrade-desc">Upload your actual WhatsApp history → the AI becomes <em>them</em>. Their words. Their patterns. Their exact reactions.</div>
             <a href="app.html" class="sandbox-upgrade-btn">Start with your real person →</a>
+          </div>
+          <div class="sandbox-outcome hidden" id="sandboxOutcome">
+            <div class="sandbox-outcome-icon" id="sandboxOutcomeIcon"></div>
+            <div class="sandbox-outcome-title" id="sandboxOutcomeTitle"></div>
+            <div class="sandbox-outcome-reason" id="sandboxOutcomeReason"></div>
+            <div class="sandbox-outcome-tip" id="sandboxOutcomeTip"></div>
+            <div class="sandbox-outcome-actions">
+              <button class="sandbox-outcome-retry" id="sandboxOutcomeRetry">Try again</button>
+              <a href="app.html" class="sandbox-outcome-cta">Try with your real person →</a>
+            </div>
           </div>
           <div class="sandbox-input-row" id="sandboxInputRow">
             <textarea id="sandboxInput" placeholder="Type your message…" rows="1"></textarea>
@@ -848,141 +903,234 @@
 </script>
 
 <script>
-(function () {
-  const CHARS = {
-    boss:    { emoji: '💼', name: 'Michael', role: 'Your Boss', startMsg: 'We need to talk about your performance this quarter.' },
-    mom:     { emoji: '👩‍👦', name: 'Mom',     role: 'Your Mom',  startMsg: "You never call anymore. I was worried sick about you." },
-    partner: { emoji: '💑', name: 'Jordan',  role: 'Your Partner', startMsg: "Can we talk? I feel like we've been disconnected lately." },
-    client:  { emoji: '🤝', name: 'David',   role: 'Difficult Client', startMsg: "I'm not happy with where this project is heading. We need to discuss the timeline." },
-    ex:      { emoji: '💔', name: 'Alex',    role: 'Your Ex', startMsg: "Hey. I've been thinking about us. Do you have a minute to talk?" },
-    bestie:  { emoji: '🫂', name: 'Sam',     role: 'Your Best Friend', startMsg: "ok wait i need to tell you something first — i've been thinking about you all day. what's going on with you lately??" }
-  };
-  const LIMIT = 4;
-  const CHAR_ROLES = { boss: 'boss', mom: 'mom', partner: 'partner', client: 'client', ex: 'ex', bestie: 'Your Best Friend' };
+const CHAR_EMOJIS = { boss: '💼', mom: '💛', partner: '💔', client: '💼', ex: '👻', bestie: '🫂', real: '👤' };
+const CHAR_NAMES  = { boss: 'Michael', mom: 'Mom', partner: 'Jordan', client: 'David', ex: 'Alex', bestie: 'Sam' };
+const CHAR_ROLES  = { boss: 'Your Boss', mom: 'Your Mom', partner: 'Your Partner', client: 'Your Client', ex: 'Your Ex', bestie: 'Your Best Friend' };
 
-  let currentChar = null;
-  let sandboxHistory = [];
-  let turnCount = 0;
-  let busy = false;
+const OPENING_MSGS = {
+  boss:    "I wanted to circle back on a few things. My calendar's pretty packed this week — what did you need?",
+  mom:     "Hi sweetheart! I was just thinking about you. Are you eating? You look tired in your last photo.",
+  partner: "hey you 🙂 what are you up to?",
+  client:  "Hey! So excited about everything. Quick thing while I have you — super small ask.",
+  ex:      "hey. hope you're good. saw something that reminded me of you lol",
+  bestie:  "OKAY I've been waiting for you to text me all day what is going on with you"
+};
 
-  const $ = id => document.getElementById(id);
-  const picker    = $('sandboxCharPicker');
-  const chat      = $('sandboxChat');
-  const messages  = $('sandboxMessages');
-  const typing    = $('sandboxTyping');
-  const upgrade   = $('sandboxUpgrade');
-  const inputRow  = $('sandboxInputRow');
-  const input     = $('sandboxInput');
-  const sendBtn   = $('sandboxSend');
+let currentChar = null;
+let currentChallenge = null;
+let sandboxHistory = [];
+let turnsUsed = 0;
+let allChallenges = {};
+let outcomeShown = false;
 
-  function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+fetch('/api/sandbox-challenges')
+  .then(r => r.json())
+  .then(data => { allChallenges = data; })
+  .catch(() => {});
 
-  function appendMsg(role, text) {
-    const div = document.createElement('div');
-    div.className = 'sandbox-msg ' + role;
-    div.textContent = text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
+document.querySelectorAll('.sandbox-char-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const charId = btn.dataset.char;
+    if (charId === 'real') { window.location.href = 'app.html'; return; }
+    showChallengePicker(charId);
+  });
+});
+
+function showChallengePicker(charId) {
+  currentChar = charId;
+  document.querySelectorAll('.sandbox-char-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`[data-char="${charId}"]`)?.classList.add('selected');
+
+  document.getElementById('sandboxChallengeEmoji').textContent = CHAR_EMOJIS[charId];
+  document.getElementById('sandboxChallengeName').textContent = CHAR_NAMES[charId];
+
+  const list = document.getElementById('sandboxChallengesList');
+  const charChallenges = allChallenges[charId] || [];
+  list.innerHTML = charChallenges.map(c => `
+    <button class="sandbox-challenge-item" data-challenge-id="${c.id}">
+      <div class="sandbox-challenge-item-label">${c.label}</div>
+      <div class="sandbox-challenge-item-turns">${c.max_turns} attempts</div>
+    </button>
+  `).join('') + `<button class="sandbox-challenge-item" data-challenge-id="free">
+    <div class="sandbox-challenge-item-label">Free conversation</div>
+    <div class="sandbox-challenge-item-turns">No challenge — just talk</div>
+  </button>`;
+
+  list.querySelectorAll('.sandbox-challenge-item').forEach(item => {
+    item.addEventListener('click', () => selectChallenge(item.dataset.challengeId));
+  });
+
+  document.getElementById('sandboxCharacters').classList.add('hidden');
+  document.getElementById('sandboxChallengePicker').classList.remove('hidden');
+}
+
+function selectChallenge(challengeId) {
+  currentChallenge = challengeId === 'free' ? null : (allChallenges[currentChar]?.find(c => c.id === challengeId) || null);
+  startChat();
+}
+
+function startChat() {
+  sandboxHistory = [];
+  turnsUsed = 0;
+  outcomeShown = false;
+
+  document.getElementById('sandboxChallengePicker').classList.add('hidden');
+  document.getElementById('sandboxMessages').innerHTML = '';
+  document.getElementById('sandboxOutcome').classList.add('hidden');
+  document.getElementById('sandboxUpgrade').classList.add('hidden');
+  document.getElementById('sandboxInput').value = '';
+  document.getElementById('sandboxInput').disabled = false;
+  document.getElementById('sandboxSend').disabled = false;
+  document.getElementById('sandboxInput').placeholder = 'Type your message...';
+
+  const goalEl = document.getElementById('sandboxChallengeGoal');
+  if (currentChallenge) {
+    goalEl.textContent = '🎯 ' + currentChallenge.label;
+    goalEl.style.display = 'block';
+  } else {
+    goalEl.style.display = 'none';
   }
 
-  function setTyping(on) {
-    typing.classList.toggle('hidden', !on);
-    if (on) messages.scrollTop = messages.scrollHeight;
+  updateTurnsBar();
+
+  document.getElementById('sandboxCharEmoji').textContent = CHAR_EMOJIS[currentChar];
+  document.getElementById('sandboxCharName').textContent = CHAR_NAMES[currentChar];
+  document.getElementById('sandboxCharRole').textContent = CHAR_ROLES[currentChar];
+
+  document.getElementById('sandboxChat').classList.remove('hidden');
+
+  const opening = OPENING_MSGS[currentChar];
+  sandboxHistory.push({ role: 'assistant', content: opening });
+  appendMsg('ai', opening);
+
+  setTimeout(() => document.getElementById('sandboxInput').focus(), 100);
+}
+
+function updateTurnsBar() {
+  if (!currentChallenge) {
+    document.getElementById('sandboxTurnsBar').style.display = 'none';
+    return;
   }
+  document.getElementById('sandboxTurnsBar').style.display = 'flex';
+  const max = currentChallenge.max_turns;
+  const left = Math.max(0, max - turnsUsed);
+  document.getElementById('sandboxTurnsDots').innerHTML = Array.from({length: max}, (_, i) =>
+    `<div class="sandbox-turn-dot ${i >= left ? 'used' : ''}"></div>`
+  ).join('');
+}
 
-  function openChar(key) {
-    if (key === 'real') { window.location.href = 'app.html'; return; }
-    const c = CHARS[key];
-    currentChar = key;
-    sandboxHistory = [];
-    turnCount = 0;
+document.getElementById('sandboxBack').addEventListener('click', () => {
+  document.getElementById('sandboxChat').classList.add('hidden');
+  document.getElementById('sandboxChallengePicker').classList.add('hidden');
+  document.getElementById('sandboxCharacters').classList.remove('hidden');
+  document.querySelectorAll('.sandbox-char-btn').forEach(b => b.classList.remove('selected'));
+  currentChar = null;
+  currentChallenge = null;
+});
 
-    picker.querySelectorAll('.sandbox-char-btn').forEach(b => b.classList.remove('selected'));
-    picker.querySelector(`[data-char="${key}"]`).classList.add('selected');
+document.getElementById('sandboxChallengeBack').addEventListener('click', () => {
+  document.getElementById('sandboxChallengePicker').classList.add('hidden');
+  document.getElementById('sandboxCharacters').classList.remove('hidden');
+  currentChallenge = null;
+});
 
-    $('sandboxCharEmoji').textContent = c.emoji;
-    $('sandboxCharLabel').textContent = c.name;
-    $('sandboxCharRole').textContent  = c.role;
+async function sendMessage() {
+  const input = document.getElementById('sandboxInput');
+  const text = input.value.trim();
+  if (!text || !currentChar || document.getElementById('sandboxSend').disabled) return;
 
-    messages.innerHTML = '';
-    upgrade.classList.add('hidden');
-    inputRow.style.display = '';
-    input.value = '';
-    sendBtn.disabled = false;
+  input.value = '';
+  input.style.height = 'auto';
+  appendMsg('user', text);
+  sandboxHistory.push({ role: 'user', content: text });
+  turnsUsed++;
+  updateTurnsBar();
 
-    picker.style.display = 'none';
-    chat.classList.remove('hidden');
+  document.getElementById('sandboxSend').disabled = true;
+  input.disabled = true;
+  document.getElementById('sandboxTyping').classList.remove('hidden');
+  scrollToBottom();
 
-    // Opening message from character
-    const openingMsg = c.startMsg;
-    sandboxHistory.push({ role: 'assistant', content: openingMsg });
-    appendMsg('ai', openingMsg);
-    input.focus();
-  }
+  try {
+    const resp = await fetch('/api/sandbox-simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        character_id: currentChar,
+        history: sandboxHistory,
+        challenge_id: currentChallenge?.id || null
+      })
+    });
+    const data = await resp.json();
+    document.getElementById('sandboxTyping').classList.add('hidden');
 
-  function closeChat() {
-    chat.classList.add('hidden');
-    picker.style.display = '';
-    picker.querySelectorAll('.sandbox-char-btn').forEach(b => b.classList.remove('selected'));
-  }
-
-  async function sendMessage() {
-    const text = input.value.trim();
-    if (!text || busy) return;
-    busy = true;
-    sendBtn.disabled = true;
-    input.value = '';
-
-    sandboxHistory.push({ role: 'user', content: text });
-    appendMsg('user', text);
-    turnCount++;
-
-    setTyping(true);
-    try {
-      const res = await fetch('/api/sandbox-simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ character_id: currentChar, history: sandboxHistory.slice(-20) })
-      });
-      const data = await res.json();
-      setTyping(false);
-
-      const reply = data.reply || '…';
-      sandboxHistory.push({ role: 'assistant', content: reply });
-      appendMsg('ai', reply);
-
-      if (turnCount >= LIMIT) {
-        document.getElementById('sandbox-upgrade-type').textContent = CHAR_ROLES[currentChar] || 'person';
-        upgrade.classList.remove('hidden');
-        inputRow.style.display = 'none';
-      }
-    } catch (e) {
-      setTyping(false);
-      appendMsg('ai', 'Connection error — try again in a moment.');
+    if (data.reply) {
+      sandboxHistory.push({ role: 'assistant', content: data.reply });
+      appendMsg('ai', data.reply);
     }
-    busy = false;
-    if (turnCount < LIMIT) sendBtn.disabled = false;
+
+    if (data.evaluation && !outcomeShown) {
+      outcomeShown = true;
+      showOutcome(data.evaluation);
+      return;
+    }
+
+    if (currentChallenge && turnsUsed >= currentChallenge.max_turns && !outcomeShown) {
+      outcomeShown = true;
+      showOutcome({ outcome: 'fail', reason: "You've used all your attempts.", tip: "Try a more direct approach next time — be specific about what you want." });
+      return;
+    }
+
+  } catch(e) {
+    document.getElementById('sandboxTyping').classList.add('hidden');
+    appendMsg('ai', 'Something went wrong. Please try again.');
   }
 
-  // Wire events
-  picker.addEventListener('click', e => {
-    const btn = e.target.closest('.sandbox-char-btn');
-    if (btn) openChar(btn.dataset.char);
-  });
+  document.getElementById('sandboxSend').disabled = false;
+  input.disabled = false;
+  input.focus();
+  scrollToBottom();
+}
 
-  $('sandboxBack').addEventListener('click', closeChat);
+function showOutcome(evaluation) {
+  document.getElementById('sandboxSend').disabled = true;
+  document.getElementById('sandboxInput').disabled = true;
+  document.getElementById('sandboxInput').placeholder = 'Challenge ended';
 
-  sendBtn.addEventListener('click', sendMessage);
+  const icons  = { success: '🎉', partial: '🤔', fail: '😬' };
+  const titles = { success: 'You nailed it.', partial: 'Almost there.', fail: "Didn't land this time." };
 
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
+  document.getElementById('sandboxOutcomeIcon').textContent  = icons[evaluation.outcome]  || '🤔';
+  document.getElementById('sandboxOutcomeTitle').textContent = titles[evaluation.outcome] || 'Done.';
+  document.getElementById('sandboxOutcomeReason').textContent = evaluation.reason || '';
+  document.getElementById('sandboxOutcomeTip').textContent    = evaluation.tip ? '💡 ' + evaluation.tip : '';
 
-  input.addEventListener('input', function () {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-  });
-})();
+  document.getElementById('sandboxOutcome').classList.remove('hidden');
+  document.getElementById('sandboxOutcome').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.getElementById('sandboxOutcomeRetry').addEventListener('click', () => { startChat(); });
+document.getElementById('sandboxSend').addEventListener('click', sendMessage);
+document.getElementById('sandboxInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+document.getElementById('sandboxInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+function appendMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = `sandbox-msg ${role}`;
+  div.textContent = text;
+  document.getElementById('sandboxMessages').appendChild(div);
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  const msgs = document.getElementById('sandboxMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
 </script>
 
 <!-- REMOVED SECTIONS - RESTORE IF NEEDED
