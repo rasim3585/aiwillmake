@@ -4196,28 +4196,30 @@
       if (!trueSoloConvs.length) return;
       trueSoloConvs.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
 
-      const now2 = Date.now();
-      const WEEK  = 7  * 24 * 60 * 60 * 1000;
-      const MONTH = 30 * 24 * 60 * 60 * 1000;
-      const dateGroups = [
-        { label: 'This week',  items: trueSoloConvs.filter(c => now2 - +new Date(c.updated_at) < WEEK) },
-        { label: 'This month', items: trueSoloConvs.filter(c => { const a = now2 - +new Date(c.updated_at); return a >= WEEK && a < MONTH; }) },
-        { label: 'Earlier',    items: trueSoloConvs.filter(c => now2 - +new Date(c.updated_at) >= MONTH) },
-      ];
-      const hasContactCards = contactGroups.size > 0 || nameGroups.size > 0;
-      const multiDateGroups = dateGroups.filter(g => g.items.length).length > 1;
-      const showHeaders = hasContactCards || multiDateGroups;
+      {
+        const now2 = Date.now();
+        const WEEK  = 7  * 24 * 60 * 60 * 1000;
+        const MONTH = 30 * 24 * 60 * 60 * 1000;
+        const dateGroups = [
+          { label: 'This week',  items: trueSoloConvs.filter(c => now2 - +new Date(c.updated_at) < WEEK) },
+          { label: 'This month', items: trueSoloConvs.filter(c => { const a = now2 - +new Date(c.updated_at); return a >= WEEK && a < MONTH; }) },
+          { label: 'Earlier',    items: trueSoloConvs.filter(c => now2 - +new Date(c.updated_at) >= MONTH) },
+        ];
+        const hasContactCards = contactGroups.size > 0 || nameGroups.size > 0;
+        const multiDateGroups = dateGroups.filter(g => g.items.length).length > 1;
+        const showHeaders = hasContactCards || multiDateGroups;
 
-      dateGroups.forEach(({ label, items }) => {
-        if (!items.length) return;
-        if (showHeaders) {
-          const hdr = document.createElement('div');
-          hdr.className = 'home-conv-section';
-          hdr.textContent = label;
-          listEl.appendChild(hdr);
-        }
-        items.forEach(c => renderHomeCard(c, null, null, true));
-      });
+        dateGroups.forEach(({ label, items }) => {
+          if (!items.length) return;
+          if (showHeaders) {
+            const hdr = document.createElement('div');
+            hdr.className = 'home-conv-section';
+            hdr.textContent = label;
+            listEl.appendChild(hdr);
+          }
+          items.forEach(c => renderHomeCard(c, null, null, true));
+        });
+      }
     }
 
     function initConvSearch() {
