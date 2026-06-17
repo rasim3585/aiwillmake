@@ -3041,6 +3041,7 @@
         const cfg = await fetch('/api/config').then(r => r.json());
         if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
           document.getElementById('authGate').classList.add('hidden');
+          document.getElementById('screen-landing').classList.remove('hidden');
           return;
         }
         sbClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
@@ -3079,6 +3080,7 @@
       } catch (e) {
         console.warn('Auth init failed:', e);
         document.getElementById('authGate').classList.add('hidden');
+        document.getElementById('screen-landing').classList.remove('hidden');
       }
     }
 
