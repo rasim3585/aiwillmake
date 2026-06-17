@@ -2220,18 +2220,19 @@
     /* ── Share Preview Modal ── */
     .share-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.65); }
     .share-overlay.hidden { display: none; }
-    .share-panel { background: var(--surf); border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-width: 520px; max-height: 88vh; display: flex; flex-direction: column; animation: fadeUp .2s ease both; }
+    .share-panel { background: var(--surf); border-radius: 20px 20px 0 0; padding: 0; width: 100%; max-width: 520px; max-height: 75vh; display: flex; flex-direction: column; animation: fadeUp .2s ease both; }
     .share-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 14px; border-bottom: 1px solid var(--bord); flex-shrink: 0; }
     .share-panel-title { font-size: .95rem; font-weight: 700; color: var(--fg); }
     .share-panel-close { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 2px 6px; }
     .share-notice { margin: 12px 20px 0; padding: 8px 12px; background: rgba(234,179,8,.1); border: 1px solid rgba(234,179,8,.25); border-radius: 8px; font-size: .75rem; color: #eab308; line-height: 1.4; flex-shrink: 0; }
     .share-settings { padding: 12px 20px 0; flex-shrink: 0; }
     .share-toggle-label { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--sec); cursor: pointer; }
-    .share-msgs-section { padding: 12px 20px 0; overflow-y: auto; flex: 1; }
+    .share-msgs-section { padding: 12px 20px 8px; overflow-y: auto; flex: 1; min-height: 120px; }
     .share-msgs-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
-    .share-msg-row { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; }
-    .share-msg-who { font-size: .75rem; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 1px; min-width: 36px; }
-    .share-msg-text { font-size: .8rem; color: var(--sec); line-height: 1.4; flex: 1; }
+    .share-msg-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; min-height: 48px; }
+    .share-msg-check { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; cursor: pointer; accent-color: var(--accent); }
+    .share-msg-who { font-size: 11px; color: var(--accent); font-weight: 700; flex-shrink: 0; min-width: 32px; margin-top: 2px; }
+    .share-msg-text { font-size: 14px; color: var(--txt); line-height: 1.5; flex: 1; word-break: break-word; }
     .share-generate-btn { margin: 14px 20px 28px; padding: 13px; background: var(--accent); border: none; border-radius: 11px; color: #fff; font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; transition: opacity .15s; flex-shrink: 0; }
     .share-generate-btn:disabled { opacity: .55; cursor: default; }
     .rp-share-row { padding: 2px 16px 6px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
