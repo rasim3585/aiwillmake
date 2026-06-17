@@ -934,6 +934,9 @@
     .rp-debrief-coaching { font-size: 15px; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
     .rp-debrief-secondary { padding: 16px 20px; border-bottom: 1px solid var(--bord); display: flex; flex-direction: column; gap: 16px; }
     .rp-accuracy-row { display: flex; align-items: center; justify-content: space-between; }
+    .rp-outcome-later { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--bord); gap: 12px; }
+    .rp-outcome-later-text { font-size: 13px; color: var(--txt2); }
+    .rp-outcome-later-btn { font-size: 12px; color: var(--accent); background: none; border: none; cursor: pointer; font-weight: 600; white-space: nowrap; }
     .rp-accuracy-label { font-size: 13px; color: var(--sec); }
     .rp-stars { display: flex; gap: 4px; }
     .rp-star { background: none; border: none; font-size: 22px; color: #333; cursor: pointer; transition: color 0.15s; padding: 0 2px; font-family: inherit; }
@@ -2382,6 +2385,10 @@
               <button class="rp-star" data-val="4">★</button>
               <button class="rp-star" data-val="5">★</button>
             </div>
+          </div>
+          <div class="rp-outcome-later hidden" id="rp-outcome-later">
+            <span class="rp-outcome-later-text">Had the real conversation?</span>
+            <button class="rp-outcome-later-btn" id="rp-outcome-later-btn">Tell us how it went →</button>
           </div>
           <div class="rp-real-outcome hidden" id="rp-real-outcome">
             <div class="rp-real-outcome-label">Had the real conversation?</div>
@@ -4901,6 +4908,7 @@
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-real-outcome').classList.add('hidden');
       document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-outcome-later').classList.add('hidden');
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
@@ -5058,6 +5066,7 @@
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-real-outcome').classList.add('hidden');
       document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-outcome-later').classList.add('hidden');
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
@@ -6933,6 +6942,7 @@
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-real-outcome').classList.add('hidden');
       document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-outcome-later').classList.add('hidden');
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
@@ -7013,6 +7023,7 @@
       document.getElementById('rp-correction-input').value = '';
       document.getElementById('rp-real-outcome').classList.add('hidden');
       document.getElementById('rp-real-outcome-detail').classList.add('hidden');
+      document.getElementById('rp-outcome-later').classList.add('hidden');
       document.getElementById('rp-real-outcome-text').value = '';
       document.getElementById('rp-real-outcome-saved').classList.add('hidden');
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
@@ -7120,7 +7131,7 @@
       document.querySelector('.roleplay-card').classList.add('debrief-active');
       document.getElementById('rp-correction-toggle').textContent = `+ Add a correction about ${_simCharacter?.name || 'them'}`;
       if (_simCharacter?.contact_id) {
-        document.getElementById('rp-real-outcome').classList.remove('hidden');
+        document.getElementById('rp-outcome-later').classList.remove('hidden');
       }
       document.getElementById('rp-messages').scrollTop = document.getElementById('rp-messages').scrollHeight;
     }
@@ -7413,6 +7424,10 @@
 
     document.getElementById('rp-close').addEventListener('click', _rpClose);
     document.getElementById('rp-suggest-btn').addEventListener('click', endSimulation);
+    document.getElementById('rp-outcome-later-btn').addEventListener('click', () => {
+      document.getElementById('rp-outcome-later').classList.add('hidden');
+      document.getElementById('rp-real-outcome').classList.remove('hidden');
+    });
     document.getElementById('rp-done-btn').addEventListener('click', _rpClose);
     document.getElementById('rp-again-btn').addEventListener('click', () => {
       openSimulator(_simInitialMsg, _simCharacter);
