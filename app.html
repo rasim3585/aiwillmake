@@ -6122,14 +6122,14 @@
         });
         document.getElementById('personGoalBtn').addEventListener('click', () => openGoalScreen());
         document.getElementById('personGenerateBtn').addEventListener('click', () => {
-          App.navigateTo('home');
+          hideAllMainSections();
           selectMode(1);
           const _si = document.getElementById('smartInput');
           if (_si) { _si.value = ''; _si.placeholder = `What do you want to say to ${activeContactContext?.name || 'them'}?`; }
         });
 
         document.getElementById('personAnalyzeBtn').addEventListener('click', () => {
-          App.navigateTo('home');
+          hideAllMainSections();
           selectMode(2);
           const el = document.getElementById('contPasteOpt');
           if (el) el.click();
@@ -6137,7 +6137,7 @@
         });
 
         document.getElementById('personBriefBtn').addEventListener('click', () => {
-          App.navigateTo('home');
+          hideAllMainSections();
           selectMode(3);
           document.getElementById('reviewSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
