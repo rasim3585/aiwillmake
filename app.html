@@ -2215,6 +2215,10 @@
     .goal-extra-row { display: flex; gap: 8px; margin-top: 8px; }
     .goal-extra-field { flex: 1; background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; color: var(--txt); font: inherit; font-size: 14px; padding: 10px 12px; outline: none; }
     .goal-extra-field:focus { border-color: var(--accent); }
+    .goal-context-field { margin-top: 8px; }
+    .goal-context-label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    .goal-context-input { width: 100%; background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; color: var(--txt); font: inherit; font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+    .goal-context-input:focus { border-color: var(--accent); }
     .btn-get-strategy { width: 100%; padding: 14px; background: var(--accent); border: none; color: #fff; font: inherit; font-size: .97rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: opacity .2s; }
     .btn-get-strategy:hover:not(:disabled) { opacity: .88; }
     .btn-get-strategy:disabled { opacity: .4; cursor: not-allowed; }
@@ -2940,6 +2944,8 @@
         </div>
         <div id="goalExtraInput" class="hidden"></div>
         <textarea id="goalInput" class="goal-input" placeholder="Or describe your goal… (e.g. 'I want to apologize and fix what happened last time')"></textarea>
+        <div id="goalContextInputs" class="hidden"></div>
+        <div id="goalContextLoading" class="hidden" style="font-size:12px;color:var(--muted);padding:4px 0;">Thinking about what info might help...</div>
         <button type="button" class="btn-get-strategy" id="goalSubmitBtn">Get strategy →</button>
       </div>
     </section>
@@ -4821,6 +4827,48 @@
     // ────────────────────────────────────────────────────────────────
 
     // ── Goal → Strategy flow (Faz 3) ─────────────────────────────────────────
+    let _goalContextTimeout = null;
+
+    async function fetchGoalContext(goalText) {
+      const container = document.getElementById('goalContextInputs');
+      const loading   = document.getElementById('goalContextLoading');
+      if (!goalText || goalText.length < 8) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+      }
+      loading.classList.remove('hidden');
+      try {
+        const resp = await fetch('/api/goal-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
+          body: JSON.stringify({ goal: goalText })
+        });
+        const fields = await resp.json();
+        loading.classList.add('hidden');
+        if (!Array.isArray(fields) || fields.length === 0) {
+          container.innerHTML = '';
+          container.classList.add('hidden');
+          return;
+        }
+        container.innerHTML = fields.map(f => `
+          <div class="goal-context-field">
+            <label class="goal-context-label">${f.label}</label>
+            <input type="text"
+                   id="goalCtx_${f.field}"
+                   data-field="${f.field}"
+                   placeholder="${f.placeholder || ''}"
+                   class="goal-context-input"
+                   ${f.required ? 'required' : ''}>
+          </div>`).join('');
+        container.classList.remove('hidden');
+      } catch (e) {
+        loading.classList.add('hidden');
+        container.innerHTML = '';
+        container.classList.add('hidden');
+      }
+    }
+
     function openGoalScreen() {
       const name = activeContactContext?.name || '';
       const lbl = document.getElementById('goalPersonLabel');
@@ -4828,6 +4876,10 @@
       const inp = document.getElementById('goalInput');
       if (inp) inp.value = '';
       document.querySelectorAll('.goal-chip').forEach(c => c.classList.remove('active'));
+      document.getElementById('goalContextInputs').innerHTML = '';
+      document.getElementById('goalContextInputs').classList.add('hidden');
+      document.getElementById('goalContextLoading').classList.add('hidden');
+      clearTimeout(_goalContextTimeout);
       App.navigateTo('goal');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -4864,15 +4916,31 @@
         extraDiv.innerHTML = '';
         extraDiv.classList.add('hidden');
       }
+      // Trigger dynamic context inputs
+      clearTimeout(_goalContextTimeout);
+      const currentGoal = document.getElementById('goalInput').value.trim();
+      _goalContextTimeout = setTimeout(() => fetchGoalContext(currentGoal), 300);
+    });
+
+    document.getElementById('goalInput').addEventListener('input', function() {
+      clearTimeout(_goalContextTimeout);
+      _goalContextTimeout = setTimeout(() => fetchGoalContext(this.value.trim()), 800);
     });
 
     document.getElementById('goalSubmitBtn').addEventListener('click', () => {
       let goal = (document.getElementById('goalInput').value || '').trim();
       if (!goal) { showToast('Enter a goal or select an option', 'error'); return; }
-      const amount = document.getElementById('goalExtraAmount')?.value?.trim();
-      const time   = document.getElementById('goalExtraTime')?.value?.trim();
-      if (amount) goal += ` for ${amount}`;
-      if (time)   goal += ` by ${time}`;
+      // Collect dynamic context inputs
+      const contextInputs = document.querySelectorAll('#goalContextInputs .goal-context-input');
+      const extras = [];
+      contextInputs.forEach(input => {
+        const val = input.value.trim();
+        if (val) {
+          const label = input.closest('.goal-context-field')?.querySelector('.goal-context-label')?.textContent || input.dataset.field;
+          extras.push(`${label}: ${val}`);
+        }
+      });
+      if (extras.length > 0) goal += ' (' + extras.join(', ') + ')';
       App.state.activeIntent = goal;
       App.state.intentMode = 'strategic';
       fetchAndRenderStrategy(goal);

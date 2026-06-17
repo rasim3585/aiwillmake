@@ -561,6 +561,30 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
   }
 });
 
+app.post('/api/goal-context', limiter, async (req, res) => {
+  try {
+    const { goal } = req.body;
+    if (!goal?.trim()) return res.json([]);
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        system: 'You help users prepare for difficult conversations. Given a conversation goal, return a JSON array of 0-3 additional inputs that would make the message more specific and effective. Each item: { "field": "snake_case_key", "label": "Short label", "placeholder": "Example placeholder", "required": false }. Return ONLY the JSON array, no markdown, no explanation. If no extra info is needed, return []. Examples: "Ask for money" → [{field:"amount",label:"How much?",placeholder:"e.g. $500"},{field:"deadline",label:"By when?",placeholder:"e.g. end of month"}]. "Clear the air" → []. "Ask for a raise" → [{field:"target",label:"Target salary/increase",placeholder:"e.g. 20% or $5,000 more"}].',
+        messages: [{ role: 'user', content: `Goal: "${goal.trim()}"` }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text?.trim() || '[]';
+    const fields = JSON.parse(text.replace(/```json|```/g, '').trim());
+    res.json(Array.isArray(fields) ? fields : []);
+  } catch (e) {
+    console.error('[goal-context]', e.message);
+    res.json([]);
+  }
+});
+
 app.post('/api/analyze-reply', limiter, async (req, res) => {
   try {
     const { reply, categoryId, situation, language, contactContext, previousMessage, senderType } = req.body;
