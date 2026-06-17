@@ -2030,7 +2030,7 @@
     .home-conv-search:focus { border-color: var(--bord2); box-shadow: 0 0 0 3px rgba(212,113,90,0.10); }
     .home-conv-search::placeholder { color: var(--muted); }
     /* ── Date group header ── */
-    .home-conv-section {
+    .home-conv-section, .home-date-header {
       font-size: .68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .08em; color: var(--muted); margin: 12px 0 6px;
     }
@@ -4142,12 +4142,34 @@
         listEl.appendChild(row);
       };
 
-      [...contactGroups.entries()]
-        .sort((a, b) => Math.max(...b[1].convs.map(c => +new Date(c.updated_at))) - Math.max(...a[1].convs.map(c => +new Date(c.updated_at))))
-        .forEach(([contactId, { name, convs }]) => {
+      const now = Date.now();
+      const WEEK  = 7  * 24 * 60 * 60 * 1000;
+      const MONTH = 30 * 24 * 60 * 60 * 1000;
+
+      const sortedContacts = [...contactGroups.entries()]
+        .sort((a, b) => Math.max(...b[1].convs.map(c => +new Date(c.updated_at))) - Math.max(...a[1].convs.map(c => +new Date(c.updated_at))));
+
+      const contactDateGroups = [
+        { label: 'This week',  items: sortedContacts.filter(([,{convs}]) => now - Math.max(...convs.map(c => +new Date(c.updated_at))) < WEEK) },
+        { label: 'This month', items: sortedContacts.filter(([,{convs}]) => { const age = now - Math.max(...convs.map(c => +new Date(c.updated_at))); return age >= WEEK && age < MONTH; }) },
+        { label: 'Earlier',    items: sortedContacts.filter(([,{convs}]) => now - Math.max(...convs.map(c => +new Date(c.updated_at))) >= MONTH) },
+      ];
+
+      const nonEmptyContactGroups = contactDateGroups.filter(g => g.items.length > 0);
+      const showContactHeaders = nonEmptyContactGroups.length > 1;
+
+      nonEmptyContactGroups.forEach(({ label, items }) => {
+        if (showContactHeaders) {
+          const header = document.createElement('div');
+          header.className = 'home-date-header';
+          header.textContent = label;
+          listEl.appendChild(header);
+        }
+        items.forEach(([contactId, { name, convs }]) => {
           convs.sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at));
           renderPersonRow(contactId, name, convs[0], convs.length);
         });
+      });
 
       // Render nameGroups sorted by latest updated_at
       [...nameGroups.entries()]
