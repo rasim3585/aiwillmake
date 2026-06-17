@@ -2234,7 +2234,8 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
         });
         const evalData = await evalResp.json();
         const evalText = evalData.content?.[0]?.text || '{}';
-        evaluation = JSON.parse(evalText.replace(/```json|```/g, '').trim());
+        console.log('[sandbox-eval]', evalText);
+        evaluation = parseJsonSafe(evalText);
       } catch (e) { evaluation = null; }
     }
 
