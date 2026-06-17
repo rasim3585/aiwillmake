@@ -114,14 +114,14 @@
     .hero h1 {
       font-size: clamp(2rem, 5vw, 3.2rem);
       font-weight: 800; line-height: 1.0; letter-spacing: -0.03em;
-      margin-bottom: 18px;
+      margin-bottom: 8px;
     }
     .hero-h2 {
       font-size: clamp(1.1rem, 2.5vw, 1.6rem);
       font-weight: 700; letter-spacing: -.02em;
       background: linear-gradient(135deg, var(--accent), var(--acc2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 28px;
+      background-clip: text; margin-bottom: 16px;
     }
     .hero-try-now {
       margin: 24px 0 20px;
@@ -548,6 +548,19 @@
     .sandbox-outcome-actions { display: flex; flex-direction: column; gap: 8px; }
     .sandbox-outcome-retry { background: transparent; border: 1px solid #2a2a2a; color: #888; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; }
     .sandbox-outcome-cta { display: block; background: #ff6b35; color: #000; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 10px; text-decoration: none; text-align: center; }
+    .sandbox-outcome-score { font-size: 48px; font-weight: 900; margin-bottom: 4px; }
+    .sandbox-intro { padding: 0 0 16px; }
+    .sandbox-intro-free { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #ff6b35; margin-bottom: 6px; }
+    .sandbox-intro-desc { font-size: 13px; color: #444; line-height: 1.6; }
+    .sandbox-intro-desc em { font-style: normal; color: #777; }
+    .sandbox-challenge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .sandbox-challenge-card { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: flex-start; gap: 10px; width: 100%; }
+    .sandbox-challenge-card:hover { border-color: #ff6b35; background: rgba(255,107,53,0.06); }
+    .sandbox-challenge-card-real { border-color: #ff6b3530; background: rgba(255,107,53,0.04); }
+    .scc-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .scc-body { flex: 1; }
+    .scc-who { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+    .scc-label { font-size: 13px; font-weight: 600; color: #d0d0d0; line-height: 1.4; }
     #sandboxChallengePicker { background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 20px; overflow: hidden; }
     .how-wrap { max-width: 560px; margin: 0 auto; padding: 80px 0; }
     .how-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: #555; margin-bottom: 16px; text-align: center; }
@@ -605,42 +618,102 @@
           <p class="sandbox-sub">Pick someone. Have the conversation. See how they react.</p>
         </div>
 
-        <!-- Character picker -->
-        <div class="sandbox-characters" id="sandboxCharacters">
-          <button class="sandbox-char-btn" data-char="boss">
-            <div class="sandbox-char-emoji">💼</div>
-            <div class="sandbox-char-name">Michael, Your Boss</div>
-            <div class="sandbox-char-desc">Wants results, not excuses. Practice asking for a raise or explaining a delay.</div>
+        <!-- Character + challenge picker -->
+        <div class="sandbox-intro">
+          <div class="sandbox-intro-free">FREE — No signup needed</div>
+          <div class="sandbox-intro-desc">This is a demo with fictional characters. Your real version uses <em>actual people from your life</em> — built from your real chat history.</div>
+        </div>
+        <div id="sandboxCharacters" class="sandbox-challenge-grid">
+          <button class="sandbox-challenge-card" data-char="boss" data-challenge="raise">
+            <span class="scc-emoji">👔</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Boss</div>
+              <div class="scc-label">Ask for a raise</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn" data-char="mom">
-            <div class="sandbox-char-emoji">👩‍👦</div>
-            <div class="sandbox-char-name">Mom</div>
-            <div class="sandbox-char-desc">Loving but can guilt-trip. Practice setting limits without hurting feelings.</div>
+          <button class="sandbox-challenge-card" data-char="boss" data-challenge="credit">
+            <span class="scc-emoji">👔</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Boss</div>
+              <div class="scc-label">Make him admit he took your credit</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn" data-char="partner">
-            <div class="sandbox-char-emoji">💑</div>
-            <div class="sandbox-char-name">Jordan, Your Partner</div>
-            <div class="sandbox-char-desc">Emotionally intelligent but conflict-avoidant. Practice tough conversations.</div>
+          <button class="sandbox-challenge-card" data-char="mom" data-challenge="holiday">
+            <span class="scc-emoji">💛</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Mom</div>
+              <div class="scc-label">Tell her you're skipping the holidays</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn" data-char="client">
-            <div class="sandbox-char-emoji">🤝</div>
-            <div class="sandbox-char-name">David, Difficult Client</div>
-            <div class="sandbox-char-desc">Demanding and skeptical. Practice handling scope creep or missed deadlines.</div>
+          <button class="sandbox-challenge-card" data-char="mom" data-challenge="moving">
+            <span class="scc-emoji">💛</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Mom</div>
+              <div class="scc-label">Tell her you're moving away</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn" data-char="ex">
-            <div class="sandbox-char-emoji">💔</div>
-            <div class="sandbox-char-name">Alex, Your Ex</div>
-            <div class="sandbox-char-desc">Complicated history. Practice saying what you actually mean — or letting go.</div>
+          <button class="sandbox-challenge-card" data-char="partner" data-challenge="dtf">
+            <span class="scc-emoji">💔</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Partner</div>
+              <div class="scc-label">Define the relationship</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn" data-char="bestie">
-            <span class="sandbox-char-emoji">🫂</span>
-            <span class="sandbox-char-name">Best Friend</span>
-            <span class="sandbox-char-desc">Knows everything. Says it like it is.</span>
+          <button class="sandbox-challenge-card" data-char="partner" data-challenge="issue">
+            <span class="scc-emoji">💔</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Partner</div>
+              <div class="scc-label">Bring up what's been bothering you</div>
+            </div>
           </button>
-          <button class="sandbox-char-btn sandbox-char-real" data-char="real">
-            <span class="sandbox-char-emoji">👤</span>
-            <span class="sandbox-char-name">Someone You Know</span>
-            <span class="sandbox-char-desc">Upload your real chat history. The AI becomes them.</span>
+          <button class="sandbox-challenge-card" data-char="client" data-challenge="scope">
+            <span class="scc-emoji">💼</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Client</div>
+              <div class="scc-label">Say no to out-of-scope work</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card" data-char="client" data-challenge="invoice">
+            <span class="scc-emoji">💼</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Client</div>
+              <div class="scc-label">Get the overdue invoice paid</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card" data-char="ex" data-challenge="closure">
+            <span class="scc-emoji">👻</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Ex</div>
+              <div class="scc-label">Get closure — for real this time</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card" data-char="ex" data-challenge="back">
+            <span class="scc-emoji">👻</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Ex</div>
+              <div class="scc-label">Find out if they want you back</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card" data-char="bestie" data-challenge="confess">
+            <span class="scc-emoji">🫂</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Best Friend</div>
+              <div class="scc-label">Confess what you've been hiding</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card" data-char="bestie" data-challenge="advice">
+            <span class="scc-emoji">🫂</span>
+            <div class="scc-body">
+              <div class="scc-who">Your Best Friend</div>
+              <div class="scc-label">Get their honest take on a bad decision</div>
+            </div>
+          </button>
+          <button class="sandbox-challenge-card sandbox-challenge-card-real" data-char="real" data-challenge="free" style="grid-column: 1 / -1;">
+            <span class="scc-emoji">👤</span>
+            <div class="scc-body">
+              <div class="scc-who" style="color:#ff6b35">Someone You Know</div>
+              <div class="scc-label">Upload your real chat history → AI becomes them</div>
+            </div>
           </button>
         </div>
 
@@ -689,6 +762,7 @@
           </div>
           <div class="sandbox-outcome hidden" id="sandboxOutcome">
             <div class="sandbox-outcome-icon" id="sandboxOutcomeIcon"></div>
+            <div class="sandbox-outcome-score" id="sandboxOutcomeScore"></div>
             <div class="sandbox-outcome-title" id="sandboxOutcomeTitle"></div>
             <div class="sandbox-outcome-reason" id="sandboxOutcomeReason"></div>
             <div class="sandbox-outcome-tip" id="sandboxOutcomeTip"></div>
@@ -928,6 +1002,18 @@ fetch('/api/sandbox-challenges')
   .then(data => { allChallenges = data; })
   .catch(() => {});
 
+document.querySelectorAll('.sandbox-challenge-card').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const charId = btn.dataset.char;
+    const challengeId = btn.dataset.challenge;
+    if (charId === 'real') { window.location.href = 'app.html'; return; }
+    currentChar = charId;
+    currentChallenge = challengeId === 'free' ? null : (allChallenges[charId]?.find(c => c.id === challengeId) || null);
+    startChat();
+  });
+});
+
+// Legacy stub — character picker no longer used but referenced by back-button handler
 document.querySelectorAll('.sandbox-char-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const charId = btn.dataset.char;
@@ -1104,6 +1190,12 @@ function showOutcome(evaluation) {
   document.getElementById('sandboxOutcomeTitle').textContent = titles[evaluation.outcome] || 'Done.';
   document.getElementById('sandboxOutcomeReason').textContent = evaluation.reason || '';
   document.getElementById('sandboxOutcomeTip').textContent    = evaluation.tip ? '💡 ' + evaluation.tip : '';
+
+  const scoreEl = document.getElementById('sandboxOutcomeScore');
+  if (scoreEl && evaluation.score !== undefined) {
+    scoreEl.textContent = evaluation.score + '%';
+    scoreEl.style.color = evaluation.score >= 71 ? '#34c759' : evaluation.score >= 31 ? '#ff9f0a' : '#ff453a';
+  }
 
   document.getElementById('sandboxOutcome').classList.remove('hidden');
   document.getElementById('sandboxOutcome').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

@@ -2097,7 +2097,7 @@ SPEECH PATTERNS you use constantly:
 
 EMOTIONAL REALITY: You're actually threatened by competent people. You mask insecurity with process and corporate speak. You take credit quietly and never loudly. You genuinely believe you're a good manager.
 
-Respond in 1-3 short sentences. Stay completely in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in character. Never acknowledge being an AI.`
     },
     mom: {
       name: 'Mom',
@@ -2115,7 +2115,7 @@ SPEECH PATTERNS:
 
 EMOTIONAL REALITY: You sacrificed a lot. You want credit for that love even if you never ask for it directly. You feel most loved when they need you. Independence in your child feels like rejection.
 
-Respond in 1-3 sentences. Stay in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay in character. Never acknowledge being an AI.`
     },
     partner: {
       name: 'Jordan',
@@ -2133,7 +2133,7 @@ SPEECH PATTERNS:
 
 EMOTIONAL REALITY: You're terrified of being left. Commitment feels like setting yourself up to be abandoned. You'd rather control the distance than risk losing it.
 
-Respond in 1-3 sentences. Stay in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay in character. Never acknowledge being an AI.`
     },
     client: {
       name: 'David',
@@ -2151,7 +2151,7 @@ SPEECH PATTERNS:
 
 EMOTIONAL REALITY: You're stressed and overwhelmed. You're not trying to take advantage — you just don't know what you don't know. You respond well to education but slip back into old patterns.
 
-Respond in 1-3 sentences. Stay in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay in character. Never acknowledge being an AI.`
     },
     ex: {
       name: 'Alex',
@@ -2169,7 +2169,7 @@ SPEECH PATTERNS:
 
 EMOTIONAL REALITY: You miss them. You're not ready to say it. You'd rather orbit than commit or let go. Every message is a test to see if they still care.
 
-Respond in 1-3 sentences. Stay completely in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in character. Never acknowledge being an AI.`
     },
     bestie: {
       name: 'Sam',
@@ -2188,7 +2188,7 @@ SPEECH PATTERNS:
 
 EMOTIONAL REALITY: You're fiercely loyal and sometimes too honest. You've seen them at their worst and they've seen yours. This friendship is a safe place to be a mess.
 
-Respond in 1-3 sentences. Stay completely in character. Never acknowledge being an AI.`
+Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in character. Never acknowledge being an AI.`
     }
   };
 
@@ -2210,7 +2210,7 @@ Respond in 1-3 sentences. Stay completely in character. Never acknowledge being 
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 200,
+        max_tokens: 100,
         system: archetype.system + challengeContext,
         messages: history
       })
@@ -2230,7 +2230,7 @@ Respond in 1-3 sentences. Stay completely in character. Never acknowledge being 
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 150,
-            system: 'You evaluate conversation outcomes. Given a conversation goal and the full exchange, determine if the user succeeded. Return JSON: { "outcome": "success" | "partial" | "fail", "reason": "one sentence explanation", "tip": "one specific thing they could do differently or better" }. Be honest and specific.',
+            system: 'You evaluate conversation outcomes. Given a conversation goal and the full exchange, determine if the user succeeded. Return JSON: { "outcome": "success" | "partial" | "fail", "score": 0-100, "reason": "one sentence", "tip": "one specific actionable tip" }. Score: 0-30 = fail, 31-70 = partial, 71-100 = success. Be honest and specific.',
             messages: [{ role: 'user', content: `Goal: "${challenge.goal}"\n\nConversation:\n${fullConvo}` }]
           })
         });
