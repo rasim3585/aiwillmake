@@ -7333,11 +7333,10 @@
       const type     = contactCtx.type || 'Contact';
       const name     = contactCtx.name || 'them';
       const patterns = Array.isArray(contactCtx.observed_patterns) ? contactCtx.observed_patterns : [];
-      const summary  = (contactCtx.relationship_summary || '').slice(0, 120);
+      const summary  = (contactCtx.relationship_summary || '').slice(0, 200);
       const state    = contactCtx.relationship_state || '';
 
-      const firstPattern = (patterns[0] || '').slice(0, 80);
-      const topPatterns  = patterns.slice(0, 3).map(p => p.slice(0, 70));
+      const topPatterns  = patterns.slice(0, 3).map(p => p.slice(0, 110));
 
       const statePill = state
         ? `<div style="display:inline-block;padding:4px 12px;border-radius:20px;background:rgba(212,113,90,0.2);border:1px solid #d4715a;font-size:11px;color:#d4715a;font-weight:700;margin-bottom:16px;">${esc(state)}</div>`
@@ -7346,21 +7345,16 @@
       const patternItems = topPatterns.map(p =>
         `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
            <span style="color:#d4715a;font-size:10px;margin-top:3px;flex-shrink:0;">●</span>
-           <span style="font-size:12px;color:#e2e8f0;line-height:1.45;">${esc(p)}${p.length >= 70 ? '…' : ''}</span>
+           <span style="font-size:12px;color:#e2e8f0;line-height:1.45;">${esc(p)}${p.length >= 110 ? '…' : ''}</span>
          </div>`
       ).join('');
 
       const card = document.createElement('div');
-      card.style.cssText = 'position:fixed;left:-9999px;top:0;width:360px;padding:26px 22px;background:linear-gradient(145deg,#1e1b4b 0%,#1a1a2e 55%,#0f172a 100%);font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;';
+      card.style.cssText = 'position:fixed;left:-9999px;top:0;width:420px;padding:26px 22px;background:linear-gradient(145deg,#1e1b4b 0%,#1a1a2e 55%,#0f172a 100%);font-family:system-ui,-apple-system,sans-serif;box-sizing:border-box;';
       card.innerHTML = `
         <div style="font-size:10px;color:#818cf8;font-weight:700;letter-spacing:.1em;margin-bottom:6px;">RELATIONSHIP PROFILE</div>
         <div style="font-size:15px;color:#f1f5f9;font-weight:700;margin-bottom:14px;">Your ${esc(showName ? `${type} · ${name}` : type)}</div>
         ${statePill}
-        ${firstPattern ? `
-        <div style="margin-bottom:16px;">
-          <div style="font-size:10px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">How they communicate:</div>
-          <div style="font-size:14px;color:#d4715a;font-weight:700;line-height:1.45;">${esc(firstPattern)}</div>
-        </div>` : ''}
         ${topPatterns.length ? `
         <div style="margin-bottom:16px;">
           <div style="font-size:10px;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;">Observed patterns:</div>
@@ -7368,7 +7362,7 @@
         </div>` : ''}
         ${summary ? `
         <div style="margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;border-left:2px solid rgba(212,113,90,0.4);">
-          <div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.5;">${esc(summary)}${summary.length >= 120 ? '…' : ''}</div>
+          <div style="font-size:12px;color:#94a3b8;font-style:italic;line-height:1.5;">${esc(summary)}${summary.length >= 200 ? '…' : ''}</div>
         </div>` : ''}
         <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:flex-end;">
           <div style="font-size:10px;color:#475569;line-height:1.5;">Built from real conversation history</div>
