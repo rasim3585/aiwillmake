@@ -1191,11 +1191,6 @@ async function sendMessage() {
       bar.style.background = score >= 71 ? '#34c759' : score >= 31 ? '#ff9f0a' : '#ff453a';
       signal.textContent = (data.evaluation.signal || '') + ' · ' + score + '% · ' + Math.max(0, currentChallenge.max_turns - turnsUsed) + ' attempts left';
 
-      if (data.evaluation.outcome === 'success' && !outcomeShown) {
-        outcomeShown = true;
-        setTimeout(() => showOutcome(data.evaluation), 800);
-        return;
-      }
     }
 
     if (currentChallenge && !data.evaluation) {
