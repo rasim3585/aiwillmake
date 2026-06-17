@@ -2218,20 +2218,18 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
     const data = await response.json();
     const reply = data.content?.[0]?.text || '';
 
-    // Evaluate outcome if challenge active and last turn reached
     let evaluation = null;
     const turnsUsed = Math.ceil(history.length / 2);
-    if (challenge && turnsUsed >= challenge.max_turns) {
+    if (challenge) {
       try {
-        const fullConvo = history.map(m => `${m.role === 'user' ? 'User' : character_id}: ${m.content}`).join('\n') + `\n${character_id}: ${reply}`;
         const evalResp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 150,
-            system: 'You evaluate conversation outcomes. Given a conversation goal and the full exchange, determine if the user succeeded. Return JSON: { "outcome": "success" | "partial" | "fail", "score": 0-100, "reason": "one sentence", "tip": "one specific actionable tip" }. Score: 0-30 = fail, 31-70 = partial, 71-100 = success. Be honest and specific.',
-            messages: [{ role: 'user', content: `Goal: "${challenge.goal}"\n\nConversation:\n${fullConvo}` }]
+            system: `You evaluate how close a user is to achieving their conversation goal. Given the goal and conversation so far, score progress 0-100. Return JSON only: { "score": 0-100, "outcome": "success" | "partial" | "fail", "signal": "one very short phrase describing current state, max 5 words" }. Score 71-100 = success (goal achieved), 31-70 = partial (making progress), 0-30 = fail (not working). Be honest and dynamic — score should go up AND down based on how conversation flows.`,
+            messages: [{ role: 'user', content: `Goal: "${challenge?.goal || 'have a good conversation'}"\n\nConversation so far:\n${[...history, {role:'assistant', content: reply}].map(m => `${m.role === 'user' ? 'User' : 'Them'}: ${m.content}`).join('\n')}` }]
           })
         });
         const evalData = await evalResp.json();
