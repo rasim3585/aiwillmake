@@ -2040,8 +2040,43 @@ RULES:
   }
 });
 
+const sandboxChallenges = {
+  boss: [
+    { id: 'raise',  label: 'Convince Michael to give you a raise',       goal: 'Get Michael to agree to discuss or approve a salary increase', max_turns: 4 },
+    { id: 'credit', label: 'Make him admit he took credit for your work', goal: 'Get Michael to acknowledge your contribution directly',         max_turns: 4 }
+  ],
+  mom: [
+    { id: 'holiday', label: "Tell her you're not coming home for the holidays", goal: 'Deliver the news without triggering a guilt trip or argument', max_turns: 4 },
+    { id: 'moving',  label: "Tell her you're moving to another city",          goal: 'Get her to accept and support your decision',                max_turns: 4 }
+  ],
+  partner: [
+    { id: 'dtf',   label: 'Get them to define the relationship',            goal: 'Get Jordan to agree to be officially together or have a real conversation about it', max_turns: 4 },
+    { id: 'issue', label: "Bring up something that's been bothering you",   goal: 'Express your concern and have Jordan take it seriously without deflecting',          max_turns: 4 }
+  ],
+  client: [
+    { id: 'scope',   label: 'Say no to his out-of-scope request', goal: 'Decline the extra work professionally and keep the contract intact', max_turns: 4 },
+    { id: 'invoice', label: 'Get him to pay the overdue invoice',  goal: 'Get David to commit to a specific payment date',                    max_turns: 4 }
+  ],
+  ex: [
+    { id: 'closure', label: 'Get closure — once and for all',           goal: 'Have Alex clearly state whether they want to try again or truly move on', max_turns: 4 },
+    { id: 'back',    label: 'Find out if they want to get back together', goal: 'Get a direct honest answer from Alex about their feelings',             max_turns: 4 }
+  ],
+  bestie: [
+    { id: 'confess', label: "Confess something you've been hiding",       goal: 'Tell Sam the secret and get their honest reaction',          max_turns: 4 },
+    { id: 'advice',  label: 'Ask for honest advice about a bad decision', goal: "Get Sam's real opinion even if it's hard to hear",           max_turns: 4 }
+  ]
+};
+
+app.get('/api/sandbox-challenges', (req, res) => {
+  const result = {};
+  Object.entries(sandboxChallenges).forEach(([char_id, challs]) => {
+    result[char_id] = challs.map(c => ({ id: c.id, label: c.label, max_turns: c.max_turns }));
+  });
+  res.json(result);
+});
+
 app.post('/api/sandbox-simulate', limiter, async (req, res) => {
-  const { character_id, history } = req.body;
+  const { character_id, history, challenge_id } = req.body;
   if (!character_id || !Array.isArray(history)) return res.status(400).json({ error: 'invalid' });
   if (history.length > 20) return res.status(400).json({ error: 'too long' });
 
@@ -2160,6 +2195,11 @@ Respond in 1-3 sentences. Stay completely in character. Never acknowledge being 
   const archetype = archetypes[character_id];
   if (!archetype) return res.status(400).json({ error: 'unknown character' });
 
+  const challenge = sandboxChallenges[character_id]?.find(c => c.id === challenge_id) || null;
+  const challengeContext = challenge
+    ? `\n\nSCENARIO: The person you're talking to is trying to: "${challenge.goal}". React naturally and authentically — don't make it easy. Make them earn it. If they use a genuinely good approach, you can soften. If they're clumsy or aggressive, resist. Be real.`
+    : '';
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -2171,13 +2211,37 @@ Respond in 1-3 sentences. Stay completely in character. Never acknowledge being 
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 200,
-        system: archetype.system,
+        system: archetype.system + challengeContext,
         messages: history
       })
     });
     const data = await response.json();
     const reply = data.content?.[0]?.text || '';
-    res.json({ reply, character_name: archetype.name, character_role: archetype.role });
+
+    // Evaluate outcome if challenge active and last turn reached
+    let evaluation = null;
+    const turnsUsed = Math.ceil(history.length / 2);
+    if (challenge && turnsUsed >= challenge.max_turns) {
+      try {
+        const fullConvo = history.map(m => `${m.role === 'user' ? 'User' : character_id}: ${m.content}`).join('\n') + `\n${character_id}: ${reply}`;
+        const evalResp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 150,
+            system: 'You evaluate conversation outcomes. Given a conversation goal and the full exchange, determine if the user succeeded. Return JSON: { "outcome": "success" | "partial" | "fail", "reason": "one sentence explanation", "tip": "one specific thing they could do differently or better" }. Be honest and specific.',
+            messages: [{ role: 'user', content: `Goal: "${challenge.goal}"\n\nConversation:\n${fullConvo}` }]
+          })
+        });
+        const evalData = await evalResp.json();
+        const evalText = evalData.content?.[0]?.text || '{}';
+        evaluation = JSON.parse(evalText.replace(/```json|```/g, '').trim());
+      } catch (e) { evaluation = null; }
+    }
+
+    const turns_left = challenge ? Math.max(0, challenge.max_turns - turnsUsed) : null;
+    res.json({ reply, character_name: archetype.name, character_role: archetype.role, evaluation, turns_left, challenge });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
