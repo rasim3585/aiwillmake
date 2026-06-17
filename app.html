@@ -877,6 +877,14 @@
       align-self: flex-start; background: var(--surf2); color: var(--text);
       border: 1px solid var(--bord); border-bottom-left-radius: 4px;
     }
+    .rp-bubble-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .rp-inline-correct-btn { background: none; border: none; color: var(--muted); font-size: .72rem; cursor: pointer; padding: 2px 4px; opacity: 0.55; transition: opacity .15s; }
+    .rp-inline-correct-btn:hover { opacity: 1; color: #e55; }
+    .rp-inline-correct-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 80%; }
+    .rp-inline-correct-input { flex: 1; min-width: 140px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf2); color: var(--text); font-size: .84rem; }
+    .rp-inline-correct-save { padding: 5px 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: .8rem; cursor: pointer; }
+    .rp-inline-correct-cancel { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--bord); background: transparent; color: var(--muted); font-size: .8rem; cursor: pointer; }
+    .rp-corrected-label { font-size: .7rem; color: var(--muted); font-style: italic; }
     .rp-bubble.system {
       background: transparent; border: 1px solid rgba(255,255,255,.1);
       color: var(--muted); font-style: italic; font-size: .78rem;
@@ -6961,12 +6969,101 @@
     }
 
     function _rpAppendBubble(role, text) {
-      const el = document.createElement('div');
-      el.className = `rp-bubble ${role}`;
-      el.textContent = text;
       const container = document.getElementById('rp-messages');
-      container.appendChild(el);
+      if (role === 'other') {
+        let histIdx = -1;
+        for (let i = _simHistory.length - 1; i >= 0; i--) {
+          if (_simHistory[i].role === 'assistant' && _simHistory[i].content === text) { histIdx = i; break; }
+        }
+        const wrapper = document.createElement('div');
+        wrapper.className = 'rp-bubble-wrapper';
+        const el = document.createElement('div');
+        el.className = 'rp-bubble other';
+        el.textContent = text;
+        wrapper.appendChild(el);
+        if (histIdx >= 0) {
+          const btn = document.createElement('button');
+          btn.className = 'rp-inline-correct-btn';
+          btn.textContent = '✗ Wrong';
+          btn.addEventListener('click', () => btn.replaceWith(_rpBuildCorrectForm(el, histIdx)));
+          wrapper.appendChild(btn);
+        }
+        container.appendChild(wrapper);
+      } else {
+        const el = document.createElement('div');
+        el.className = `rp-bubble ${role}`;
+        el.textContent = text;
+        container.appendChild(el);
+      }
       container.scrollTop = container.scrollHeight;
+    }
+
+    function _rpBuildCorrectForm(bubbleEl, histIdx) {
+      const form = document.createElement('div');
+      form.className = 'rp-inline-correct-form';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'rp-inline-correct-input';
+      input.placeholder = 'What should they have said?';
+      input.value = bubbleEl.textContent;
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'rp-inline-correct-save';
+      saveBtn.textContent = 'Save';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'rp-inline-correct-cancel';
+      cancelBtn.textContent = 'Cancel';
+
+      const doSave = async () => {
+        const newText = input.value.trim();
+        if (!newText) return;
+        const original = bubbleEl.textContent;
+        bubbleEl.textContent = newText;
+        if (_simHistory[histIdx]) _simHistory[histIdx].content = newText;
+        const label = document.createElement('span');
+        label.className = 'rp-corrected-label';
+        label.textContent = '✓ corrected';
+        form.replaceWith(label);
+        if (_simCharacter?.contact_id && accessToken) {
+          try {
+            const existing = _simCharacter.character_profile || '';
+            const entry = `- Original: "${original}"\n  Corrected: "${newText}"`;
+            const marker = 'USER CORRECTIONS';
+            const newProfile = existing.includes(marker)
+              ? existing.trimEnd() + '\n' + entry
+              : (existing.trimEnd() ? existing.trimEnd() + '\n\n' : '') + marker + '\n' + entry;
+            await fetch(`/api/contacts/${_simCharacter.contact_id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ character_profile: newProfile })
+            });
+            _simCharacter.character_profile = newProfile;
+          } catch (e) { console.error('[inline-correction]', e); }
+        }
+      };
+
+      const doCancel = () => {
+        const btn = document.createElement('button');
+        btn.className = 'rp-inline-correct-btn';
+        btn.textContent = '✗ Wrong';
+        btn.addEventListener('click', () => btn.replaceWith(_rpBuildCorrectForm(bubbleEl, histIdx)));
+        form.replaceWith(btn);
+      };
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); doSave(); }
+        if (e.key === 'Escape') doCancel();
+      });
+      saveBtn.addEventListener('click', doSave);
+      cancelBtn.addEventListener('click', doCancel);
+
+      form.appendChild(input);
+      form.appendChild(saveBtn);
+      form.appendChild(cancelBtn);
+      setTimeout(() => input.focus(), 0);
+      return form;
     }
 
     function _rpShowTyping() {
