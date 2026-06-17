@@ -2212,6 +2212,9 @@
     .goal-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .goal-input { width: 100%; min-height: 80px; padding: 11px 12px; background: var(--card); border: 1px solid var(--bord); border-radius: 10px; color: var(--fg); font: inherit; font-size: .9rem; resize: vertical; box-sizing: border-box; margin-bottom: 16px; }
     .goal-input:focus { border-color: var(--accent); outline: none; }
+    .goal-extra-row { display: flex; gap: 8px; margin-top: 8px; }
+    .goal-extra-field { flex: 1; background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; color: var(--txt); font: inherit; font-size: 14px; padding: 10px 12px; outline: none; }
+    .goal-extra-field:focus { border-color: var(--accent); }
     .btn-get-strategy { width: 100%; padding: 14px; background: var(--accent); border: none; color: #fff; font: inherit; font-size: .97rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: opacity .2s; }
     .btn-get-strategy:hover:not(:disabled) { opacity: .88; }
     .btn-get-strategy:disabled { opacity: .4; cursor: not-allowed; }
@@ -2670,14 +2673,14 @@
             <span class="co-icon">💬</span>
             <div class="co-body">
               <span class="co-title">Paste their reply →</span>
-              <span class="co-desc">Analyze what they really mean and get your next move</span>
+              <span class="co-desc">Paste a message you received — we'll decode what it really means and suggest your next move</span>
             </div>
           </button>
           <button type="button" class="continue-opt" id="contImportOpt">
             <span class="co-icon">📂</span>
             <div class="co-body">
               <span class="co-title">Import WhatsApp chat →</span>
-              <span class="co-desc">Analyze the relationship, interest level, power balance, and next best move.</span>
+              <span class="co-desc">Upload a WhatsApp conversation — we'll analyze the relationship dynamics and communication patterns</span>
             </div>
           </button>
           <button type="button" class="continue-opt co-tertiary" id="contHistoryOpt">
@@ -2935,6 +2938,7 @@
           <button type="button" class="goal-chip" data-chip="Ask for a raise">Ask for a raise</button>
           <button type="button" class="goal-chip" data-chip="Bring something up">Bring something up</button>
         </div>
+        <div id="goalExtraInput" class="hidden"></div>
         <textarea id="goalInput" class="goal-input" placeholder="Or describe your goal… (e.g. 'I want to apologize and fix what happened last time')"></textarea>
         <button type="button" class="btn-get-strategy" id="goalSubmitBtn">Get strategy →</button>
       </div>
@@ -4833,17 +4837,42 @@
       if (!chip) return;
       const wasActive = chip.classList.contains('active');
       document.querySelectorAll('.goal-chip').forEach(c => c.classList.remove('active'));
+      const extraDiv = document.getElementById('goalExtraInput');
       if (!wasActive) {
         chip.classList.add('active');
-        document.getElementById('goalInput').value = chip.dataset.chip;
+        const chip_val = chip.dataset.chip;
+        document.getElementById('goalInput').value = chip_val;
+        if (chip_val === 'Ask for money/a loan') {
+          extraDiv.innerHTML = `
+            <div class="goal-extra-row">
+              <input type="text" id="goalExtraAmount" placeholder="Amount (e.g. $500)" class="goal-extra-field">
+              <input type="text" id="goalExtraTime" placeholder="When by? (e.g. end of month)" class="goal-extra-field">
+            </div>`;
+          extraDiv.classList.remove('hidden');
+        } else if (chip_val === 'Ask for a raise') {
+          extraDiv.innerHTML = `
+            <div class="goal-extra-row">
+              <input type="text" id="goalExtraAmount" placeholder="Target amount or %" class="goal-extra-field">
+            </div>`;
+          extraDiv.classList.remove('hidden');
+        } else {
+          extraDiv.innerHTML = '';
+          extraDiv.classList.add('hidden');
+        }
       } else {
         document.getElementById('goalInput').value = '';
+        extraDiv.innerHTML = '';
+        extraDiv.classList.add('hidden');
       }
     });
 
     document.getElementById('goalSubmitBtn').addEventListener('click', () => {
-      const goal = (document.getElementById('goalInput').value || '').trim();
+      let goal = (document.getElementById('goalInput').value || '').trim();
       if (!goal) { showToast('Enter a goal or select an option', 'error'); return; }
+      const amount = document.getElementById('goalExtraAmount')?.value?.trim();
+      const time   = document.getElementById('goalExtraTime')?.value?.trim();
+      if (amount) goal += ` for ${amount}`;
+      if (time)   goal += ` by ${time}`;
       App.state.activeIntent = goal;
       App.state.intentMode = 'strategic';
       fetchAndRenderStrategy(goal);
@@ -5987,7 +6016,7 @@
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
             <button type="button" class="person-secondary-btn" id="personAnalyzeBtn">📩 Analyze reply</button>
-            <button type="button" class="person-secondary-btn" id="personBriefBtn">🔍 Decision brief</button>
+            <button type="button" class="person-secondary-btn" id="personBriefBtn">🔍 Review a message before sending</button>
           </div>
 
           <div class="person-actions-list">
