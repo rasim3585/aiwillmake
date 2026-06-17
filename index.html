@@ -1087,10 +1087,16 @@ function startChat() {
     goalEl.style.display = 'none';
   }
 
-  document.getElementById('sandboxTurnsBar').style.display = 'none';
-  document.getElementById('sandboxProgressWrap').style.display = 'none';
-  document.getElementById('sandboxProgressBar').style.width = '0%';
-  document.getElementById('sandboxProgressSignal').textContent = '';
+  if (currentChallenge) {
+    document.getElementById('sandboxProgressWrap').style.display = 'block';
+    document.getElementById('sandboxProgressBar').style.width = '0%';
+    document.getElementById('sandboxProgressBar').style.background = '#ff453a';
+    document.getElementById('sandboxProgressSignal').textContent = '0% · ' + currentChallenge.max_turns + ' attempts left';
+    document.getElementById('sandboxTurnsBar').style.display = 'none';
+  } else {
+    document.getElementById('sandboxProgressWrap').style.display = 'none';
+    document.getElementById('sandboxTurnsBar').style.display = 'none';
+  }
 
   document.getElementById('sandboxCharEmoji').textContent = CHAR_EMOJIS[currentChar];
   document.getElementById('sandboxCharName').textContent = CHAR_NAMES[currentChar];
@@ -1144,6 +1150,13 @@ async function sendMessage() {
   sandboxHistory.push({ role: 'user', content: text });
   turnsUsed++;
 
+  const signal = document.getElementById('sandboxProgressSignal');
+  if (signal && currentChallenge) {
+    const attemptsLeft = Math.max(0, currentChallenge.max_turns - turnsUsed);
+    const currentScore = document.getElementById('sandboxProgressBar')?.style.width || '0%';
+    signal.textContent = currentScore.replace('%', '') + '% · ' + attemptsLeft + ' attempts left';
+  }
+
   document.getElementById('sandboxSend').disabled = true;
   input.disabled = true;
   document.getElementById('sandboxTyping').classList.remove('hidden');
@@ -1183,6 +1196,13 @@ async function sendMessage() {
         setTimeout(() => showOutcome(data.evaluation), 800);
         return;
       }
+    }
+
+    if (currentChallenge && !data.evaluation) {
+      const attemptsLeft = Math.max(0, currentChallenge.max_turns - turnsUsed);
+      const bar = document.getElementById('sandboxProgressBar');
+      const currentPct = parseInt(bar?.style.width) || 0;
+      document.getElementById('sandboxProgressSignal').textContent = currentPct + '% · ' + attemptsLeft + ' attempts left';
     }
 
     if (currentChallenge && turnsUsed >= currentChallenge.max_turns && !outcomeShown) {
