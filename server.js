@@ -2294,6 +2294,7 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
 });
 
 app.post('/api/create-checkout', requireAuth, async (req, res) => {
+  console.log('[checkout] stripe null?', stripe === null, 'key set?', !!process.env.STRIPE_SECRET_KEY);
   const { plan } = req.body;
 
   const prices = {
