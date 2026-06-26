@@ -65,7 +65,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 
     if (userId && plan) {
       const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
-      await fetch(`${SUPABASE_REST}/user_subscriptions`, {
+      const subResp = await fetch(`${SUPABASE_REST}/user_subscriptions`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
         body: JSON.stringify({
@@ -77,6 +77,8 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
           created_at: new Date().toISOString()
         })
       });
+      const subResult = await subResp.json();
+      console.log('[webhook-sub] status:', subResp.status, 'body:', JSON.stringify(subResult));
       console.log(`[stripe] subscription activated: ${userId} → ${plan}`);
     }
   }
