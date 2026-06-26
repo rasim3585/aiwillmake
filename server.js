@@ -2356,4 +2356,5 @@ console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS las
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim_accuracy_rating integer;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_areas text;');
 console.log('MIGRATION NEEDED: CREATE TABLE IF NOT EXISTS user_subscriptions (id uuid DEFAULT gen_random_uuid() PRIMARY KEY, user_id uuid NOT NULL, plan text, status text DEFAULT \'active\', stripe_customer_id text, stripe_subscription_id text, created_at timestamptz DEFAULT now()); ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY; CREATE POLICY "sub_owner" ON user_subscriptions FOR ALL USING (auth.uid() = user_id);');
+console.log('MIGRATION NEEDED: ALTER TABLE user_subscriptions ADD CONSTRAINT user_subscriptions_user_id_unique UNIQUE (user_id);');
 app.listen(port, () => console.log(`Server running on ${port}`));
