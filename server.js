@@ -23,12 +23,6 @@ const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_
 const app = express();
 app.set('trust proxy', 1);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TEST BYPASS - REMOVE BEFORE LAUNCH
-// Accounts in this list: unlimited credits + all PRO features unlocked
-const DEV_BYPASS_EMAILS = ['rasimkurum@gmail.com'];
-const isDevBypass = req => !!(req.user?.email && DEV_BYPASS_EMAILS.includes(req.user.email));
-// ─────────────────────────────────────────────────────────────────────────────
 
 const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '');
 const supabase = supabaseUrl && process.env.SUPABASE_ANON_KEY
@@ -77,8 +71,6 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
           created_at: new Date().toISOString()
         })
       });
-      const subText = await subResp.text();
-      console.log('[webhook-sub] status:', subResp.status, 'body:', subText || '(empty)');
       console.log(`[stripe] subscription activated: ${userId} → ${plan}`);
     }
   }
@@ -197,8 +189,6 @@ app.get('/api/credits', async (req, res) => {
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (!user) return res.json({ credits_used: 0, limit: 5, guest: true });
-    if (DEV_BYPASS_EMAILS.includes(user.email)) // TEST BYPASS - REMOVE BEFORE LAUNCH
-      return res.json({ credits_used: 0, limit: 999, guest: false }); // TEST BYPASS - REMOVE BEFORE LAUNCH
     const credits_used = await getCredits(token, user.id);
     res.json({ credits_used, limit: 5, guest: false });
   } catch (e) {
@@ -267,7 +257,7 @@ ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr
     const modifier = variationPrompts[variation] || null;
 
     let creditsUsed = 0;
-    if (req.user && !isDevBypass(req)) {
+    if (req.user) {
       creditsUsed = await getCredits(req.token, req.user.id);
     }
 
@@ -442,7 +432,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       });
     }
 
-    if (req.user && !isDevBypass(req)) {
+    if (req.user) {
       await incrementCredits(req.token, req.user.id);
     }
 
@@ -809,7 +799,7 @@ const DISENGAGEMENT_NEXT_REPLY = {
 
 app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
   try {
-    if (!req.user && !isDevBypass(req)) return res.status(403).json({ error: 'Sign in required to use this feature.' });
+    if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
     const { categoryId, situation, originalMessage, theirReply, language, contactContext } = req.body;
     if (!theirReply?.trim()) return res.status(400).json({ error: 'theirReply is required' });
 
