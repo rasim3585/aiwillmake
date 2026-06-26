@@ -18,7 +18,7 @@ const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
 const Stripe = require('stripe');
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 const app = express();
 app.set('trust proxy', 1);
@@ -2303,6 +2303,7 @@ app.post('/api/create-checkout', requireAuth, async (req, res) => {
 
   const selected = prices[plan];
   if (!selected) return res.status(400).json({ error: 'Invalid plan' });
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
     const session = await stripe.checkout.sessions.create({
