@@ -3119,6 +3119,7 @@
         if (urlParams.get('payment') === 'success') {
           showToast('Payment successful! Welcome to Pro 🎉', 'success');
           window.history.replaceState({}, '', '/app.html');
+          checkSubscriptionAndShowReady();
         }
         if (urlParams.get('payment') === 'cancelled') {
           showToast('Payment cancelled.', 'info');
