@@ -2019,6 +2019,21 @@
     }
     .btn-later:hover { color: var(--sec); }
 
+    /* ── Credits upgrade plans ── */
+    .credits-modal-inner { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 28px; padding: 32px 28px; max-width: 480px; width: 100%; text-align: center; }
+    .credits-modal-title { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 6px; }
+    .credits-modal-sub { color: var(--sec); font-size: .9rem; margin-bottom: 4px; }
+    .credits-plans { display: flex; gap: 12px; margin: 20px 0; }
+    .credits-plan { flex: 1; background: var(--surf); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; text-align: center; position: relative; }
+    .credits-plan-featured { border-color: var(--accent); background: rgba(212,113,90,0.06); }
+    .credits-plan-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 100px; white-space: nowrap; }
+    .credits-plan-name { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 6px; }
+    .credits-plan-price { font-size: 28px; font-weight: 800; color: var(--txt); margin-bottom: 6px; }
+    .credits-plan-price span { font-size: 13px; color: var(--txt2); font-weight: 400; }
+    .credits-plan-features { font-size: 12px; color: var(--txt2); line-height: 1.6; margin-bottom: 14px; }
+    .credits-plan-btn { width: 100%; padding: 10px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .credits-modal-close { background: none; border: none; color: var(--txt2); font-size: 13px; cursor: pointer; margin-top: 8px; }
+
     /* ── Conv Search ── */
     .home-conv-search {
       width: 100%; padding: 10px 14px;
@@ -2324,12 +2339,27 @@
 
   <!-- Credits exhausted modal -->
   <div id="creditsModal" class="credits-modal hidden">
-    <div class="credits-card">
-      <div class="credits-icon">✦</div>
-      <h2>You've used all 5 free generations</h2>
-      <p>Upgrade to keep writing — more generations, all 9 categories, and faster results.</p>
-      <a href="index.html#pricing" class="btn-upgrade">Upgrade to continue →</a>
-      <button class="btn-later" onclick="closeCreditsModal()">Maybe later</button>
+    <div class="credits-modal-inner">
+      <div class="credits-modal-title">Upgrade to continue</div>
+      <div class="credits-modal-sub">You've used your free generations.</div>
+
+      <div class="credits-plans">
+        <div class="credits-plan" data-plan="pro">
+          <div class="credits-plan-name">Pro</div>
+          <div class="credits-plan-price">$9.99<span>/mo</span></div>
+          <div class="credits-plan-features">10 imports · Unlimited practice · Strategy cards</div>
+          <button class="credits-plan-btn" onclick="startCheckout('pro')">Get Pro →</button>
+        </div>
+        <div class="credits-plan credits-plan-featured" data-plan="unlimited">
+          <div class="credits-plan-badge">Best value</div>
+          <div class="credits-plan-name">Unlimited</div>
+          <div class="credits-plan-price">$19.99<span>/mo</span></div>
+          <div class="credits-plan-features">Unlimited imports · Unlimited practice · Priority support</div>
+          <button class="credits-plan-btn" onclick="startCheckout('unlimited')">Get Unlimited →</button>
+        </div>
+      </div>
+
+      <button class="credits-modal-close" onclick="closeCreditsModal()">Maybe later</button>
     </div>
   </div>
 
@@ -3045,6 +3075,16 @@
           return;
         }
         sbClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('payment') === 'success') {
+          showToast('Payment successful! Welcome to Pro 🎉', 'success');
+          window.history.replaceState({}, '', '/app.html');
+        }
+        if (urlParams.get('payment') === 'cancelled') {
+          showToast('Payment cancelled.', 'info');
+          window.history.replaceState({}, '', '/app.html');
+        }
 
         const { data: { session } } = await sbClient.auth.getSession();
         if (session) {
@@ -6886,6 +6926,22 @@
     }
     function closeCreditsModal() {
       document.getElementById('creditsModal').classList.add('hidden');
+    }
+
+    async function startCheckout(plan) {
+      if (!accessToken) { signInWithGoogle(); return; }
+      try {
+        const r = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ plan })
+        });
+        const data = await r.json();
+        if (data.url) window.location.href = data.url;
+        else showToast('Could not start checkout', 'error');
+      } catch (e) {
+        showToast('Something went wrong', 'error');
+      }
     }
 
     // ── Wizard chat-import panel ────────────────────────────────

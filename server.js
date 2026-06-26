@@ -17,6 +17,8 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 app.set('trust proxy', 1);
@@ -42,6 +44,57 @@ const limiter = rateLimit({
 });
 
 app.use(cors());
+
+// ── Stripe webhook — must come before express.json() to receive raw body ──
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (e) {
+    console.error('[stripe-webhook] signature failed:', e.message);
+    return res.status(400).send(`Webhook Error: ${e.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.metadata?.user_id;
+    const plan = session.metadata?.plan;
+
+    if (userId && plan) {
+      const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+      await fetch(`${SUPABASE_REST}/user_subscriptions`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify({
+          user_id: userId,
+          plan,
+          status: 'active',
+          stripe_customer_id: session.customer,
+          stripe_subscription_id: session.subscription,
+          created_at: new Date().toISOString()
+        })
+      });
+      console.log(`[stripe] subscription activated: ${userId} → ${plan}`);
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+    await fetch(`${SUPABASE_REST}/user_subscriptions?stripe_subscription_id=eq.${sub.id}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'cancelled' })
+    });
+    console.log('[stripe] subscription cancelled:', sub.id);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+)
 app.use(express.static(__dirname));
 
@@ -2245,6 +2298,59 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
   }
 });
 
+app.post('/api/create-checkout', requireAuth, async (req, res) => {
+  const { plan } = req.body;
+
+  const prices = {
+    pro:       { amount: 999,  name: 'AIWILLMAKE Pro',       description: '10 imports, unlimited practice' },
+    unlimited: { amount: 1999, name: 'AIWILLMAKE Unlimited', description: 'Unlimited everything' }
+  };
+
+  const selected = prices[plan];
+  if (!selected) return res.status(400).json({ error: 'Invalid plan' });
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: selected.name, description: selected.description },
+          unit_amount: selected.amount,
+          recurring: { interval: 'month' }
+        },
+        quantity: 1
+      }],
+      success_url: `${process.env.APP_URL || 'https://www.aiwillmake.com'}/app.html?payment=success`,
+      cancel_url:  `${process.env.APP_URL || 'https://www.aiwillmake.com'}/app.html?payment=cancelled`,
+      client_reference_id: req.user.id,
+      metadata: { user_id: req.user.id, plan }
+    });
+
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('[stripe-checkout]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/subscription', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/user_subscriptions?user_id=eq.${req.user.id}&select=plan,status`, {
+      headers: sbHeaders(req.token)
+    });
+    const data = await r.json();
+    const sub = data?.[0];
+    res.json({
+      plan:   sub?.status === 'active' ? sub.plan : 'free',
+      status: sub?.status || 'free'
+    });
+  } catch (e) {
+    res.json({ plan: 'free', status: 'free' });
+  }
+});
+
 app.get('/health', (_, res) => res.json({ ok: true }));
 
 process.stdin.resume();
@@ -2253,4 +2359,5 @@ console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS con
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome text; ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome_at timestamptz;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim_accuracy_rating integer;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_areas text;');
+console.log('MIGRATION NEEDED: CREATE TABLE IF NOT EXISTS user_subscriptions (id uuid DEFAULT gen_random_uuid() PRIMARY KEY, user_id uuid NOT NULL, plan text, status text DEFAULT \'active\', stripe_customer_id text, stripe_subscription_id text, created_at timestamptz DEFAULT now()); ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY; CREATE POLICY "sub_owner" ON user_subscriptions FOR ALL USING (auth.uid() = user_id);');
 app.listen(port, () => console.log(`Server running on ${port}`));
