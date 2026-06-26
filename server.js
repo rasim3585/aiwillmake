@@ -77,8 +77,8 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
           created_at: new Date().toISOString()
         })
       });
-      const subResult = await subResp.json();
-      console.log('[webhook-sub] status:', subResp.status, 'body:', JSON.stringify(subResult));
+      const subText = await subResp.text();
+      console.log('[webhook-sub] status:', subResp.status, 'body:', subText || '(empty)');
       console.log(`[stripe] subscription activated: ${userId} → ${plan}`);
     }
   }
