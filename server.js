@@ -265,13 +265,8 @@ ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr
     const modifier = variationPrompts[variation] || null;
 
     let creditsUsed = 0;
-    if (req.user) {
-      if (!isDevBypass(req)) {
-        creditsUsed = await getCredits(req.token, req.user.id);
-        if (creditsUsed >= 5) {
-          return res.status(403).json({ error: 'Free limit reached', credits_used: creditsUsed });
-        }
-      }
+    if (req.user && !isDevBypass(req)) {
+      creditsUsed = await getCredits(req.token, req.user.id);
     }
 
     const category = categories.categories.find(c => c.id === categoryId);

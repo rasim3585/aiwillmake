@@ -2034,6 +2034,31 @@
     .credits-plan-btn { width: 100%; padding: 10px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
     .credits-modal-close { background: none; border: none; color: var(--txt2); font-size: 13px; cursor: pointer; margin-top: 8px; }
 
+    /* ── Upgrade modal (practice paywall) ── */
+    .upgrade-modal-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .upgrade-modal-overlay.hidden { display: none; }
+    .upgrade-modal { background: var(--surf); border: 1px solid var(--bord); border-radius: 20px; padding: 28px 24px; max-width: 380px; width: 100%; text-align: center; }
+    .upgrade-modal-icon { font-size: 40px; margin-bottom: 12px; }
+    .upgrade-modal-title { font-size: 20px; font-weight: 800; color: var(--txt); margin-bottom: 6px; }
+    .upgrade-modal-sub { font-size: 14px; color: var(--txt2); margin-bottom: 20px; }
+    .upgrade-preview { background: var(--surf2); border: 1px solid var(--bord); border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+    .upgrade-preview-inner { display: flex; align-items: center; gap: 12px; }
+    .upgrade-preview-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .upgrade-preview-info { flex: 1; text-align: left; }
+    .upgrade-preview-name { font-size: 15px; font-weight: 700; color: var(--txt); }
+    .upgrade-preview-desc { font-size: 12px; color: var(--txt2); }
+    .upgrade-preview-ready { font-size: 12px; color: #34c759; font-weight: 600; }
+    .upgrade-plans { display: flex; gap: 10px; margin-bottom: 16px; }
+    .upgrade-plan { flex: 1; background: var(--surf2); border: 1px solid var(--bord); border-radius: 12px; padding: 16px 12px; cursor: pointer; transition: all 0.2s; position: relative; }
+    .upgrade-plan:hover { border-color: var(--accent); }
+    .upgrade-plan-best { border-color: var(--accent); background: rgba(212,113,90,0.08); }
+    .upgrade-plan-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
+    .upgrade-plan-name { font-size: 13px; font-weight: 700; color: var(--txt); margin-bottom: 4px; }
+    .upgrade-plan-price { font-size: 24px; font-weight: 800; color: var(--txt); margin-bottom: 4px; }
+    .upgrade-plan-price span { font-size: 12px; color: var(--txt2); font-weight: 400; }
+    .upgrade-plan-desc { font-size: 11px; color: var(--txt2); line-height: 1.5; }
+    .upgrade-modal-close { background: none; border: none; color: var(--txt2); font-size: 13px; cursor: pointer; padding: 8px; }
+
     /* ── Conv Search ── */
     .home-conv-search {
       width: 100%; padding: 10px 14px;
@@ -2360,6 +2385,33 @@
       </div>
 
       <button class="credits-modal-close" onclick="closeCreditsModal()">Maybe later</button>
+    </div>
+  </div>
+
+  <!-- Practice paywall modal -->
+  <div id="upgradeModal" class="upgrade-modal-overlay hidden">
+    <div class="upgrade-modal">
+      <div class="upgrade-modal-icon">🧠</div>
+      <div class="upgrade-modal-title">Your AI twin is ready.</div>
+      <div class="upgrade-modal-sub">Subscribe to start practicing with them.</div>
+
+      <div class="upgrade-preview" id="upgradePreview"></div>
+
+      <div class="upgrade-plans">
+        <div class="upgrade-plan" onclick="startCheckout('pro')">
+          <div class="upgrade-plan-name">Pro</div>
+          <div class="upgrade-plan-price">$9.99<span>/mo</span></div>
+          <div class="upgrade-plan-desc">10 imports · Unlimited practice</div>
+        </div>
+        <div class="upgrade-plan upgrade-plan-best" onclick="startCheckout('unlimited')">
+          <div class="upgrade-plan-badge">Most popular</div>
+          <div class="upgrade-plan-name">Unlimited</div>
+          <div class="upgrade-plan-price">$19.99<span>/mo</span></div>
+          <div class="upgrade-plan-desc">Unlimited everything</div>
+        </div>
+      </div>
+
+      <button class="upgrade-modal-close" onclick="closeUpgradeModal()">Maybe later</button>
     </div>
   </div>
 
@@ -3027,11 +3079,8 @@
       const count      = document.getElementById('creditCount');
       const dots       = document.getElementById('creditDots');
       const upgradeMsg = document.getElementById('upgradeMsg');
-      const generateBtn = document.getElementById('generateBtn');
 
-      // credit wrap stays hidden in form; button state still updates
       label.textContent = isGuest ? 'Free uses (guest)' : 'Generations used';
-      const remaining = Math.max(limit - used, 0);
       count.textContent = `${used} / ${limit}`;
 
       dots.innerHTML = Array.from({ length: limit }, (_, i) => {
@@ -3039,17 +3088,7 @@
         return `<span class="${cls}"></span>`;
       }).join('');
 
-      if (used >= limit) {
-        upgradeMsg.classList.remove('hidden');
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = '<span class="btn-spin"></span><span class="btn-label">Upgrade to continue</span>';
-      } else {
-        upgradeMsg.classList.add('hidden');
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<span class="btn-spin"></span><span class="btn-label">Generate ✦</span>';
-        if (remaining === 1) count.style.color = '#f59e0b';
-        else count.style.color = '';
-      }
+      upgradeMsg.classList.add('hidden');
     }
 
     async function fetchAndShowCredits() {
@@ -3509,15 +3548,6 @@
       if (msgLen && msgLen !== 'Auto') fields.message_length = msgLen;
       lastFields = { ...fields };
 
-      if (!accessToken) {
-        const guestUsed = getGuestUsed();
-        if (guestUsed >= GUEST_LIMIT) {
-          updateCreditUI(guestUsed, GUEST_LIMIT, true);
-          showCreditsModal();
-          return;
-        }
-      }
-
       const btn = document.getElementById('generateBtn');
       isGenerating = true;
       btn.disabled = true;
@@ -3556,10 +3586,6 @@
           showToast("You're going too fast! Wait a few seconds and try again.", 'warning');
           return;
         }
-        if (res.status === 403) {
-          showCreditsModal();
-          return;
-        }
         if (!res.ok) {
           showToast('Something went wrong. Please try again.', 'error');
           return;
@@ -3570,13 +3596,6 @@
         // Contact context personalization badge
         renderCtxBadge(document.getElementById('contactContextBadge'));
 
-        if (data.credits_used != null) {
-          const remaining = Math.max(AUTH_LIMIT - data.credits_used, 0);
-          const badge = document.getElementById('resultCreditBadge');
-          badge.textContent = remaining === 0 ? 'No free uses left' : `${remaining} free ${remaining === 1 ? 'use' : 'uses'} left`;
-          badge.className = `result-credit-badge${remaining <= 1 ? ' rbc-warn' : ''}`;
-          badge.classList.remove('hidden');
-        }
 
         const container = document.getElementById('captionsContainer');
         container.innerHTML = '';
@@ -4814,8 +4833,46 @@
       setTimeout(() => { el.textContent = msg; el.style.opacity = '1'; }, 380);
     }
 
+    async function checkSubscriptionAndShowReady() {
+      if (!accessToken) return;
+      try {
+        const r = await fetch('/api/subscription', {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await r.json();
+        window._userPlan = data.plan || 'free';
+      } catch (e) {
+        window._userPlan = 'free';
+      }
+    }
+
+    function showUpgradeModal() {
+      const preview = document.getElementById('upgradePreview');
+      if (activeContactContext) {
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        preview.innerHTML = `
+          <div class="upgrade-preview-inner">
+            <div class="upgrade-preview-avatar">${escH((activeContactContext.name || '?').charAt(0).toUpperCase())}</div>
+            <div class="upgrade-preview-info">
+              <div class="upgrade-preview-name">${escH(activeContactContext.name || '')}</div>
+              <div class="upgrade-preview-desc">AI twin built · ${escH(activeContactContext.type || 'Contact')}</div>
+            </div>
+            <div class="upgrade-preview-ready">✓ Ready</div>
+          </div>
+        `;
+      } else {
+        preview.innerHTML = '';
+      }
+      document.getElementById('upgradeModal').classList.remove('hidden');
+    }
+
+    function closeUpgradeModal() {
+      document.getElementById('upgradeModal').classList.add('hidden');
+    }
+
     async function showReadyScreen(contactId, name, importMode) {
       App.navigateTo('ready');
+      await checkSubscriptionAndShowReady();
       const el = document.getElementById('readyContent');
       el.innerHTML = '<div class="ns-skeleton skeleton" style="height:52px;border-radius:10px;margin-bottom:8px"></div>'.repeat(3);
 
@@ -4861,9 +4918,15 @@
         </div>
         <button class="ready-btn-profile" id="readyProfileBtn">view full profile →</button>
       `;
-      document.getElementById('readyTalkBtn').addEventListener('click', () => loadPersonSection(contactId));
+      document.getElementById('readyTalkBtn').addEventListener('click', () => {
+        if (window._userPlan === 'free') { showUpgradeModal(); return; }
+        loadPersonSection(contactId);
+      });
       document.getElementById('readyProfileBtn').addEventListener('click', () => loadPersonSection(contactId));
-      document.getElementById('readyIntentBtn').addEventListener('click', () => openGoalScreen());
+      document.getElementById('readyIntentBtn').addEventListener('click', () => {
+        if (window._userPlan === 'free') { showUpgradeModal(); return; }
+        openGoalScreen();
+      });
     }
     // ────────────────────────────────────────────────────────────────
 
