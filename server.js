@@ -19,7 +19,6 @@ const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
 const Stripe = require('stripe');
 const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
-console.log('[stripe-init] key present:', !!process.env.STRIPE_SECRET_KEY, 'stripe null:', stripe === null);
 
 const app = express();
 app.set('trust proxy', 1);
@@ -2295,7 +2294,6 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
 });
 
 app.post('/api/create-checkout', requireAuth, async (req, res) => {
-  console.log('[checkout] stripe null?', stripe === null, 'key set?', !!process.env.STRIPE_SECRET_KEY);
   const { plan } = req.body;
 
   const prices = {
