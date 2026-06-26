@@ -5128,6 +5128,8 @@
     }
 
     async function openSimulatorFresh(contactCtx, intentGoal) {
+      if (!window._userPlan) await checkSubscriptionAndShowReady();
+      if (window._userPlan === 'free') { showUpgradeModal(); return; }
       _simCharacter = contactCtx
         ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null }
         : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null };
@@ -6323,6 +6325,8 @@
 
         // ── Primary buttons ──
         document.getElementById('personPracticeBtn').addEventListener('click', async () => {
+          if (!window._userPlan) await checkSubscriptionAndShowReady();
+          if (window._userPlan === 'free') { showUpgradeModal(); return; }
           if (!activeContactContext?.character_profile && activeContactContext?.id && accessToken) {
             try {
               const fr = await fetch(`/api/contacts/${activeContactContext.id}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
@@ -7161,6 +7165,7 @@
     }
 
     function openSimulator(msgText, contactCtx, intentGoal = null) {
+      if (window._userPlan === 'free') { showUpgradeModal(); return; }
       if (!msgText?.trim()) return;
       _simCharacter = contactCtx
         ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null }
