@@ -40,11 +40,14 @@ app.use(cors());
 
 // ── Lemon Squeezy webhook — must come before express.json() to receive raw body ──
 app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  console.log('[ls-webhook] HIT — signature present:', !!req.headers['x-signature']);
   try {
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
     const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(req.body).digest('hex');
     const signature = req.headers['x-signature'];
+
+    console.log('[ls-webhook] digest:', digest?.slice(0,10), 'signature:', signature?.slice(0,10), 'match:', digest === signature);
 
     if (digest !== signature) {
       console.error('[ls-webhook] signature mismatch');
