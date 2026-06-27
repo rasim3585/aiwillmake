@@ -2159,6 +2159,27 @@
     .btn-home-add { padding: 8px 16px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font: inherit; font-size: .84rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity .18s; flex-shrink: 0; }
     .btn-home-add:hover { opacity: .85; }
 
+    /* ── My Profile button ── */
+    .my-profile-btn { background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; padding: 8px 14px; color: var(--txt); font-size: 13px; cursor: pointer; }
+    .my-profile-btn:hover { border-color: var(--accent); }
+
+    /* ── User Profile screen ── */
+    .user-profile-inner { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .user-profile-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+    .user-profile-sub { font-size: 14px; color: var(--txt2); line-height: 1.6; margin-bottom: 20px; }
+    .user-profile-confidence { margin-bottom: 20px; }
+    .conf-areas-grid { display: flex; flex-direction: column; gap: 10px; }
+    .conf-area { display: grid; grid-template-columns: 140px 1fr 40px; align-items: center; gap: 10px; }
+    .conf-area-label { font-size: 12px; color: var(--txt2); }
+    .conf-area-bar { height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; }
+    .conf-area-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+    .conf-area-pct { font-size: 11px; color: var(--txt2); text-align: right; }
+    .user-profile-textarea { width: 100%; min-height: 300px; background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; color: var(--txt); font: inherit; font-size: 14px; line-height: 1.7; padding: 16px; outline: none; resize: vertical; box-sizing: border-box; }
+    .user-profile-textarea:focus { border-color: var(--accent); }
+    .user-profile-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+    .user-profile-save { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .user-profile-saved { font-size: 13px; color: #34c759; }
+
     /* ── Import Screen ── */
     .import-inner { max-width: 520px; margin: 0 auto; padding: 40px 20px; }
     .import-tabs { display: flex; gap: 5px; margin-bottom: 20px; background: var(--card); border-radius: 12px; padding: 4px; border: 1px solid var(--bord); }
@@ -2619,10 +2640,28 @@
     <section id="homeSection" data-screen-id="home">
       <div class="home-section-header">
         <h1 class="home-section-title">My People</h1>
-        <button type="button" class="btn-home-add" onclick="openNewConversation()">+ New person</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="myProfileBtn" class="my-profile-btn">👤 Your Profile</button>
+          <button type="button" class="btn-home-add" onclick="openNewConversation()">+ New person</button>
+        </div>
       </div>
       <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Search people or conversations…" autocomplete="off" />
       <div id="homeConvList" class="home-conv-list"></div>
+    </section>
+
+    <!-- User Profile Screen -->
+    <section id="userProfileSection" class="hidden" data-screen-id="userProfile">
+      <div class="user-profile-inner">
+        <button type="button" class="back-btn" onclick="App.navigateTo('home')">← Back</button>
+        <h2 class="user-profile-title">Your Profile</h2>
+        <p class="user-profile-sub">This is what the AI twins know about you. It's built from your conversations and grows with every import. You can edit it anytime.</p>
+        <div class="user-profile-confidence" id="userProfileConfidence"></div>
+        <textarea id="userProfileText" class="user-profile-textarea" placeholder="Your profile will appear here after your first import. You can also write about yourself manually — your name, family, work, interests, anything the AI should know."></textarea>
+        <div class="user-profile-actions">
+          <button id="userProfileSaveBtn" class="user-profile-save">Save</button>
+          <span id="userProfileSaved" class="user-profile-saved hidden">✓ Saved</span>
+        </div>
+      </div>
     </section>
 
     <!-- Person Screen -->
@@ -4714,7 +4753,8 @@
       'homeSection','newConvWizard','personSection',
       'smartStartSection','catSection','subcatSection','formCard',
       'continueSection','reviewSection','simulatorSection','convAnalysisResult',
-      'screen-import','screen-processing','screen-ready','screen-goal','screen-strategy'
+      'screen-import','screen-processing','screen-ready','screen-goal','screen-strategy',
+      'userProfileSection'
     ];
     function hideAllMainSections() {
       _ALL_SECTIONS.forEach(id => document.getElementById(id)?.classList.add('hidden'));
@@ -4844,6 +4884,39 @@
         window._userPlan = data.plan || 'free';
       } catch (e) {
         window._userPlan = 'free';
+      }
+    }
+
+    function renderConfidenceAreas(confStr) {
+      if (!confStr) return '';
+      const areas = confStr.split('|').map(a => a.trim()).filter(Boolean);
+      return '<div class="conf-areas-grid">' + areas.map(a => {
+        const [label, score] = a.split(':').map(s => s.trim());
+        const pct = parseInt(score) || 0;
+        const color = pct >= 70 ? '#34c759' : pct >= 40 ? '#ff9f0a' : '#ff453a';
+        return `
+          <div class="conf-area">
+            <div class="conf-area-label">${label}</div>
+            <div class="conf-area-bar"><div class="conf-area-fill" style="width:${pct}%;background:${color}"></div></div>
+            <div class="conf-area-pct">${pct}%</div>
+          </div>`;
+      }).join('') + '</div>';
+    }
+
+    async function openUserProfile() {
+      App.navigateTo('userProfile');
+      const textarea = document.getElementById('userProfileText');
+      const confEl = document.getElementById('userProfileConfidence');
+      textarea.value = 'Loading...';
+      try {
+        const r = await fetch('/api/user-profile', {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await r.json();
+        textarea.value = data.profile_text || '';
+        confEl.innerHTML = data.confidence_areas ? renderConfidenceAreas(data.confidence_areas) : '';
+      } catch (e) {
+        textarea.value = '';
       }
     }
 
@@ -6325,6 +6398,24 @@
         });
 
         // ── Primary buttons ──
+        document.getElementById('myProfileBtn').addEventListener('click', openUserProfile);
+
+        document.getElementById('userProfileSaveBtn').addEventListener('click', async () => {
+          const text = document.getElementById('userProfileText').value.trim();
+          try {
+            await fetch('/api/user-profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ profile_text: text })
+            });
+            const saved = document.getElementById('userProfileSaved');
+            saved.classList.remove('hidden');
+            setTimeout(() => saved.classList.add('hidden'), 2000);
+          } catch (e) {
+            showToast('Could not save', 'error');
+          }
+        });
+
         document.getElementById('personPracticeBtn').addEventListener('click', async () => {
           if (!window._userPlan) await checkSubscriptionAndShowReady();
           if (window._userPlan === 'free') { showUpgradeModal(); return; }
