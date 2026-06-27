@@ -571,14 +571,17 @@
     .sandbox-outcome-retry { background: transparent; border: 1px solid #2a2a2a; color: #888; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; }
     .sandbox-outcome-cta { display: block; background: #ff6b35; color: #000; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 10px; text-decoration: none; text-align: center; }
     .sandbox-outcome-score { font-size: 48px; font-weight: 900; margin-bottom: 4px; }
-    .sandbox-intro { padding: 0 0 16px; }
-    .sandbox-intro-free { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #ff6b35; margin-bottom: 6px; }
-    .sandbox-intro-desc { font-size: 13px; color: #444; line-height: 1.6; }
-    .sandbox-intro-desc em { font-style: normal; color: #777; }
+    .sandbox-intro { text-align: center; margin-bottom: 24px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .sandbox-intro-free { font-size: 11px; letter-spacing: 2px; color: var(--accent, #ff6b35); font-weight: 700; margin-bottom: 8px; }
+    .sandbox-intro-headline { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .sandbox-intro-desc { font-size: 14px; color: #666; line-height: 1.6; }
+    .sandbox-intro-desc em { color: #aaa; font-style: normal; font-weight: 600; }
     .sandbox-challenge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .sandbox-challenge-card { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: flex-start; gap: 10px; width: 100%; }
     .sandbox-challenge-card:hover { border-color: #ff6b35; background: rgba(255,107,53,0.06); }
-    .sandbox-challenge-card-real { border-color: #ff6b3530; background: rgba(255,107,53,0.04); }
+    .sandbox-challenge-card-real { border: 1.5px solid var(--accent, #ff6b35); background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(255,107,53,0.04)); padding: 18px; align-items: center; }
+    .sandbox-challenge-card-real .scc-emoji { font-size: 24px; }
+    .scc-arrow { font-size: 20px; color: var(--accent, #ff6b35); margin-left: auto; flex-shrink: 0; }
     .scc-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
     .scc-body { flex: 1; }
     .scc-who { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
@@ -655,8 +658,9 @@
     <div class="sandbox-inner">
         <!-- Character + challenge picker -->
         <div class="sandbox-intro">
-          <div class="sandbox-intro-free">▶ TRY IT FREE — no signup</div>
-          <div class="sandbox-intro-desc">Pick a challenge. Talk to the AI. See if you can win.</div>
+          <div class="sandbox-intro-free">▶ FREE DEMO — no signup</div>
+          <div class="sandbox-intro-headline">Try the engine on a few characters.</div>
+          <div class="sandbox-intro-desc">These are generic AI personalities. The real magic happens when you upload someone you actually know — the AI becomes <em>them</em>.</div>
         </div>
         <div id="sandboxCharacters" class="sandbox-challenge-grid">
           <button class="sandbox-challenge-card" data-char="boss" data-challenge="raise">
@@ -744,11 +748,12 @@
             </div>
           </button>
           <button class="sandbox-challenge-card sandbox-challenge-card-real" data-char="real" data-challenge="free" style="grid-column: 1 / -1;">
-            <span class="scc-emoji">👤</span>
+            <span class="scc-emoji">⭐</span>
             <div class="scc-body">
-              <div class="scc-who" style="color:#ff6b35">Someone You Know</div>
-              <div class="scc-label">Upload your real chat history → AI becomes them</div>
+              <div class="scc-who" style="color:#ff6b35">THE REAL THING</div>
+              <div class="scc-label" style="font-size:15px">Upload your real chat history → the AI becomes someone you actually know</div>
             </div>
+            <span class="scc-arrow">→</span>
           </button>
         </div>
 
@@ -796,10 +801,10 @@
             <span></span><span></span><span></span>
           </div>
           <div class="sandbox-upgrade hidden" id="sandboxUpgrade">
-            <div class="sandbox-upgrade-hook">🔥 This is just a generic AI.</div>
-            <div class="sandbox-upgrade-real">Your real <span id="sandbox-upgrade-type"></span> would be completely different.</div>
-            <div class="sandbox-upgrade-desc">Upload your actual WhatsApp history → the AI becomes <em>them</em>. Their words. Their patterns. Their exact reactions.</div>
-            <a href="app.html" class="sandbox-upgrade-btn">Start with your real person →</a>
+            <div class="sandbox-upgrade-hook">This is a demo. The real version is different.</div>
+            <div class="sandbox-upgrade-real">A generic <span id="sandbox-upgrade-type"></span> character — not yours. Upload real chat history and the AI becomes <em>that actual person</em>.</div>
+            <div class="sandbox-upgrade-desc">Their tone. Their patterns. Your shared history. The way they actually respond to you — not a simulation of a type.</div>
+            <a href="app.html" class="sandbox-upgrade-btn">Try it with someone real →</a>
           </div>
           <div class="sandbox-outcome hidden" id="sandboxOutcome">
             <div class="sandbox-outcome-icon" id="sandboxOutcomeIcon"></div>
@@ -809,7 +814,7 @@
             <div class="sandbox-outcome-tip" id="sandboxOutcomeTip"></div>
             <div class="sandbox-outcome-actions">
               <button class="sandbox-outcome-retry" id="sandboxOutcomeRetry">Try again</button>
-              <a href="app.html" class="sandbox-outcome-cta">Try with your real person →</a>
+              <a href="app.html" class="sandbox-outcome-cta">That was a generic AI. Now try it with someone real →</a>
             </div>
           </div>
           <div class="sandbox-input-row" id="sandboxInputRow">
