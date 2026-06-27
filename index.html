@@ -467,12 +467,14 @@
     .hdr-auth-btn:hover { opacity: .88; }
 
     /* ════════ HDR PROFILE MENU ════════ */
-    .hdr-profile { position: relative; }
+    #hdrAuthArea { display: flex; align-items: center; }
+    .hdr-profile { position: relative; display: none; }
     .hdr-profile-btn { display: flex; align-items: center; gap: 8px; background: #161616; border: 1px solid #262626; border-radius: 100px; padding: 6px 12px 6px 6px; cursor: pointer; color: #fff; font-family: inherit; }
     .hdr-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent, #ff6b35); color: #000; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
     .hdr-name { font-size: 13px; font-weight: 600; }
     .hdr-chevron { font-size: 10px; color: #888; }
-    .hdr-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200; }
+    .hdr-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #161616; border: 1px solid #262626; border-radius: 12px; padding: 6px; min-width: 160px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200; }
+    .hdr-dropdown.open { display: block; }
     .hdr-dropdown-item { display: block; width: 100%; text-align: left; background: none; border: none; color: #fff; font-size: 13px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; }
     .hdr-dropdown-item:hover { background: #222; }
     .hdr-logout { color: #ff6b6b; }
@@ -622,13 +624,13 @@
     </a>
     <div id="hdrAuthArea">
       <button id="hdrAuthBtn" class="hdr-auth-btn" onclick="window.location.href='app.html'">Sign in</button>
-      <div id="hdrProfile" class="hdr-profile hidden">
+      <div id="hdrProfile" class="hdr-profile">
         <button id="hdrProfileBtn" class="hdr-profile-btn">
           <span id="hdrAvatar" class="hdr-avatar"></span>
           <span id="hdrName" class="hdr-name"></span>
           <span class="hdr-chevron">▾</span>
         </button>
-        <div id="hdrDropdown" class="hdr-dropdown hidden">
+        <div id="hdrDropdown" class="hdr-dropdown">
           <button onclick="window.location.href='app.html'" class="hdr-dropdown-item">Go to App →</button>
           <button id="hdrLogoutBtn" class="hdr-dropdown-item hdr-logout">Log out</button>
         </div>
@@ -945,16 +947,15 @@
       const { data: { session } } = await sb.auth.getSession();
       const ctaBottom = document.getElementById('ctaBottom');
       if (session) {
-        const user = session.user;
-        const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'You';
-        document.getElementById('hdrAuthBtn').classList.add('hidden');
-        document.getElementById('hdrProfile').classList.remove('hidden');
+        const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'You';
+        document.getElementById('hdrAuthBtn').style.display = 'none';
+        document.getElementById('hdrProfile').style.display = 'block';
         document.getElementById('hdrAvatar').textContent = (name.charAt(0) || 'U').toUpperCase();
         document.getElementById('hdrName').textContent = name;
         if (ctaBottom) ctaBottom.textContent = 'Open App →';
       } else {
-        document.getElementById('hdrAuthBtn').classList.remove('hidden');
-        document.getElementById('hdrProfile').classList.add('hidden');
+        document.getElementById('hdrAuthBtn').style.display = 'inline-flex';
+        document.getElementById('hdrProfile').style.display = 'none';
         if (ctaBottom) ctaBottom.textContent = 'Start for free';
       }
     } catch (e) {
@@ -966,10 +967,10 @@
 
   document.getElementById('hdrProfileBtn')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    document.getElementById('hdrDropdown').classList.toggle('hidden');
+    document.getElementById('hdrDropdown').classList.toggle('open');
   });
   document.addEventListener('click', () => {
-    document.getElementById('hdrDropdown')?.classList.add('hidden');
+    document.getElementById('hdrDropdown')?.classList.remove('open');
   });
   document.getElementById('hdrLogoutBtn')?.addEventListener('click', async () => {
     if (sb) await sb.auth.signOut();
