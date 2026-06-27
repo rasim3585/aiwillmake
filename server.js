@@ -1503,7 +1503,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
           const upProse = up_d.content?.[0]?.text?.trim() || '';
           if (!upProse) { console.warn('[user-profile-extract] empty prose'); return; }
           const userConfMatch = upProse.match(/USER_CONFIDENCE:\s*(.+)/);
-          const userConfidence = userConfMatch ? userConfMatch[1].trim() : null;
+          const userConfidence = userConfMatch ? userConfMatch[1].trim().replace(/[\[\]]/g, '') : null;
           const cleanUserProse = upProse.replace(/\n*USER_CONFIDENCE:.*$/m, '').trim();
           await fetch(`${SUPABASE_REST}/user_profile`, {
             method: 'POST',
@@ -2065,8 +2065,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
 
     let profileText = data.content?.[0]?.text?.trim() || '';
     const confMatch = profileText.match(/USER_CONFIDENCE:\s*(.+)/);
-    const confidence = confMatch ? confMatch[1].trim() : null;
-    console.log('[build-profile] raw confidence match:', confMatch ? confMatch[1] : 'NO MATCH', '| full text tail:', profileText.slice(-200));
+    const confidence = confMatch ? confMatch[1].trim().replace(/[\[\]]/g, '') : null;
     profileText = profileText.replace(/USER_CONFIDENCE:.*$/m, '').trim();
 
     await fetch(`${SUPABASE_REST}/user_profile`, {

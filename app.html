@@ -4894,7 +4894,7 @@
       const areas = confStr.split('|').map(a => a.trim()).filter(Boolean);
       return '<div class="conf-areas-grid">' + areas.map(a => {
         const [label, score] = a.split(':').map(s => s.trim());
-        const pct = parseInt(score) || 0;
+        const pct = parseInt(String(score).replace(/[\[\]]/g, '')) || 0;
         const color = pct >= 70 ? '#34c759' : pct >= 40 ? '#ff9f0a' : '#ff453a';
         return `
           <div class="conf-area">
