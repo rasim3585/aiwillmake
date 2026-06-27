@@ -2019,6 +2019,73 @@ No markdown, no extra text, just the JSON.`
   }
 });
 
+app.post('/api/build-user-profile', requireAuth, async (req, res) => {
+  try {
+    const chunksR = await fetch(`${SUPABASE_REST}/conversation_chunks?user_id=eq.${req.user.id}&select=chunk_text&order=chunk_index&limit=30`, {
+      headers: sbHeaders(req.token)
+    });
+    const chunks = await chunksR.json();
+
+    if (!Array.isArray(chunks) || chunks.length === 0) {
+      return res.json({ profile_text: '', message: 'no_conversations' });
+    }
+
+    const combinedText = chunks.map(c => c.chunk_text).join('\n').slice(0, 40000);
+
+    const existingR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+    const existingData = await existingR.json();
+    const existing = existingData?.[0]?.profile_text || null;
+
+    const userMsg = (existing ? `EXISTING PROFILE (enrich, don't replace):\n${existing.slice(0, 2000)}\n\n---\nCONVERSATIONS:\n` : '') + combinedText;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: `You are reading WhatsApp conversations and writing a prose profile of the CHAT OWNER (the USER) — the person who appears in MULTIPLE of these conversations as one consistent participant. These are conversations between the user and different contacts.
+
+Extract what we learn about the USER across all these conversations:
+- Their personality, values, what they care about
+- Their communication style, tone, humor
+- Life details: family members (names, relationships), work, location, interests
+- People in their life (kids, spouse, friends — with names and relationships)
+
+Write 2-4 paragraphs in plain prose, third person, referring to the user as "the user". Be specific — capture names, facts, details revealed across the conversations. Only include what's actually revealed. Do not invent.
+
+After the profile, write exactly:
+USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    let profileText = data.content?.[0]?.text?.trim() || '';
+    const confMatch = profileText.match(/USER_CONFIDENCE:\s*(.+)/);
+    const confidence = confMatch ? confMatch[1].trim() : null;
+    profileText = profileText.replace(/USER_CONFIDENCE:.*$/m, '').trim();
+
+    await fetch(`${SUPABASE_REST}/user_profile`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        user_id: req.user.id,
+        profile_text: profileText,
+        confidence_areas: confidence,
+        updated_at: new Date().toISOString()
+      })
+    });
+
+    res.json({ profile_text: profileText, confidence_areas: confidence });
+  } catch (e) {
+    console.error('[build-user-profile]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/user-profile', requireAuth, async (req, res) => {
   try {
     const r = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text,confidence_areas,updated_at`, { headers: sbHeaders(req.token) });

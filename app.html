@@ -2179,6 +2179,7 @@
     .user-profile-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
     .user-profile-save { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 700; font-size: 14px; cursor: pointer; }
     .user-profile-saved { font-size: 13px; color: #34c759; }
+    .user-profile-build-btn { width: 100%; background: rgba(255,107,53,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 10px; padding: 14px; font-weight: 700; font-size: 14px; cursor: pointer; margin-bottom: 16px; }
 
     /* ── Import Screen ── */
     .import-inner { max-width: 520px; margin: 0 auto; padding: 40px 20px; }
@@ -2654,8 +2655,9 @@
       <div class="user-profile-inner">
         <button type="button" class="back-btn" onclick="App.navigateTo('home')">← Back</button>
         <h2 class="user-profile-title">Your Profile</h2>
-        <p class="user-profile-sub">This is what the AI twins know about you. It's built from your conversations and grows with every import. You can edit it anytime.</p>
+        <p class="user-profile-sub">This is what the AI twins know about you. It grows with every import. If you've already imported conversations, build your profile from them below — or write about yourself manually.</p>
         <div class="user-profile-confidence" id="userProfileConfidence"></div>
+        <button id="userProfileBuildBtn" class="user-profile-build-btn hidden"></button>
         <textarea id="userProfileText" class="user-profile-textarea" placeholder="Your profile will appear here after your first import. You can also write about yourself manually — your name, family, work, interests, anything the AI should know."></textarea>
         <div class="user-profile-actions">
           <button id="userProfileSaveBtn" class="user-profile-save">Save</button>
@@ -4907,7 +4909,9 @@
       App.navigateTo('userProfile');
       const textarea = document.getElementById('userProfileText');
       const confEl = document.getElementById('userProfileConfidence');
+      const buildBtn = document.getElementById('userProfileBuildBtn');
       textarea.value = 'Loading...';
+      buildBtn.classList.add('hidden');
       try {
         const r = await fetch('/api/user-profile', {
           headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -4915,6 +4919,14 @@
         const data = await r.json();
         textarea.value = data.profile_text || '';
         confEl.innerHTML = data.confidence_areas ? renderConfidenceAreas(data.confidence_areas) : '';
+        if (!data.profile_text) {
+          const convR = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+          const contacts = await convR.json();
+          if (Array.isArray(contacts) && contacts.length > 0) {
+            buildBtn.classList.remove('hidden');
+            buildBtn.textContent = `Build from your ${contacts.length} conversation${contacts.length > 1 ? 's' : ''}`;
+          }
+        }
       } catch (e) {
         textarea.value = '';
       }
@@ -8100,6 +8112,33 @@
         setTimeout(() => saved.classList.add('hidden'), 2000);
       } catch (e) {
         showToast('Could not save', 'error');
+      }
+    });
+
+    document.getElementById('userProfileBuildBtn').addEventListener('click', async function() {
+      const textarea = document.getElementById('userProfileText');
+      const confEl = document.getElementById('userProfileConfidence');
+      this.disabled = true;
+      this.textContent = 'Building your profile from conversations...';
+      try {
+        const r = await fetch('/api/build-user-profile', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await r.json();
+        if (data.message === 'no_conversations') {
+          showToast('No conversations found — import one first or write about yourself manually', 'info');
+          this.classList.add('hidden');
+          return;
+        }
+        textarea.value = data.profile_text || '';
+        confEl.innerHTML = data.confidence_areas ? renderConfidenceAreas(data.confidence_areas) : '';
+        this.classList.add('hidden');
+        showToast('Profile built! Edit it anytime.', 'success');
+      } catch (e) {
+        showToast('Could not build profile', 'error');
+        this.disabled = false;
+        this.textContent = 'Try again';
       }
     });
 
