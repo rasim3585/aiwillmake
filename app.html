@@ -6398,24 +6398,6 @@
         });
 
         // ── Primary buttons ──
-        document.getElementById('myProfileBtn').addEventListener('click', openUserProfile);
-
-        document.getElementById('userProfileSaveBtn').addEventListener('click', async () => {
-          const text = document.getElementById('userProfileText').value.trim();
-          try {
-            await fetch('/api/user-profile', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-              body: JSON.stringify({ profile_text: text })
-            });
-            const saved = document.getElementById('userProfileSaved');
-            saved.classList.remove('hidden');
-            setTimeout(() => saved.classList.add('hidden'), 2000);
-          } catch (e) {
-            showToast('Could not save', 'error');
-          }
-        });
-
         document.getElementById('personPracticeBtn').addEventListener('click', async () => {
           if (!window._userPlan) await checkSubscriptionAndShowReady();
           if (window._userPlan === 'free') { showUpgradeModal(); return; }
@@ -8103,6 +8085,23 @@
 
     window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     // ─────────────────────────────────────────────────────────────────────────
+
+    document.getElementById('myProfileBtn').addEventListener('click', openUserProfile);
+    document.getElementById('userProfileSaveBtn').addEventListener('click', async () => {
+      const text = document.getElementById('userProfileText').value.trim();
+      try {
+        await fetch('/api/user-profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ profile_text: text })
+        });
+        const saved = document.getElementById('userProfileSaved');
+        saved.classList.remove('hidden');
+        setTimeout(() => saved.classList.add('hidden'), 2000);
+      } catch (e) {
+        showToast('Could not save', 'error');
+      }
+    });
 
     initAuth().then(() => { init(); fetchAndShowCredits(); loadHomeConvList(); initConvSearch(); });
   </script>
