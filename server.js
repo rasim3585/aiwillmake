@@ -17,8 +17,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const categories = require('./categories.json');
-const Stripe = require('stripe');
-const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
+const crypto = require('crypto');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -39,54 +38,64 @@ const limiter = rateLimit({
 
 app.use(cors());
 
-// ── Stripe webhook — must come before express.json() to receive raw body ──
-app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
+// ── Lemon Squeezy webhook — must come before express.json() to receive raw body ──
+app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (e) {
-    console.error('[stripe-webhook] signature failed:', e.message);
-    return res.status(400).send(`Webhook Error: ${e.message}`);
-  }
+    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = hmac.update(req.body).digest('hex');
+    const signature = req.headers['x-signature'];
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = session.metadata?.user_id;
-    const plan = session.metadata?.plan;
-
-    if (userId && plan) {
-      const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
-      const subResp = await fetch(`${SUPABASE_REST}/user_subscriptions`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          user_id: userId,
-          plan,
-          status: 'active',
-          stripe_customer_id: session.customer,
-          stripe_subscription_id: session.subscription,
-          created_at: new Date().toISOString()
-        })
-      });
-      console.log(`[stripe] subscription activated: ${userId} → ${plan}`);
+    if (digest !== signature) {
+      console.error('[ls-webhook] signature mismatch');
+      return res.status(400).json({ error: 'Invalid signature' });
     }
-  }
 
-  if (event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object;
-    const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
-    await fetch(`${SUPABASE_REST}/user_subscriptions?stripe_subscription_id=eq.${sub.id}`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'cancelled' })
-    });
-    console.log('[stripe] subscription cancelled:', sub.id);
-  }
+    const event = JSON.parse(req.body.toString());
+    const eventName = event.meta?.event_name;
+    const customData = event.meta?.custom_data || {};
+    const userId = customData.user_id;
+    const plan = customData.plan;
 
-  res.json({ received: true });
+    console.log('[ls-webhook] event:', eventName, 'user:', userId, 'plan:', plan);
+
+    if (['subscription_created', 'subscription_resumed', 'subscription_unpaused'].includes(eventName)) {
+      if (userId && plan) {
+        const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+        const subResp = await fetch(`${SUPABASE_REST}/user_subscriptions`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            user_id: userId,
+            plan,
+            status: 'active',
+            stripe_customer_id: event.data?.attributes?.customer_id ? String(event.data.attributes.customer_id) : null,
+            stripe_subscription_id: event.data?.id ? String(event.data.id) : null,
+            created_at: new Date().toISOString()
+          })
+        });
+        const subText = await subResp.text();
+        console.log('[ls-webhook-sub] status:', subResp.status, 'body:', subText || '(empty)');
+      }
+    }
+
+    if (['subscription_cancelled', 'subscription_expired'].includes(eventName)) {
+      if (userId) {
+        const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+        await fetch(`${SUPABASE_REST}/user_subscriptions?user_id=eq.${userId}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'cancelled' })
+        });
+        console.log('[ls-webhook] subscription cancelled for', userId);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (e) {
+    console.error('[ls-webhook]', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+)
@@ -2288,37 +2297,53 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
 app.post('/api/create-checkout', requireAuth, async (req, res) => {
   const { plan } = req.body;
 
-  const prices = {
-    pro:       { amount: 999,  name: 'AIWILLMAKE Pro',       description: '10 imports, unlimited practice' },
-    unlimited: { amount: 1999, name: 'AIWILLMAKE Unlimited', description: 'Unlimited everything' }
+  const variantIds = {
+    pro:       process.env.LEMONSQUEEZY_PRO_VARIANT_ID,
+    unlimited: process.env.LEMONSQUEEZY_UNLIMITED_VARIANT_ID
   };
 
-  const selected = prices[plan];
-  if (!selected) return res.status(400).json({ error: 'Invalid plan' });
-  if (!stripe) return res.status(503).json({ error: 'Payments not configured' });
+  const variantId = variantIds[plan];
+  if (!variantId) return res.status(400).json({ error: 'Invalid plan' });
+  if (!process.env.LEMONSQUEEZY_API_KEY) return res.status(503).json({ error: 'Payments not configured' });
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'subscription',
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: selected.name, description: selected.description },
-          unit_amount: selected.amount,
-          recurring: { interval: 'month' }
-        },
-        quantity: 1
-      }],
-      success_url: `${process.env.APP_URL || 'https://www.aiwillmake.com'}/app.html?payment=success`,
-      cancel_url:  `${process.env.APP_URL || 'https://www.aiwillmake.com'}/app.html?payment=cancelled`,
-      client_reference_id: req.user.id,
-      metadata: { user_id: req.user.id, plan }
+    const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+        'Authorization': `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'checkouts',
+          attributes: {
+            checkout_data: {
+              email: req.user.email,
+              custom: { user_id: req.user.id, plan }
+            },
+            product_options: {
+              redirect_url: 'https://www.aiwillmake.com/app.html?payment=success'
+            }
+          },
+          relationships: {
+            store:   { data: { type: 'stores',   id: String(process.env.LEMONSQUEEZY_STORE_ID) } },
+            variant: { data: { type: 'variants', id: String(variantId) } }
+          }
+        }
+      })
     });
 
-    res.json({ url: session.url });
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('[ls-checkout]', JSON.stringify(data));
+      return res.status(500).json({ error: 'Checkout creation failed' });
+    }
+
+    const checkoutUrl = data.data?.attributes?.url;
+    res.json({ url: checkoutUrl });
   } catch (e) {
-    console.error('[stripe-checkout]', e.message);
+    console.error('[ls-checkout]', e.message);
     res.status(500).json({ error: e.message });
   }
 });
