@@ -1463,8 +1463,65 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
     const what_changed = previousContext ? (extract('WHAT_CHANGED') || null) : null;
 
     const action_detail = extract('ACTION_DETAIL') || null;
+    const personA = extract('PERSON_A');
+
+    // Fire-and-forget: extract USER profile from this conversation
+    if (req.user?.id && req.token) {
+      (async () => {
+        try {
+          const existingUserR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+          const existingUserData = await existingUserR.json();
+          const existingUserProfile = existingUserData?.[0]?.profile_text || null;
+          const userProfileContent = existingUserProfile
+            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 3000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
+            : conversationText.slice(0, 120000);
+          const up_r = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-6',
+              max_tokens: 800,
+              system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER named "${personA || 'the owner'}"), NOT the contact.
+
+The USER is the person whose perspective we're building. Extract what we learn about THEM from this conversation:
+- Their personality, values, what they care about
+- Their communication style, tone, humor
+- Their life details revealed: family members (names, relationships), work, location, interests, ongoing situations
+- People in their life mentioned (their kids, spouse, friends, colleagues — with names and relationships)
+
+Write 2-4 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". Be specific — capture names, facts, details. Only include what's actually revealed in the conversation. Do not invent.
+
+If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve existing facts, add new ones, refine where the new conversation gives better information.
+
+After the profile, on a new line write exactly:
+USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
+              messages: [{ role: 'user', content: userProfileContent }]
+            })
+          });
+          if (!up_r.ok) { console.error('[user-profile-extract] API fail:', up_r.status); return; }
+          const up_d = await up_r.json();
+          const upProse = up_d.content?.[0]?.text?.trim() || '';
+          if (!upProse) { console.warn('[user-profile-extract] empty prose'); return; }
+          const userConfMatch = upProse.match(/USER_CONFIDENCE:\s*(.+)/);
+          const userConfidence = userConfMatch ? userConfMatch[1].trim() : null;
+          const cleanUserProse = upProse.replace(/\n*USER_CONFIDENCE:.*$/m, '').trim();
+          await fetch(`${SUPABASE_REST}/user_profile`, {
+            method: 'POST',
+            headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
+            body: JSON.stringify({
+              user_id: req.user.id,
+              profile_text: cleanUserProse,
+              confidence_areas: userConfidence,
+              updated_at: new Date().toISOString()
+            })
+          });
+          console.log('[user-profile-extract] SAVED for user:', req.user.id, cleanUserProse.length, 'chars');
+        } catch (e) { console.error('[user-profile-extract-error]', e.message); }
+      })();
+    }
+
     res.json({
-      person_a:             extract('PERSON_A'),
+      person_a:             personA,
       person_b:             chunkDerivedPersonBName || extract('PERSON_B'),
       total_messages:       extract('TOTAL_MESSAGES'),
       person_a_messages:    extract('PERSON_A_MESSAGES'),
@@ -1962,6 +2019,30 @@ No markdown, no extra text, just the JSON.`
   }
 });
 
+app.get('/api/user-profile', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text,confidence_areas,updated_at`, { headers: sbHeaders(req.token) });
+    const data = await r.json();
+    res.json(data?.[0] || { profile_text: '', confidence_areas: null });
+  } catch (e) {
+    res.json({ profile_text: '', confidence_areas: null });
+  }
+});
+
+app.patch('/api/user-profile', requireAuth, async (req, res) => {
+  const { profile_text } = req.body;
+  try {
+    await fetch(`${SUPABASE_REST}/user_profile`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify({ user_id: req.user.id, profile_text, updated_at: new Date().toISOString() })
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
   try {
     const { character, language } = req.body;
@@ -2046,6 +2127,16 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       console.log('[rag] skipped — contact_id:', character.contact_id, 'has_token:', !!req.token);
     }
 
+    let userProfileBlock = '';
+    if (req.token && req.user?.id) {
+      try {
+        const upR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+        const upData = await upR.json();
+        const up = upData?.[0]?.profile_text;
+        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — this is ${userLabel}, the person messaging you. Use this to make your responses personal and informed, as someone who knows them would:\n${up.slice(0, 1500)}`;
+      } catch (e) {}
+    }
+
     // Prose character document — handles string (new) and old JSON profiles
     const charDoc = (() => {
       const cp = character.character_profile;
@@ -2062,7 +2153,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -2377,4 +2468,5 @@ console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_areas text;');
 console.log('MIGRATION NEEDED: CREATE TABLE IF NOT EXISTS user_subscriptions (id uuid DEFAULT gen_random_uuid() PRIMARY KEY, user_id uuid NOT NULL, plan text, status text DEFAULT \'active\', stripe_customer_id text, stripe_subscription_id text, created_at timestamptz DEFAULT now()); ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY; CREATE POLICY "sub_owner" ON user_subscriptions FOR ALL USING (auth.uid() = user_id);');
 console.log('MIGRATION NEEDED: ALTER TABLE user_subscriptions ADD CONSTRAINT user_subscriptions_user_id_unique UNIQUE (user_id);');
+console.log('MIGRATION NEEDED: CREATE TABLE IF NOT EXISTS user_profile (user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, profile_text text, confidence_areas text, updated_at timestamptz DEFAULT now()); ALTER TABLE user_profile ENABLE ROW LEVEL SECURITY; CREATE POLICY "user_profile_owner" ON user_profile FOR ALL USING (auth.uid() = user_id);');
 app.listen(port, () => console.log(`Server running on ${port}`));
