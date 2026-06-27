@@ -2066,6 +2066,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
     let profileText = data.content?.[0]?.text?.trim() || '';
     const confMatch = profileText.match(/USER_CONFIDENCE:\s*(.+)/);
     const confidence = confMatch ? confMatch[1].trim() : null;
+    console.log('[build-profile] raw confidence match:', confMatch ? confMatch[1] : 'NO MATCH', '| full text tail:', profileText.slice(-200));
     profileText = profileText.replace(/USER_CONFIDENCE:.*$/m, '').trim();
 
     await fetch(`${SUPABASE_REST}/user_profile`, {
