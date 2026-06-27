@@ -2737,7 +2737,7 @@
           </button>
           <button type="button" class="wiz-opt" id="wizTxtBtn" style="padding:12px 16px">
             <span class="wiz-opt-icon" style="font-size:1.2rem">📄</span>
-            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload .txt file</span></div>
+            <div class="wiz-opt-body"><span class="wiz-opt-title" style="font-size:.88rem">Upload WhatsApp export (.txt or .zip)</span></div>
             <span class="wiz-opt-arrow">→</span>
           </button>
           <div style="text-align:center;font-size:.76rem;color:var(--muted)">or</div>
@@ -2773,16 +2773,16 @@
         </div>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
           <label class="import-link" for="convImgInput">📷 Import screenshot</label>
-          <label class="import-link" for="convTxtInput">📄 Import .txt file</label>
+          <label class="import-link" for="convTxtInput">📄 Import .txt or .zip</label>
         </div>
       </div>
     </section>
 
     <!-- File inputs live outside all mode sections so .click() always works -->
     <input type="file" id="convImgInput" accept="image/*" multiple style="display:none">
-    <input type="file" id="convTxtInput" accept=".txt" style="display:none">
+    <input type="file" id="convTxtInput" accept=".txt,.zip" style="display:none">
     <input type="file" id="contactImgInput" accept="image/*" multiple style="display:none">
-    <input type="file" id="contactTxtInput" accept=".txt" style="display:none">
+    <input type="file" id="contactTxtInput" accept=".txt,.zip" style="display:none">
 
     <!-- Mode 2: Continue a Conversation -->
     <section id="continueSection" class="hidden" data-screen-id="compose-continue">
@@ -3097,6 +3097,7 @@
 
   </div><!-- /.page -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
@@ -5622,10 +5623,10 @@
       const box = document.createElement('div');
       box.id = 'waiBox'; box.className = 'wai-box';
       box.innerHTML = `
-        <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file. Or upload a screenshot of the conversation.</p>
+        <p class="wai-text"><strong>How to export:</strong> Open the WhatsApp chat → tap <em>⋮</em> (or the contact name) → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> or <em>.zip</em> file. Or upload a screenshot.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="wai-btn" id="waiImgBtn">📷 Upload screenshot</button>
-          <button type="button" class="wai-btn" id="waiTxtBtn">📄 Upload .txt file</button>
+          <button type="button" class="wai-btn" id="waiTxtBtn">📄 Upload .txt or .zip</button>
         </div>`;
       document.getElementById('continueSection').querySelector('.continue-card').appendChild(box);
       document.getElementById('waiImgBtn').addEventListener('click', () => document.getElementById('convImgInput').click());
@@ -5762,7 +5763,7 @@
           <button class="btn-import-contact-chat" id="reimportChatBtn">↻ Update with new chat</button>
           <div id="reimportChoicePanel" class="hidden" style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
             <button class="wai-btn" id="reimportImgBtn" style="flex:1;padding:6px 10px;font-size:.78rem">📷 Screenshot</button>
-            <button class="wai-btn" id="reimportTxtBtn" style="flex:1;padding:6px 10px;font-size:.78rem">📄 .txt file</button>
+            <button class="wai-btn" id="reimportTxtBtn" style="flex:1;padding:6px 10px;font-size:.78rem">📄 .txt / .zip</button>
           </div>`;
       }
       return `
@@ -5770,10 +5771,10 @@
         <div class="contact-patterns-empty">Import a WhatsApp chat with this person to automatically learn their communication patterns.</div>
         <button class="btn-import-contact-chat" id="importChatBtn">Import WhatsApp chat →</button>
         <div id="contactImportInfo" class="wai-box hidden" style="margin-top:10px">
-          <p class="wai-text"><strong>How to export:</strong> Open the chat → tap <em>⋮</em> → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> file.</p>
+          <p class="wai-text"><strong>How to export:</strong> Open the chat → tap <em>⋮</em> → <em>More</em> → <em>Export chat</em> → <em>Without media</em> → save the <em>.txt</em> or <em>.zip</em> file.</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="wai-btn" id="contactImgChooseBtn">📷 Screenshot</button>
-            <button class="wai-btn" id="contactTxtChooseBtn">📄 .txt file</button>
+            <button class="wai-btn" id="contactTxtChooseBtn">📄 .txt / .zip</button>
           </div>
         </div>`;
     }
@@ -5831,6 +5832,33 @@
     }
 
 
+    async function readImportFile(file) {
+      const name = (file.name || '').toLowerCase();
+      if (name.endsWith('.zip')) {
+        if (typeof JSZip === 'undefined') {
+          showToast('ZIP support not loaded — please try the .txt file instead', 'error');
+          throw new Error('JSZip not loaded');
+        }
+        try {
+          const zip = await JSZip.loadAsync(file);
+          const txtFiles = Object.keys(zip.files).filter(n =>
+            n.toLowerCase().endsWith('.txt') && !zip.files[n].dir
+          );
+          if (txtFiles.length === 0) {
+            showToast('No chat text found in the ZIP', 'error');
+            throw new Error('No txt in zip');
+          }
+          const target = txtFiles.find(n => n.toLowerCase().includes('_chat')) || txtFiles[0];
+          return await zip.files[target].async('string');
+        } catch (e) {
+          if (e.message === 'No txt in zip' || e.message === 'JSZip not loaded') throw e;
+          showToast('Could not read the ZIP file', 'error');
+          throw e;
+        }
+      }
+      return await file.text();
+    }
+
     async function analyzeContactChat(fileOrText, contactId, contactName) {
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       showLoadingOverlay(`Analyzing your conversation with ${contactName}…`);
@@ -5845,7 +5873,9 @@
       }
 
       try {
-        const rawText = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text();
+        const rawText = typeof fileOrText === 'string'
+          ? fileOrText
+          : await readImportFile(fileOrText);
         const text = rawText;
         const wasSampled = false;
 
@@ -6462,7 +6492,7 @@
               <p style="font-size:.84rem;color:var(--sec);margin-bottom:10px">Upload new data:</p>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button id="pUpdateImgBtn" class="wai-btn" style="flex:1">📷 Screenshot</button>
-                <button id="pUpdateTxtBtn" class="wai-btn" style="flex:1">📄 .txt file</button>
+                <button id="pUpdateTxtBtn" class="wai-btn" style="flex:1">📄 .txt / .zip</button>
               </div>`;
             const _sc = (inpId) => {
               const inp = document.getElementById(inpId);
