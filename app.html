@@ -994,6 +994,9 @@
     .rp-mfb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
     .rp-mfb-tag { background: none; border: 1px solid #2a2a2a; border-radius: 5px; color: #555; font-size: 11px; padding: 2px 7px; cursor: pointer; font-family: inherit; }
     .rp-mfb-tag:hover { border-color: #ff6b35; color: #ff6b35; }
+    .rp-mfb-copy-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: #555; font-size: 13px; padding: 2px 7px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, color .15s; margin-left: 2px; }
+    .rp-mfb-copy-btn:hover { border-color: #444; color: #aaa; }
+    #rp-copy-conv-btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--bord); background: transparent; color: var(--sec); transition: all 0.15s; font-family: inherit; }
     .rp-date-divider { text-align: center; font-size: 11px; color: #444; letter-spacing: 1px; padding: 8px 0; position: relative; }
     .rp-date-divider::before, .rp-date-divider::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: #222; }
     .rp-date-divider::before { left: 0; }
@@ -2540,6 +2543,7 @@
         <div class="rp-debrief-actions" id="rp-debrief-actions">
           <button id="rp-again-btn">Practice again</button>
           <button id="rp-share-btn">Share</button>
+          <button id="rp-copy-conv-btn">📋 Copy chat</button>
           <button id="rp-strategy-btn">Strategy card</button>
           <button id="rp-done-btn">Close</button>
         </div>
@@ -7418,6 +7422,20 @@
         mfbRow.appendChild(exactBtn);
         mfbRow.appendChild(closeBtn);
         mfbRow.appendChild(wrongBtn);
+
+        const copyBubbleBtn = document.createElement('button');
+        copyBubbleBtn.className = 'rp-mfb-copy-btn';
+        copyBubbleBtn.textContent = '📋';
+        copyBubbleBtn.title = 'Copy this message';
+        copyBubbleBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(text).then(() => {
+            copyBubbleBtn.textContent = '✓';
+            setTimeout(() => { copyBubbleBtn.textContent = '📋'; }, 1500);
+            _signalSend('copy', null, turnIndex);
+          }).catch(() => {});
+        });
+        mfbRow.appendChild(copyBubbleBtn);
+
         wrapper.appendChild(mfbRow);
         // ─────────────────────────────────────────────────────────────────────
 
@@ -7973,6 +7991,43 @@
     document.getElementById('simulationModal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) _rpClose();
     });
+
+    // ── Copy full conversation ────────────────────────────────────────────────
+    document.getElementById('rp-copy-conv-btn').addEventListener('click', () => {
+      const name = _simCharacter?.name || 'Twin';
+      const date = new Date().toLocaleDateString('en-GB');
+      const lines = [`Conversation with ${name} — ${date}`, ''];
+      _simHistory.forEach(m => {
+        lines.push(`${m.role === 'user' ? 'You' : name}: ${m.content}`);
+      });
+      const text = lines.join('\n');
+      const btn = document.getElementById('rp-copy-conv-btn');
+
+      const doShare = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({ text });
+            _signalSend('copy', 'full_conversation', null);
+            return;
+          } catch (e) { /* share cancelled — fall through to clipboard */ }
+        }
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.textContent = '📋 Copy chat'; }, 2000);
+        _signalSend('copy', 'full_conversation', null);
+      };
+      doShare().catch(() => {});
+    });
+
+    // ── Manual text selection copy (debounced) ────────────────────────────────
+    let _copyDebounce = null;
+    document.getElementById('rp-messages').addEventListener('copy', () => {
+      const sel = window.getSelection()?.toString().trim();
+      if (!sel) return;
+      clearTimeout(_copyDebounce);
+      _copyDebounce = setTimeout(() => { _signalSend('copy', 'manual_select', null); }, 1000);
+    });
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ── Star rating ───────────────────────────────────────────────────────────
     document.getElementById('rp-accuracy-stars').addEventListener('click', async (e) => {
