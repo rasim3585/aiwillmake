@@ -7602,8 +7602,8 @@
         const lang = lastFields?.language || 'English';
         const resp = await fetch('/api/simulate-debrief', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang })
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, contact_id: _simCharacter?.contact_id || activeContactContext?.id || null, conversation_id: null })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Failed');

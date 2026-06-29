@@ -2089,9 +2089,9 @@ app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
   }
 });
 
-app.post('/api/simulate-debrief', limiter, async (req, res) => {
+app.post('/api/simulate-debrief', limiter, optionalAuth, async (req, res) => {
   try {
-    const { character, history, language } = req.body;
+    const { character, history, language, contact_id, conversation_id } = req.body;
     if (!character || !Array.isArray(history) || history.length < 2) {
       return res.status(400).json({ error: 'character and history are required' });
     }
@@ -2120,7 +2120,9 @@ Return ONLY a JSON object with exactly these two fields:
 No markdown, no extra text, just the JSON.`
       : null;
 
-    const [response, nmResponse] = await Promise.all([
+    const behaviorSystemPrompt = `Analyze ONLY the user's (You) messages in this practice transcript. Return a JSON object with these fields: patterns (array of strings from this fixed list only: 'early_apology', 'interrupting', 'logical_escape', 'humor_deflection', 'conflict_avoidance', 'message_flooding', 'over_explaining', 'premature_concession', 'seeking_reassurance', 'defensive'), went_defensive (boolean), humor_deflection (boolean), emotional_trend ('escalating'|'calming'|'flat'). Only include a pattern if there is clear evidence in the user's messages. No markdown, just JSON.`;
+
+    const [response, nmResponse, behaviorResponse] = await Promise.all([
       fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -2133,7 +2135,12 @@ No markdown, no extra text, just the JSON.`
             body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500, system: nmSystemPrompt,
               messages: [{ role: 'user', content: `Goal: ${character.intent_goal}\nPerson: ${name}\n\nPractice transcript:\n${transcript}` }] })
           })
-        : Promise.resolve(null)
+        : Promise.resolve(null),
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 300, system: behaviorSystemPrompt, messages: [{ role: 'user', content: `Transcript:\n${transcript}` }] })
+      })
     ]);
 
     const data = await response.json();
@@ -2150,6 +2157,66 @@ No markdown, no extra text, just the JSON.`
         }
       } catch { /* next_move stays null */ }
     }
+
+    // ── Fire-and-forget behavior snapshot ────────────────────────────────────
+    if (req.user) {
+      (async () => {
+        try {
+          // Rule-based signals (no AI needed)
+          const userMsgs = history.filter(m => m.role === 'user');
+          const apologyRe = /\b(sorry|apolog|pardon|forgive|özür|affedersin|kusura bakma)\b/i;
+          const apology_count = userMsgs.filter(m => apologyRe.test(m.content)).length;
+
+          let message_flooding = false;
+          for (let i = 1; i < history.length; i++) {
+            if (history[i].role === 'user' && history[i - 1].role === 'user') {
+              message_flooding = true; break;
+            }
+          }
+
+          const tensionRe = /\b(no\b|but\b|don't|won't|can't|why\b|stop\b|that's not|that isn't|unfair|never\b|always\b|not fair|didn't|wouldn't)\b/i;
+          let first_tension_turn = null;
+          for (let i = 0; i < history.length; i++) {
+            if (history[i].role === 'user' && tensionRe.test(history[i].content)) {
+              first_tension_turn = Math.floor(i / 2);
+              break;
+            }
+          }
+
+          // Claude behavior analysis
+          let claudePatterns = [], went_defensive = false, humor_deflection = false, emotional_trend = 'flat';
+          try {
+            const bData = await behaviorResponse.json();
+            if (behaviorResponse.ok) {
+              const bText = bData.content?.[0]?.text?.trim() || '{}';
+              const bMatch = bText.match(/\{[\s\S]*\}/);
+              const bJson = JSON.parse(bMatch ? bMatch[0] : bText);
+              claudePatterns  = Array.isArray(bJson.patterns) ? bJson.patterns : [];
+              went_defensive  = !!bJson.went_defensive;
+              humor_deflection = !!bJson.humor_deflection;
+              emotional_trend = bJson.emotional_trend || 'flat';
+            }
+          } catch { /* use defaults */ }
+
+          await sbInsert(req.token, 'user_behavior_snapshots', {
+            user_id:           req.user.id,
+            contact_id:        contact_id || character.contact_id || null,
+            conversation_id:   conversation_id || null,
+            patterns:          claudePatterns.length ? claudePatterns : null,
+            first_tension_turn,
+            apology_count,
+            humor_deflection,
+            went_defensive,
+            message_flooding,
+            emotional_trend,
+            relationship_type: character.type || null
+          });
+        } catch (e) {
+          console.error('[behavior-snapshot]', e.message);
+        }
+      })();
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move });
   } catch (e) {
