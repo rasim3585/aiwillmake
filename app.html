@@ -5242,6 +5242,7 @@
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
       _userPrediction = null;
+      _predictionId = null;
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
@@ -5400,6 +5401,7 @@
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
       _userPrediction = null;
+      _predictionId = null;
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
@@ -7259,6 +7261,7 @@
     let _simTurn       = 1;
     let _simInitialMsg = '';
     let _userPrediction = null; // { key: 'positive'|'resistant'|'deflect', label: string }
+    let _predictionId = null;
 
     const PREDICTION_OPTIONS = [
       { key: 'positive',  label: 'Olumlu karşılar' },
@@ -7278,7 +7281,15 @@
         btn.textContent = opt.label;
         btn.addEventListener('click', () => {
           _userPrediction = opt;
+          _predictionId = null;
           document.getElementById('predictionBetModal').classList.add('hidden');
+          if (accessToken) {
+            fetch('/api/predictions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ contact_id: contactCtx?.id || null, conversation_id: null, predicted_reaction: opt.label, predicted_class: opt.key, confidence: null, topic: intentGoal || null })
+            }).then(r => r.ok ? r.json() : null).then(d => { if (d?.id) _predictionId = d.id; }).catch(() => {});
+          }
           openSimulator(msgText, contactCtx, intentGoal);
         });
         optEl.appendChild(btn);
@@ -7620,6 +7631,13 @@
           const outcomeLabelMap = { positive: 'Olumlu karşıladı', resistant: 'Direnç gösterdi', deflect: 'Konuyu geçiştirdi' };
           const personName = _simCharacter?.name || 'Karşı taraf';
           const isMatch = outcomeKey === _userPrediction.key;
+          if (_predictionId && accessToken) {
+            fetch(`/api/predictions/${_predictionId}/resolve`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ actual_class: outcomeKey, actual_outcome: outcomeLabelMap[outcomeKey], was_correct: isMatch })
+            }).catch(() => {});
+          }
           document.getElementById('rp-prediction-result-text').innerHTML =
             `<p style="margin:0 0 5px">Sen: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simülasyon: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
             `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `${personName}'i iyi tanıyorsun! ✓` : `${personName} seni şaşırttı.`}</p>`;
