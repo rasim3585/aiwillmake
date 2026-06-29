@@ -3713,6 +3713,7 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            _signalSend('copy', null, null);
             saveMessage('sent', text, badge || '');
             if (text !== selectedMsgText) {
               selectedMsgText = text;
@@ -3960,6 +3961,7 @@
             e.target.textContent = 'Copied ✓';
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+            _signalSend('copy', null, null);
             saveMessage('sent', opt.message, opt.strategy || '');
           });
 
@@ -4632,6 +4634,7 @@
                     await navigator.clipboard.writeText(opt.message);
                     e.target.textContent = 'Copied ✓'; e.target.classList.add('copied');
                     setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
+                    _signalSend('copy', null, null);
                   });
                   deepEl.appendChild(item);
                 });
@@ -7171,7 +7174,7 @@
     document.getElementById('contextGateInput')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); applyContextGate(); }
     });
-    document.getElementById('regenBtn').addEventListener('click', () => generate('different'));
+    document.getElementById('regenBtn').addEventListener('click', () => { _signalSend('regenerate', null, null); generate('different'); });
     document.getElementById('diffBtn').addEventListener('click',  () => generate('completely_new'));
     document.getElementById('nextReplyBtn').addEventListener('click', fetchNextReply);
     document.getElementById('convClose').addEventListener('click', hideConvPanel);
@@ -7325,6 +7328,15 @@
       }
       _rpAppendBubble('user', msgText);
       _rpCallSimulate();
+    }
+
+    function _signalSend(signal_type, signal_value, turn_index) {
+      if (!accessToken) return;
+      fetch('/api/signals/passive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ signal_type, signal_value: signal_value ?? null, turn_index: turn_index ?? null })
+      }).catch(() => {});
     }
 
     function _rpAppendBubble(role, text) {
@@ -7532,6 +7544,11 @@
     }
 
     function _rpClose() {
+      const _debriefVisible = !document.getElementById('rp-debrief').classList.contains('hidden');
+      const _otherCount = _simHistory.filter(m => m.role === 'assistant').length;
+      if (!_debriefVisible && _otherCount > 0) {
+        _signalSend('abandon', _otherCount, Math.floor(_simHistory.length / 2));
+      }
       document.getElementById('simulationModal').classList.add('hidden');
       document.getElementById('sharePreviewModal').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
@@ -7602,7 +7619,7 @@
           const msgToCopy = data.next_move.message;
           newCopy.addEventListener('click', () => {
             if (navigator.clipboard) {
-              navigator.clipboard.writeText(msgToCopy).then(() => showToast('Copied', 'success')).catch(() => showToast('Copy failed', 'error'));
+              navigator.clipboard.writeText(msgToCopy).then(() => { showToast('Copied', 'success'); _signalSend('copy', null, Math.floor(_simHistory.length / 2)); }).catch(() => showToast('Copy failed', 'error'));
             } else {
               showToast('Copying not supported', 'error');
             }
@@ -7950,6 +7967,7 @@
     });
     document.getElementById('rp-done-btn').addEventListener('click', _rpClose);
     document.getElementById('rp-again-btn').addEventListener('click', () => {
+      _signalSend('try_again', null, null);
       openSimulator(_simInitialMsg, _simCharacter);
     });
     document.getElementById('simulationModal').addEventListener('click', (e) => {
