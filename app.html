@@ -3188,6 +3188,11 @@
         sbClient = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
         const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('import') === '1') {
+          window.history.replaceState({}, '', '/app.html');
+          // handled after auth check below — flag for checkFirstRunAndRoute
+          window._forceImport = true;
+        }
         if (urlParams.get('payment') === 'success') {
           showToast('Payment successful! Welcome to Pro 🎉', 'success');
           window.history.replaceState({}, '', '/app.html');
@@ -3238,6 +3243,7 @@
 
     async function checkFirstRunAndRoute() {
       if (App.state.currentScreen !== null) return;
+      if (window._forceImport) { window._forceImport = false; App.navigateTo('import'); return; }
       try {
         const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (r.ok) {
