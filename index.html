@@ -162,12 +162,7 @@
     }
     .hero-cta:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(212,113,90,0.44); }
 
-    .hero-trust { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
-    .trust-item {
-      color: var(--muted); font-size: .8rem;
-      padding: 0 16px; border-right: 1px solid var(--bord);
-    }
-    .trust-item:last-child { border-right: none; }
+    /* .hero-trust and .trust-item — replaced by new hero design */
     /* hero chat bubble */
     .hero-chat { margin: 0 auto 32px; max-width: 360px; padding: 14px 16px 10px; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 14px; text-align: left; overflow: hidden; }
     .hero-bubble { display: inline-block; max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: .87rem; line-height: 1.45; margin-bottom: 7px; }
@@ -458,9 +453,67 @@
     }
 
     /* ════════ COMPACT HERO ════════ */
-    .hero-compact { text-align: center; max-width: 640px; margin: 0 auto; padding: 60px 0 32px; }
-    .hero-h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 16px; }
-    .hero-tagline { font-size: clamp(1rem, 2vw, 1.15rem); color: #888; line-height: 1.6; }
+    /* ════════ HERO (import-first) ════════ */
+    .hero-section { padding: 80px 0 60px; text-align: center; }
+    .hero-inner { max-width: 540px; margin: 0 auto; }
+    .hero-h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -0.025em;
+      margin-bottom: 14px;
+    }
+    .hero-tagline {
+      font-size: clamp(.93rem, 1.8vw, 1.08rem);
+      color: var(--sec); line-height: 1.65;
+      max-width: 440px; margin: 0 auto 36px;
+    }
+    .hero-import-card {
+      display: flex; align-items: center; gap: 16px;
+      padding: 18px 20px 18px 22px; margin-bottom: 14px;
+      background: rgba(255,255,255,.035);
+      border: 1.5px solid var(--bord2);
+      border-radius: 16px; text-align: left;
+      text-decoration: none; color: inherit;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      box-shadow: 0 2px 16px rgba(0,0,0,.18);
+    }
+    .hero-import-card:hover {
+      border-color: rgba(212,113,90,.45);
+      background: rgba(212,113,90,.045);
+      box-shadow: 0 4px 28px rgba(212,113,90,.18);
+    }
+    .hero-import-icon { font-size: 1.9rem; flex-shrink: 0; }
+    .hero-import-info { flex: 1; min-width: 0; }
+    .hero-import-label { font-size: .97rem; font-weight: 700; color: var(--text); display: block; }
+    .hero-import-hint  { font-size: .78rem; color: var(--sec); display: block; margin-top: 2px; }
+    .hero-import-arrow {
+      flex-shrink: 0;
+      background: var(--accent); color: #fff;
+      padding: 11px 18px; border-radius: 10px;
+      font-size: .92rem; font-weight: 700; white-space: nowrap;
+      box-shadow: 0 3px 14px rgba(212,113,90,.35);
+      transition: opacity .15s, transform .15s;
+    }
+    .hero-import-card:hover .hero-import-arrow { opacity: .9; transform: translateX(2px); }
+    .hero-trust {
+      font-size: .76rem; color: var(--muted);
+      margin-bottom: 28px; letter-spacing: .01em;
+    }
+    .hero-steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; flex-wrap: wrap;
+    }
+    .hero-step { display: flex; align-items: center; gap: 7px; font-size: .81rem; color: var(--sec); }
+    .hero-step-num {
+      width: 21px; height: 21px; border-radius: 50%;
+      background: rgba(212,113,90,.13); border: 1px solid rgba(212,113,90,.28);
+      font-size: .68rem; font-weight: 700; color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .hero-step-arrow { color: var(--muted); font-size: .75rem; }
+    @media (max-width: 500px) {
+      .hero-import-card { flex-wrap: wrap; }
+      .hero-import-arrow { width: 100%; text-align: center; }
+    }
 
     /* ════════ HDR AUTH BTN ════════ */
     .hdr-auth-btn { background: var(--accent, #ff6b35); color: #000; border: none; border-radius: 100px; padding: 8px 18px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
@@ -630,11 +683,37 @@
 </header>
 
 <!-- Hero -->
-<section>
+<section class="hero-section">
   <div class="wrap">
-    <div class="hero-compact">
-      <h1 class="hero-h1">The conversation before the conversation.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin. Rehearse the hard conversation before you have it.</p>
+    <div class="hero-inner">
+      <h1 class="hero-h1">The conversation<br>before the conversation.</h1>
+      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.</p>
+
+      <!-- Logged-out: import card (shown by default, hidden if logged in) -->
+      <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
+        <span class="hero-import-icon">📤</span>
+        <span class="hero-import-info">
+          <span class="hero-import-label">Import your chat</span>
+          <span class="hero-import-hint">WhatsApp .txt or .zip · takes 30 seconds</span>
+        </span>
+        <span class="hero-import-arrow">Create your twin →</span>
+      </a>
+
+      <!-- Logged-in: open app button (hidden by default) -->
+      <a href="app.html" class="hero-cta" id="heroOpenAppCta" style="display:none">
+        Go to your twins →
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+
+      <p class="hero-trust">🔒 Your chats stay private. Analyzed once, never used to train AI models.</p>
+
+      <div class="hero-steps">
+        <div class="hero-step"><span class="hero-step-num">1</span>Import chat</div>
+        <span class="hero-step-arrow">→</span>
+        <div class="hero-step"><span class="hero-step-num">2</span>Build the twin</div>
+        <span class="hero-step-arrow">→</span>
+        <div class="hero-step"><span class="hero-step-num">3</span>Rehearse</div>
+      </div>
     </div>
   </div>
 </section>
@@ -924,17 +1003,28 @@
       sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       const { data: { session } } = await sb.auth.getSession();
       const ctaBottom = document.getElementById('ctaBottom');
+      const heroImportCta = document.getElementById('heroImportCta');
+      const heroOpenAppCta = document.getElementById('heroOpenAppCta');
       if (session) {
         const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'You';
         document.getElementById('hdrAuthBtn').style.display = 'none';
         document.getElementById('hdrProfile').style.display = 'block';
         document.getElementById('hdrAvatar').textContent = (name.charAt(0) || 'U').toUpperCase();
         document.getElementById('hdrName').textContent = name;
-        if (ctaBottom) ctaBottom.textContent = 'Open App →';
+        // Hero: show "Open App" instead of import card
+        if (heroImportCta) heroImportCta.style.display = 'none';
+        if (heroOpenAppCta) heroOpenAppCta.style.display = 'inline-flex';
+        // Secondary CTAs → app.html (no import mode for returning users)
+        if (ctaBottom) { ctaBottom.href = 'app.html'; ctaBottom.textContent = 'Open App →'; }
+        document.querySelectorAll('.how-cta, .reply-flow-cta a').forEach(el => {
+          el.href = 'app.html'; el.textContent = 'Open App →';
+        });
       } else {
         document.getElementById('hdrAuthBtn').style.display = 'inline-flex';
         document.getElementById('hdrProfile').style.display = 'none';
-        if (ctaBottom) ctaBottom.textContent = 'Start for free';
+        if (heroImportCta) heroImportCta.style.display = 'flex';
+        if (heroOpenAppCta) heroOpenAppCta.style.display = 'none';
+        if (ctaBottom) { ctaBottom.href = 'app.html?import=1'; ctaBottom.textContent = 'Create your twin →'; }
       }
     } catch (e) {
       console.warn('Auth init failed:', e);
