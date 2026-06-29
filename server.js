@@ -1427,7 +1427,9 @@ BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
 AVOID: [what NOT to do right now — one sentence]
 SIGNAL_STRENGTH: [exactly one of: Strong / Moderate / Weak — confidence in this analysis. Weak if very few messages or context is unclear.]
 OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
-ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]${whatChangedLine}
+ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]
+RELATIONSHIP_TIER: [1 or 2 — 1 if surface/work/casual (no personal life details shared), 2 if close/intimate (personal life, emotions, family openly discussed)]
+TIER_REASON: [one sentence explaining why — write in the conversation's language]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1542,6 +1544,8 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       relationship_summary: chunkDerivedRelationshipSummary || null,
       what_changed,
       how_user_addresses:   extract('ADDRESS_STYLE') || null,
+      suggested_tier:       (() => { const v = extract('RELATIONSHIP_TIER'); return v === '1' ? 1 : v === '2' ? 2 : null; })(),
+      tier_reason:          extract('TIER_REASON') || null,
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes
@@ -1936,12 +1940,13 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary. Language 
 
 app.post('/api/contacts', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns, source } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, source, relationship_tier } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' });
     const insertBody = {
       user_id: req.user.id, name: name.trim(),
       type: type || null, relationship_summary: relationship_summary || null,
       relationship_state: relationship_state || null,
+      relationship_tier: relationship_tier ?? 2,
       source: source || 'manual'
     };
     if (Array.isArray(observed_patterns) && observed_patterns.length) {
@@ -2011,7 +2016,7 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score, last_outcome, last_outcome_at } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score, last_outcome, last_outcome_at, relationship_tier } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
@@ -2022,6 +2027,7 @@ app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
     if (confidence_score !== undefined) updates.confidence_score = confidence_score;
     if (last_outcome !== undefined) updates.last_outcome = last_outcome;
     if (last_outcome_at !== undefined) updates.last_outcome_at = last_outcome_at;
+    if (relationship_tier !== undefined) updates.relationship_tier = relationship_tier;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },

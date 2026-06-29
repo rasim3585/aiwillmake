@@ -1883,6 +1883,11 @@
       box-shadow: 0 4px 18px var(--glow); transition: opacity .2s;
     }
     .btn-save-contact:disabled { opacity: .45; cursor: not-allowed; }
+    .tier-toggle { display: flex; gap: 6px; margin-top: 4px; }
+    .tier-toggle-btn { flex: 1; padding: 8px 10px; border: 1.5px solid var(--bord); border-radius: 8px; background: none; color: var(--fg); font: inherit; font-size: .82rem; cursor: pointer; text-align: center; transition: border-color .15s, background .15s; }
+    .tier-toggle-btn.active { border-color: var(--accent,#6366f1); background: rgba(99,102,241,.1); font-weight: 600; }
+    .tier-note { font-size: .75rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .tier-ai-hint { font-size: .76rem; color: var(--acc2); margin-top: 6px; font-style: italic; }
     .btn-start-conv-contact {
       width: 100%; padding: 12px; border: none; border-radius: var(--r-lg);
       background: linear-gradient(95deg, var(--accent), var(--acc2));
@@ -5947,6 +5952,7 @@
         if (data.emotional_tone) patchBody.relationship_state = mapToneToState(data.emotional_tone);
         if (data.relationship_summary || data.recommended_next) patchBody.relationship_summary = data.relationship_summary || data.recommended_next;
         if (data.confidence_score !== undefined) patchBody.confidence_score = data.confidence_score;
+        if (data.suggested_tier) patchBody.relationship_tier = data.suggested_tier;
 
         await fetch(`/api/contacts/${contactId}`, {
           method: 'PATCH',
@@ -6153,6 +6159,14 @@
           <div><label class="contacts-form-label">Short summary <span style="color:var(--muted);font-weight:400">(optional)</span></label>
             <textarea id="cntSummary" placeholder="e.g. We dated for 2 years, broke up in March…" style="min-height:80px"></textarea>
           </div>
+          <div>
+            <label class="contacts-form-label">How well do they know you?</label>
+            <div class="tier-toggle" id="cntTierToggle">
+              <button type="button" class="tier-toggle-btn active" data-tier="2">Knows me well</button>
+              <button type="button" class="tier-toggle-btn" data-tier="1">Knows me a little</button>
+            </div>
+            <p class="tier-note">The twin will only share what fits this level — even if it knows more, it'll keep private things to itself for a distant contact.</p>
+          </div>
           <button type="button" class="btn-save-contact" id="cntSaveBtn">Save →</button>
         </div>`;
       document.getElementById('cntBack').addEventListener('click', loadContactsList);
@@ -6162,6 +6176,12 @@
         document.getElementById('cntShowManual').style.display = 'none';
       });
       document.getElementById('cntSaveBtn').addEventListener('click', saveContact);
+      document.getElementById('cntTierToggle').addEventListener('click', e => {
+        const btn = e.target.closest('.tier-toggle-btn');
+        if (!btn) return;
+        document.querySelectorAll('#cntTierToggle .tier-toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
     }
 
     async function createContactFromText() {
@@ -6248,13 +6268,15 @@
       const state   = document.getElementById('cntState').value;
       const summary = document.getElementById('cntSummary').value.trim();
       if (!name) { document.getElementById('cntName').focus(); return; }
+      const tierActive = document.querySelector('#cntTierToggle .tier-toggle-btn.active');
+      const tier = tierActive ? parseInt(tierActive.dataset.tier) : 2;
       const btn = document.getElementById('cntSaveBtn');
       btn.disabled = true; btn.textContent = 'Saving…';
       try {
         const r = await fetch('/api/contacts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ name, type: type||null, relationship_state: state||null, relationship_summary: summary||null })
+          body: JSON.stringify({ name, type: type||null, relationship_state: state||null, relationship_summary: summary||null, relationship_tier: tier })
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
@@ -6424,6 +6446,13 @@
                 <option value="Colleague" ${c.type==='Colleague'?'selected':''}>Colleague</option>
                 <option value="Client" ${c.type==='Client'?'selected':''}>Client</option>
               </select>
+              <div>
+                <label style="font-size:.78rem;font-weight:600;color:var(--sec);margin-bottom:4px;display:block">How well do they know you?</label>
+                <div class="tier-toggle" id="personEditTierToggle">
+                  <button type="button" class="tier-toggle-btn${(c.relationship_tier||2)===2?' active':''}" data-tier="2">Knows me well</button>
+                  <button type="button" class="tier-toggle-btn${(c.relationship_tier||2)===1?' active':''}" data-tier="1">Knows me a little</button>
+                </div>
+              </div>
               <div style="display:flex;gap:8px">
                 <button type="button" id="personEditSaveBtn" style="flex:1;padding:8px 14px;border-radius:8px;background:var(--accent,#6366f1);color:#fff;border:none;font-size:.82rem;cursor:pointer">Save</button>
                 <button type="button" id="personEditCancelBtn" style="padding:8px 14px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--fg,#000);border:none;font-size:.82rem;cursor:pointer">Cancel</button>
@@ -6547,7 +6576,8 @@
             ${badges ? `<div class="conv-analysis-badges" style="flex-wrap:wrap;gap:5px;margin-bottom:8px">${badges}</div>` : ''}
             ${ad.power_balance ? `<div class="conv-power"><strong>Dynamic</strong><br>${escHa(ad.power_balance)}</div>` : ''}
             ${ad.key_moment ? `<div class="conv-key-moment">${escHa(ad.key_moment)}</div>` : ''}
-            ${ad.biggest_risk ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk</span>${escHa(ad.biggest_risk)}</div>` : ''}`;
+            ${ad.biggest_risk ? `<div class="conv-risk"><span class="conv-risk-lbl">⚠ Biggest risk</span>${escHa(ad.biggest_risk)}</div>` : ''}
+            ${ad.tier_reason ? `<div class="tier-ai-hint">💡 ${escHa(ad.tier_reason)}</div>` : ''}`;
           document.getElementById('personAnalysisPanel').insertAdjacentElement('afterend', analysisEl);
           document.getElementById('personAnalysisPanel').classList.remove('hidden');
         }
@@ -6556,6 +6586,12 @@
         document.getElementById('personEditBtn').addEventListener('click', () => {
           document.getElementById('personEditForm').classList.toggle('hidden');
         });
+        document.getElementById('personEditTierToggle').addEventListener('click', e => {
+          const btn = e.target.closest('.tier-toggle-btn');
+          if (!btn) return;
+          document.querySelectorAll('#personEditTierToggle .tier-toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
         document.getElementById('personEditCancelBtn').addEventListener('click', () => {
           document.getElementById('personEditForm').classList.add('hidden');
         });
@@ -6563,13 +6599,15 @@
           const newName = document.getElementById('personEditName').value.trim();
           const newType = document.getElementById('personEditType').value;
           if (!newName) { document.getElementById('personEditName').focus(); return; }
+          const tierActiveBtn = document.querySelector('#personEditTierToggle .tier-toggle-btn.active');
+          const newTier = tierActiveBtn ? parseInt(tierActiveBtn.dataset.tier) : 2;
           const saveBtn = document.getElementById('personEditSaveBtn');
           saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
           try {
             const pr = await fetch(`/api/contacts/${contactId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-              body: JSON.stringify({ name: newName, type: newType || null })
+              body: JSON.stringify({ name: newName, type: newType || null, relationship_tier: newTier })
             });
             const updated = await pr.json();
             if (!pr.ok) throw new Error(updated.error);
