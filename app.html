@@ -988,8 +988,8 @@
     .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-bubble-history { opacity: 0.45; font-size: 13px; }
     .rp-mfb-row { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
-    .rp-mfb-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: #555; font-size: 12px; padding: 2px 7px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, color .15s; }
-    .rp-mfb-btn:hover { border-color: #555; color: #ccc; }
+    .rp-mfb-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: #555; font-size: 15px; padding: 2px 6px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, transform .1s; }
+    .rp-mfb-btn:hover { border-color: #444; transform: scale(1.15); }
     .rp-mfb-ack { font-size: 11px; color: #444; padding: 2px 0; }
     .rp-mfb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
     .rp-mfb-tag { background: none; border: 1px solid #2a2a2a; border-radius: 5px; color: #555; font-size: 11px; padding: 2px 7px; cursor: pointer; font-family: inherit; }
@@ -7359,8 +7359,8 @@
 
         const exactBtn = document.createElement('button');
         exactBtn.className = 'rp-mfb-btn';
-        exactBtn.textContent = '✓';
-        exactBtn.title = 'Exact — this is exactly how they\'d respond';
+        exactBtn.textContent = '✅';
+        exactBtn.title = 'Just like them';
         exactBtn.addEventListener('click', () => {
           _mfbPost({ verdict: 'exact' });
           mfbRow.innerHTML = '<span class="rp-mfb-ack">✓ thanks</span>';
@@ -7368,8 +7368,8 @@
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'rp-mfb-btn';
-        closeBtn.textContent = '😐';
-        closeBtn.title = 'Close but off in some way';
+        closeBtn.textContent = '🤔';
+        closeBtn.title = 'Close / not sure';
         closeBtn.addEventListener('click', () => {
           _mfbPost({ verdict: 'close' });
           mfbRow.innerHTML = '';
@@ -7390,8 +7390,8 @@
 
         const wrongBtn = document.createElement('button');
         wrongBtn.className = 'rp-mfb-btn';
-        wrongBtn.textContent = '✗';
-        wrongBtn.title = 'Wrong — they wouldn\'t say this';
+        wrongBtn.textContent = '❌';
+        wrongBtn.title = 'They\'d never say this';
         wrongBtn.addEventListener('click', () => {
           _mfbPost({ verdict: 'wrong' });
           if (histIdx >= 0) {
