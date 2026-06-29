@@ -952,6 +952,9 @@
     .rp-mirror-block { margin: 0 20px 4px; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); }
     .rp-mirror-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
     .rp-mirror-text { font-size: .85rem; line-height: 1.55; color: var(--sec); font-style: italic; }
+    .rp-cross-mirror-block { margin: 0 20px 4px; padding: 14px 16px; border-radius: 12px; background: linear-gradient(135deg, rgba(212,113,90,.08), rgba(99,102,241,.08)); border: 1px solid rgba(212,113,90,.25); }
+    .rp-cross-mirror-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--acc2); margin-bottom: 7px; }
+    .rp-cross-mirror-text { font-size: .88rem; line-height: 1.6; color: var(--fg); }
     .rp-debrief-tertiary { padding: 12px 20px; border-bottom: 1px solid var(--bord); }
     .rp-correction-toggle { background: none; border: none; color: #444; font-size: 12px; cursor: pointer; padding: 0; font-family: inherit; }
     .rp-correction-toggle:hover { color: var(--accent); }
@@ -2515,6 +2518,10 @@
         <div id="rp-mirror-block" class="rp-mirror-block hidden">
           <div class="rp-mirror-label">👁 Senin için bir gözlem</div>
           <div class="rp-mirror-text" id="rp-mirror-text"></div>
+        </div>
+        <div id="rp-cross-mirror-block" class="rp-cross-mirror-block hidden">
+          <div class="rp-cross-mirror-label">🪞 Bir kalıp fark ettik</div>
+          <div class="rp-cross-mirror-text" id="rp-cross-mirror-text"></div>
         </div>
         <div class="rp-debrief-secondary">
           <div class="rp-accuracy-row">
@@ -5259,6 +5266,7 @@
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.getElementById('rp-mirror-block').classList.add('hidden');
+      document.getElementById('rp-cross-mirror-block').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -5419,6 +5427,7 @@
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
       document.getElementById('rp-mirror-block').classList.add('hidden');
+      document.getElementById('rp-cross-mirror-block').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -7699,6 +7708,14 @@
           mirrorBlockEl.classList.remove('hidden');
         } else {
           mirrorBlockEl.classList.add('hidden');
+        }
+        // ── Cross-relationship mirror ────────────────────────────────
+        const crossMirrorBlockEl = document.getElementById('rp-cross-mirror-block');
+        if (data.cross_mirror) {
+          document.getElementById('rp-cross-mirror-text').textContent = data.cross_mirror;
+          crossMirrorBlockEl.classList.remove('hidden');
+        } else {
+          crossMirrorBlockEl.classList.add('hidden');
         }
         // ────────────────────────────────────────────────────────────
 

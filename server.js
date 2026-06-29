@@ -2137,7 +2137,7 @@ Good examples:
 - "When the tension rose, you shifted to a lighter topic instead of staying with it."
 Bad (never write these): "You show avoidant patterns." / "70% defensive responses." / "Your attachment style..."`;
 
-    const [response, nmResponse, behaviorResponse, mirrorResponse] = await Promise.all([
+    const [response, nmResponse, behaviorResponse, mirrorResponse, rawSnapsR] = await Promise.all([
       fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -2160,7 +2160,10 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 150, system: mirrorSystemPrompt, messages: [{ role: 'user', content: `Transcript:\n${transcript}` }] })
-      })
+      }),
+      (req.user && req.token)
+        ? fetch(`${SUPABASE_REST}/user_behavior_snapshots?user_id=eq.${req.user.id}&select=contact_id,patterns,relationship_type&order=created_at.desc&limit=30`, { headers: sbHeaders(req.token) })
+        : Promise.resolve(null)
     ]);
 
     const data = await response.json();
@@ -2248,7 +2251,64 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
       }
     } catch { /* mirror stays null */ }
 
-    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror });
+    // ── Cross-relationship mirror ─────────────────────────────────────────────
+    let cross_mirror = null;
+    try {
+      if (rawSnapsR) {
+        const snaps = await rawSnapsR.json();
+        if (Array.isArray(snaps)) {
+          const withContact = snaps.filter(s => s.contact_id && Array.isArray(s.patterns) && s.patterns.length);
+          const distinctContacts = [...new Set(withContact.map(s => s.contact_id))];
+          if (distinctContacts.length >= 3) {
+            // Count how many distinct contacts each pattern appears in
+            const patternContacts = {};
+            for (const s of withContact) {
+              for (const p of s.patterns) {
+                if (!patternContacts[p]) patternContacts[p] = new Set();
+                patternContacts[p].add(s.contact_id);
+              }
+            }
+            // Find patterns appearing in ≥ 2 distinct contacts, sorted by frequency
+            const crossPatterns = Object.entries(patternContacts)
+              .filter(([, c]) => c.size >= 2)
+              .sort((a, b) => b[1].size - a[1].size);
+
+            if (crossPatterns.length > 0) {
+              const [topPattern, topContactIds] = crossPatterns[0];
+              // Get relationship types for the contacts that showed this pattern
+              const relTypes = [];
+              const seen = new Set();
+              for (const s of withContact) {
+                if (topContactIds.has(s.contact_id) && !seen.has(s.contact_id) && s.relationship_type) {
+                  relTypes.push(s.relationship_type);
+                  seen.add(s.contact_id);
+                }
+              }
+              const isTr = lang.toLowerCase().startsWith('tr') || lang.toLowerCase().includes('turkish');
+              const patDescTr = { early_apology:'özür dilemeye erken geçiyorsun', defensive:'savunmaya geçiyorsun', conflict_avoidance:'çatışmadan kaçınıyorsun', over_explaining:'aşırı açıklama yapıyorsun', seeking_reassurance:'onay arıyorsun', humor_deflection:'espriyle geçiştiriyorsun', logical_escape:'mantığa sığınıyorsun', premature_concession:'erken taviz veriyorsun', message_flooding:'üst üste mesaj atıyorsun', interrupting:'sözünü kesiyorsun' };
+              const patDescEn = { early_apology:'apologize early', defensive:'go on the defensive', conflict_avoidance:'avoid conflict', over_explaining:'over-explain', seeking_reassurance:'seek reassurance', humor_deflection:'deflect with humor', logical_escape:'retreat to logic', premature_concession:'give in too early', message_flooding:'flood with messages', interrupting:'interrupt' };
+              const relLblTr = { boss:'patronunla',partner:'partnerinle',family:'aile üyenle',friend:'arkadaşınla',ex:'eskiyle',colleague:'iş arkadaşınla',crush:'beğendiğin kişiyle',client:'müşteriyle' };
+              const relLblEn = { boss:'your boss',partner:'your partner',family:'a family member',friend:'a friend',ex:'an ex',colleague:'a colleague',crush:'someone you like',client:'a client' };
+              const patDesc = isTr ? patDescTr : patDescEn;
+              const relLbl = isTr ? relLblTr : relLblEn;
+              const pDesc = patDesc[topPattern];
+              const rLabels = relTypes.slice(0, 3).map(t => relLbl[t?.toLowerCase()] || t || '?');
+              if (pDesc && rLabels.length >= 2) {
+                const rList = rLabels.length >= 3
+                  ? (isTr ? `${rLabels[0]}, ${rLabels[1]} ve ${rLabels[2]}` : `${rLabels[0]}, ${rLabels[1]}, and ${rLabels[2]}`)
+                  : (isTr ? `${rLabels[0]} ve ${rLabels[1]}` : `${rLabels[0]} and ${rLabels[1]}`);
+                cross_mirror = isTr
+                  ? `${rLabels[0].charAt(0).toUpperCase() + rLabels[0].slice(1)} ile ${rLabels.slice(1).join(', ')} ile olan konuşmalarda aynı şeyi fark ettik: ${pDesc}. Bu birden fazla ilişkinde tekrar eden bir kalıp olabilir.`
+                  : `Across conversations with ${rList}, we noticed the same thing: you tend to ${pDesc}. This might be a pattern that repeats across multiple relationships.`;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) { console.error('[cross-mirror]', e.message); }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror, cross_mirror });
   } catch (e) {
     console.error('[simulate-debrief]', e.message);
     res.status(500).json({ error: e.message });
