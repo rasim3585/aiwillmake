@@ -2245,6 +2245,16 @@
     .wow-cta-btn:hover { opacity: .88; }
     .wow-cta-note { font-size: .76rem; color: var(--muted); margin-top: 8px; }
 
+    /* ── Import pre-auth modal ── */
+    .import-auth-overlay { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .import-auth-overlay.hidden { display: none; }
+    .import-auth-card { background: var(--card); border: 1px solid var(--bord); border-radius: 18px; padding: 32px 24px; max-width: 340px; width: 100%; text-align: center; }
+    .import-auth-icon { font-size: 2rem; margin-bottom: 12px; }
+    .import-auth-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
+    .import-auth-msg { font-size: .87rem; color: var(--sec); line-height: 1.55; margin-bottom: 22px; }
+    .import-auth-google { width: 100%; justify-content: center; margin-bottom: 0; }
+    .import-auth-cancel { background: none; border: none; color: var(--muted); font: inherit; font-size: .83rem; cursor: pointer; margin-top: 14px; display: block; width: 100%; }
+
     /* ── Ready Screen ── */
     .ready-inner { max-width: 440px; margin: 0 auto; padding: 44px 20px; }
     .ready-badge { font-size: .75rem; font-weight: 700; color: var(--acc2); text-transform: uppercase; letter-spacing: .09em; margin-bottom: 10px; }
@@ -2606,6 +2616,20 @@
         Sign in with Google
       </button>
       <a href="index.html" class="auth-back">← Back to home</a>
+    </div>
+  </div>
+
+  <!-- Pre-auth import modal (shown when user clicks Analyze without being logged in) -->
+  <div id="importAuthModal" class="import-auth-overlay hidden">
+    <div class="import-auth-card">
+      <div class="import-auth-icon">🔒</div>
+      <h3 class="import-auth-title">Analizin hazırlanıyor</h3>
+      <p class="import-auth-msg">Verilerinin güvenliği ve sadece senin görebilmen için tek tıkla hesabını oluştur.</p>
+      <button class="btn-google import-auth-google" id="importAuthGoogleBtn" onclick="importAuthContinue()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+        Continue with Google
+      </button>
+      <button class="import-auth-cancel" onclick="importAuthCancel()">← Back</button>
     </div>
   </div>
 
@@ -3287,6 +3311,14 @@
     async function checkFirstRunAndRoute() {
       if (App.state.currentScreen !== null) return;
       if (window._forceImport) { window._forceImport = false; App.navigateTo('import'); return; }
+      const pendingRaw = sessionStorage.getItem('_pendingImport');
+      if (pendingRaw) {
+        sessionStorage.removeItem('_pendingImport');
+        try {
+          const pd = JSON.parse(pendingRaw);
+          if (pd.rawText && Date.now() - pd.ts < 10 * 60 * 1000) { await resumeImportFlow(pd); return; }
+        } catch (e) { /* ignore malformed pending state */ }
+      }
       try {
         const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (r.ok) {
@@ -3372,6 +3404,9 @@
     let _importMode = 'whatsapp';
     let _importFile = null;
     let _processingTimer = null;
+    let _wowContactId = null;
+    let _importPreAuthName = null;
+    let _importPreAuthType = null;
 
     // ── App State Machine (FAZ 0 skeleton) ──────────────────────
     const App = {
@@ -4881,8 +4916,10 @@
       btn.disabled = true;
 
       if (!accessToken) {
-        try { await runGuestImportAnalysis(name, type, dataSource); }
-        catch (err) { App.navigateTo('import'); showToast(err.message || 'Analysis failed. Try again.', 'error'); btn.disabled = false; }
+        btn.disabled = false;
+        _importPreAuthName = name;
+        _importPreAuthType = type;
+        document.getElementById('importAuthModal').classList.remove('hidden');
         return;
       }
 
@@ -4905,11 +4942,11 @@
           analyzeSource = await extractScreenshot(dataSource);
         }
 
-        await analyzeContactChat(analyzeSource, contact.id, name);
-
+        await analyzeContactChat(analyzeSource, contact.id, name, {
+          onComplete: (data, cid) => showWowScreen(name, data, cid)
+        });
         _suppressLoadingOverlay = false;
         stopProcessingAnimation();
-        await showReadyScreen(contact.id, name, _importMode);
 
       } catch (err) {
         _suppressLoadingOverlay = false;
@@ -4921,44 +4958,75 @@
       }
     }
 
-    async function runGuestImportAnalysis(name, type, dataSource) {
-      App.navigateTo('processing');
-      startProcessingAnimation(name);
-      _suppressLoadingOverlay = true;
-
-      let text = dataSource;
-      if (_importMode === 'screenshot') {
-        updateProcessingMsg('Ekran görüntüsü okunuyor…');
-        text = await extractScreenshot(dataSource);
-      } else if (_importMode !== 'text') {
-        text = await readImportFile(dataSource);
-      }
-
-      const analysisRes = await fetch('/api/analyze-conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationText: text, language: 'auto', contact_name: name })
-      });
-      const data = await analysisRes.json();
-      if (!analysisRes.ok) throw new Error(data.error || 'Analysis failed');
-
-      _suppressLoadingOverlay = false;
-      stopProcessingAnimation();
-
+    async function importAuthContinue() {
+      const btn = document.getElementById('importAuthGoogleBtn');
+      btn.disabled = true;
+      btn.textContent = 'Preparing…';
       try {
-        sessionStorage.setItem('_guestAnalysis', JSON.stringify({
-          name, type: type || null,
-          analysisData: data,
-          rawText: typeof text === 'string' ? text.slice(0, 50000) : null,
+        let rawText;
+        if (_importMode === 'text') {
+          rawText = (document.getElementById('importTextArea').value || '').trim();
+          if (!rawText) throw new Error('Write something first');
+        } else if (_importMode === 'screenshot') {
+          if (!_importFile) throw new Error('No file selected');
+          rawText = await extractScreenshot(_importFile);
+        } else {
+          if (!_importFile) throw new Error('No file selected');
+          rawText = await readImportFile(_importFile);
+        }
+        sessionStorage.setItem('_pendingImport', JSON.stringify({
+          name: _importPreAuthName,
+          type: _importPreAuthType,
           importMode: _importMode,
+          rawText: rawText.slice(0, 200000),
           ts: Date.now()
         }));
-      } catch (e) { /* sessionStorage full — silently skip */ }
-
-      showGuestWowScreen(name, data);
+        await signInWithGoogle();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Continue with Google';
+        showToast(e.message || 'Could not read file', 'error');
+      }
     }
 
-    function showGuestWowScreen(name, data) {
+    function importAuthCancel() {
+      document.getElementById('importAuthModal').classList.add('hidden');
+      document.getElementById('importAnalyzeBtn').disabled = false;
+    }
+
+    async function resumeImportFlow(pd) {
+      App.navigateTo('processing');
+      startProcessingAnimation(pd.name);
+      _suppressLoadingOverlay = true;
+      _importMode = pd.importMode || 'whatsapp';
+      try {
+        const cr = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ name: pd.name, type: pd.type || null })
+        });
+        if (!cr.ok) throw new Error('Could not create person');
+        const contact = await cr.json();
+        await analyzeContactChat(pd.rawText, contact.id, pd.name, {
+          onComplete: (data, cid) => {
+            _suppressLoadingOverlay = false;
+            stopProcessingAnimation();
+            showWowScreen(pd.name, data, cid);
+          }
+        });
+        _suppressLoadingOverlay = false;
+        stopProcessingAnimation();
+      } catch (err) {
+        _suppressLoadingOverlay = false;
+        stopProcessingAnimation();
+        hideLoadingOverlay();
+        showToast(err.message || 'Analysis failed. Please try again.', 'error');
+        App.navigateTo('import');
+      }
+    }
+
+    function showWowScreen(name, data, contactId) {
+      _wowContactId = contactId || null;
       App.navigateTo('wow');
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -4972,10 +5040,10 @@
 
       const conf = data.confidence_score || 0;
       const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
-      const parts = [];
-      if (msgCount > 0) parts.push(`${msgCount.toLocaleString()} messages analyzed`);
-      if (conf > 0) parts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
-      document.getElementById('wowConfidenceMeta').textContent = parts.join(' · ');
+      const metaParts = [];
+      if (msgCount > 0) metaParts.push(`${msgCount.toLocaleString()} messages analyzed`);
+      if (conf > 0) metaParts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
+      document.getElementById('wowConfidenceMeta').textContent = metaParts.join(' · ');
 
       const patterns = Array.isArray(data.observed_patterns) ? data.observed_patterns.slice(0, 3) : [];
       const patEl = document.getElementById('wowPatterns');
@@ -4994,7 +5062,12 @@
     }
 
     function wowStartTalking() {
-      document.getElementById('screen-landing').classList.remove('hidden');
+      if (_wowContactId) {
+        if (window._userPlan === 'free') { showUpgradeModal(); return; }
+        loadPersonSection(_wowContactId);
+      } else {
+        document.getElementById('screen-landing').classList.remove('hidden');
+      }
     }
 
     const _PROCESSING_MSGS = [
@@ -6029,7 +6102,7 @@
       return await file.text();
     }
 
-    async function analyzeContactChat(fileOrText, contactId, contactName) {
+    async function analyzeContactChat(fileOrText, contactId, contactName, opts = {}) {
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       showLoadingOverlay(`Analyzing your conversation with ${contactName}…`);
       const patternsEl = document.getElementById('patternsSectionEl');
@@ -6157,7 +6230,9 @@
 
         showToast(`✓ Saved to ${contactName}'s history${wasSampled ? ' · sampled (beginning, middle & end)' : ''}`, 'success');
         if (contactId) showToast(`Building ${contactName}'s profile in the background…`, 'info');
-        if (accessToken) {
+        if (typeof opts.onComplete === 'function') {
+          opts.onComplete(data, contactId);
+        } else if (accessToken) {
           _pendingContactAnalysis = { contactId, data };
           loadPersonSection(contactId);
         }
