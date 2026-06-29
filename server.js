@@ -2164,8 +2164,9 @@ No markdown, no extra text, just the JSON.`
         try {
           // Rule-based signals (no AI needed)
           const userMsgs = history.filter(m => m.role === 'user');
-          const apologyRe = /\b(sorry|apolog|pardon|forgive|özür|affedersin|kusura bakma)\b/i;
-          const apology_count = userMsgs.filter(m => apologyRe.test(m.content)).length;
+          const apologyReAscii    = /\b(sorry|apolog|pardon|forgive)/i;
+          const apologyReNonAscii = /(özür|affedersin|kusura\s+bakma)/i;
+          const apology_count = userMsgs.filter(m => apologyReAscii.test(m.content) || apologyReNonAscii.test(m.content)).length;
 
           let message_flooding = false;
           for (let i = 1; i < history.length; i++) {
