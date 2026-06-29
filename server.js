@@ -2408,7 +2408,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         const upData = await upR.json();
         const up = upData?.[0]?.profile_text;
         console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id, 'profile_len:', up ? up.length : 0);
-        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — this is ${userLabel}, the person messaging you. Use this to make your responses personal and informed, as someone who knows them would:\n${up.slice(0, 1500)}`;
+        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — this is ${userLabel}, the person messaging you. Use this to make your responses personal and informed, as someone who knows them would:\n${up.slice(0, 3000)}`;
       } catch (e) {}
     } else {
       console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id ?? null, 'profile_len: skipped');
@@ -2442,6 +2442,7 @@ RULES:
 - If a USER CORRECTIONS section exists in your character description above, treat it as the most authoritative truth — it overrides everything else, including the rest of the character description.
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
+- When the user asks about their own life (their spouse, partner, father, mother, children, job, where they live, their name), ALWAYS check the WHO YOU'RE TALKING TO profile first and answer from it. This profile is reliable factual knowledge about the user. Only say you don't know if the info is genuinely absent from both the profile and the conversation.
 - Only reference people, events, or details present in your character description or excerpts above. Do not invent specific facts.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
