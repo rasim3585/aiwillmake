@@ -987,6 +987,13 @@
     .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
     .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-bubble-history { opacity: 0.45; font-size: 13px; }
+    .rp-mfb-row { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+    .rp-mfb-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: #555; font-size: 12px; padding: 2px 7px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, color .15s; }
+    .rp-mfb-btn:hover { border-color: #555; color: #ccc; }
+    .rp-mfb-ack { font-size: 11px; color: #444; padding: 2px 0; }
+    .rp-mfb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .rp-mfb-tag { background: none; border: 1px solid #2a2a2a; border-radius: 5px; color: #555; font-size: 11px; padding: 2px 7px; cursor: pointer; font-family: inherit; }
+    .rp-mfb-tag:hover { border-color: #ff6b35; color: #ff6b35; }
     .rp-date-divider { text-align: center; font-size: 11px; color: #444; letter-spacing: 1px; padding: 8px 0; position: relative; }
     .rp-date-divider::before, .rp-date-divider::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: #222; }
     .rp-date-divider::before { left: 0; }
@@ -7333,13 +7340,75 @@
         el.className = 'rp-bubble other';
         el.textContent = text;
         wrapper.appendChild(el);
-        if (histIdx >= 0) {
-          const btn = document.createElement('button');
-          btn.className = 'rp-inline-correct-btn';
-          btn.textContent = '✗ Wrong';
-          btn.addEventListener('click', () => btn.replaceWith(_rpBuildCorrectForm(el, histIdx)));
-          wrapper.appendChild(btn);
+
+        // ── Micro-feedback row ────────────────────────────────────────────────
+        const turnIndex = Math.floor(_simHistory.length / 2);
+        const contactId = _simCharacter?.contact_id || null;
+
+        function _mfbPost(payload) {
+          if (!accessToken) return;
+          fetch('/api/feedback/micro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+            body: JSON.stringify({ contact_id: contactId, turn_index: turnIndex, ...payload })
+          }).catch(() => {});
         }
+
+        const mfbRow = document.createElement('div');
+        mfbRow.className = 'rp-mfb-row';
+
+        const exactBtn = document.createElement('button');
+        exactBtn.className = 'rp-mfb-btn';
+        exactBtn.textContent = '✓';
+        exactBtn.title = 'Exact — this is exactly how they\'d respond';
+        exactBtn.addEventListener('click', () => {
+          _mfbPost({ verdict: 'exact' });
+          mfbRow.innerHTML = '<span class="rp-mfb-ack">✓ thanks</span>';
+        });
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'rp-mfb-btn';
+        closeBtn.textContent = '😐';
+        closeBtn.title = 'Close but off in some way';
+        closeBtn.addEventListener('click', () => {
+          _mfbPost({ verdict: 'close' });
+          mfbRow.innerHTML = '';
+          const tagRow = document.createElement('div');
+          tagRow.className = 'rp-mfb-tags';
+          ['too formal', 'wrong tone', 'softened too fast', 'wrong memory', 'too long', 'wouldn\'t say'].forEach(label => {
+            const t = document.createElement('button');
+            t.className = 'rp-mfb-tag';
+            t.textContent = label;
+            t.addEventListener('click', () => {
+              _mfbPost({ verdict: 'close', tag: label });
+              mfbRow.innerHTML = '<span class="rp-mfb-ack">✓ noted</span>';
+            });
+            tagRow.appendChild(t);
+          });
+          mfbRow.appendChild(tagRow);
+        });
+
+        const wrongBtn = document.createElement('button');
+        wrongBtn.className = 'rp-mfb-btn';
+        wrongBtn.textContent = '✗';
+        wrongBtn.title = 'Wrong — they wouldn\'t say this';
+        wrongBtn.addEventListener('click', () => {
+          _mfbPost({ verdict: 'wrong' });
+          if (histIdx >= 0) {
+            wrongBtn.replaceWith(_rpBuildCorrectForm(el, histIdx));
+            // remove remaining mfb buttons if correction form opened
+            mfbRow.querySelectorAll('.rp-mfb-btn').forEach(b => b.remove());
+          } else {
+            mfbRow.innerHTML = '<span class="rp-mfb-ack">✗ logged</span>';
+          }
+        });
+
+        mfbRow.appendChild(exactBtn);
+        mfbRow.appendChild(closeBtn);
+        mfbRow.appendChild(wrongBtn);
+        wrapper.appendChild(mfbRow);
+        // ─────────────────────────────────────────────────────────────────────
+
         container.appendChild(wrapper);
       } else {
         const el = document.createElement('div');

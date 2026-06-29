@@ -1681,6 +1681,145 @@ app.patch('/api/conversations/:convId/messages/:msgId/outcome', requireAuth, asy
   }
 });
 
+// ── Faz 1: Veri toplama altyapısı ────────────────────────────────────────────
+
+async function sbInsert(token, table, row) {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/${table}`, {
+      method: 'POST',
+      headers: { ...sbHeaders(token), 'Prefer': 'return=minimal' },
+      body: JSON.stringify(row)
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      console.error(`[sbInsert] ${table} failed:`, err);
+    }
+  } catch (e) {
+    console.error(`[sbInsert] ${table} exception:`, e.message);
+  }
+}
+
+app.post('/api/feedback/micro', requireAuth, async (req, res) => {
+  try {
+    const { contact_id, conversation_id, message_id, verdict, tag, turn_index } = req.body;
+    if (!verdict || !['exact', 'close', 'wrong'].includes(verdict)) {
+      return res.status(400).json({ ok: false, error: 'verdict required: exact|close|wrong' });
+    }
+    await sbInsert(req.token, 'micro_feedback', {
+      user_id: req.user.id,
+      contact_id: contact_id || null,
+      conversation_id: conversation_id || null,
+      message_id: message_id || null,
+      verdict,
+      tag: tag || null,
+      turn_index: turn_index ?? null
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[feedback/micro]', e.message);
+    res.json({ ok: false });
+  }
+});
+
+app.post('/api/signals/passive', requireAuth, async (req, res) => {
+  try {
+    const events = req.body.events
+      ? req.body.events
+      : [{ signal_type: req.body.signal_type, signal_value: req.body.signal_value, turn_index: req.body.turn_index, contact_id: req.body.contact_id, conversation_id: req.body.conversation_id }];
+    await Promise.all(events.map(ev => sbInsert(req.token, 'passive_signals', {
+      user_id: req.user.id,
+      signal_type: ev.signal_type || null,
+      signal_value: ev.signal_value ?? null,
+      turn_index: ev.turn_index ?? null,
+      contact_id: ev.contact_id || null,
+      conversation_id: ev.conversation_id || null
+    })));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[signals/passive]', e.message);
+    res.json({ ok: false });
+  }
+});
+
+app.post('/api/predictions', requireAuth, async (req, res) => {
+  try {
+    const { contact_id, conversation_id, predicted_reaction, predicted_class, confidence, topic } = req.body;
+    const r = await fetch(`${SUPABASE_REST}/prediction_ledger`, {
+      method: 'POST',
+      headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        user_id: req.user.id,
+        contact_id: contact_id || null,
+        conversation_id: conversation_id || null,
+        predicted_reaction: predicted_reaction || null,
+        predicted_class: predicted_class || null,
+        confidence: confidence ?? null,
+        topic: topic || null
+      })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) {
+    console.error('[predictions POST]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch('/api/predictions/:id/resolve', requireAuth, async (req, res) => {
+  try {
+    const { actual_outcome, actual_class, was_correct } = req.body;
+    const r = await fetch(
+      `${SUPABASE_REST}/prediction_ledger?id=eq.${req.params.id}&user_id=eq.${req.user.id}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
+        body: JSON.stringify({
+          actual_outcome: actual_outcome || null,
+          actual_class: actual_class || null,
+          was_correct: was_correct ?? null,
+          resolved_at: new Date().toISOString()
+        })
+      }
+    );
+    const data = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(data));
+    res.json(Array.isArray(data) ? data[0] : data);
+  } catch (e) {
+    console.error('[predictions PATCH resolve]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/behavior/snapshot', requireAuth, async (req, res) => {
+  try {
+    const {
+      contact_id, conversation_id, patterns,
+      first_tension_turn, apology_count, humor_deflection,
+      went_defensive, message_flooding, emotional_trend, relationship_type
+    } = req.body;
+    await sbInsert(req.token, 'user_behavior_snapshots', {
+      user_id: req.user.id,
+      contact_id: contact_id || null,
+      conversation_id: conversation_id || null,
+      patterns: patterns || null,
+      first_tension_turn: first_tension_turn ?? null,
+      apology_count: apology_count ?? null,
+      humor_deflection: humor_deflection ?? null,
+      went_defensive: went_defensive ?? null,
+      message_flooding: message_flooding ?? null,
+      emotional_trend: emotional_trend || null,
+      relationship_type: relationship_type || null
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[behavior/snapshot]', e.message);
+    res.json({ ok: false });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.delete('/api/conversations/:id', requireAuth, async (req, res) => {
   try {
     const cr = await fetch(`${SUPABASE_REST}/conversations?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id`,
