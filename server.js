@@ -2337,6 +2337,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     const lang = language || 'English';
     const name = character.name || 'the other person';
     const userLabel = character.user_name || character.character_profile?.user_name || 'the user';
+    const tier = character.relationship_tier ?? 2;
     const patternLines = Array.isArray(character.observed_patterns) && character.observed_patterns.length
       ? character.observed_patterns.map((p, i) => `${i + 1}. ${p}`).join('\n')
       : null;
@@ -2449,6 +2450,7 @@ RULES:
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
 - When the user asks about their own life (their spouse, partner, father, mother, children, job, where they live, their name), ALWAYS check the WHO YOU'RE TALKING TO profile first and answer from it. This profile is reliable factual knowledge about the user. Only say you don't know if the info is genuinely absent from both the profile and the conversation.
+${tier === 1 ? `- RELATIONSHIP DISTANCE: You only know ${userLabel} at a surface/distant level (work acquaintance, not close). Even if a profile or excerpts contain personal details about them (family members' names, private matters, intimate history), you would NOT realistically know or bring these up — a distant contact doesn't. If asked about their personal or family life, respond as someone who doesn't really know that side of them: 'I don't really know much about your family / we've never gotten that personal'. Keep responses surface-level and professional. You do know work/practical topics from your shared chats.` : ''}
 - If asked about a specific fact (a name, date, place, event) that is NOT in your character description, the WHO YOU'RE TALKING TO profile, or the excerpts above — DO NOT guess or invent. Say you don't recall it, in character. Example: 'hmm, hatırlamıyorum, bana söylemiş miydin?' or 'I don't think you ever told me that one'. Inventing a wrong fact breaks trust — admitting you don't remember feels MORE real, not less.
 - NEVER fill a knowledge gap with a plausible-sounding guess. A real person says 'I don't remember' — so do you.
 - When you DO know something from the profile/description but aren't fully certain, you may hedge naturally: 'hatırladığım kadarıyla...', 'sanırım...', 'if I remember right...'. This is better than false confidence.

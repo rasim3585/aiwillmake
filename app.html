@@ -5237,8 +5237,8 @@
       if (!window._userPlan) await checkSubscriptionAndShowReady();
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null }
-        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null };
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2 }
+        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null, relationship_tier: 2 };
       _simInitialMsg = '';
       _simHistory = [];
       _simTurn = 0;
@@ -6304,7 +6304,8 @@
           observed_patterns: Array.isArray(c.observed_patterns) && c.observed_patterns.length ? c.observed_patterns : null,
           relationship_summary: c.relationship_summary || null,
           character_profile: c.character_profile || null,
-          person_a: c.character_profile?.user_name || null
+          person_a: c.character_profile?.user_name || null,
+          relationship_tier: c.relationship_tier ?? 2
         };
         updatePrevMsgFieldVisibility();
 
@@ -7347,8 +7348,8 @@
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       if (!msgText?.trim()) return;
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null }
-        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null };
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2 }
+        : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null, relationship_tier: 2 };
       _simInitialMsg = msgText;
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;
