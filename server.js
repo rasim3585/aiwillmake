@@ -1429,7 +1429,10 @@ SIGNAL_STRENGTH: [exactly one of: Strong / Moderate / Weak — confidence in thi
 OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
 ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]
 RELATIONSHIP_TIER: [1 or 2 — 1 if surface/work/casual (no personal life details shared), 2 if close/intimate (personal life, emotions, family openly discussed)]
-TIER_REASON: [one sentence explaining why — write in the conversation's language]${whatChangedLine}
+TIER_REASON: [one sentence explaining why — write in the conversation's language]
+MIRROR_INSIGHT_1: [One concrete behavioral observation about Person A (the user) from this conversation — how they communicate under pressure, what they seek, what they avoid. Kind, non-clinical, specific. Write in the conversation's language. Example: "Gerilim yükseldiğinde açıklamaya kaçıyor" or "Tends to apologize before making a request".]
+MIRROR_INSIGHT_2: [Another distinct observation about Person A, different angle. Omit this line entirely if nothing else stands out clearly.]
+MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by the data.]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1546,6 +1549,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       how_user_addresses:   extract('ADDRESS_STYLE') || null,
       suggested_tier:       (() => { const v = extract('RELATIONSHIP_TIER'); return v === '1' ? 1 : v === '2' ? 2 : null; })(),
       tier_reason:          extract('TIER_REASON') || null,
+      mirror_insights:      [extract('MIRROR_INSIGHT_1'), extract('MIRROR_INSIGHT_2'), extract('MIRROR_INSIGHT_3')].filter(Boolean),
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes

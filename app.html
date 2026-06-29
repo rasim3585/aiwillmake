@@ -2225,6 +2225,26 @@
     .processing-bar-wrap { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; overflow: hidden; }
     .processing-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width .9s ease; width: 0%; }
 
+    /* ── WOW Screen ── */
+    .wow-inner { padding: 28px 20px 48px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .wow-card { border-radius: 14px; padding: 20px; }
+    .wow-card-them { background: var(--card); border: 1px solid var(--bord); }
+    .wow-card-you { background: linear-gradient(135deg, rgba(212,113,90,.12), rgba(99,102,241,.12)); border: 1px solid rgba(212,113,90,.32); }
+    .wow-card-eyebrow { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+    .wow-card-name { font-size: 1.55rem; font-weight: 800; letter-spacing: -.025em; margin: 0 0 7px; }
+    .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
+    .wow-meta { font-size: .76rem; color: var(--muted); margin-bottom: 10px; }
+    .wow-patterns { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+    .wow-patterns li { font-size: .82rem; color: var(--sec); padding: 6px 10px; background: rgba(255,255,255,.04); border-radius: 6px; border-left: 2px solid var(--accent,#6366f1); }
+    .wow-card-you-sub { font-size: .8rem; color: var(--muted); margin: 0 0 12px; font-style: italic; }
+    .wow-mirror-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+    .wow-mirror-list li { font-size: .9rem; color: var(--fg); line-height: 1.5; padding-left: 18px; position: relative; }
+    .wow-mirror-list li::before { content: '→'; position: absolute; left: 0; color: var(--acc2,#d4715a); font-weight: 700; }
+    .wow-cta-area { margin-top: 6px; text-align: center; }
+    .wow-cta-btn { width: 100%; padding: 16px; background: var(--accent,#6366f1); color: #fff; border: none; border-radius: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -.01em; transition: opacity .15s; }
+    .wow-cta-btn:hover { opacity: .88; }
+    .wow-cta-note { font-size: .76rem; color: var(--muted); margin-top: 8px; }
+
     /* ── Ready Screen ── */
     .ready-inner { max-width: 440px; margin: 0 auto; padding: 44px 20px; }
     .ready-badge { font-size: .75rem; font-weight: 700; color: var(--acc2); text-transform: uppercase; letter-spacing: .09em; margin-bottom: 10px; }
@@ -3081,6 +3101,28 @@
       </div>
     </section>
 
+    <!-- WOW Screen (guest pre-login analysis result) -->
+    <section id="screen-wow" class="hidden" data-screen-id="wow">
+      <div class="wow-inner">
+        <div class="wow-card wow-card-them">
+          <div class="wow-card-eyebrow">✓ Twin built</div>
+          <h2 class="wow-card-name" id="wowThemName">—</h2>
+          <p class="wow-card-summary" id="wowThemSummary"></p>
+          <div class="wow-meta" id="wowConfidenceMeta"></div>
+          <ul class="wow-patterns" id="wowPatterns"></ul>
+        </div>
+        <div class="wow-card wow-card-you" id="wowCardYou">
+          <div class="wow-card-eyebrow">👁 We saw you too</div>
+          <p class="wow-card-you-sub">Biz seni de gördük</p>
+          <ul class="wow-mirror-list" id="wowMirrorList"></ul>
+        </div>
+        <div class="wow-cta-area">
+          <button class="wow-cta-btn" onclick="wowStartTalking()">💬 Start talking with <span id="wowCtaName">them</span> →</button>
+          <p class="wow-cta-note">Sign in to save your twin &amp; start practicing. Free.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Goal Screen -->
     <section id="screen-goal" class="hidden" data-screen-id="goal">
       <div class="goal-inner">
@@ -3213,7 +3255,8 @@
           await checkFirstRunAndRoute();
         } else {
           document.getElementById('authGate').classList.add('hidden');
-          document.getElementById('screen-landing').classList.remove('hidden');
+          if (window._forceImport) { window._forceImport = false; App.navigateTo('import'); }
+          else document.getElementById('screen-landing').classList.remove('hidden');
         }
 
         sbClient.auth.onAuthStateChange(async (event, session) => {
@@ -4795,7 +4838,7 @@
       'homeSection','newConvWizard','personSection',
       'smartStartSection','catSection','subcatSection','formCard',
       'continueSection','reviewSection','simulatorSection','convAnalysisResult',
-      'screen-import','screen-processing','screen-ready','screen-goal','screen-strategy',
+      'screen-import','screen-processing','screen-wow','screen-ready','screen-goal','screen-strategy',
       'userProfileSection'
     ];
     function hideAllMainSections() {
@@ -4837,6 +4880,12 @@
       const btn = document.getElementById('importAnalyzeBtn');
       btn.disabled = true;
 
+      if (!accessToken) {
+        try { await runGuestImportAnalysis(name, type, dataSource); }
+        catch (err) { App.navigateTo('import'); showToast(err.message || 'Analysis failed. Try again.', 'error'); btn.disabled = false; }
+        return;
+      }
+
       try {
         const cr = await fetch('/api/contacts', {
           method: 'POST',
@@ -4870,6 +4919,82 @@
         showToast(err.message || 'Analysis failed. Try again.', 'error');
         btn.disabled = false;
       }
+    }
+
+    async function runGuestImportAnalysis(name, type, dataSource) {
+      App.navigateTo('processing');
+      startProcessingAnimation(name);
+      _suppressLoadingOverlay = true;
+
+      let text = dataSource;
+      if (_importMode === 'screenshot') {
+        updateProcessingMsg('Ekran görüntüsü okunuyor…');
+        text = await extractScreenshot(dataSource);
+      } else if (_importMode !== 'text') {
+        text = await readImportFile(dataSource);
+      }
+
+      const analysisRes = await fetch('/api/analyze-conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationText: text, language: 'auto', contact_name: name })
+      });
+      const data = await analysisRes.json();
+      if (!analysisRes.ok) throw new Error(data.error || 'Analysis failed');
+
+      _suppressLoadingOverlay = false;
+      stopProcessingAnimation();
+
+      try {
+        sessionStorage.setItem('_guestAnalysis', JSON.stringify({
+          name, type: type || null,
+          analysisData: data,
+          rawText: typeof text === 'string' ? text.slice(0, 50000) : null,
+          importMode: _importMode,
+          ts: Date.now()
+        }));
+      } catch (e) { /* sessionStorage full — silently skip */ }
+
+      showGuestWowScreen(name, data);
+    }
+
+    function showGuestWowScreen(name, data) {
+      App.navigateTo('wow');
+      const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      document.getElementById('wowThemName').textContent = name;
+      document.getElementById('wowCtaName').textContent = name;
+
+      const summary = data.relationship_summary || data.emotional_tone || '';
+      const summaryEl = document.getElementById('wowThemSummary');
+      summaryEl.textContent = summary;
+      summaryEl.classList.toggle('hidden', !summary);
+
+      const conf = data.confidence_score || 0;
+      const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
+      const parts = [];
+      if (msgCount > 0) parts.push(`${msgCount.toLocaleString()} messages analyzed`);
+      if (conf > 0) parts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
+      document.getElementById('wowConfidenceMeta').textContent = parts.join(' · ');
+
+      const patterns = Array.isArray(data.observed_patterns) ? data.observed_patterns.slice(0, 3) : [];
+      const patEl = document.getElementById('wowPatterns');
+      patEl.innerHTML = patterns.map(p => `<li>${escH(p)}</li>`).join('');
+      patEl.classList.toggle('hidden', patterns.length === 0);
+
+      const insights = Array.isArray(data.mirror_insights) ? data.mirror_insights.slice(0, 3) : [];
+      const mirrorEl = document.getElementById('wowMirrorList');
+      const mirrorCard = document.getElementById('wowCardYou');
+      if (insights.length) {
+        mirrorEl.innerHTML = insights.map(i => `<li>${escH(i)}</li>`).join('');
+        mirrorCard.classList.remove('hidden');
+      } else {
+        mirrorCard.classList.add('hidden');
+      }
+    }
+
+    function wowStartTalking() {
+      document.getElementById('screen-landing').classList.remove('hidden');
     }
 
     const _PROCESSING_MSGS = [
