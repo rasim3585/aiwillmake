@@ -2407,8 +2407,11 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         const upR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
         const upData = await upR.json();
         const up = upData?.[0]?.profile_text;
+        console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id, 'profile_len:', up ? up.length : 0);
         if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — this is ${userLabel}, the person messaging you. Use this to make your responses personal and informed, as someone who knows them would:\n${up.slice(0, 1500)}`;
       } catch (e) {}
+    } else {
+      console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id ?? null, 'profile_len: skipped');
     }
 
     // Prose character document — handles string (new) and old JSON profiles
