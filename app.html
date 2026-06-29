@@ -949,6 +949,9 @@
     .rp-stars { display: flex; gap: 4px; }
     .rp-star { background: none; border: none; font-size: 22px; color: #333; cursor: pointer; transition: color 0.15s; padding: 0 2px; font-family: inherit; }
     .rp-star.selected, .rp-star:hover { color: #ff6b35; }
+    .rp-mirror-block { margin: 0 20px 4px; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); }
+    .rp-mirror-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+    .rp-mirror-text { font-size: .85rem; line-height: 1.55; color: var(--sec); font-style: italic; }
     .rp-debrief-tertiary { padding: 12px 20px; border-bottom: 1px solid var(--bord); }
     .rp-correction-toggle { background: none; border: none; color: #444; font-size: 12px; cursor: pointer; padding: 0; font-family: inherit; }
     .rp-correction-toggle:hover { color: var(--accent); }
@@ -2508,6 +2511,10 @@
             <div class="rp-next-move-advice" id="rp-next-move-advice"></div>
             <button type="button" class="rp-copy-btn" id="rp-copy-btn">Copy message</button>
           </div>
+        </div>
+        <div id="rp-mirror-block" class="rp-mirror-block hidden">
+          <div class="rp-mirror-label">👁 Senin için bir gözlem</div>
+          <div class="rp-mirror-text" id="rp-mirror-text"></div>
         </div>
         <div class="rp-debrief-secondary">
           <div class="rp-accuracy-row">
@@ -5251,6 +5258,7 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
+      document.getElementById('rp-mirror-block').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -5410,6 +5418,7 @@
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-debrief').classList.add('hidden');
       document.getElementById('rp-next-move').classList.add('hidden');
+      document.getElementById('rp-mirror-block').classList.add('hidden');
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -7680,6 +7689,16 @@
           document.getElementById('rp-prediction-result-text').innerHTML =
             `<p style="margin:0 0 5px">Sen: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simülasyon: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
             `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `${personName}'i iyi tanıyorsun! ✓` : `${personName} seni şaşırttı.`}</p>`;
+        }
+        // ────────────────────────────────────────────────────────────
+
+        // ── Mirror (user behavior observation) ──────────────────────
+        const mirrorBlockEl = document.getElementById('rp-mirror-block');
+        if (data.mirror) {
+          document.getElementById('rp-mirror-text').textContent = data.mirror;
+          mirrorBlockEl.classList.remove('hidden');
+        } else {
+          mirrorBlockEl.classList.add('hidden');
         }
         // ────────────────────────────────────────────────────────────
 

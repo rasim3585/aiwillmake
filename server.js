@@ -2128,7 +2128,16 @@ No markdown, no extra text, just the JSON.`
 
     const behaviorSystemPrompt = `Analyze ONLY the user's (You) messages in this practice transcript. Return a JSON object with these fields: patterns (array of strings from this fixed list only: 'early_apology', 'interrupting', 'logical_escape', 'humor_deflection', 'conflict_avoidance', 'message_flooding', 'over_explaining', 'premature_concession', 'seeking_reassurance', 'defensive'), went_defensive (boolean), humor_deflection (boolean), emotional_trend ('escalating'|'calming'|'flat'). Only include a pattern if there is clear evidence in the user's messages. No markdown, just JSON.`;
 
-    const [response, nmResponse, behaviorResponse] = await Promise.all([
+    const mirrorSystemPrompt = `You are a compassionate observer watching someone practice a difficult conversation. Write 1-2 sentences describing ONE specific behavior pattern you noticed in the USER's (marked [You]) messages — NOT the other person's. Tone: gentle, non-judgmental observation. No clinical labels, no percentages, no scores. Write entirely in ${lang}. If no single pattern stands out clearly, respond with exactly the word: null.
+
+Good examples:
+- "İkinci itirazdan sonra savunmaya geçtin — twin de o noktada kapandı."
+- "Onlar tepki vermeden önce özür diledin."
+- "You offered to compromise before they'd even pushed back."
+- "When the tension rose, you shifted to a lighter topic instead of staying with it."
+Bad (never write these): "You show avoidant patterns." / "70% defensive responses." / "Your attachment style..."`;
+
+    const [response, nmResponse, behaviorResponse, mirrorResponse] = await Promise.all([
       fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -2146,6 +2155,11 @@ No markdown, no extra text, just the JSON.`
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 300, system: behaviorSystemPrompt, messages: [{ role: 'user', content: `Transcript:\n${transcript}` }] })
+      }),
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 150, system: mirrorSystemPrompt, messages: [{ role: 'user', content: `Transcript:\n${transcript}` }] })
       })
     ]);
 
@@ -2225,7 +2239,16 @@ No markdown, no extra text, just the JSON.`
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move });
+    let mirror = null;
+    try {
+      const mData = await mirrorResponse.json();
+      if (mirrorResponse.ok) {
+        const mText = mData.content?.[0]?.text?.trim() || '';
+        mirror = (mText && mText.toLowerCase() !== 'null') ? mText : null;
+      }
+    } catch { /* mirror stays null */ }
+
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror });
   } catch (e) {
     console.error('[simulate-debrief]', e.message);
     res.status(500).json({ error: e.message });
