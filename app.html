@@ -2079,6 +2079,9 @@
     .upgrade-plan-price span { font-size: 12px; color: var(--txt2); font-weight: 400; }
     .upgrade-plan-desc { font-size: 11px; color: var(--txt2); line-height: 1.5; }
     .upgrade-modal-close { background: none; border: none; color: var(--txt2); font-size: 13px; cursor: pointer; padding: 8px; }
+    .upgrade-features { list-style: none; padding: 0; margin: 0 0 18px; text-align: left; display: flex; flex-direction: column; gap: 7px; }
+    .upgrade-features li { font-size: 13px; color: var(--sec); padding-left: 20px; position: relative; }
+    .upgrade-features li::before { content: '✓'; position: absolute; left: 0; color: var(--ok); font-weight: 700; }
 
     /* ── Conv Search ── */
     .home-conv-search {
@@ -2493,10 +2496,18 @@
   <div id="upgradeModal" class="upgrade-modal-overlay hidden">
     <div class="upgrade-modal">
       <div class="upgrade-modal-icon">🧠</div>
-      <div class="upgrade-modal-title">Your AI twin is ready.</div>
-      <div class="upgrade-modal-sub">Subscribe to start practicing with them.</div>
+      <div class="upgrade-modal-title" id="upgradeModalTitle">Your AI twin is ready.</div>
+      <div class="upgrade-modal-sub" id="upgradeModalSub">Subscribe to start practicing with them.</div>
 
       <div class="upgrade-preview" id="upgradePreview"></div>
+
+      <ul class="upgrade-features">
+        <li>Practice &amp; prova with any twin</li>
+        <li>Full Mirror report — see how you show up</li>
+        <li>Cross-relationship insights</li>
+        <li>Unlimited imports &amp; twins</li>
+        <li>Twin evolution — re-import &amp; track changes</li>
+      </ul>
 
       <div class="upgrade-plans">
         <div class="upgrade-plan" onclick="startCheckout('pro')">
@@ -3376,9 +3387,9 @@
         const r = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (r.ok) {
           const contacts = await r.json();
-          if (Array.isArray(contacts) && contacts.length === 0) {
-            App.navigateTo('import');
-            return;
+          if (Array.isArray(contacts)) {
+            window._contactCount = contacts.length;
+            if (contacts.length === 0) { App.navigateTo('import'); return; }
           }
         }
       } catch (e) { console.warn('[checkFirstRunAndRoute]', e); }
@@ -4983,6 +4994,7 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
           body: JSON.stringify({ name, type: type || null })
         });
+        if (cr.status === 402) { btn.disabled = false; showUpgradeModal('import'); return; }
         if (!cr.ok) throw new Error('Could not create person');
         const contact = await cr.json();
 
@@ -5059,6 +5071,15 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
           body: JSON.stringify({ name: pd.name, type: pd.type || null })
         });
+        if (cr.status === 402) {
+          _suppressLoadingOverlay = false;
+          stopProcessingAnimation();
+          hideLoadingOverlay();
+          showUpgradeModal('import');
+          App.navigateTo('home');
+          loadHomeConvList();
+          return;
+        }
         if (!cr.ok) throw new Error('Could not create person');
         const contact = await cr.json();
         await analyzeContactChat(pd.rawText, contact.id, pd.name, {
@@ -5081,6 +5102,7 @@
 
     function showWowScreen(name, data, contactId) {
       _wowContactId = contactId || null;
+      if (contactId) window._contactCount = Math.max(1, (window._contactCount || 0) + 1);
       App.navigateTo('wow');
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const isPaid = window._userPlan && window._userPlan !== 'free';
@@ -5302,9 +5324,16 @@
       }
     }
 
-    function showUpgradeModal() {
+    function showUpgradeModal(context) {
+      const isImport = context === 'import';
+      document.getElementById('upgradeModalTitle').textContent = isImport
+        ? 'More people, more insight.'
+        : 'Your AI twin is ready.';
+      document.getElementById('upgradeModalSub').textContent = isImport
+        ? 'You\'ve used your free import. Subscribe to add more people and start practicing.'
+        : 'Subscribe to start practicing with them.';
       const preview = document.getElementById('upgradePreview');
-      if (activeContactContext) {
+      if (!isImport && activeContactContext) {
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         preview.innerHTML = `
           <div class="upgrade-preview-inner">
@@ -5316,8 +5345,10 @@
             <div class="upgrade-preview-ready">✓ Ready</div>
           </div>
         `;
+        preview.classList.remove('hidden');
       } else {
         preview.innerHTML = '';
+        preview.classList.add('hidden');
       }
       document.getElementById('upgradeModal').classList.remove('hidden');
     }
@@ -5807,6 +5838,10 @@
 
     // ── New Conversation Wizard ──────────────────────────────────
     function openNewConversation() {
+      if (window._userPlan === 'free' && (window._contactCount || 0) >= 1) {
+        showUpgradeModal('import');
+        return;
+      }
       activeContactContext = null;
       _importFile = null;
       _importMode = 'whatsapp';

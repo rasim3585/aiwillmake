@@ -157,6 +157,17 @@ const sbHeaders = (token) => ({
   'Content-Type': 'application/json'
 });
 
+async function getUserPlan(userId, token) {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/user_subscriptions?user_id=eq.${userId}&select=plan,status`, {
+      headers: sbHeaders(token)
+    });
+    const data = await r.json();
+    const sub = Array.isArray(data) ? data[0] : null;
+    return sub?.status === 'active' ? (sub.plan || 'free') : 'free';
+  } catch (_) { return 'free'; }
+}
+
 async function getCredits(token, userId) {
   const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
   const res = await fetch(url, { headers: sbHeaders(token) });
@@ -1124,6 +1135,18 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
   try {
     const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
+    // Defense-in-depth: free users may only analyze when they have no OTHER contacts
+    if (req.user && req.token && contact_id) {
+      const plan = await getUserPlan(req.user.id, req.token);
+      if (plan === 'free') {
+        const othersR = await fetch(
+          `${SUPABASE_REST}/contacts?user_id=eq.${req.user.id}&id=neq.${contact_id}&select=id`,
+          { headers: sbHeaders(req.token) }
+        );
+        const others = await othersR.json();
+        if (Array.isArray(others) && others.length >= 1) return res.status(402).json({ error: 'upgrade_required' });
+      }
+    }
 
     const totalChars = conversationText.length;
     const messageCount = (conversationText.match(/^\d{2}[\/\.]\d{2}[\/\.]\d{4}/gm) || []).length;
@@ -1955,6 +1978,12 @@ app.post('/api/contacts', requireAuth, async (req, res) => {
   try {
     const { name, type, relationship_summary, relationship_state, observed_patterns, source, relationship_tier } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' });
+    const plan = await getUserPlan(req.user.id, req.token);
+    if (plan === 'free') {
+      const countR = await fetch(`${SUPABASE_REST}/contacts?user_id=eq.${req.user.id}&select=id`, { headers: sbHeaders(req.token) });
+      const existing = await countR.json();
+      if (Array.isArray(existing) && existing.length >= 1) return res.status(402).json({ error: 'upgrade_required' });
+    }
     const insertBody = {
       user_id: req.user.id, name: name.trim(),
       type: type || null, relationship_summary: relationship_summary || null,
