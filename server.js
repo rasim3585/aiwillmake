@@ -1432,7 +1432,8 @@ RELATIONSHIP_TIER: [1 or 2 — 1 if surface/work/casual (no personal life detail
 TIER_REASON: [one sentence explaining why — write in the conversation's language]
 MIRROR_INSIGHT_1: [One concrete behavioral observation about Person A (the user) from this conversation — how they communicate under pressure, what they seek, what they avoid. Kind, non-clinical, specific. Write in the conversation's language. Example: "Gerilim yükseldiğinde açıklamaya kaçıyor" or "Tends to apologize before making a request".]
 MIRROR_INSIGHT_2: [Another distinct observation about Person A, different angle. Omit this line entirely if nothing else stands out clearly.]
-MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by the data.]${whatChangedLine}
+MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by the data.]
+ROLE_NAMES_JSON: [compact single-line JSON mapping fixed English role keys to names found in this conversation: {"spouse":null,"father":null,"mother":null,"son":null,"daughter":null,"sibling":null,"close_friend":null} — fill the exact name for each role that appears clearly; keep null for any role not mentioned. Output ONLY the JSON object on this line, no extra text.]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1550,6 +1551,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       suggested_tier:       (() => { const v = extract('RELATIONSHIP_TIER'); return v === '1' ? 1 : v === '2' ? 2 : null; })(),
       tier_reason:          extract('TIER_REASON') || null,
       mirror_insights:      [extract('MIRROR_INSIGHT_1'), extract('MIRROR_INSIGHT_2'), extract('MIRROR_INSIGHT_3')].filter(Boolean),
+      role_names:           (() => { const m = text.match(/^ROLE_NAMES_JSON:\s*(\{.+\})/m); if (!m) return {}; try { return JSON.parse(m[1]); } catch { return {}; } })(),
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes
@@ -2439,6 +2441,9 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
         const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
+        // Inject known people's names from role index so RAG finds them regardless of language
+        const _rn = character.role_names || {};
+        Object.values(_rn).forEach(v => { if (typeof v === 'string' && v.trim()) words.push(v.trim()); });
         if (words.length > 0) {
           const chunksR = await fetch(
             `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
@@ -2536,7 +2541,7 @@ RULES:
 - If a USER CORRECTIONS section exists in your character description above, treat it as the most authoritative truth — it overrides everything else, including the rest of the character description.
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
-- When the user asks about their own life (their spouse, partner, father, mother, children, job, where they live, their name), ALWAYS check the WHO YOU'RE TALKING TO profile first and answer from it. This profile is reliable factual knowledge about the user. Only say you don't know if the info is genuinely absent from both the profile and the conversation.
+- PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life. Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text itself.
 ${tier === 1 ? `- RELATIONSHIP DISTANCE: You only know ${userLabel} at a surface/distant level (work acquaintance, not close). Even if a profile or excerpts contain personal details about them (family members' names, private matters, intimate history), you would NOT realistically know or bring these up — a distant contact doesn't. If asked about their personal or family life, respond as someone who doesn't really know that side of them: 'I don't really know much about your family / we've never gotten that personal'. Keep responses surface-level and professional. You do know work/practical topics from your shared chats.` : ''}
 - If asked about a specific fact (a name, date, place, event) that is NOT in your character description, the WHO YOU'RE TALKING TO profile, or the excerpts above — DO NOT guess or invent. Say you don't recall it, in character. Example: 'hmm, hatırlamıyorum, bana söylemiş miydin?' or 'I don't think you ever told me that one'. Inventing a wrong fact breaks trust — admitting you don't remember feels MORE real, not less.
 - NEVER fill a knowledge gap with a plausible-sounding guess. A real person says 'I don't remember' — so do you.
