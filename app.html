@@ -2227,23 +2227,51 @@
 
     /* ── WOW Screen ── */
     .wow-inner { padding: 28px 20px 48px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    /* Header */
+    .wow-header { text-align: center; padding: 2px 0 6px; }
+    .wow-badge { display: inline-block; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ok); background: rgba(32,212,122,.1); border: 1px solid rgba(32,212,122,.25); border-radius: 20px; padding: 3px 11px; margin-bottom: 9px; }
+    .wow-header-name { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: 5px; }
+    .wow-meta { font-size: .76rem; color: var(--muted); }
+    /* Cards */
     .wow-card { border-radius: 14px; padding: 20px; }
-    .wow-card-them { background: var(--card); border: 1px solid var(--bord); }
-    .wow-card-you { background: linear-gradient(135deg, rgba(212,113,90,.12), rgba(99,102,241,.12)); border: 1px solid rgba(212,113,90,.32); }
-    .wow-card-eyebrow { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
-    .wow-card-name { font-size: 1.55rem; font-weight: 800; letter-spacing: -.025em; margin: 0 0 7px; }
+    .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
-    .wow-meta { font-size: .76rem; color: var(--muted); margin-bottom: 10px; }
-    .wow-patterns { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
-    .wow-patterns li { font-size: .82rem; color: var(--sec); padding: 6px 10px; background: rgba(255,255,255,.04); border-radius: 6px; border-left: 2px solid var(--accent,#6366f1); }
-    .wow-card-you-sub { font-size: .8rem; color: var(--muted); margin: 0 0 12px; font-style: italic; }
+    /* Mirror Card — star */
+    .wow-card-mirror { background: linear-gradient(145deg, rgba(212,113,90,.15) 0%, rgba(232,149,110,.07) 55%, rgba(212,113,90,.05) 100%); border: 1.5px solid rgba(212,113,90,.42); position: relative; overflow: hidden; }
+    .wow-card-mirror::after { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(212,113,90,.18), transparent 70%); pointer-events: none; }
+    .wow-card-mirror .wow-card-eyebrow { color: var(--accent); }
+    /* Twin Card */
+    .wow-card-twin { background: var(--card); border: 1px solid var(--bord); }
+    /* Mirror insight list */
     .wow-mirror-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
-    .wow-mirror-list li { font-size: .9rem; color: var(--fg); line-height: 1.5; padding-left: 18px; position: relative; }
-    .wow-mirror-list li::before { content: '→'; position: absolute; left: 0; color: var(--acc2,#d4715a); font-weight: 700; }
-    .wow-cta-area { margin-top: 6px; text-align: center; }
-    .wow-cta-btn { width: 100%; padding: 16px; background: var(--accent,#6366f1); color: #fff; border: none; border-radius: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -.01em; transition: opacity .15s; }
+    .wow-mirror-list li { font-size: .9rem; color: var(--fg); line-height: 1.5; padding-left: 20px; position: relative; }
+    .wow-mirror-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+    .wow-mirror-locked { font-size: .81rem; color: var(--muted); padding: 10px 0 0; margin-top: 8px; border-top: 1px solid rgba(255,255,255,.06); cursor: pointer; transition: color .15s; }
+    .wow-mirror-locked:hover { color: var(--accent); }
+    /* Patterns */
+    .wow-patterns { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+    .wow-patterns li { font-size: .82rem; color: var(--sec); padding: 6px 10px; background: rgba(255,255,255,.04); border-radius: 6px; border-left: 2px solid var(--accent); }
+    /* Evidence block */
+    .wow-evidence { margin-top: 13px; padding: 10px 13px; background: rgba(255,255,255,.03); border-radius: 8px; border-left: 2px solid rgba(212,113,90,.5); }
+    .wow-evidence-quote { font-size: .84rem; font-style: italic; color: var(--sec); line-height: 1.55; margin-bottom: 4px; }
+    .wow-evidence-shows { font-size: .77rem; color: var(--muted); }
+    /* Relationship loop */
+    .wow-loop-section { padding: 16px 18px; background: var(--surf2); border-radius: 14px; border: 1px solid var(--bord); }
+    .wow-section-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 12px; }
+    .wow-loop-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+    .wow-loop-step { font-size: .82rem; color: var(--sec); background: rgba(255,255,255,.05); border: 1px solid var(--bord); border-radius: 20px; padding: 5px 13px; line-height: 1.3; }
+    .wow-loop-arrow { font-size: .9rem; color: var(--muted); flex-shrink: 0; }
+    /* DNA bars */
+    .wow-dna-section { padding: 16px 18px; background: var(--surf2); border-radius: 14px; border: 1px solid var(--bord); }
+    /* CTA */
+    .wow-cta-area { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; align-items: center; }
+    .wow-cta-btn { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -.01em; transition: opacity .15s; }
     .wow-cta-btn:hover { opacity: .88; }
-    .wow-cta-note { font-size: .76rem; color: var(--muted); margin-top: 8px; }
+    .wow-cta-btn-sec { width: 100%; padding: 14px; background: transparent; color: var(--text); border: 1.5px solid var(--bord2); border-radius: 12px; font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; letter-spacing: -.01em; transition: border-color .15s, color .15s; }
+    .wow-cta-btn-sec:hover { border-color: var(--accent); color: var(--accent); }
+    .wow-cta-profile { background: none; border: none; color: var(--muted); font: inherit; font-size: .82rem; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 3px; transition: color .15s; }
+    .wow-cta-profile:hover { color: var(--sec); }
+    .wow-cta-note { font-size: .76rem; color: var(--muted); }
 
     /* ── Import pre-auth modal ── */
     .import-auth-overlay { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -3128,21 +3156,46 @@
     <!-- WOW Screen (guest pre-login analysis result) -->
     <section id="screen-wow" class="hidden" data-screen-id="wow">
       <div class="wow-inner">
-        <div class="wow-card wow-card-them">
-          <div class="wow-card-eyebrow">✓ Twin built</div>
-          <h2 class="wow-card-name" id="wowThemName">—</h2>
-          <p class="wow-card-summary" id="wowThemSummary"></p>
+        <!-- Header -->
+        <div class="wow-header">
+          <div class="wow-badge">✓ Twin built</div>
+          <h2 class="wow-header-name" id="wowThemName">—</h2>
           <div class="wow-meta" id="wowConfidenceMeta"></div>
-          <ul class="wow-patterns" id="wowPatterns"></ul>
         </div>
-        <div class="wow-card wow-card-you" id="wowCardYou">
-          <div class="wow-card-eyebrow">👁 We saw you too</div>
-          <p class="wow-card-you-sub">Biz seni de gördük</p>
+
+        <!-- Mirror Card — star -->
+        <div class="wow-card wow-card-mirror" id="wowMirrorCard">
+          <div class="wow-card-eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
           <ul class="wow-mirror-list" id="wowMirrorList"></ul>
+          <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
         </div>
+
+        <!-- Twin Card -->
+        <div class="wow-card wow-card-twin">
+          <div class="wow-card-eyebrow">✦ <span id="wowTwinLabel">—</span></div>
+          <p class="wow-card-summary" id="wowThemSummary"></p>
+          <ul class="wow-patterns" id="wowPatterns"></ul>
+          <div class="wow-evidence hidden" id="wowTwinEvidence"></div>
+        </div>
+
+        <!-- Relationship Loop -->
+        <div class="wow-loop-section hidden" id="wowLoopSection">
+          <div class="wow-section-label">🔄 Tekrar eden döngünüz</div>
+          <div class="wow-loop-steps" id="wowLoopSteps"></div>
+        </div>
+
+        <!-- DNA Bars -->
+        <div class="wow-dna-section hidden" id="wowDnaSection">
+          <div class="wow-section-label">İlişki DNA'sı</div>
+          <div id="wowDnaBars"></div>
+        </div>
+
+        <!-- CTA -->
         <div class="wow-cta-area">
-          <button class="wow-cta-btn" onclick="wowStartTalking()">💬 Start talking with <span id="wowCtaName">them</span> →</button>
-          <p class="wow-cta-note">Sign in to save your twin &amp; start practicing. Free.</p>
+          <button class="wow-cta-btn" id="wowTalkBtn">💬 Just talk with <span id="wowCtaName">them</span> →</button>
+          <button class="wow-cta-btn-sec" id="wowSayBtn">🎯 I have something to say</button>
+          <button class="wow-cta-profile" id="wowProfileBtn">view full profile →</button>
+          <p class="wow-cta-note hidden" id="wowCtaNote">Sign in to save your twin &amp; start practicing. Free.</p>
         </div>
       </div>
     </section>
@@ -5030,14 +5083,12 @@
       _wowContactId = contactId || null;
       App.navigateTo('wow');
       const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const isPaid = window._userPlan && window._userPlan !== 'free';
 
+      // Header
       document.getElementById('wowThemName').textContent = name;
+      document.getElementById('wowTwinLabel').textContent = name;
       document.getElementById('wowCtaName').textContent = name;
-
-      const summary = data.relationship_summary || data.emotional_tone || '';
-      const summaryEl = document.getElementById('wowThemSummary');
-      summaryEl.textContent = summary;
-      summaryEl.classList.toggle('hidden', !summary);
 
       const conf = data.confidence_score || 0;
       const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
@@ -5046,20 +5097,100 @@
       if (conf > 0) metaParts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
       document.getElementById('wowConfidenceMeta').textContent = metaParts.join(' · ');
 
-      const patterns = Array.isArray(data.observed_patterns) ? data.observed_patterns.slice(0, 3) : [];
+      // Mirror Card (star)
+      const allInsights = Array.isArray(data.mirror_insights) ? data.mirror_insights : [];
+      const mirrorCardEl = document.getElementById('wowMirrorCard');
+      const mirrorListEl = document.getElementById('wowMirrorList');
+      if (allInsights.length) {
+        const shown = isPaid ? allInsights : allInsights.slice(0, 2);
+        let html = shown.map(i => `<li>${escH(i)}</li>`).join('');
+        if (!isPaid) html += `<div class="wow-mirror-locked" onclick="showUpgradeModal()">🔒 3 more insights locked — upgrade to unlock</div>`;
+        mirrorListEl.innerHTML = html;
+        mirrorCardEl.classList.remove('hidden');
+      } else {
+        mirrorCardEl.classList.add('hidden');
+      }
+
+      // Mirror evidence (only present on fresh analysis, not DB re-load)
+      const mirrorEvEl = document.getElementById('wowMirrorEvidence');
+      const me = data.evidence?.mirror;
+      if (me?.quote) {
+        mirrorEvEl.innerHTML = `<div class="wow-evidence-quote">"${escH(me.quote)}"</div>${me.shows ? `<div class="wow-evidence-shows">→ ${escH(me.shows)}</div>` : ''}`;
+        mirrorEvEl.classList.remove('hidden');
+      } else {
+        mirrorEvEl.classList.add('hidden');
+      }
+
+      // Twin Card
+      const summary = data.relationship_summary || data.emotional_tone || '';
+      const summaryEl = document.getElementById('wowThemSummary');
+      summaryEl.textContent = summary;
+      summaryEl.classList.toggle('hidden', !summary);
+
+      const patterns = Array.isArray(data.observed_patterns) ? data.observed_patterns.slice(0, 2) : [];
       const patEl = document.getElementById('wowPatterns');
       patEl.innerHTML = patterns.map(p => `<li>${escH(p)}</li>`).join('');
       patEl.classList.toggle('hidden', patterns.length === 0);
 
-      const insights = Array.isArray(data.mirror_insights) ? data.mirror_insights.slice(0, 3) : [];
-      const mirrorEl = document.getElementById('wowMirrorList');
-      const mirrorCard = document.getElementById('wowCardYou');
-      if (insights.length) {
-        mirrorEl.innerHTML = insights.map(i => `<li>${escH(i)}</li>`).join('');
-        mirrorCard.classList.remove('hidden');
+      // Twin evidence
+      const twinEvEl = document.getElementById('wowTwinEvidence');
+      const te = data.evidence?.twin;
+      if (te?.quote) {
+        twinEvEl.innerHTML = `<div class="wow-evidence-quote">"${escH(te.quote)}"</div>${te.shows ? `<div class="wow-evidence-shows">→ ${escH(te.shows)}</div>` : ''}`;
+        twinEvEl.classList.remove('hidden');
       } else {
-        mirrorCard.classList.add('hidden');
+        twinEvEl.classList.add('hidden');
       }
+
+      // Relationship Loop
+      const loopSection = document.getElementById('wowLoopSection');
+      const loop = Array.isArray(data.relationship_loop) && data.relationship_loop.length ? data.relationship_loop : null;
+      if (loop) {
+        document.getElementById('wowLoopSteps').innerHTML = loop.map((step, i) =>
+          `<span class="wow-loop-step">${escH(step)}</span>${i < loop.length - 1 ? '<span class="wow-loop-arrow">→</span>' : ''}`
+        ).join('');
+        loopSection.classList.remove('hidden');
+      } else {
+        loopSection.classList.add('hidden');
+      }
+
+      // DNA Bars
+      const dnaSection = document.getElementById('wowDnaSection');
+      if (data.confidence_areas) {
+        document.getElementById('wowDnaBars').innerHTML = renderConfidenceAreas(data.confidence_areas);
+        dnaSection.classList.remove('hidden');
+      } else {
+        dnaSection.classList.add('hidden');
+      }
+
+      // CTA note (sign-in prompt for guests)
+      const ctaNote = document.getElementById('wowCtaNote');
+      ctaNote.classList.toggle('hidden', !!accessToken);
+
+      // Populate activeContactContext minimally so goal screen works from here
+      if (contactId) {
+        activeContactContext = {
+          id: contactId,
+          name: name,
+          type: null,
+          relationship_state: data.emotional_tone || null,
+          observed_patterns: Array.isArray(data.observed_patterns) && data.observed_patterns.length ? data.observed_patterns : null,
+          relationship_summary: data.relationship_summary || null,
+          character_profile: null,
+          person_a: null,
+          role_names: {}
+        };
+      }
+
+      // Wire CTA buttons
+      document.getElementById('wowTalkBtn').onclick = wowStartTalking;
+      document.getElementById('wowSayBtn').onclick = () => {
+        if (window._userPlan === 'free') { showUpgradeModal(); return; }
+        if (_wowContactId) openGoalScreen();
+      };
+      document.getElementById('wowProfileBtn').onclick = () => {
+        if (_wowContactId) loadPersonSection(_wowContactId);
+      };
     }
 
     function wowStartTalking() {
