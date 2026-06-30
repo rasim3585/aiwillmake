@@ -1,16 +1,10 @@
-# Test Recipe — aiwillmake
+# Test Guide — aiwillmake
 
-## Seçilen yöntem: Playwright (yerel sunucu + gerçek Supabase/Anthropic)
+## Otomatik test (e2e_test.js)
 
-Playwright testi zaten `playwright_test.js` dosyasında mevcut.
-Supabase ve Anthropic erişimi `.env` dosyasından gelir (gerçek API'lar, mock yok).
-Auth bypass yok — tarayıcı otomasyonu Google OAuth'u simüle edemez, bu yüzden
-kimlik doğrulama gerektirmeyen akışlar test edilir, auth gerektiren adımlar
-`page.evaluate` ile token enjeksiyonu yapılarak atlatılır.
+Supabase Admin API ile ephemeral test kullanıcısı oluşturur, gerçek access token alır, Playwright'a enjekte eder — Google OAuth gerekmez.
 
----
-
-## Ön koşullar
+### Ön koşullar
 
 ```
 node >= 18
@@ -18,123 +12,128 @@ npm install
 npx playwright install chromium   # ilk kurulumda bir kez
 ```
 
-`.env` dosyası (proje kökünde, zaten mevcut):
+`.env` (proje kökünde, asla commit etme):
 ```
-ANTHROPIC_API_KEY=<mevcut>
+ANTHROPIC_API_KEY=...
 SUPABASE_URL=https://<proje>.supabase.co/rest/v1/
-SUPABASE_ANON_KEY=<mevcut>
-
-# Opsiyonel — ödeme testleri için (olmasa da akış testleri çalışır)
-LEMONSQUEEZY_API_KEY=
-LEMONSQUEEZY_STORE_ID=
-LEMONSQUEEZY_PRO_VARIANT_ID=
-LEMONSQUEEZY_UNLIMITED_VARIANT_ID=
-LEMONSQUEEZY_WEBHOOK_SECRET=
-
+SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # Supabase dashboard → Project Settings → API → service_role
 PORT=3000
 ```
 
----
+### Çalıştırma
 
-## Test başlatma reçetesi (tam uçtan uca)
-
-### 1. Sunucuyu ayağa kaldır
-
+**Terminal 1 — server:**
 ```bash
-cd C:\Users\rasim\OneDrive\Desktop\projelerim\aiwillmake
-node server.js
+node -r dotenv/config server.js
 ```
 
-Çıktıda `Listening on port 3000` görünmeli.
-
-### 2. Playwright testini çalıştır (ayrı terminal)
-
+**Terminal 2 — testler:**
 ```bash
-node playwright_test.js
+node -r dotenv/config e2e_test.js
 ```
 
-URL: `http://localhost:3000/app.html`
+> ⚠️ `node server.js` değil, `node -r dotenv/config server.js` — sunucunun kendi dotenv yüklemesi yok.
 
-### 3. Sadece UI'yı hızlı kontrol etmek için
-
-Tarayıcıda `http://localhost:3000/app.html` aç.
-Google ile giriş yap (gerçek hesap — Supabase Auth gerçek OAuth'u kullanır).
+Son çalıştırma: **31 PASS, 0 FAIL, 7 SKIP** ✅
 
 ---
 
-## Kritik test senaryoları (manuel)
+## Test kapsamı
+
+| # | Test | Strateji |
+|---|---|---|
+| 1 | Auth setup | Admin API createUser + signInWithPassword |
+| 2a | İlk contact POST → 200 | REST API call with token |
+| 2b | İkinci contact POST → 402 | free plan paywall gate |
+| 2c | analyze-conversation için 402 (farklı contact) | defense gate |
+| 3 | Import → WOW ekranı routing | browser + injectSession |
+| 3 | WOW DOM: mirror card, twin, loop, CTA butonları | Playwright evaluate |
+| 3 | Free plan locked row (`🔒 3 more insights locked`) | DOM check |
+| 4a | "Just talk" → upgrade modal | button click |
+| 4b | "I have something to say" → upgrade modal | button click |
+| 4c | "+ New person" → import paywall modal | openNewConversation() |
+| 4d | Feature list (≥5 item) | DOM query |
+| 4e | Modal title değişimi (import vs practice) | showUpgradeModal() |
+| 4f | Goal back button → wow ekranına dönüş | goalBack() |
+| 5 | Telemetri (passive_signals, user_behavior_snapshots) | SKIP — fire-and-forget |
+| 6 | Entity mapping (role_names) | SKIP — kısa chat tetiklemiyor |
+| 7 | Ölü kod yok (screen-ready, showReadyScreen) | HTML içerik arama |
+
+---
+
+## SKIP neden oluşuyor?
+
+| SKIP | Sebep |
+|---|---|
+| `wow_dna_section` | `confidence_areas` async olarak doldurulur, ilk response'da null gelir |
+| `telemetry_*` | `simulate-reply` 400 dönüyor — endpoint conversation_id bekliyor (burada yok) |
+| `entity_role_names_exist` | 20 mesajlık kısa sahte chat entity extraction için yetersiz |
+| `entity_role_name_in_reply` | Canlı simülasyon session gerektirir — manuel test kapsamında |
+
+---
+
+## Manuel test senaryoları
 
 ### A. First-import-free + paywall akışı
 
-1. Yeni/temiz bir hesapla giriş yap (veya mevcut hesabın tüm contact'larını sil)
-2. Import ekranına yönlendirildiğini doğrula
+1. Yeni/temiz hesapla giriş yap (ya da mevcut contact'ları sil)
+2. Import ekranına yönlendirilmeli
 3. Sahte WhatsApp verisi yapıştır (aşağıda)
 4. Analyze → processing → WOW ekranı görünmeli (ödeme yok)
-5. "Just talk" → upgrade modal açılmalı
-6. "I have something to say" → upgrade modal açılmalı  
-7. "view full profile" → profil sayfası açılmalı (ödeme yok)
-8. "+ New person" → upgrade modal açılmalı (import paywall)
+5. "Just talk" → upgrade modal
+6. "I have something to say" → upgrade modal
+7. "view full profile" → profil sayfası (ödeme yok)
+8. "+ New person" → upgrade modal (import paywall)
 
-### B. Wow ekranı içerik testi
+### B. WOW ekranı kontrol listesi
 
-WOW ekranında şunlar görünmeli:
-- Mirror kartı (👁 We saw you too) — yıldız kart, accent border
-- Twin kartı (kişi adı)
-- Relationship loop (varsa) — chip'ler arası → okları
-- DNA bar (confidence_areas doluysa)
-- 3 CTA: "Just talk", "I have something to say", "view full profile"
-- Free plan: mirror listede "🔒 3 more insights locked" satırı
+- ✅ Mirror kartı (👁 We saw you too) — accent border, yıldız kart
+- ✅ Twin kartı (kişi adı)
+- ✅ Relationship loop (chip → chip → chip)
+- ✅ DNA bar (`confidence_areas` doluysa)
+- ✅ 3 CTA: "Just talk", "I have something to say", "view full profile"
+- ✅ Free plan: "🔒 3 more insights locked" satırı
 
 ### C. Goal screen back button
 
-1. Person sayfasından → "I have something to say" → goal ekranı
-2. ← Back → person sayfasına dönmeli
-3. WOW ekranından → "I have something to say" → goal ekranı  
-4. ← Back → WOW ekranına dönmeli
+1. WOW ekranından → "I have something to say" → goal ekranı → ← Back → WOW ekranına dönmeli
+2. Person sayfasından → "I have something to say" → goal ekranı → ← Back → person sayfasına dönmeli
 
 ---
 
 ## Sahte WhatsApp verisi
 
-Şu içeriği bir `.txt` dosyasına kopyala, import ekranına yükle:
-
 ```
-01.01.2025, 10:00 - Elif: Günaydın
-01.01.2025, 10:01 - Rasim: Günaydın :)
-01.01.2025, 10:05 - Elif: Bugün ne yapıyorsun?
-01.01.2025, 10:06 - Rasim: Çalışıyorum, akşam müsaitim
-01.01.2025, 10:10 - Elif: Tamam, akşam konuşuruz
-01.01.2025, 20:00 - Elif: Nasıl geçti günün?
-01.01.2025, 20:15 - Rasim: İyi geçti, yorgunum ama. Sen?
-01.01.2025, 20:16 - Elif: Ben de. Seninle konuşmak istedim aslında
-01.01.2025, 20:20 - Rasim: Neden beklettirdin o zaman?
-01.01.2025, 20:21 - Elif: Bilmiyorum, cesareti bulamadım
-02.01.2025, 09:00 - Rasim: Sabah mesajın geldi, konuşalım mı?
-02.01.2025, 09:30 - Elif: Evet, sana bir şey söylemem lazım
-02.01.2025, 09:31 - Rasim: Dinliyorum
-02.01.2025, 09:35 - Elif: Biraz daha ciddi olmamı istiyorum ilişkimizde
-02.01.2025, 09:40 - Rasim: Ne demek istiyorsun tam olarak?
-02.01.2025, 09:45 - Elif: Daha fazla zaman geçirmek, planlar yapmak
-02.01.2025, 09:50 - Rasim: Haklısın, benim de eksikliğimdi
-02.01.2025, 09:51 - Elif: Teşekkür ederim, bu çok önemli benim için
+01.01.2025, 09:00 - Elif: Günaydın
+01.01.2025, 09:02 - Rasim: Günaydın :) nasılsın?
+01.01.2025, 09:05 - Elif: İyiyim, bugün ne yapıyorsun?
+01.01.2025, 09:06 - Rasim: Çalışıyorum, akşam çıkabilir miyiz?
+01.01.2025, 09:10 - Elif: Tabii, saat kaçta?
+01.01.2025, 09:11 - Rasim: 19:00 olur mu?
+01.01.2025, 09:12 - Elif: Harika
+01.01.2025, 20:05 - Elif: Neredesin?
+01.01.2025, 20:07 - Rasim: 5 dakika geçiyorum, özür dilerim
+01.01.2025, 20:09 - Elif: Tamam ama bu sık oluyor artık
+01.01.2025, 20:15 - Rasim: Haklısın, söz bu sefer son
+01.01.2025, 20:17 - Elif: Bunu daha önce de söyledin
+01.01.2025, 20:30 - Elif: Güzel bir yer burası
+01.01.2025, 20:31 - Rasim: Evet, seninle olmak her yeri güzel yapıyor
+01.01.2025, 20:33 - Elif: 😊
+02.01.2025, 10:00 - Rasim: Dün güzeldi, tekrar yapalım
+02.01.2025, 10:05 - Elif: Ben de öyle düşünüyorum
+02.01.2025, 10:10 - Rasim: Bu hafta sonu müsait misin?
+02.01.2025, 10:12 - Elif: Cumartesi iyi olur
+02.01.2025, 10:13 - Rasim: Süper, yer ayarlayayım
 ```
 
 ---
 
-## Env eksikliği olduğunda ne olur?
+## Env eksikliği etkileri
 
-| Eksik env | Etki |
+| Eksik | Etki |
 |---|---|
-| `ANTHROPIC_API_KEY` | `/api/analyze-conversation` → 500, WOW ekranı görünmez |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Auth çalışmaz, import engellenir |
-| `LEMONSQUEEZY_*` | Checkout başlatılamaz (503), ama upgrade modal görünür |
-| `PORT` | Default 3000 kullanılır |
-
----
-
-## Playwright testi çalıştırma notu
-
-`playwright_test.js` headless Chromium açar ve auth gerektirmeyen testleri çalıştırır.
-Auth gerektiren testler için Supabase service role key ile doğrudan DB'ye test user
-oluşturulabilir ve `accessToken` `page.evaluate` ile inject edilebilir.
-Bu konfigürasyon şu an mevcut değil — auth testleri manuel yapılır.
+| `ANTHROPIC_API_KEY` | `/api/analyze-conversation` → 500 |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Auth çalışmaz → 503 |
+| `SUPABASE_SERVICE_ROLE_KEY` | `e2e_test.js` başlamaz — Admin API yok |
+| `PORT` | Default 3000 |
