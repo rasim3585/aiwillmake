@@ -6178,6 +6178,7 @@
         if (data.confidence_score !== undefined) patchBody.confidence_score = data.confidence_score;
         if (data.suggested_tier) patchBody.relationship_tier = data.suggested_tier;
         if (data.role_names && typeof data.role_names === 'object') patchBody.role_names = data.role_names;
+        if (Array.isArray(data.relationship_loop) && data.relationship_loop.length) patchBody.relationship_loop = data.relationship_loop;
 
         await fetch(`/api/contacts/${contactId}`, {
           method: 'PATCH',

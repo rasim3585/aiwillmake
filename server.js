@@ -1433,7 +1433,12 @@ TIER_REASON: [one sentence explaining why — write in the conversation's langua
 MIRROR_INSIGHT_1: [One concrete behavioral observation about Person A (the user) from this conversation — how they communicate under pressure, what they seek, what they avoid. Kind, non-clinical, specific. Write in the conversation's language. Example: "Gerilim yükseldiğinde açıklamaya kaçıyor" or "Tends to apologize before making a request".]
 MIRROR_INSIGHT_2: [Another distinct observation about Person A, different angle. Omit this line entirely if nothing else stands out clearly.]
 MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by the data.]
-ROLE_NAMES_JSON: [compact single-line JSON mapping fixed English role keys to names found in this conversation: {"spouse":null,"father":null,"mother":null,"son":null,"daughter":null,"sibling":null,"close_friend":null} — fill the exact name for each role that appears clearly; keep null for any role not mentioned. Output ONLY the JSON object on this line, no extra text.]${whatChangedLine}
+ROLE_NAMES_JSON: [compact single-line JSON mapping fixed English role keys to names found in this conversation: {"spouse":null,"father":null,"mother":null,"son":null,"daughter":null,"sibling":null,"close_friend":null} — fill the exact name for each role that appears clearly; keep null for any role not mentioned. Output ONLY the JSON object on this line, no extra text.]
+RELATIONSHIP_LOOP_JSON: [compact single-line JSON array of 3-4 short phrases describing the REPEATING interaction cycle observable between Person A and Person B — one phrase per step, in the conversation's language. Format: ["phrase1","phrase2","phrase3"]. Only output if a clear recurring pattern exists. If not clearly observable, output: null]
+TWIN_QUOTE: [a short verbatim quote — max 10 words — from Person B's messages that best illustrates their behavioral pattern. Copy ONLY the message text, no timestamp or sender prefix. Omit this line entirely if no clear example exists.]
+TWIN_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this quote reveals about Person B's behavior. Omit if TWIN_QUOTE was omitted.]
+MIRROR_QUOTE: [a short verbatim quote — max 10 words — from Person A's messages that illustrates their behavioral pattern. Message text only, no prefix. Omit if no clear example.]
+MIRROR_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this reveals about Person A. Omit if MIRROR_QUOTE was omitted.]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1446,7 +1451,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2200,
+        max_tokens: 2600,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Conversation:\n${snippet}` }]
       })
@@ -1552,6 +1557,8 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       tier_reason:          extract('TIER_REASON') || null,
       mirror_insights:      [extract('MIRROR_INSIGHT_1'), extract('MIRROR_INSIGHT_2'), extract('MIRROR_INSIGHT_3')].filter(Boolean),
       role_names:           (() => { const m = text.match(/^ROLE_NAMES_JSON:\s*(\{.+\})/m); if (!m) return {}; try { return JSON.parse(m[1]); } catch { return {}; } })(),
+      relationship_loop:    (() => { const m = text.match(/^RELATIONSHIP_LOOP_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
+      evidence:             (() => { const tq = extract('TWIN_QUOTE'); const ts = extract('TWIN_QUOTE_SHOWS'); const mq = extract('MIRROR_QUOTE'); const ms = extract('MIRROR_QUOTE_SHOWS'); const nul = v => !v || v === 'null'; return { twin: nul(tq) ? null : { quote: tq, shows: nul(ts) ? null : ts }, mirror: nul(mq) ? null : { quote: mq, shows: nul(ms) ? null : ms } }; })(),
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes
