@@ -35,7 +35,7 @@ node -r dotenv/config e2e_test.js
 
 > ⚠️ `node server.js` değil, `node -r dotenv/config server.js` — sunucunun kendi dotenv yüklemesi yok.
 
-Son çalıştırma: **31 PASS, 0 FAIL, 7 SKIP** ✅
+Son çalıştırma: **41 PASS, 0 FAIL, 0 SKIP** ✅
 
 ---
 
@@ -56,20 +56,9 @@ Son çalıştırma: **31 PASS, 0 FAIL, 7 SKIP** ✅
 | 4d | Feature list (≥5 item) | DOM query |
 | 4e | Modal title değişimi (import vs practice) | showUpgradeModal() |
 | 4f | Goal back button → wow ekranına dönüş | goalBack() |
-| 5 | Telemetri (passive_signals, user_behavior_snapshots) | SKIP — fire-and-forget |
-| 6 | Entity mapping (role_names) | SKIP — kısa chat tetiklemiyor |
+| 5 | Telemetri (micro_feedback, passive_signals, prediction_ledger, user_behavior_snapshots) | POST endpoint + service-role DB row count |
+| 6 | Entity mapping: role_names + simulate-reply | RICH_CHAT (28 mesaj) → spouse/daughter/sibling rolleri doğru, AI karakter bilgiyi kullanıyor |
 | 7 | Ölü kod yok (screen-ready, showReadyScreen) | HTML içerik arama |
-
----
-
-## SKIP neden oluşuyor?
-
-| SKIP | Sebep |
-|---|---|
-| `wow_dna_section` | `confidence_areas` async olarak doldurulur, ilk response'da null gelir |
-| `telemetry_*` | `simulate-reply` 400 dönüyor — endpoint conversation_id bekliyor (burada yok) |
-| `entity_role_names_exist` | 20 mesajlık kısa sahte chat entity extraction için yetersiz |
-| `entity_role_name_in_reply` | Canlı simülasyon session gerektirir — manuel test kapsamında |
 
 ---
 
