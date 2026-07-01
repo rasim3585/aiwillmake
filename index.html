@@ -654,7 +654,42 @@
     .how-footer-text { font-size: 14px; color: #555; line-height: 1.7; }
     .how-footer-text strong { color: #777; }
     .how-cta { font-size: 13px; font-weight: 700; color: #000; background: #ff6b35; padding: 10px 20px; border-radius: 100px; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Auth-flicker prevention: class set synchronously before first paint ── */
+    html.logged-in #hdrAuthBtn   { display: none !important; }
+    html.logged-in #hdrProfile   { display: block !important; }
+    html.logged-in #heroImportCta  { display: none !important; }
+    html.logged-in #heroOpenAppCta { display: inline-flex !important; }
   </style>
+  <script>
+    /* Sync session sniff — runs before first paint, no async, no network.
+       Reads Supabase's localStorage entry (sb-<proj>-auth-token) to decide
+       initial header/hero state. initAuth() still runs async and corrects
+       if the token turns out to be expired/invalid. */
+    (function () {
+      try {
+        var key = Object.keys(localStorage).find(function (k) {
+          return /^sb-.+-auth-token$/.test(k);
+        });
+        if (!key) return;
+        var raw = localStorage.getItem(key);
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        /* Supabase v2 stores the session object directly (access_token at top level).
+           Some builds nest it under currentSession. */
+        var sess = data.access_token ? data : (data.currentSession || null);
+        if (!sess || !sess.access_token) return;
+        /* Bail if token is already past its expiry — async initAuth will handle it cleanly. */
+        if (sess.expires_at && sess.expires_at * 1000 < Date.now()) return;
+        /* Mark <html> so CSS shows logged-in state immediately on first paint. */
+        document.documentElement.classList.add('logged-in');
+        /* Stash display name for the avatar/name setter below. */
+        var u = sess.user || {};
+        window._preAuthName = (u.user_metadata && u.user_metadata.full_name) ||
+                              ((u.email || '').split('@')[0]) || '';
+      } catch (e) {}
+    }());
+  </script>
 </head>
 <body>
 
@@ -681,6 +716,14 @@
     </div>
   </div>
 </header>
+<script>
+  /* Apply pre-auth name/avatar synchronously — DOM elements exist here. */
+  if (window._preAuthName) {
+    var _n = window._preAuthName;
+    document.getElementById('hdrAvatar').textContent = (_n.charAt(0) || 'U').toUpperCase();
+    document.getElementById('hdrName').textContent = _n;
+  }
+</script>
 
 <!-- Hero -->
 <section class="hero-section">

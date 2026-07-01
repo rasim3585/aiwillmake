@@ -2457,7 +2457,45 @@
       .goal-chip { padding: 7px 11px; font-size: .8rem; }
       .person-actions-list { border-radius: 10px; }
     }
+
+    /* ── Auth-flicker prevention ── */
+    /* Logged-out: show screen-landing immediately instead of blank period */
+    html.pre-logged-out #screen-landing { display: flex !important; }
+    /* Logged-in: navUser + signOut already visible before async confirms */
+    html.pre-logged-in #signOutBtn { display: inline-flex !important; }
   </style>
+  <script>
+    /* Sync session sniff — same logic as index.html, adapted for app.html.
+       Sets html.pre-logged-in or html.pre-logged-out before first paint so:
+       - logged-in users: navUser gets a letter, signOutBtn appears immediately
+       - logged-out users: screen-landing visible immediately (no blank flash)
+       initAuth() still runs async and makes all final corrections. */
+    (function () {
+      try {
+        var key = Object.keys(localStorage).find(function (k) {
+          return /^sb-.+-auth-token$/.test(k);
+        });
+        var hasValidSession = false;
+        if (key) {
+          var raw = localStorage.getItem(key);
+          if (raw) {
+            var data = JSON.parse(raw);
+            var sess = data.access_token ? data : (data.currentSession || null);
+            if (sess && sess.access_token) {
+              if (!sess.expires_at || sess.expires_at * 1000 > Date.now()) {
+                hasValidSession = true;
+                var u = sess.user || {};
+                window._preAuthName = (u.user_metadata && u.user_metadata.full_name) ||
+                                      ((u.email || '').split('@')[0]) || '';
+                window._preAuthEmail = u.email || '';
+              }
+            }
+          }
+        }
+        document.documentElement.classList.add(hasValidSession ? 'pre-logged-in' : 'pre-logged-out');
+      } catch (e) {}
+    }());
+  </script>
 </head>
 <body>
 
@@ -2732,6 +2770,13 @@
         <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()">Sign out</button>
       </nav>
     </header>
+    <script>
+      /* Sync: set navUser letter immediately for logged-in users. */
+      if (window._preAuthEmail) {
+        var _nu = document.getElementById('navUser');
+        if (_nu) _nu.textContent = (_preAuthEmail.charAt(0) || 'U').toUpperCase();
+      }
+    </script>
 
     <!-- Conversations Panel -->
     <div class="conv-overlay" id="convOverlay"></div>
