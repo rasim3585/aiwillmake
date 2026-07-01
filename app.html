@@ -2273,6 +2273,26 @@
     .wow-loop-arrow { font-size: .9rem; color: var(--muted); flex-shrink: 0; }
     /* DNA bars */
     .wow-dna-section { padding: 16px 18px; background: var(--surf2); border-radius: 14px; border: 1px solid var(--bord); }
+    /* Rehearsal Card */
+    .wow-card-rehearse { background: linear-gradient(145deg, rgba(130,100,200,.13) 0%, rgba(100,80,180,.05) 100%); border: 1.5px solid rgba(130,100,200,.35); position: relative; overflow: hidden; }
+    .wow-card-rehearse::after { content: ''; position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, rgba(130,100,200,.15), transparent 70%); pointer-events: none; }
+    .wow-card-rehearse .wow-card-eyebrow { color: #a07ee0; }
+    .wow-rehearse-textarea { width: 100%; box-sizing: border-box; background: rgba(255,255,255,.06); border: 1px solid rgba(130,100,200,.3); border-radius: 9px; color: var(--fg); font: inherit; font-size: .88rem; padding: 10px 12px; resize: none; min-height: 72px; line-height: 1.5; margin-top: 4px; transition: border-color .15s; outline: none; }
+    .wow-rehearse-textarea:focus { border-color: rgba(130,100,200,.65); }
+    .wow-rehearse-textarea::placeholder { color: var(--muted); }
+    .wow-rehearse-btn { margin-top: 10px; width: 100%; padding: 11px; background: rgba(130,100,200,.22); color: #c8aaff; border: 1px solid rgba(130,100,200,.4); border-radius: 9px; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .wow-rehearse-btn:hover { background: rgba(130,100,200,.33); }
+    .wow-rehearse-btn:disabled { opacity: .5; cursor: default; }
+    .wow-rehearse-result { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .wow-rehearse-bars { display: flex; flex-direction: column; gap: 7px; }
+    .wow-rehearse-bar-row { display: flex; flex-direction: column; gap: 3px; }
+    .wow-rehearse-bar-label { display: flex; justify-content: space-between; font-size: .8rem; color: var(--sec); }
+    .wow-rehearse-bar-track { height: 7px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .wow-rehearse-bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+    .wow-rehearse-coach { padding: 10px 13px; background: rgba(130,100,200,.1); border-radius: 8px; border-left: 2px solid rgba(130,100,200,.55); font-size: .84rem; color: var(--sec); line-height: 1.55; }
+    .wow-rehearse-coach-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #a07ee0; margin-bottom: 5px; }
+    .wow-rehearse-again { margin-top: 8px; background: none; border: none; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 0; transition: color .15s; }
+    .wow-rehearse-again:hover { color: var(--sec); }
     /* CTA */
     .wow-cta-area { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; align-items: center; }
     .wow-cta-btn { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: -.01em; transition: opacity .15s; }
@@ -3178,6 +3198,22 @@
           <ul class="wow-unexpected-list" id="wowUnexpectedList"></ul>
         </div>
 
+        <!-- Rehearsal Card -->
+        <div class="wow-card wow-card-rehearse" id="wowRehearsalCard">
+          <div class="wow-card-eyebrow">🎯 Ona ne diyeceksin?</div>
+          <p class="wow-card-summary" style="margin-bottom:6px">Söylemek istediğin cümleyi yaz — nasıl karşılanacağını görelim.</p>
+          <textarea class="wow-rehearse-textarea" id="wowRehearseTa" placeholder="Örn: Seninle konuşmam gereken bir şey var…" rows="3"></textarea>
+          <button class="wow-rehearse-btn" id="wowRehearseSendBtn" onclick="doRehearsal()">Tepkiyi tahmin et →</button>
+          <div class="wow-rehearse-result hidden" id="wowRehearsalResult">
+            <div class="wow-rehearse-bars" id="wowRehearseBars"></div>
+            <div class="wow-rehearse-coach hidden" id="wowRehearseCoach">
+              <div class="wow-rehearse-coach-label">💡 Kanıta dayalı ipucu</div>
+              <div id="wowRehearseCoachText"></div>
+            </div>
+            <button class="wow-rehearse-again" id="wowRehearseTryAgainBtn" onclick="onRehearseTryAgain()">Başka cümle dene →</button>
+          </div>
+        </div>
+
         <!-- Twin Card -->
         <div class="wow-card wow-card-twin">
           <div class="wow-card-eyebrow">✦ <span id="wowTwinLabel">—</span></div>
@@ -3463,6 +3499,8 @@
     let _wowContactId = null;
     let _importPreAuthName = null;
     let _importPreAuthType = null;
+    let _rehearseCount = 0;
+    let _wowRehearsalContext = null;
 
     // ── App State Machine (FAZ 0 skeleton) ──────────────────────
     const App = {
@@ -5207,6 +5245,18 @@
         };
       }
 
+      // Reset rehearsal state and store context for /api/rehearse
+      _rehearseCount = 0;
+      _wowRehearsalContext = {
+        name: name,
+        observed_patterns: Array.isArray(data.observed_patterns) ? data.observed_patterns : [],
+        relationship_state: data.emotional_tone || data.relationship_state || null,
+        relationship_summary: data.relationship_summary || null
+      };
+      document.getElementById('wowRehearseTa').value = '';
+      document.getElementById('wowRehearsalResult').classList.add('hidden');
+      document.getElementById('wowRehearseSendBtn').disabled = false;
+
       // Wire CTA buttons
       document.getElementById('wowTalkBtn').onclick = wowStartTalking;
       document.getElementById('wowSayBtn').onclick = () => {
@@ -5225,6 +5275,68 @@
       } else {
         document.getElementById('screen-landing').classList.remove('hidden');
       }
+    }
+
+    async function doRehearsal() {
+      const isPaid = window._userPlan && window._userPlan !== 'free';
+      if (!isPaid && _rehearseCount >= 1) { showUpgradeModal('rehearse'); return; }
+
+      const ta = document.getElementById('wowRehearseTa');
+      const msg = ta.value.trim();
+      if (!msg) { ta.focus(); return; }
+
+      const btn = document.getElementById('wowRehearseSendBtn');
+      btn.disabled = true;
+      btn.textContent = 'Analiz ediliyor…';
+
+      try {
+        const r = await fetch('/api/rehearse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, contactContext: _wowRehearsalContext, language: 'Turkish' })
+        });
+        if (!r.ok) throw new Error('API error');
+        const d = await r.json();
+        _rehearseCount++;
+        renderRehearsalResult(d);
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'Tepkiyi tahmin et →';
+      }
+    }
+
+    function renderRehearsalResult({ predictions, coach_tip }) {
+      const escH = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const colors = ['#7c9cf8', '#f87c7c', '#7ce0a4'];
+      const barsEl = document.getElementById('wowRehearseBars');
+      barsEl.innerHTML = (predictions || []).map((p, i) => `
+        <div class="wow-rehearse-bar-row">
+          <div class="wow-rehearse-bar-label"><span>${escH(p.reaction)}</span><span>${p.pct}%</span></div>
+          <div class="wow-rehearse-bar-track"><div class="wow-rehearse-bar-fill" style="width:${p.pct}%;background:${colors[i % colors.length]}"></div></div>
+        </div>`).join('');
+
+      const coachEl = document.getElementById('wowRehearseCoach');
+      const coachTextEl = document.getElementById('wowRehearseCoachText');
+      if (coach_tip) {
+        coachTextEl.textContent = coach_tip;
+        coachEl.classList.remove('hidden');
+      } else {
+        coachEl.classList.add('hidden');
+      }
+
+      document.getElementById('wowRehearsalResult').classList.remove('hidden');
+
+      const btn = document.getElementById('wowRehearseSendBtn');
+      btn.textContent = 'Tepkiyi tahmin et →';
+      btn.disabled = false;
+    }
+
+    function onRehearseTryAgain() {
+      const isPaid = window._userPlan && window._userPlan !== 'free';
+      if (!isPaid) { showUpgradeModal('rehearse'); return; }
+      document.getElementById('wowRehearsalResult').classList.add('hidden');
+      document.getElementById('wowRehearseTa').value = '';
+      document.getElementById('wowRehearseTa').focus();
     }
 
     const _PROCESSING_MSGS = [
@@ -5329,12 +5441,17 @@
 
     function showUpgradeModal(context) {
       const isImport = context === 'import';
+      const isRehearse = context === 'rehearse';
       document.getElementById('upgradeModalTitle').textContent = isImport
         ? 'More people, more insight.'
-        : 'Your AI twin is ready.';
+        : isRehearse
+          ? 'Tam prova için üye ol.'
+          : 'Your AI twin is ready.';
       document.getElementById('upgradeModalSub').textContent = isImport
         ? 'You\'ve used your free import. Subscribe to add more people and start practicing.'
-        : 'Subscribe to start practicing with them.';
+        : isRehearse
+          ? 'Ücretsiz 1 prova hakkın bitti. Sınırsız prova + canlı pratik için üye ol.'
+          : 'Subscribe to start practicing with them.';
       const preview = document.getElementById('upgradePreview');
       if (!isImport && activeContactContext) {
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

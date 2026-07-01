@@ -943,6 +943,60 @@ RESPONSE_2_NEXT_MOVE: ...
   }
 });
 
+app.post('/api/rehearse', limiter, async (req, res) => {
+  try {
+    const { message, contactContext, language } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: 'message is required' });
+
+    const lang = language || 'Turkish';
+    const systemPrompt = `You are a protective communication coach. Given a message someone plans to say and what we know about the recipient from past conversations, predict 3 likely reactions and give ONE evidence-backed coaching tip.
+
+${buildContactContext(contactContext) ? buildContactContext(contactContext).trim() : 'No prior conversation data available.'}
+
+Format exactly (no extra text):
+REACTION_1: [short label, e.g. "Savunmaya geçer" or "Açılır"]
+REACTION_1_PCT: [integer 0-100]
+REACTION_2: [short label]
+REACTION_2_PCT: [integer 0-100]
+REACTION_3: [short label]
+REACTION_3_PCT: [integer 0-100]
+(all three percentages must sum to exactly 100)
+COACH_TIP: [ONE sentence. Must reference a specific observed pattern — NOT generic advice. Use soft language ("genellikle", "sık sık", "çoğunlukla"). Never invent exact numbers. Protective tone: we are finding the path with least friction together. If no patterns available, give a soft general tip without claiming it's pattern-based.]
+
+Write entirely in ${lang}.`;
+
+    const userPrompt = `Message they plan to say: "${message.trim()}"`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+
+    const text = data.content[0].text;
+    const extract = key => { const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
+
+    const predictions = [1, 2, 3].map(n => ({
+      reaction: extract(`REACTION_${n}`),
+      pct: parseInt(extract(`REACTION_${n}_PCT`) || '0', 10)
+    })).filter(p => p.reaction);
+
+    const totalPct = predictions.reduce((s, p) => s + p.pct, 0);
+    if (totalPct > 0 && totalPct !== 100) {
+      const diff = 100 - totalPct;
+      predictions[0].pct += diff;
+    }
+
+    res.json({ predictions, coach_tip: extract('COACH_TIP') || null });
+  } catch (e) {
+    console.error('[rehearse]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/next-steps', limiter, async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, scenario, theirMessage } = req.body;
@@ -2470,12 +2524,10 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       : null;
     const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
 
-    console.log('[simulate-reply] called — contact_id:', character.contact_id, 'has_token:', !!req.token, 'profile:', !!character.character_profile, 'profile_len:', typeof character.character_profile === 'string' ? character.character_profile.length : (character.character_profile ? 'object' : 0));
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     let recentContext = '';
     if (character.contact_id && req.token) {
-      console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'has_auth_header:', !!req.headers.authorization);
       try {
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
         const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
@@ -2489,7 +2541,6 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
           );
           if (chunksR.ok) {
             const allChunks = await chunksR.json();
-            console.log('[rag] contact_id:', character.contact_id, 'has_token:', !!req.token, 'chunks_found:', allChunks?.length);
             if (Array.isArray(allChunks) && allChunks.length > 0) {
               const isJunkLine = (l) => {
                 const t = l.trim();
@@ -2523,19 +2574,13 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 6);
-              console.log('[rag-matched]', scored.length, 'chunks for words:', words.slice(0, 5), '| snippets:', scored.map(c => c.snippet.length));
               if (scored.length > 0) {
                 ragContext = `\nRELEVANT EXCERPTS (tone/context examples, in these "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
-                console.log('[rag-context] total ragContext len:', ragContext.length);
-              } else {
-                console.log('[rag-context] ragContext EMPTY — all snippets filtered or no matches');
               }
             }
           }
         }
       } catch { /* RAG is best-effort */ }
-    } else {
-      console.log('[rag] skipped — contact_id:', character.contact_id, 'has_token:', !!req.token);
     }
 
     let userProfileBlock = '';
@@ -2544,11 +2589,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         const upR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
         const upData = await upR.json();
         const up = upData?.[0]?.profile_text;
-        console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id, 'profile_len:', up ? up.length : 0);
-        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — this is ${userLabel}, the person messaging you. Use this to make your responses personal and informed, as someone who knows them would:\n${up.slice(0, 3000)}`;
+        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — facts about ${userLabel}, the person messaging you. CRITICAL: ${userLabel}'s family members listed here (spouse, parents, children, siblings) are COMPLETELY SEPARATE from your own family in WHO YOU ARE. When ${userLabel} says "eşim", "annem", "babam", "my wife", "my husband", "my spouse", or any possessive about their family — they mean the people listed HERE, never from WHO YOU ARE:\n${up.slice(0, 3000)}`;
       } catch (e) {}
-    } else {
-      console.log('[sim userprofile] token:', !!req.token, 'user:', req.user?.id ?? null, 'profile_len: skipped');
     }
 
     // Prose character document — handles string (new) and old JSON profiles
@@ -2565,9 +2607,13 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
       return parts.join(' ');
     })();
 
+    const noProfileGuard = !userProfileBlock
+      ? `\n\nNO USER PROFILE AVAILABLE: You have no verified data about ${userLabel}'s personal life. If asked about their family members, spouse, parents, children, or anyone they refer to as "mine" or "my" — do NOT substitute your own family details from WHO YOU ARE as an answer. Say you don't recall, in character: 'hatırlamıyorum, söylemiş miydin?' or 'I don't think you ever told me that'. YOUR own spouse/family from WHO YOU ARE are YOUR details — they are never the answer to a question about THE USER's family.`
+      : '';
+
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
