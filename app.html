@@ -2245,6 +2245,13 @@
     .wow-card-mirror .wow-card-eyebrow { color: var(--accent); }
     /* Twin Card */
     .wow-card-twin { background: var(--card); border: 1px solid var(--bord); }
+    /* Unexpected Findings Card */
+    .wow-card-unexpected { background: linear-gradient(145deg, rgba(100,149,237,.12) 0%, rgba(100,149,237,.04) 100%); border: 1.5px solid rgba(100,149,237,.35); position: relative; overflow: hidden; }
+    .wow-card-unexpected::after { content: ''; position: absolute; top: -20px; right: -20px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(100,149,237,.15), transparent 70%); pointer-events: none; }
+    .wow-card-unexpected .wow-card-eyebrow { color: cornflowerblue; }
+    .wow-unexpected-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+    .wow-unexpected-list li { font-size: .9rem; color: var(--fg); line-height: 1.55; padding-left: 22px; position: relative; }
+    .wow-unexpected-list li::before { content: '!'; position: absolute; left: 0; width: 16px; height: 16px; border-radius: 50%; background: rgba(100,149,237,.25); color: cornflowerblue; font-size: .7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; top: 2px; }
     /* Mirror insight list */
     .wow-mirror-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
     .wow-mirror-list li { font-size: .9rem; color: var(--fg); line-height: 1.5; padding-left: 20px; position: relative; }
@@ -3163,6 +3170,12 @@
           <div class="wow-card-eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
           <ul class="wow-mirror-list" id="wowMirrorList"></ul>
           <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
+        </div>
+
+        <!-- Unexpected Findings Card -->
+        <div class="wow-card wow-card-unexpected hidden" id="wowUnexpectedCard">
+          <div class="wow-card-eyebrow">🔍 Beklemediğimiz bir şey</div>
+          <ul class="wow-unexpected-list" id="wowUnexpectedList"></ul>
         </div>
 
         <!-- Twin Card -->
@@ -5094,8 +5107,8 @@
       const conf = data.confidence_score || 0;
       const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
       const metaParts = [];
-      if (msgCount > 0) metaParts.push(`${msgCount.toLocaleString()} messages analyzed`);
-      if (conf > 0) metaParts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
+      if (msgCount > 0) metaParts.push(`${msgCount.toLocaleString()} mesaj analiz edildi`);
+      if (conf > 0) metaParts.push(`Güven: ${data.confidence_label === 'High' ? 'Yüksek' : data.confidence_label === 'Medium' ? 'Orta' : data.confidence_label === 'Low' ? 'Düşük' : (conf >= 70 ? 'Yüksek' : conf >= 40 ? 'Orta' : 'Düşük')}`);
       document.getElementById('wowConfidenceMeta').textContent = metaParts.join(' · ');
 
       // Mirror Card (star)
@@ -5120,6 +5133,17 @@
         mirrorEvEl.classList.remove('hidden');
       } else {
         mirrorEvEl.classList.add('hidden');
+      }
+
+      // Unexpected Findings Card
+      const unexpectedCard = document.getElementById('wowUnexpectedCard');
+      const unexpectedList = document.getElementById('wowUnexpectedList');
+      const findings = Array.isArray(data.unexpected_findings) && data.unexpected_findings.length ? data.unexpected_findings : null;
+      if (findings) {
+        unexpectedList.innerHTML = findings.map(f => `<li>${escH(f)}</li>`).join('');
+        unexpectedCard.classList.remove('hidden');
+      } else {
+        unexpectedCard.classList.add('hidden');
       }
 
       // Twin Card

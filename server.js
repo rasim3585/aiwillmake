@@ -1449,19 +1449,20 @@ ACTION_DETAIL: [one sentence — what to do and why, in the conversation's langu
 BIGGEST_RISK: [main risk in this relationship dynamic — one sentence]
 AVOID: [what NOT to do right now — one sentence]
 SIGNAL_STRENGTH: [exactly one of: Strong / Moderate / Weak — confidence in this analysis. Weak if very few messages or context is unclear.]
-OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — these must be OBSERVATIONS only, never diagnoses or clinical labels. GOOD examples: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Engages more with practical questions" | "Replies get shorter when the topic turns personal". BAD (never use): attachment styles, percentages, clinical labels, personality types]
+OBSERVED_PATTERNS: [3-5 behavioral patterns separated by | — OBSERVATIONS only, specific to THIS conversation, not generic. Each pattern must be something you actually saw in the messages — tied to a specific moment or recurring behavior. GOOD: "Responds slower after emotional topics" | "Rarely initiates after a disagreement" | "Replies get shorter when the topic turns personal". BAD: generic labels ("good listener", "empathetic"), invented or estimated counts ("73% of the time"), clinical/personality labels. If you observed a clear count (e.g. "4 of 5 responses"), only include it if you genuinely counted it in the messages — otherwise use soft language ("often", "sık sık", "çoğunlukla", "genellikle").]
 ADDRESS_STYLE: [How Person A (user) addresses Person B — a pet name, term of endearment, or just their name. Examples: "aşkım", "canım", "abi", "hocam", or the actual name. One word or short phrase. Omit this line if unclear.]
 RELATIONSHIP_TIER: [1 or 2 — 1 if surface/work/casual (no personal life details shared), 2 if close/intimate (personal life, emotions, family openly discussed)]
 TIER_REASON: [one sentence explaining why — write in the conversation's language]
-MIRROR_INSIGHT_1: [One concrete behavioral observation about Person A (the user) from this conversation — how they communicate under pressure, what they seek, what they avoid. Kind, non-clinical, specific. Write in the conversation's language. Example: "Gerilim yükseldiğinde açıklamaya kaçıyor" or "Tends to apologize before making a request".]
-MIRROR_INSIGHT_2: [Another distinct observation about Person A, different angle. Omit this line entirely if nothing else stands out clearly.]
-MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by the data.]
+MIRROR_INSIGHT_1: [One concrete behavioral observation about Person A (the user) specific to THIS conversation — something they might not have consciously noticed. Must be tied to actual messages, not a generic personality label. Avoid: "good listener", "empathetic", "direct person". Prefer: something they DO (a pattern, a habit, a reaction). If you observed a clear count, only include it if you actually counted it — otherwise use soft language ("genellikle", "sık sık", "often"). Kind, non-clinical. Write in the conversation's language. Example: "Gerilim yükseldiğinde açıklamaya kaçıyor" or "Tends to apologize before making a request".]
+MIRROR_INSIGHT_2: [Another distinct observation about Person A, different angle from MIRROR_INSIGHT_1. Must be specific to this conversation. Omit this line entirely if nothing clearly distinct stands out.]
+MIRROR_INSIGHT_3: [Optional third observation about Person A. Omit unless clearly supported by actual message data.]
 ROLE_NAMES_JSON: [compact single-line JSON mapping fixed English role keys to names found in this conversation: {"spouse":null,"father":null,"mother":null,"son":null,"daughter":null,"sibling":null,"close_friend":null} — fill the exact name for each role that appears clearly; keep null for any role not mentioned. Output ONLY the JSON object on this line, no extra text.]
 RELATIONSHIP_LOOP_JSON: [compact single-line JSON array of 3-4 short phrases describing the REPEATING interaction cycle observable between Person A and Person B — one phrase per step, in the conversation's language. Format: ["phrase1","phrase2","phrase3"]. Only output if a clear recurring pattern exists. If not clearly observable, output: null]
 TWIN_QUOTE: [a short verbatim quote — max 10 words — from Person B's messages that best illustrates their behavioral pattern. Copy ONLY the message text, no timestamp or sender prefix. Omit this line entirely if no clear example exists.]
 TWIN_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this quote reveals about Person B's behavior. Omit if TWIN_QUOTE was omitted.]
 MIRROR_QUOTE: [a short verbatim quote — max 10 words — from Person A's messages that illustrates their behavioral pattern. Message text only, no prefix. Omit if no clear example.]
-MIRROR_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this reveals about Person A. Omit if MIRROR_QUOTE was omitted.]${whatChangedLine}
+MIRROR_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this reveals about Person A. Omit if MIRROR_QUOTE was omitted.]
+UNEXPECTED_FINDINGS_JSON: [compact single-line JSON array of 1-2 genuinely surprising observations that the user probably hasn't noticed, but that are clearly visible in the conversation data. Must be specific to THIS conversation — counterintuitive, concrete, conversation-derived. The finding should make the user think "huh, I didn't realize that." Examples of the KIND of insight (do NOT copy these): "Sen direkt sanıyorsun ama gerginlikte mesajların iki katı uzuyor" / "Bu kişiye hep bekletiyorsun, başkalarına hızlı yanıt veriyorsun" / "O senin pratik sorularını atlamıyor — sadece duygusal olanları". Write findings in the conversation's language. Format: ["finding1"] or ["finding1","finding2"]. Output null if nothing clearly surprising stands out — never force it or make something up.]${whatChangedLine}
 
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
@@ -1474,7 +1475,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2600,
+        max_tokens: 2800,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Conversation:\n${snippet}` }]
       })
@@ -1582,6 +1583,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       role_names:           (() => { const m = text.match(/^ROLE_NAMES_JSON:\s*(\{.+\})/m); if (!m) return {}; try { return JSON.parse(m[1]); } catch { return {}; } })(),
       relationship_loop:    (() => { const m = text.match(/^RELATIONSHIP_LOOP_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
       evidence:             (() => { const tq = extract('TWIN_QUOTE'); const ts = extract('TWIN_QUOTE_SHOWS'); const mq = extract('MIRROR_QUOTE'); const ms = extract('MIRROR_QUOTE_SHOWS'); const nul = v => !v || v === 'null'; return { twin: nul(tq) ? null : { quote: tq, shows: nul(ts) ? null : ts }, mirror: nul(mq) ? null : { quote: mq, shows: nul(ms) ? null : ms } }; })(),
+      unexpected_findings:  (() => { const m = text.match(/^UNEXPECTED_FINDINGS_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes
