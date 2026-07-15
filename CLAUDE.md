@@ -1,11 +1,11 @@
 # CLAUDE.md — aiwillmake
 
-> **Audit resolution status (2026-07-15/16):** RESOLVED — C1, C2, C3, C4(code), H1, H2, H3, M1, M2, M3, M4, M6,
-> and the webhook timing-safe compare. **Still open (deliberate / needs decision):** H4 (unauth cost abuse on
-> analyze/OCR — would restrict guest onboarding), M5 (open CORS — low risk under bearer auth), dead telemetry
-> (micro_feedback/passive_signals/prediction_ledger — harmless, could be wired or cut), role_names 0/8, embeddings
-> RAG + analyze cost-consolidation (deferred), plus assorted LOW items. **Everything is committed + pushed but NOT
-> deployed** (Railway peak-hours block — deploy off-peak).
+> **Audit resolution status (2026-07-15/16):** RESOLVED — C1, C2, C3, C4(code), H1, H2, H3, H4(partial: heavy
+> per-IP limiter + OCR image cap), M1, M2, M3, M4, M5 (CORS scoped), M6, webhook timing-safe compare, and SEO
+> (robots/sitemap → www, /app.html not indexed). **Deliberately left:** dead telemetry (micro_feedback/passive_signals/
+> prediction_ledger — harmless + partly wired to UI, cut/rewire later), role_names 0/8, embeddings RAG + analyze
+> cost-consolidation (deferred: external key / recall-regression risk), H4-full (IP-rotation needs auth/captcha),
+> cosmetic LOW (og-image dims etc.). **Everything is committed + pushed but NOT deployed** (Railway peak-hours block).
 
 AI conversation navigator + "digital twin" rehearsal app. Turkish-first UI, English codebase/prompts.
 User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server builds a character profile of the
