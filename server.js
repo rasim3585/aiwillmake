@@ -36,7 +36,27 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again in a minute.' }
 });
 
-app.use(cors());
+// Stricter cap for the most expensive endpoints (vision OCR, multi-Sonnet analysis) — an
+// abuser rotating IPs can still get through (only auth/captcha stops that), but this raises the
+// per-IP cost meaningfully without blocking a normal guest who analyzes a chat once.
+const heavyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 4,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please wait a minute and try again.' }
+});
+
+// Scope CORS to the app's own origins. The SPA is served same-origin so this doesn't affect it;
+// it just stops other sites from calling the API from a browser. Server-to-server (the webhook)
+// is unaffected. Non-browser / same-origin requests (no Origin header) are allowed through.
+const ALLOWED_ORIGINS = new Set([
+  'https://www.aiwillmake.com', 'https://aiwillmake.com',
+  'http://localhost:3000', 'http://127.0.0.1:3000'
+]);
+app.use(cors({
+  origin: (origin, cb) => cb(null, !origin || ALLOWED_ORIGINS.has(origin))
+}));
 
 // ── Lemon Squeezy webhook — must come before express.json() to receive raw body ──
 app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -1342,7 +1362,7 @@ function parseJsonSafe(text) {
   return null;
 }
 
-app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) => {
+app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, async (req, res) => {
   try {
     const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
@@ -2346,13 +2366,14 @@ app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
   } catch (e) { console.error('[contacts DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/extract-screenshot', optionalAuth, limiter, async (req, res) => {
+app.post('/api/extract-screenshot', optionalAuth, heavyLimiter, async (req, res) => {
   const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   try {
-    const { images } = req.body; // array of { media_type, data }
+    let { images } = req.body; // array of { media_type, data }
     if (!Array.isArray(images) || !images.length) {
       return res.status(400).json({ error: 'images array required' });
     }
+    if (images.length > 6) images = images.slice(0, 6); // cap vision calls per request (cost guard)
     const texts = [];
     for (const img of images) {
       const { media_type, data } = img;
