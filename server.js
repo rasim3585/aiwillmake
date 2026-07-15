@@ -363,6 +363,23 @@ ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr
     const language = fields.language || 'English';
     const country  = fields.country  || '';
     const strategies = STRATEGIES[categoryId] || STRATEGIES.personal;
+
+    // Revealed preference: which strategies has this user actually COPIED for this contact
+    // before? (Recorded via conversation_messages.strategy on copy.) Feed it back so the
+    // RECOMMENDED pick converges on what the user really sends — the compounding user-model.
+    let chosenNote = '';
+    if (req.user && req.token && contactContext?.id) {
+      try {
+        const cr = await fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${contactContext.id}&user_id=eq.${req.user.id}&select=conversation_messages(role,strategy)&order=updated_at.desc&limit=8`, { headers: sbHeaders(req.token) });
+        const cd = await cr.json();
+        const freq = {};
+        (Array.isArray(cd) ? cd : []).forEach(cv => (cv.conversation_messages || []).forEach(m => {
+          if (m.role === 'sent' && m.strategy && m.strategy.trim()) freq[m.strategy.trim()] = (freq[m.strategy.trim()] || 0) + 1;
+        }));
+        const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        if (top.length) chosenNote = `\nUSER'S REVEALED PREFERENCE with this recipient: they have previously chosen messages in these styles: ${top.map(([s, n]) => `"${s}" (${n}x)`).join(', ')}. When picking which message to mark RECOMMENDED, weight toward these styles — they reflect what the user actually sends.`;
+      } catch (_) { /* best-effort */ }
+    }
     const systemPrompt = `You are a communication strategist and expert writer. Analyze the situation silently, then write 6 messages using these exact strategies: ${strategies.map((s, i) => `${i + 1}. ${s}`).join(', ')}. After each message, add exactly these lines:
 WHY: [one sentence explaining why this approach works]
 BARRIER: Easy to reply / Some thought required / Emotionally demanding
@@ -382,7 +399,7 @@ When choosing which message to recommend, consider: which strategy is most likel
 CRITICAL: Write ALL 6 messages entirely in ${language}. Do not mix languages. Every single word must be in ${language}.
 CRITICAL: Do NOT use markdown. No headers (#), no bold (**), no dividers (---), no bullet points. Plain numbered list ONLY: 1. 2. 3. 4. 5. 6.
 AVOID these AI-sounding openings: "I've been trying to make sense of...", "I've had time to think clearly...", "I wasn't going to reach out...", "I've been doing a lot of thinking...". Instead write like a real person: sometimes short and direct, sometimes warm and specific, always authentic. Vary the sentence structure. Some messages can start mid-thought.
-Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.${buildContactContext(contactContext)}`;
+Rules: use specific details provided, no clichés, each message sounds like a real human, plain numbered text only, write in ${language}. If country context is relevant to format or formality, apply it subtly. Never make broad cultural generalizations or claim cultural authority. IMPORTANT: Never ask the user for more information. Never output questions. Always generate the 6 messages directly using whatever information is provided. If some context is missing, make reasonable assumptions and still write the messages.${buildContactContext(contactContext)}${chosenNote}`;
 
     const fieldLines = [...subcategory.required_fields, ...(subcategory.optional_fields || [])]
       .map(f => { const v = (fields[f.key] || '').trim(); return v ? `${f.label}: ${v}` : null; })
@@ -509,6 +526,10 @@ Rules: use specific details provided, no clichés, each message sounds like a re
       })
       .filter(Boolean)
       .slice(0, 6);
+
+    // Attach the strategy name (messages are generated in STRATEGIES order) so the client
+    // can record WHICH strategy the user actually copies — the variant-preference signal.
+    captions.forEach((c, i) => { if (!c.badge) c.strategy = strategies[i] || null; else c.strategy = c.badge; });
 
     // Ensure only one recommended:true — prefer low-pressure + easy-reply
     const recItems = captions.filter(c => c.recommended);

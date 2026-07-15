@@ -2314,6 +2314,10 @@
     .op-btn:hover { border-color: var(--accent); }
     .op-skip { flex-basis: 100%; color: var(--muted); font-weight: 500; }
     .op-confirm { font-size: .9rem; font-weight: 700; color: #4ade80; text-align: center; padding: 4px; }
+    /* ── Wow "more details" collapse ── */
+    .wow-details-toggle { width: 100%; padding: 12px; border: 1px dashed var(--bord); border-radius: 12px; background: transparent; color: var(--sec); font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
+    .wow-details-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .wow-details { display: flex; flex-direction: column; gap: 14px; }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -3347,16 +3351,16 @@
         </div>
 
         <!-- Mirror Card — star -->
+        <!-- Unexpected Findings Card — the "how did it know that" hero -->
+        <div class="wow-card wow-card-unexpected hidden" id="wowUnexpectedCard">
+          <div class="wow-card-eyebrow">🔍 Beklemediğimiz bir şey</div>
+          <ul class="wow-unexpected-list" id="wowUnexpectedList"></ul>
+        </div>
+
         <div class="wow-card wow-card-mirror" id="wowMirrorCard">
           <div class="wow-card-eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
           <ul class="wow-mirror-list" id="wowMirrorList"></ul>
           <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
-        </div>
-
-        <!-- Unexpected Findings Card -->
-        <div class="wow-card wow-card-unexpected hidden" id="wowUnexpectedCard">
-          <div class="wow-card-eyebrow">🔍 Beklemediğimiz bir şey</div>
-          <ul class="wow-unexpected-list" id="wowUnexpectedList"></ul>
         </div>
 
         <!-- Rehearsal Card -->
@@ -3375,24 +3379,28 @@
           </div>
         </div>
 
-        <!-- Twin Card -->
-        <div class="wow-card wow-card-twin">
-          <div class="wow-card-eyebrow">✦ <span id="wowTwinLabel">—</span></div>
-          <p class="wow-card-summary" id="wowThemSummary"></p>
-          <ul class="wow-patterns" id="wowPatterns"></ul>
-          <div class="wow-evidence hidden" id="wowTwinEvidence"></div>
-        </div>
+        <!-- Secondary depth, collapsed — keeps the first glance focused on the 2-3 cards that land -->
+        <button type="button" class="wow-details-toggle" id="wowDetailsToggle">🔎 Daha fazla detay <span id="wowDetailsArrow">›</span></button>
+        <div class="wow-details hidden" id="wowDetails">
+          <!-- Twin Card -->
+          <div class="wow-card wow-card-twin">
+            <div class="wow-card-eyebrow">✦ <span id="wowTwinLabel">—</span></div>
+            <p class="wow-card-summary" id="wowThemSummary"></p>
+            <ul class="wow-patterns" id="wowPatterns"></ul>
+            <div class="wow-evidence hidden" id="wowTwinEvidence"></div>
+          </div>
 
-        <!-- Relationship Loop -->
-        <div class="wow-loop-section hidden" id="wowLoopSection">
-          <div class="wow-section-label">🔄 Tekrar eden döngünüz</div>
-          <div class="wow-loop-steps" id="wowLoopSteps"></div>
-        </div>
+          <!-- Relationship Loop -->
+          <div class="wow-loop-section hidden" id="wowLoopSection">
+            <div class="wow-section-label">🔄 Tekrar eden döngünüz</div>
+            <div class="wow-loop-steps" id="wowLoopSteps"></div>
+          </div>
 
-        <!-- DNA Bars -->
-        <div class="wow-dna-section hidden" id="wowDnaSection">
-          <div class="wow-section-label">İlişki DNA'sı</div>
-          <div id="wowDnaBars"></div>
+          <!-- DNA Bars -->
+          <div class="wow-dna-section hidden" id="wowDnaSection">
+            <div class="wow-section-label">İlişki DNA'sı</div>
+            <div id="wowDnaBars"></div>
+          </div>
         </div>
 
         <!-- CTA -->
@@ -4030,6 +4038,7 @@
           const isObj = item !== null && typeof item === 'object';
           const text               = isObj ? item.text               : item;
           const badge              = isObj ? item.badge              : null;
+          const strategyName       = isObj ? (item.strategy || item.badge) : null;
           const why                = isObj ? item.why                : null;
           const reply_barrier      = isObj ? item.reply_barrier      : null;
           const emotional_pressure = isObj ? item.emotional_pressure : null;
@@ -4083,7 +4092,7 @@
             e.target.classList.add('copied');
             setTimeout(() => { e.target.textContent = 'Copy'; e.target.classList.remove('copied'); }, 1800);
             _signalSend('copy', null, null);
-            saveMessage('sent', text, badge || '');
+            saveMessage('sent', text, strategyName || badge || '');
             if (text !== selectedMsgText) {
               selectedMsgText = text;
               document.getElementById('nsNote').textContent = 'Updated for your selected message';
@@ -5489,6 +5498,10 @@
         if (_wowContactId) loadPersonSection(_wowContactId);
       };
 
+      // details start collapsed on every fresh wow
+      document.getElementById('wowDetails')?.classList.add('hidden');
+      const _arr = document.getElementById('wowDetailsArrow'); if (_arr) _arr.textContent = '›';
+
       loadArchetype();
     }
 
@@ -5633,6 +5646,11 @@
       ov.querySelectorAll('.bys-picker-item').forEach(b => b.onclick = () => { const id = b.dataset.id; ov.remove(); pickBysContact(id); });
     }
     document.getElementById('bysHomeCta')?.addEventListener('click', startBeforeYouSend);
+    document.getElementById('wowDetailsToggle')?.addEventListener('click', function () {
+      const d = document.getElementById('wowDetails');
+      const open = d.classList.toggle('hidden') === false;
+      document.getElementById('wowDetailsArrow').textContent = open ? '▾' : '›';
+    });
 
     function wowStartTalking() {
       if (_wowContactId) {
