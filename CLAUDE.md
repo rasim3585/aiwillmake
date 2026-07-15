@@ -176,6 +176,16 @@ Shipped after a 5-lens product analysis (the data showed one-and-done use: 71 co
   yazdın?") + contact picker; the person section's old "review before sending" button now opens this. The rewrite has
   copy + "rehearse against the twin" actions. This is the retention keystone (one-and-done → per-message ritual).
 
+- **Return-moment outcome capture ("Ne oldu?")** — opening a contact surfaces their last un-outcomed sent message
+  with one-tap [İyi gitti / İdare eder / Ters gitti / Henüz bilmiyorum] → PATCHes `conversation_messages.outcome` +
+  `contacts.last_outcome`. `buildContactContext()` injects a REAL LIFE OUTCOME calibration line so generate/strategy/
+  rehearse/before-you-send lean toward what actually worked. No DDL, no external service.
+- **Variant-preference loop** — generate captions carry their strategy name; the client records it on copy
+  (`conversation_messages.strategy`); the next generate for that contact reads the frequency and weights the
+  RECOMMENDED pick toward the user's revealed style. Zero DDL.
+- **Wow screen simplified** — unexpected-finding is the hero (above mirror); twin detail card + relationship loop +
+  DNA bars are collapsed behind a "Daha fazla detay" toggle (first glance = archetype/unexpected/mirror/Prova + CTAs).
+
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.
 
