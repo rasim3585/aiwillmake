@@ -90,8 +90,13 @@ The app runs on TWO free tiers, and **has real paying subscribers** — so pausi
     `/api/keepalive` as a backup — GitHub scheduled workflows auto-disable after 60 days of no commits and can lag.
 - **Railway (free) — forced Serverless (scale-to-zero).** Site sleeps on inactivity; first request cold-starts
   (Railway QUEUES it, no 502). Free plan also has a monthly usage/resource cap. Tolerable (no data loss), but the
-  keepalive cron also keeps it warm. `git push` did NOT auto-deploy in testing — may need Railway → Deployments →
-  "Deploy latest commit" (Cmd/Ctrl+K) or an Auto-Deploy toggle check.
+  keepalive cron also keeps it warm.
+- **Railway (free) — DEPLOYS BLOCKED DURING PEAK HOURS.** The service region is **sfo (US West)**, and free-tier
+  deploys to sfo are refused during **08:00–20:00 America/Los_Angeles** ("Failed to trigger deployment … not
+  available during peak hours"). This is why `git push` (and manual "Deploy Latest Commit") FAIL mid-day — Build
+  succeeds, Deploy = "Not started". Off-peak deploy window in **Istanbul time ≈ 06:00–18:00** (LA is 10h behind
+  TRT; LA off-peak 20:00–08:00 = TRT 06:00–18:00). Options: deploy in that window, move the service to a non-sfo
+  region (Settings → Regions), or upgrade. Committed-but-undeployed code waits for the window.
 
 **Roadmap / recommendation:**
 1. **Now (free):** keepalive endpoint + cron (shipped) + external monitor backup. Deploy the pending commits.
@@ -100,6 +105,51 @@ The app runs on TWO free tiers, and **has real paying subscribers** — so pausi
    can't afford an outage. Railway can stay free (serverless) since cold-starts annoy but don't lose data (or
    Railway Hobby $5/mo to remove sleep). If subscription revenue > ~$25/mo, upgrading Supabase is a no-brainer;
    the free keepalive is a fragile stopgap (one missed ping window / CI hiccup → pause → outage → manual restore).
+
+## Twin analysis pipeline — quality diagnosis + fixes (2026-07-15)
+Empirically tested with synthetic Turkish WhatsApp chats carrying known ground-truth facts, quizzing the twin
+(`simulate-reply`) for recall vs hallucination. Findings & fixes:
+
+**Root causes found (measured, not guessed):**
+- **PERSON_A/PERSON_B misidentification** — the analysis prompt guessed the owner as "who asks for help", so when the
+  contact was the help-seeker the model labeled the CONTACT as PERSON_A → `user_profile` got built about the wrong
+  person → the user's own facts were lost/confused. (Swapped in every synthetic test.)
+- **`conversation_chunks` saved only for >175 KB** → normal-sized chats had NO RAG memory; the twin relied solely on
+  the compressed prose profile.
+- **Profile-extraction race** — character-profile extraction is fire-and-forget and scales with size (~60-90 s for a
+  120 KB chat). If the user starts practising right after upload, the profile isn't written yet → twin has no memory →
+  hallucinates / says "don't know". This is the main driver of "sometimes it knows, sometimes it doesn't".
+- **Keyword-only RAG** (embedding column unused) broke on Turkish morphology: query "köpeğinin" ≠ chunk "köpeğime" by
+  substring.
+- **`message_count` regex** only matched `DD.MM.YYYY` → 0 for many export locales (2-digit year, US, brackets).
+- **Bulk chunk insert corruption** — fixed-length slicing cuts emoji (UTF-16 surrogate pairs) in half → invalid
+  Unicode → Postgres rejects the insert.
+
+**Fixes shipped (server.js, this session):**
+- PERSON_A/PERSON_B now ANCHORED on `contact_name` (the user = the sender who is NOT the contact) in both the main
+  analysis prompt and the user-profile extraction. → user-fact recall restored in tests.
+- `saveConversationChunks()` runs for ALL sizes (bulk insert, one request), fire-and-forget but lands in seconds
+  (well before the slow profile) → the twin has verbatim memory even right after upload. Strips lone surrogates.
+- RAG is now Turkish-stem aware (diacritic-folded 5-char stems) → inflected forms match. Pure-RAG recall on
+  depth-planted facts went 2/6 → 4/6 with zero hallucination (misses were honest "don't know").
+- `message_count` regex broadened across export locales.
+
+**Measured after fixes:** small chat 6/6 recall + correct false-bait denial; mid-size (120 KB) person_a correct +
+user-facts recalled; pure-RAG (worst-case, profile not ready) 4/6 no hallucination.
+
+**Remaining levers (roadmap, not yet done):**
+1. **Embeddings RAG** (biggest quality lever) — use the `embedding` column with pgvector + an embedding provider
+   (Voyage/OpenAI/Cohere) for semantic retrieval; catches consonant mutation (k↔ğ), synonyms, paraphrase that the
+   stem matcher still misses (e.g. "ortak"↔"ortağ"). Needs a provider decision + backfill.
+2. **Profile-readiness UX** — frontend should poll `contact.character_profile` and show "twin still learning…" /
+   gate practice until it's populated, so the race never surfaces. (Chunks-for-all-sizes already softens it.)
+3. **role_names ownership** — currently a flat owner-less map (mixes both people's relatives); split into
+   user_roles vs contact_roles.
+4. **relationship_summary** is null in the analyze RESPONSE for the small path (saved to the contacts row async but
+   not returned) — add it to the main analysis output.
+5. **Cost consolidation** — analyze-conversation fires 3 Sonnet calls that each re-read the full conversation
+   (main analysis + character profile + user profile); simulate-debrief fires 4 parallel Sonnet calls. Combining
+   extractions into fewer calls / using Haiku for the cheap ones would cut cost with no quality loss.
 
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.

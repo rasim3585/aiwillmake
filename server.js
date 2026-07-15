@@ -165,6 +165,40 @@ const sbHeaders = (token) => ({
   'Content-Type': 'application/json'
 });
 
+// Matches WhatsApp export date tokens across locales: DD.MM.YY(YY), DD/MM/YY(YY), DD-MM-YY(YY).
+const DATE_TOKEN_RE = /\b\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}\b/g;
+
+// Chunk the raw conversation and store it for RAG retrieval. Runs for ALL conversation
+// sizes (previously only >175 KB), so the twin has verbatim memory even for normal chats
+// and even before the slower async character-profile lands. Bulk-inserts in one request.
+async function saveConversationChunks(contact_id, userId, token, conversationText) {
+  if (!contact_id || !token) return;
+  try {
+    const CHUNK_SIZE = 5000, OVERLAP = 200;
+    const rows = [];
+    let start = 0, idx = 0;
+    while (start < conversationText.length) {
+      // Fixed-length slicing can cut an emoji (UTF-16 surrogate pair) in half, leaving a
+      // lone surrogate → invalid Unicode → Postgres rejects the whole bulk insert. Strip them.
+      const chunk_text = conversationText.slice(start, start + CHUNK_SIZE)
+        .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
+      const _dates = chunk_text.match(DATE_TOKEN_RE) || [];
+      const date_range = _dates.length
+        ? (_dates[0] === _dates[_dates.length - 1] ? _dates[0] : `${_dates[0]} – ${_dates[_dates.length - 1]}`)
+        : null;
+      rows.push({ contact_id, user_id: userId || null, chunk_text, chunk_index: idx, date_range });
+      start += CHUNK_SIZE - OVERLAP; idx++;
+    }
+    if (!rows.length) return;
+    await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${contact_id}`, { method: 'DELETE', headers: sbHeaders(token) });
+    const r = await fetch(`${SUPABASE_REST}/conversation_chunks`, {
+      method: 'POST', headers: { ...sbHeaders(token), 'Prefer': 'return=minimal' }, body: JSON.stringify(rows)
+    });
+    if (!r.ok) console.error('[chunk-save] bulk insert failed:', r.status, (await r.text()).slice(0, 200));
+    else console.log(`[chunk-save] saved ${rows.length} chunks for ${contact_id}`);
+  } catch (e) { console.error('[chunk-save-error]', e.message); }
+}
+
 async function getUserPlan(userId, token) {
   // Returns 'free' / plan name for a confirmed lookup, or null when the lookup itself
   // FAILED (network/5xx/bad shape). Callers must treat null as "unknown", not "free",
@@ -1236,7 +1270,9 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
     }
 
     const totalChars = conversationText.length;
-    const messageCount = (conversationText.match(/^\d{2}[\/\.]\d{2}[\/\.]\d{4}/gm) || []).length;
+    // Count message lines across WhatsApp export locales: [ ] brackets, 1-2 digit day/month,
+    // 2 or 4 digit year, . / or - separators (old regex only matched DD.MM.YYYY → 0 for many exports).
+    const messageCount = (conversationText.match(/^\[?\s*\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}[,\s]/gm) || []).length;
     const chunkCount = Math.max(1, Math.ceil(totalChars / 4800));
     let confidence = 0;
     if (totalChars > 5000)   confidence += 10;
@@ -1251,6 +1287,11 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
     if (chunkCount > 20)     confidence += 10;
     confidence = Math.min(confidence, 100);
     const confidenceLabel = confidence >= 80 ? 'High' : confidence >= 50 ? 'Medium' : 'Low';
+
+    // Persist chunks for RAG for ALL conversation sizes (previously >175 KB only).
+    // Fire-and-forget, but lands within seconds — well before the slow async character
+    // profile — so the twin has verbatim memory even immediately after upload.
+    if (contact_id && req.token) saveConversationChunks(contact_id, req.user?.id, req.token, conversationText);
 
     const lang = language || 'English';
     // Head (identity/context) + tail (recent dynamics) preserves both ends
@@ -1352,31 +1393,7 @@ Score each area 0-100 based ONLY on evidence in the conversation. If a topic nev
         start += CHUNK_SIZE - OVERLAP;
       }
       console.log(`[chunk-analyze] Large file: ${conversationText.length}chars, ${chunks.length} chunks → single Sonnet synthesis`);
-
-      // Best-effort: save chunks to Supabase for RAG
-      console.log('[chunk-save] contact_id:', contact_id, 'user:', req.user?.id);
-      if (contact_id) {
-        (async () => {
-          try {
-            await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${contact_id}`, {
-              method: 'DELETE',
-              headers: sbHeaders(req.token)
-            });
-            for (let i = 0; i < chunks.length; i++) {
-              const _dates = chunks[i].match(/\d{2}[\/\.]\d{2}[\/\.]\d{4}/g) || [];
-              const date_range = _dates.length > 0
-                ? (_dates[0] === _dates[_dates.length - 1] ? _dates[0] : `${_dates[0]} – ${_dates[_dates.length - 1]}`)
-                : null;
-              await fetch(`${SUPABASE_REST}/conversation_chunks`, {
-                method: 'POST',
-                headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ contact_id, user_id: req.user?.id, chunk_text: chunks[i], chunk_index: i, date_range })
-              });
-            }
-            console.log(`[chunk-save] Saved ${chunks.length} chunks for contact_id ${contact_id}`);
-          } catch (e) { console.error('[chunk-save-error]', e.message); }
-        })();
-      }
+      // (chunk persistence now handled once, for all sizes, by saveConversationChunks above)
 
       // Take first 1500 chars of each chunk — covers ~30% of each, names distributed throughout
       const chunkSamples = chunks.map(c => c.slice(0, 1500));
@@ -1519,9 +1536,9 @@ Score each area 0-100 based ONLY on evidence in the conversation. If a topic nev
 
     const systemPrompt = `${prevBlock}CRITICAL: Detect the language of this conversation. Write ALL values in that exact same language — labels (POWER_BALANCE:, KEY_MOMENT:, etc.) stay in English for parsing, but every value after the colon must be in the conversation's language. Turkish conversation → all values in Turkish. English → English. This rule overrides everything else.
 
-Analyze this exported chat conversation. Extract:
-PERSON_A: [who seems to be the user - the one asking for help]
-PERSON_B: [the other person's name if visible]
+${contact_name ? `IDENTITY ANCHOR (do not violate): This chat was exported by the USER, and we are profiling their contact "${contact_name}". Therefore "${contact_name}" is PERSON_B, and PERSON_A is the OTHER sender — the USER / chat owner — EVEN IF "${contact_name}" is the one asking for help, dominates, or sends more messages. Never label "${contact_name}" as PERSON_A. "Asking for help" does NOT identify the owner; the owner is simply the sender who is not "${contact_name}".\n\n` : ''}Analyze this exported chat conversation. Extract:
+PERSON_A: [the USER / chat owner${contact_name ? ` — i.e. the sender who is NOT "${contact_name}"` : ' — the person whose phone exported this chat'}]
+PERSON_B: [the contact${contact_name ? ` — this is "${contact_name}"` : " — the other person's name if visible"}]
 TOTAL_MESSAGES: [count]
 PERSON_A_MESSAGES: [count]
 PERSON_B_MESSAGES: [count]
@@ -1603,9 +1620,9 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
             body: JSON.stringify({
               model: 'claude-sonnet-4-6',
               max_tokens: 800,
-              system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER named "${personA || 'the owner'}"), NOT the contact.
+              system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER${personA ? ` named "${personA}"` : ''}), NOT the contact.${contact_name ? ` The USER is the sender who is NOT "${contact_name}" — "${contact_name}" is the contact and must NOT be profiled here. If "${contact_name}" is the more active or help-seeking party, the USER is still the OTHER person.` : ''}
 
-The USER is the person whose perspective we're building. Extract what we learn about THEM from this conversation:
+The USER is the person whose perspective we're building. Extract what we learn about THEM (the owner, not "${contact_name || 'the contact'}") from this conversation:
 - Their personality, values, what they care about
 - Their communication style, tone, humor
 - Their life details revealed: family members (names, relationships), work, location, interests, ongoing situations
@@ -2569,7 +2586,16 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         // Inject known people's names from role index so RAG finds them regardless of language
         const _rn = character.role_names || {};
         Object.values(_rn).forEach(v => { if (typeof v === 'string' && v.trim()) words.push(v.trim()); });
-        if (words.length > 0) {
+        // Turkish-aware retrieval: strip diacritics and match on 5-char STEMS so inflected
+        // forms match ("köpeğime"/"köpeğinin" ↔ query "köpek"), which plain substring matching
+        // (the old approach) missed entirely — a major recall failure for Turkish.
+        const _trMap = { 'ç':'c','ğ':'g','ı':'i','İ':'i','ö':'o','ş':'s','ü':'u','Ç':'c','Ğ':'g','Ö':'o','Ş':'s','Ü':'u' };
+        const norm = s => String(s || '').replace(/[çğıİöşüÇĞÖŞÜ]/g, m => _trMap[m] || m).toLowerCase();
+        const _stop = new Set(['neydi','nedir','misin','musun','müsün','mısın','hangi','nasil','nasıl','benim','senin','onun','hatirliyor','hatırlıyor','soyle','söyle','diyorum','falan','sanki','yani']);
+        const wordStems = [...new Set(
+          words.map(w => norm(w)).filter(w => w.length > 3 && !_stop.has(w)).map(w => w.slice(0, 5)).filter(s => s.length >= 4)
+        )];
+        if (wordStems.length > 0) {
           const chunksR = await fetch(
             `${SUPABASE_REST}/conversation_chunks?contact_id=eq.${character.contact_id}&select=chunk_text,chunk_index&order=chunk_index`,
             { headers: sbHeaders(req.token) }
@@ -2598,14 +2624,15 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 const lines = text.split('\n');
                 const kept = new Set();
                 lines.forEach((line, i) => {
-                  if (!isJunkLine(line) && words.some(w => line.toLowerCase().includes(w.toLowerCase()))) {
+                  const nl = norm(line);
+                  if (!isJunkLine(line) && wordStems.some(s => nl.includes(s))) {
                     for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) kept.add(j);
                   }
                 });
                 return [...kept].sort((a, b) => a - b).map(i => lines[i]).filter(l => !isJunkLine(l)).join('\n');
               };
               const scored = allChunks
-                .map(c => ({ snippet: extractRelevantLines(c.chunk_text), score: words.filter(w => c.chunk_text.toLowerCase().includes(w.toLowerCase())).length }))
+                .map(c => { const nt = norm(c.chunk_text); return { snippet: extractRelevantLines(c.chunk_text), score: wordStems.filter(s => nt.includes(s)).length }; })
                 .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 6);
