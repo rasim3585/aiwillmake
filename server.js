@@ -1659,6 +1659,61 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       })();
     }
 
+    // Behavior snapshot from the UPLOADED chat (not just roleplay, which real users almost
+    // never do) → cross-mirror ("you apologize early with your boss AND partner AND a friend")
+    // can fire on the first analysis instead of needing 3+ roleplay sessions that never happen.
+    if (contact_id && req.user?.id && req.token && contact_name) {
+      (async () => {
+        try {
+          const cname = contact_name.toLowerCase().trim();
+          const userMsgs = [];
+          for (const line of conversationText.split('\n')) {
+            const m = line.match(/^(?:\[[^\]]*\]|[^-\n]*-)\s*([^:]{1,40}):\s*(.+)$/);
+            if (!m) continue;
+            const sender = m[1].trim().toLowerCase();
+            const text = m[2].trim();
+            if (!sender || sender.includes(cname) || cname.includes(sender)) continue; // contact's line
+            if (/media omitted|medya dahil edilmedi|end-to-end encrypted|uçtan uca şifreli/i.test(text)) continue;
+            userMsgs.push(text);
+          }
+          if (userMsgs.length < 3) return;
+          const sample = userMsgs.slice(-150).join('\n').slice(0, 6000);
+          const apologyRe = /\b(sorry|apolog|pardon|forgive)|özür|affeder|kusura\s+bak/i;
+          const apology_count = userMsgs.filter(t => apologyRe.test(t)).length;
+
+          const bResp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 250,
+              system: `These messages were all written by ONE person (the USER) to "${contact_name}". Identify the USER's own communication habits. Return ONLY a JSON object: patterns (array, ONLY from this fixed list: 'early_apology','interrupting','logical_escape','humor_deflection','conflict_avoidance','message_flooding','over_explaining','premature_concession','seeking_reassurance','defensive'), went_defensive (boolean), humor_deflection (boolean), emotional_trend ('escalating'|'calming'|'flat'). Only include a pattern with clear evidence in these messages. No markdown, just the JSON.`,
+              messages: [{ role: 'user', content: `Messages:\n${sample}` }] })
+          });
+          let patterns = [], went_defensive = false, humor_deflection = false, emotional_trend = 'flat';
+          try {
+            const bd = await bResp.json();
+            if (bResp.ok) {
+              const bj = parseJsonSafe(bd.content?.[0]?.text || '{}') || {};
+              patterns = Array.isArray(bj.patterns) ? bj.patterns.filter(p => typeof p === 'string') : [];
+              went_defensive = !!bj.went_defensive; humor_deflection = !!bj.humor_deflection;
+              emotional_trend = bj.emotional_trend || 'flat';
+            }
+          } catch {}
+          if (apology_count > 0 && !patterns.includes('early_apology')) patterns.push('early_apology');
+          // relationship type for the cross-mirror label
+          let relType = null;
+          try { const tr = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&select=type`, { headers: sbHeaders(req.token) }); const td = await tr.json(); relType = td?.[0]?.type || null; } catch {}
+          await sbInsert(req.token, 'user_behavior_snapshots', {
+            user_id: req.user.id, contact_id, conversation_id: null,
+            patterns: patterns.length ? patterns : null,
+            apology_count, humor_deflection, went_defensive,
+            message_flooding: false, emotional_trend,
+            relationship_type: relType
+          });
+          console.log('[behavior-on-upload] snapshot saved for', contact_id, '| patterns:', patterns.join(','));
+        } catch (e) { console.error('[behavior-on-upload]', e.message); }
+      })();
+    }
+
     res.json({
       person_a:             personA,
       person_b:             chunkDerivedPersonBName || extract('PERSON_B'),
@@ -2445,8 +2500,9 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
                 const rList = rLabels.length >= 3
                   ? (isTr ? `${rLabels[0]}, ${rLabels[1]} ve ${rLabels[2]}` : `${rLabels[0]}, ${rLabels[1]}, and ${rLabels[2]}`)
                   : (isTr ? `${rLabels[0]} ve ${rLabels[1]}` : `${rLabels[0]} and ${rLabels[1]}`);
+                const rListCap = rList.charAt(0).toUpperCase() + rList.slice(1);
                 cross_mirror = isTr
-                  ? `${rLabels[0].charAt(0).toUpperCase() + rLabels[0].slice(1)} ile ${rLabels.slice(1).join(', ')} ile olan konuşmalarda aynı şeyi fark ettik: ${pDesc}. Bu birden fazla ilişkinde tekrar eden bir kalıp olabilir.`
+                  ? `${rListCap} olan konuşmalarda aynı şeyi fark ettik: ${pDesc}. Bu, birden fazla ilişkinde tekrar eden bir kalıp olabilir.`
                   : `Across conversations with ${rList}, we noticed the same thing: you tend to ${pDesc}. This might be a pattern that repeats across multiple relationships.`;
               }
             }
