@@ -154,9 +154,11 @@ written in English even for Turkish chats (twin still replies in Turkish; cosmet
    user_roles vs contact_roles.
 4. **relationship_summary** is null in the analyze RESPONSE for the small path (saved to the contacts row async but
    not returned) — add it to the main analysis output.
-5. **Cost consolidation** — analyze-conversation fires 3 Sonnet calls that each re-read the full conversation
-   (main analysis + character profile + user profile); simulate-debrief fires 4 parallel Sonnet calls. Combining
-   extractions into fewer calls / using Haiku for the cheap ones would cut cost with no quality loss.
+5. **Cost.** DONE (safe subset): simulate-debrief's behavior + mirror calls moved Sonnet→Haiku (mechanical
+   extractions, off the recall path — verified no quality loss). DEFERRED (not worth the regression risk at current
+   ~8-contact volume, saves only pennies): analyze-conversation still fires 3 Sonnet calls that each re-read the full
+   conversation (main analysis + character profile + user profile) — merging character+user profile extraction into
+   one call is the bigger win, do it with the twinlab harness re-run when volume justifies it.
 
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.
