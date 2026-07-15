@@ -1064,6 +1064,68 @@ Write entirely in ${lang}.`;
   }
 });
 
+// "Before You Send" — the copilot for the highest-stakes moment: you wrote a draft and you're
+// scared to send it. Contact-aware (uses this person's profile + patterns), single Sonnet call:
+// how THEY will react, the risky line in your draft, how they'll read it, and a safer rewrite.
+app.post('/api/before-you-send', limiter, optionalAuth, async (req, res) => {
+  try {
+    const { draft, contactContext, language } = req.body;
+    if (!draft?.trim()) return res.status(400).json({ error: 'draft is required' });
+    // Paid feature (mirrors simulate-reply / strategy gating; free taste is the wow-screen rehearse).
+    if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
+
+    const lang = language || 'Turkish';
+    const name = contactContext?.name || 'the recipient';
+    const isTr = /^tr|turk/i.test(lang);
+    const charDoc = (() => { const cp = contactContext?.character_profile; return (cp && typeof cp === 'string') ? cp.trim() : ''; })();
+    const ctxStr = buildContactContext(contactContext);
+    const verdictLabels = isTr ? 'Gönder / Yumuşat / Yeniden düşün' : 'Send / Soften / Rethink';
+    const systemPrompt = `You are a protective, sharp communication coach. The user is about to send a DRAFT to ${name} and wants to know if they should. You know ${name} from past conversations — predict how THIS specific person reacts and catch exactly what could backfire. Be honest, not reassuring.
+${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${ctxStr}
+
+Analyze the draft. Return ONLY these labeled lines, all values in ${lang}:
+REACTION_1: [short label of a likely reaction from ${name}]
+REACTION_1_PCT: [integer]
+REACTION_2: [label]
+REACTION_2_PCT: [integer]
+REACTION_3: [label]
+REACTION_3_PCT: [integer]
+(the three percentages MUST sum to 100)
+RISKY_LINE: [copy the EXACT phrase from the draft most likely to backfire with ${name} specifically — verbatim, max ~12 words. If nothing is risky, write exactly: yok]
+RISK_REASON: [one sentence — why that phrase lands badly with ${name}, tied to their observed patterns. Omit this line if RISKY_LINE is "yok"]
+HOW_THEY_READ: [one sentence — how ${name} will most likely interpret this draft]
+REWRITE: [rewrite the draft to achieve the SAME goal with less friction for ${name}. Natural, human, keep the user's voice, 1-4 sentences on a single line, in ${lang}]
+VERDICT: [exactly one of: ${verdictLabels}]
+VERDICT_REASON: [one short sentence]
+No markdown, no commentary.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 900, system: systemPrompt, messages: [{ role: 'user', content: `Draft to ${name}:\n${draft.trim()}` }] })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'API error');
+    const text = data.content?.[0]?.text || '';
+    const extract = key => { const m = text.match(new RegExp(`^${key}:\\s*(.+)`, 'im')); return m ? m[1].trim() : null; };
+    const reactions = [1, 2, 3].map(n => ({ label: extract(`REACTION_${n}`), pct: parseInt(extract(`REACTION_${n}_PCT`) || '0', 10) })).filter(r => r.label);
+    const totalPct = reactions.reduce((s, r) => s + r.pct, 0);
+    if (totalPct > 0 && totalPct !== 100 && reactions[0]) reactions[0].pct += 100 - totalPct;
+    const riskyRaw = extract('RISKY_LINE');
+    const risky_line = (!riskyRaw || /^(yok|none|-|hiç|hicbir)$/i.test(riskyRaw)) ? null : riskyRaw;
+    const rewriteM = text.match(/^REWRITE:\s*([\s\S]*?)(?=\n[A-Z_]{3,}:|\s*$)/im);
+    res.json({
+      reactions,
+      risky_line,
+      risk_reason: risky_line ? extract('RISK_REASON') : null,
+      how_they_read: extract('HOW_THEY_READ'),
+      rewrite: rewriteM ? rewriteM[1].trim() : null,
+      verdict: extract('VERDICT'),
+      verdict_reason: extract('VERDICT_REASON')
+    });
+  } catch (e) { console.error('[before-you-send]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/next-steps', limiter, async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, scenario, theirMessage } = req.body;
