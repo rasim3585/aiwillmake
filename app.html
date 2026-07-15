@@ -2253,6 +2253,40 @@
     .archetype-share-btn { width: 100%; margin-top: 12px; padding: 13px; border: none; border-radius: 12px; background: var(--accent, #6d5bd0); color: #fff; font-weight: 700; font-size: .92rem; cursor: pointer; }
     .archetype-share-btn:active { transform: scale(.98); }
     .wow-archetype-teaser { background: rgba(140,120,220,.1); border: 1px dashed rgba(140,120,220,.4); }
+    /* ── Before You Send ── */
+    .bys-wrap { max-width: 560px; margin: 0 auto; padding: 4px 2px 40px; }
+    .bys-header { margin-bottom: 16px; }
+    .bys-eyebrow { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--accent); }
+    .bys-title { font-size: 1.5rem; font-weight: 800; margin: 6px 0 4px; }
+    .bys-sub { font-size: .88rem; color: var(--sec); line-height: 1.5; margin: 0; }
+    .bys-textarea { width: 100%; box-sizing: border-box; background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; color: var(--txt); font: inherit; font-size: .95rem; padding: 14px; outline: none; resize: vertical; line-height: 1.5; }
+    .bys-textarea:focus { border-color: var(--accent); }
+    .bys-analyze-btn { width: 100%; margin-top: 12px; padding: 14px; border: none; border-radius: 12px; background: var(--accent); color: #fff; font-weight: 700; font-size: .95rem; cursor: pointer; }
+    .bys-analyze-btn:disabled { opacity: .6; cursor: default; }
+    .bys-result { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .bys-block { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px; padding: 16px; }
+    .bys-block-lbl { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; }
+    .bys-react-row { display: flex; flex-direction: column; gap: 8px; }
+    .bys-react { }
+    .bys-react-top { display: flex; justify-content: space-between; font-size: .84rem; margin-bottom: 4px; }
+    .bys-react-pct { font-weight: 700; color: var(--sec); }
+    .bys-bar { height: 7px; border-radius: 4px; background: var(--bord); overflow: hidden; }
+    .bys-bar-fill { height: 100%; border-radius: 4px; }
+    .bys-risky { background: rgba(239,68,68,.09); border: 1px solid rgba(239,68,68,.35); }
+    .bys-risky-quote { font-size: .95rem; font-weight: 700; color: #ef8a7a; font-style: italic; margin-bottom: 8px; }
+    .bys-risky-reason { font-size: .86rem; color: var(--sec); line-height: 1.5; }
+    .bys-read { font-size: .88rem; color: var(--sec); line-height: 1.5; font-style: italic; }
+    .bys-rewrite { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3); }
+    .bys-rewrite-text { font-size: .95rem; color: var(--txt); line-height: 1.55; margin-bottom: 12px; }
+    .bys-rewrite-actions { display: flex; gap: 8px; }
+    .bys-mini-btn { flex: 1; padding: 10px; border: 1px solid var(--bord); border-radius: 10px; background: transparent; color: var(--sec); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+    .bys-mini-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .bys-verdict { text-align: center; padding: 16px; border-radius: 12px; font-weight: 700; }
+    .bys-verdict-badge { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .bys-verdict-reason { font-size: .84rem; font-weight: 400; opacity: .92; line-height: 1.45; }
+    .bys-v-send { background: rgba(34,197,94,.12); color: #4ade80; }
+    .bys-v-soften { background: rgba(234,179,8,.12); color: #eab308; }
+    .bys-v-rethink { background: rgba(239,68,68,.12); color: #f87171; }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -2862,6 +2896,21 @@
           Show their name (default: anonymous)
         </label>
         <button type="button" id="profileCardGenBtn" style="width:100%;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font:inherit;font-size:.87rem;font-weight:700;cursor:pointer;">Generate Card →</button>
+      </div>
+    </section>
+
+    <!-- Before You Send copilot -->
+    <section id="bysSection" class="hidden" data-screen-id="bys">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div class="bys-wrap">
+        <div class="bys-header">
+          <div class="bys-eyebrow">🛡️ Göndermeden önce</div>
+          <h2 class="bys-title" id="bysTitle">—</h2>
+          <p class="bys-sub">Göndermeye çekindiğin mesajı yapıştır — <b id="bysName">bu kişi</b> nasıl karşılar, neresi riskli, birlikte görelim.</p>
+        </div>
+        <textarea id="bysDraft" class="bys-textarea" rows="5" placeholder="Buraya göndermek istediğin mesajı yapıştır…"></textarea>
+        <button type="button" class="bys-analyze-btn" id="bysAnalyzeBtn">Nasıl karşılanır? →</button>
+        <div id="bysResult" class="bys-result hidden"></div>
       </div>
     </section>
 
@@ -5058,7 +5107,7 @@
 
     // ── Screen Manager ───────────────────────────────────────────
     const _ALL_SECTIONS = [
-      'homeSection','newConvWizard','personSection',
+      'homeSection','newConvWizard','personSection','bysSection',
       'smartStartSection','catSection','subcatSection','formCard',
       'continueSection','reviewSection','simulatorSection','convAnalysisResult',
       'screen-import','screen-processing','screen-wow','screen-goal','screen-strategy',
@@ -5415,6 +5464,65 @@
       } catch (e) { showToast('Paylaşım başarısız', 'error'); }
       finally { btn.textContent = old; btn.disabled = false; }
     }
+
+    // ── Before You Send copilot ──
+    let _bysCtx = null;
+    function openBeforeYouSend(ctx) {
+      const c = ctx || activeContactContext;
+      if (!c || !c.name) { showToast('Önce bir kişi seç', 'info'); return; }
+      if (window._userPlan === 'free') { showUpgradeModal(); return; }
+      _bysCtx = c;
+      document.getElementById('bysTitle').textContent = `${c.name}'e göndermeden önce`;
+      document.getElementById('bysName').textContent = c.name;
+      document.getElementById('bysDraft').value = '';
+      const res = document.getElementById('bysResult'); res.classList.add('hidden'); res.innerHTML = '';
+      App.navigateTo('bys');
+      window.scrollTo(0, 0);
+      setTimeout(() => document.getElementById('bysDraft').focus(), 60);
+    }
+    async function runBys() {
+      const draft = document.getElementById('bysDraft').value.trim();
+      if (!draft) { document.getElementById('bysDraft').focus(); return; }
+      const btn = document.getElementById('bysAnalyzeBtn');
+      btn.disabled = true; btn.textContent = 'Analiz ediliyor…';
+      const c = _bysCtx || activeContactContext || {};
+      const payload = { draft, language: (typeof lastFields !== 'undefined' && lastFields?.language) || 'Turkish',
+        contactContext: { name: c.name, type: c.type, relationship_state: c.relationship_state,
+          relationship_summary: c.relationship_summary, relationship_tier: c.relationship_tier ?? 2,
+          observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names || {} } };
+      try {
+        const r = await fetch('/api/before-you-send', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) }, body: JSON.stringify(payload) });
+        if (r.status === 402) { showUpgradeModal(); return; }
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'hata');
+        renderBysResult(d);
+      } catch (e) { showToast('Analiz başarısız, tekrar dene', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'Nasıl karşılanır? →'; }
+    }
+    function renderBysResult(d) {
+      const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const colors = ['#f87c7c', '#eab308', '#7ce0a4'];
+      const reactHtml = (d.reactions || []).map((r, i) => `
+        <div class="bys-react"><div class="bys-react-top"><span>${escH(r.label)}</span><span class="bys-react-pct">${r.pct}%</span></div>
+        <div class="bys-bar"><div class="bys-bar-fill" style="width:${Math.max(3, r.pct)}%;background:${colors[i % 3]}"></div></div></div>`).join('');
+      const v = (d.verdict || '').toLowerCase();
+      const vClass = /gönder|gonder|send/.test(v) ? 'bys-v-send' : /rethink|yeniden/.test(v) ? 'bys-v-rethink' : 'bys-v-soften';
+      const name = escH(_bysCtx?.name || 'Bu kişi');
+      const parts = [];
+      if (reactHtml) parts.push(`<div class="bys-block"><div class="bys-block-lbl">${name} nasıl karşılar</div><div class="bys-react-row">${reactHtml}</div></div>`);
+      if (d.risky_line) parts.push(`<div class="bys-block bys-risky"><div class="bys-block-lbl">⚠️ Riskli kısım</div><div class="bys-risky-quote">“${escH(d.risky_line)}”</div>${d.risk_reason ? `<div class="bys-risky-reason">${escH(d.risk_reason)}</div>` : ''}</div>`);
+      if (d.how_they_read) parts.push(`<div class="bys-block"><div class="bys-block-lbl">Nasıl okur</div><div class="bys-read">“${escH(d.how_they_read)}”</div></div>`);
+      if (d.rewrite) parts.push(`<div class="bys-block bys-rewrite"><div class="bys-block-lbl">✅ Daha iyi bir versiyon</div><div class="bys-rewrite-text">${escH(d.rewrite)}</div><div class="bys-rewrite-actions"><button type="button" class="bys-mini-btn" id="bysCopyBtn">📋 Kopyala</button><button type="button" class="bys-mini-btn primary" id="bysRehearseBtn">🎭 Prova et</button></div></div>`);
+      if (d.verdict) parts.push(`<div class="bys-verdict ${vClass}"><div class="bys-verdict-badge">${escH(d.verdict)}</div>${d.verdict_reason ? `<div class="bys-verdict-reason">${escH(d.verdict_reason)}</div>` : ''}</div>`);
+      const el = document.getElementById('bysResult');
+      el.innerHTML = parts.join(''); el.classList.remove('hidden');
+      const copyBtn = document.getElementById('bysCopyBtn');
+      if (copyBtn) copyBtn.onclick = () => { try { navigator.clipboard?.writeText(d.rewrite); showToast('Kopyalandı ✓', 'success'); } catch (_) {} };
+      const rehBtn = document.getElementById('bysRehearseBtn');
+      if (rehBtn) rehBtn.onclick = () => openSimulatorFresh(_bysCtx, 'Bu mesajı göndermeden önce prova');
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    document.getElementById('bysAnalyzeBtn')?.addEventListener('click', runBys);
 
     function wowStartTalking() {
       if (_wowContactId) {
@@ -6959,7 +7067,7 @@
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
             <button type="button" class="person-secondary-btn" id="personAnalyzeBtn">📩 Analyze reply</button>
-            <button type="button" class="person-secondary-btn" id="personBriefBtn">🔍 Review a message before sending</button>
+            <button type="button" class="person-secondary-btn" id="personBriefBtn">🛡️ Göndermeden önce kontrol et</button>
           </div>
 
           <div class="person-actions-list">
@@ -7132,9 +7240,7 @@
         });
 
         document.getElementById('personBriefBtn').addEventListener('click', () => {
-          hideAllMainSections();
-          selectMode(3);
-          document.getElementById('reviewSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          openBeforeYouSend(activeContactContext);
         });
 
         // ── Panel toggles ──
