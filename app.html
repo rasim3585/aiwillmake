@@ -2237,6 +2237,22 @@
     .wow-meta { font-size: .76rem; color: var(--muted); }
     /* Cards */
     .wow-card { border-radius: 14px; padding: 20px; }
+    /* ── Communication Archetype card ── */
+    .wow-archetype { padding: 0; background: none; }
+    .archetype-shareable { border-radius: 18px; padding: 26px 22px 20px; text-align: center;
+      background: linear-gradient(150deg, #6d5bd0 0%, #8b6fe0 45%, #b98be8 100%); color: #fff; }
+    .archetype-shareable .archetype-eyebrow { font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; opacity: .85; }
+    .archetype-emoji { font-size: 3.2rem; line-height: 1; margin: 10px 0 6px; }
+    .archetype-name { font-size: 1.7rem; font-weight: 800; letter-spacing: -.01em; }
+    .archetype-tagline { font-size: .95rem; opacity: .92; margin-top: 6px; line-height: 1.45; }
+    .archetype-traits { list-style: none; padding: 0; margin: 16px auto 0; max-width: 320px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+    .archetype-traits li { font-size: .84rem; line-height: 1.4; padding-left: 20px; position: relative; opacity: .96; }
+    .archetype-traits li::before { content: '·'; position: absolute; left: 6px; top: -2px; font-size: 1.3rem; font-weight: 800; }
+    .archetype-rel { font-size: .8rem; opacity: .9; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.22); line-height: 1.45; }
+    .archetype-brand { font-size: .72rem; font-weight: 700; opacity: .78; margin-top: 14px; letter-spacing: .04em; }
+    .archetype-share-btn { width: 100%; margin-top: 12px; padding: 13px; border: none; border-radius: 12px; background: var(--accent, #6d5bd0); color: #fff; font-weight: 700; font-size: .92rem; cursor: pointer; }
+    .archetype-share-btn:active { transform: scale(.98); }
+    .wow-archetype-teaser { background: rgba(140,120,220,.1); border: 1px dashed rgba(140,120,220,.4); }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -3228,6 +3244,24 @@
           <div class="wow-badge">✓ Twin built</div>
           <h2 class="wow-header-name" id="wowThemName">—</h2>
           <div class="wow-meta" id="wowConfidenceMeta"></div>
+        </div>
+
+        <!-- Communication Archetype — shareable hero (unlocks at 2+ analyzed contacts) -->
+        <div class="wow-card wow-archetype hidden" id="wowArchetypeCard">
+          <div id="wowArchetypeShareable" class="archetype-shareable">
+            <div class="archetype-eyebrow">İletişim Kişiliğin</div>
+            <div class="archetype-emoji" id="wowArchetypeEmoji">🕊️</div>
+            <div class="archetype-name" id="wowArchetypeName">—</div>
+            <div class="archetype-tagline" id="wowArchetypeTagline"></div>
+            <ul class="archetype-traits" id="wowArchetypeTraits"></ul>
+            <div class="archetype-rel" id="wowArchetypeRel"></div>
+            <div class="archetype-brand">aiwillmake.com</div>
+          </div>
+          <button type="button" class="archetype-share-btn" id="wowArchetypeShareBtn">📸 Paylaş / İndir</button>
+        </div>
+        <div class="wow-card wow-archetype-teaser hidden" id="wowArchetypeTeaser">
+          <div class="archetype-eyebrow">🔒 İletişim Kişiliğin</div>
+          <p class="wow-card-summary">Bir sohbet daha analiz et — birden fazla ilişkinde tekrar eden <b>iletişim kişiliğini</b> çıkaralım ve paylaşılabilir bir kart yapalım.</p>
         </div>
 
         <!-- Mirror Card — star -->
@@ -5325,6 +5359,61 @@
       document.getElementById('wowProfileBtn').onclick = () => {
         if (_wowContactId) loadPersonSection(_wowContactId);
       };
+
+      loadArchetype();
+    }
+
+    // Communication archetype — the shareable "your communication personality" hero.
+    // Unlocks at 2+ analyzed contacts (pulls the multi-upload behaviour that is the data moat).
+    async function loadArchetype() {
+      const card = document.getElementById('wowArchetypeCard');
+      const teaser = document.getElementById('wowArchetypeTeaser');
+      card.classList.add('hidden'); teaser.classList.add('hidden');
+      if (!accessToken) return;
+      try {
+        const r = await fetch('/api/communication-archetype', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!d.ready) {
+          if ((d.contacts_analyzed || 0) >= 1) teaser.classList.remove('hidden');
+          return;
+        }
+        const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const a = d.archetype;
+        document.getElementById('wowArchetypeEmoji').textContent = a.emoji || '✨';
+        document.getElementById('wowArchetypeName').textContent = a.name;
+        document.getElementById('wowArchetypeTagline').textContent = a.tagline || '';
+        document.getElementById('wowArchetypeTraits').innerHTML = (a.traits || []).map(t => `<li>${escH(t)}</li>`).join('');
+        const rels = Array.isArray(d.relationships) ? d.relationships : [];
+        const relText = rels.length >= 2
+          ? `${rels.slice(0, -1).join(', ')} ve ${rels[rels.length - 1]} olan konuşmalarında beliriyor.`
+          : '';
+        const relEl = document.getElementById('wowArchetypeRel');
+        relEl.textContent = relText; relEl.style.display = relText ? '' : 'none';
+        card.classList.remove('hidden');
+        document.getElementById('wowArchetypeShareBtn').onclick = shareArchetype;
+      } catch (_) {}
+    }
+
+    async function shareArchetype() {
+      const btn = document.getElementById('wowArchetypeShareBtn');
+      if (typeof html2canvas === 'undefined') { showToast('Görsel kütüphanesi yüklenemedi — sayfayı yenile', 'error'); return; }
+      const node = document.getElementById('wowArchetypeShareable');
+      const old = btn.textContent; btn.textContent = 'Hazırlanıyor…'; btn.disabled = true;
+      try {
+        const canvas = await html2canvas(node, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        const file = new File([blob], 'iletisim-kisiligim.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'İletişim Kişiliğim', text: 'aiwillmake.com ile iletişim kişiliğimi buldum 👇' });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a'); link.href = url; link.download = 'iletisim-kisiligim.png'; link.click();
+          URL.revokeObjectURL(url);
+          showToast('Görsel indirildi', 'success');
+        }
+      } catch (e) { showToast('Paylaşım başarısız', 'error'); }
+      finally { btn.textContent = old; btn.disabled = false; }
     }
 
     function wowStartTalking() {

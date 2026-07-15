@@ -2610,6 +2610,56 @@ app.patch('/api/user-profile', requireAuth, async (req, res) => {
   }
 });
 
+// ── Communication archetype — named, shareable "personality" from cross-relationship patterns ──
+// Deterministic (no per-view LLM cost), privacy-safe (about the USER only, no contact names/quotes),
+// unlocks at 2+ analyzed contacts so it pulls multi-upload (the data moat) and is a viral share object.
+const COMM_ARCHETYPES = {
+  early_apology:        { name: 'Erken Barıştıran', emoji: '🕊️', tagline: 'Daha ortada sorun yokken özrün hazır.', traits: ['Gerginliği anında dağıtmak istersin','İlişkiyi korumak için önce sen geri adım atarsın','Bazen hak etmediğin şeyler için bile özür dilersin'] },
+  premature_concession: { name: 'Erken Taviz Veren', emoji: '🤝', tagline: 'Karşı taraf daha bastırmadan pes edersin.', traits: ['Anlaşmazlıkta hızlı boyun eğersin','Huzuru haklı çıkmaya tercih edersin','İhtiyaçlarını sık sık ikinci plana atarsın'] },
+  conflict_avoidance:   { name: 'Çatışmadan Kaçan', emoji: '🌊', tagline: 'Gerginlik belirince konuyu yumuşatırsın.', traits: ['Zor konuları erteleme eğilimindesin','Ortam gerilince başka konuya kayarsın','Kırıcı olmaktansa susmayı seçersin'] },
+  over_explaining:      { name: 'Aşırı Açıklayan', emoji: '📝', tagline: 'Kısa cevap yerine paragraf yazarsın.', traits: ['Yanlış anlaşılmaktan çekinirsin','Her şeyi gerekçelendirme ihtiyacı duyarsın','Gerginlikte mesajların uzar'] },
+  humor_deflection:     { name: 'Espriyle Geçiştiren', emoji: '😅', tagline: 'Zorlaşınca espriye sığınırsın.', traits: ['Duygusal anları şakayla hafifletirsin','Ciddileşmekte zorlanabilirsin','Mizah senin kalkanın'] },
+  defensive:            { name: 'Savunmaya Geçen', emoji: '🛡️', tagline: 'Eleştiriyi hemen savunmayla karşılarsın.', traits: ['Kendini açıklama ihtiyacın hızlı devreye girer','Geri bildirimi tehdit gibi algılayabilirsin','Haklılığını kanıtlamaya odaklanırsın'] },
+  seeking_reassurance:  { name: 'Onay Arayan', emoji: '🫶', tagline: 'Sık sık "değil mi?" diye teyit ararsın.', traits: ['Karşının onayına değer verirsin','Belirsizlik seni tedirgin eder','İlişkinin sağlamlığını sık kontrol edersin'] },
+  message_flooding:     { name: 'Üst Üste Yazan', emoji: '💬', tagline: 'Tek mesaj yerine peş peşe yazarsın.', traits: ['Düşünceni parça parça gönderirsin','Sessizlik seni aceleye getirir','Heyecanda mesajların sıklaşır'] },
+  logical_escape:       { name: 'Mantığa Sığınan', emoji: '🧠', tagline: 'Duygu yükselince mantığa kaçarsın.', traits: ['Tartışmayı mantıkla çözmeye çalışırsın','Duyguları rasyonelleştirebilirsin','"Haklı" olmak "yakın" olmanın önüne geçebilir'] },
+  interrupting:         { name: 'Sözü Tamamlayan', emoji: '⚡', tagline: 'Karşı taraf bitirmeden atlarsın.', traits: ['Hızlı düşünür, hızlı yanıtlarsın','Bazen dinlemeden cevap verirsin','Enerjin karşıdakini bastırabilir'] },
+};
+const REL_LABEL_TR = { boss:'patronunla', partner:'partnerinle', family:'aile üyenle', friend:'arkadaşınla', ex:'eskiyle', colleague:'iş arkadaşınla', crush:'beğendiğin kişiyle', client:'müşteriyle', mother:'annenle', father:'babanla' };
+
+app.get('/api/communication-archetype', requireAuth, async (req, res) => {
+  try {
+    const r = await fetch(`${SUPABASE_REST}/user_behavior_snapshots?user_id=eq.${req.user.id}&select=contact_id,patterns,relationship_type&order=created_at.desc&limit=60`, { headers: sbHeaders(req.token) });
+    const snaps = await r.json();
+    const rows = Array.isArray(snaps) ? snaps.filter(s => s.contact_id && Array.isArray(s.patterns) && s.patterns.length) : [];
+    const distinct = new Set(rows.map(s => s.contact_id));
+    const patContacts = {}, patRelTypes = {};
+    for (const s of rows) {
+      for (const p of s.patterns) {
+        (patContacts[p] = patContacts[p] || new Set()).add(s.contact_id);
+        if (s.relationship_type) (patRelTypes[p] = patRelTypes[p] || new Set()).add(String(s.relationship_type).toLowerCase());
+      }
+    }
+    const ranked = Object.entries(patContacts).filter(([k]) => COMM_ARCHETYPES[k]).sort((a, b) => b[1].size - a[1].size);
+    const top = ranked[0];
+    if (!top || top[1].size < 2) {
+      return res.json({ ready: false, contacts_analyzed: distinct.size, needed: 2 });
+    }
+    const [patKey, contactSet] = top;
+    const arch = COMM_ARCHETYPES[patKey];
+    const relLabels = [...(patRelTypes[patKey] || [])].map(t => REL_LABEL_TR[t] || null).filter(Boolean).slice(0, 3);
+    const secondary = (ranked[1] && ranked[1][1].size >= 2 && COMM_ARCHETYPES[ranked[1][0]]) ? COMM_ARCHETYPES[ranked[1][0]].name : null;
+    res.json({
+      ready: true,
+      archetype: { key: patKey, name: arch.name, emoji: arch.emoji, tagline: arch.tagline, traits: arch.traits },
+      relationships: relLabels,
+      contacts_showing: contactSet.size,
+      contacts_analyzed: distinct.size,
+      secondary
+    });
+  } catch (e) { console.error('[archetype]', e.message); res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
   try {
     const { character, language } = req.body;
