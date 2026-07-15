@@ -1314,14 +1314,14 @@ app.post('/api/analyze-conversation', limiter, optionalAuth, async (req, res) =>
             const existingData = await existingProfileR.json();
             const existingProfile = existingData?.[0]?.character_profile || null;
             const userContentSmall = existingProfile
-              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 3000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 6000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
               : conversationText;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
               body: JSON.stringify({
                 model: 'claude-sonnet-4-6',
-                max_tokens: 1000,
+                max_tokens: 1800,
                 system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
 WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There are TWO senders: the chat OWNER (USER) and the CONTACT.
 
@@ -1463,7 +1463,7 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
               `FULL CONVERSATION:\n${conversationText.slice(0, 180000)}`
             ].filter(Boolean).join('\n\n');
             const userContentLarge = existingProfileLarge
-              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 3000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 6000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
               : profileInput;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
@@ -1612,14 +1612,14 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
           const existingUserData = await existingUserR.json();
           const existingUserProfile = existingUserData?.[0]?.profile_text || null;
           const userProfileContent = existingUserProfile
-            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 3000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
+            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 6000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
             : conversationText.slice(0, 120000);
           const up_r = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
             body: JSON.stringify({
               model: 'claude-sonnet-4-6',
-              max_tokens: 800,
+              max_tokens: 1500,
               system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER${personA ? ` named "${personA}"` : ''}), NOT the contact.${contact_name ? ` The USER is the sender who is NOT "${contact_name}" — "${contact_name}" is the contact and must NOT be profiled here. If "${contact_name}" is the more active or help-seeking party, the USER is still the OTHER person.` : ''}
 
 The USER is the person whose perspective we're building. Extract what we learn about THEM (the owner, not "${contact_name || 'the contact'}") from this conversation:
@@ -1628,7 +1628,7 @@ The USER is the person whose perspective we're building. Extract what we learn a
 - Their life details revealed: family members (names, relationships), work, location, interests, ongoing situations
 - People in their life mentioned (their kids, spouse, friends, colleagues — with names and relationships)
 
-Write 2-4 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". Be specific — capture names, facts, details. Only include what's actually revealed in the conversation. Do not invent.
+Write 3-5 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". BE EXHAUSTIVE: capture EVERY concrete fact revealed — every name and how they relate, every job/profession, city/neighborhood, hobby, pet, habit, and notable event — do NOT drop secondary details to keep it short. It is better to be complete than concise. Only include what's actually revealed in the conversation. Do not invent.
 
 If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve existing facts, add new ones, refine where the new conversation gives better information.
 
@@ -2480,7 +2480,7 @@ app.post('/api/build-user-profile', requireAuth, async (req, res) => {
     const existingData = await existingR.json();
     const existing = existingData?.[0]?.profile_text || null;
 
-    const userMsg = (existing ? `EXISTING PROFILE (enrich, don't replace):\n${existing.slice(0, 2000)}\n\n---\nCONVERSATIONS:\n` : '') + combinedText;
+    const userMsg = (existing ? `EXISTING PROFILE (enrich, don't replace):\n${existing.slice(0, 6000)}\n\n---\nCONVERSATIONS:\n` : '') + combinedText;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -2591,9 +2591,12 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         // (the old approach) missed entirely — a major recall failure for Turkish.
         const _trMap = { 'ç':'c','ğ':'g','ı':'i','İ':'i','ö':'o','ş':'s','ü':'u','Ç':'c','Ğ':'g','Ö':'o','Ş':'s','Ü':'u' };
         const norm = s => String(s || '').replace(/[çğıİöşüÇĞÖŞÜ]/g, m => _trMap[m] || m).toLowerCase();
+        // Also fold Turkish consonant softening so a stem matches across the mutation:
+        // kitap↔kitab(ım), köpek↔köpeğ(in), ağaç↔ağac(ı), kanat↔kanad(ı). Fold soft→hard.
+        const foldC = s => norm(s).replace(/[ğg]/g, 'k').replace(/b/g, 'p').replace(/d/g, 't');
         const _stop = new Set(['neydi','nedir','misin','musun','müsün','mısın','hangi','nasil','nasıl','benim','senin','onun','hatirliyor','hatırlıyor','soyle','söyle','diyorum','falan','sanki','yani']);
         const wordStems = [...new Set(
-          words.map(w => norm(w)).filter(w => w.length > 3 && !_stop.has(w)).map(w => w.slice(0, 5)).filter(s => s.length >= 4)
+          words.map(w => norm(w)).filter(w => w.length > 3 && !_stop.has(w)).map(w => foldC(w).slice(0, 5)).filter(s => s.length >= 4)
         )];
         if (wordStems.length > 0) {
           const chunksR = await fetch(
@@ -2624,7 +2627,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 const lines = text.split('\n');
                 const kept = new Set();
                 lines.forEach((line, i) => {
-                  const nl = norm(line);
+                  const nl = foldC(line);
                   if (!isJunkLine(line) && wordStems.some(s => nl.includes(s))) {
                     for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) kept.add(j);
                   }
@@ -2632,7 +2635,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
                 return [...kept].sort((a, b) => a - b).map(i => lines[i]).filter(l => !isJunkLine(l)).join('\n');
               };
               const scored = allChunks
-                .map(c => { const nt = norm(c.chunk_text); return { snippet: extractRelevantLines(c.chunk_text), score: wordStems.filter(s => nt.includes(s)).length }; })
+                .map(c => { const nt = foldC(c.chunk_text); return { snippet: extractRelevantLines(c.chunk_text), score: wordStems.filter(s => nt.includes(s)).length }; })
                 .filter(c => c.score > 0 && c.snippet)
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 6);
@@ -2651,7 +2654,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         const upR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
         const upData = await upR.json();
         const up = upData?.[0]?.profile_text;
-        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — facts about ${userLabel}, the person messaging you. CRITICAL: ${userLabel}'s family members listed here (spouse, parents, children, siblings) are COMPLETELY SEPARATE from your own family in WHO YOU ARE. When ${userLabel} says "eşim", "annem", "babam", "my wife", "my husband", "my spouse", or any possessive about their family — they mean the people listed HERE, never from WHO YOU ARE:\n${up.slice(0, 3000)}`;
+        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — facts about ${userLabel}, the person messaging you. CRITICAL: ${userLabel}'s family members listed here (spouse, parents, children, siblings) are COMPLETELY SEPARATE from your own family in WHO YOU ARE. When ${userLabel} says "eşim", "annem", "babam", "my wife", "my husband", "my spouse", or any possessive about their family — they mean the people listed HERE, never from WHO YOU ARE:\n${up.slice(0, 6000)}`;
       } catch (e) {}
     }
 

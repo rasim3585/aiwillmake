@@ -130,12 +130,19 @@ Empirically tested with synthetic Turkish WhatsApp chats carrying known ground-t
   analysis prompt and the user-profile extraction. → user-fact recall restored in tests.
 - `saveConversationChunks()` runs for ALL sizes (bulk insert, one request), fire-and-forget but lands in seconds
   (well before the slow profile) → the twin has verbatim memory even right after upload. Strips lone surrogates.
-- RAG is now Turkish-stem aware (diacritic-folded 5-char stems) → inflected forms match. Pure-RAG recall on
-  depth-planted facts went 2/6 → 4/6 with zero hallucination (misses were honest "don't know").
+- RAG is now Turkish-stem aware (diacritic-folded 5-char stems) AND folds consonant softening
+  (k↔ğ, p↔b, t↔d, ç↔c) → inflected + mutated forms match ("köpek"↔"köpeğin", "kitap"↔"kitabım").
+- Profile extraction made more EXHAUSTIVE (user-profile 800→1500 tok + "capture every concrete fact"
+  instruction; character small 1000→1800 tok) so secondary facts (job, hobby, place) aren't dropped.
+  Merge/carry slices bumped 3000→6000 so multi-upload accumulation doesn't truncate older facts.
 - `message_count` regex broadened across export locales.
 
-**Measured after fixes:** small chat 6/6 recall + correct false-bait denial; mid-size (120 KB) person_a correct +
-user-facts recalled; pure-RAG (worst-case, profile not ready) 4/6 no hallucination.
+**Measured after fixes (synthetic quizzes):** small chat 6/6 recall + correct false-bait denial;
+mid-size (120 KB) person_a correct + user-facts recalled; pure-RAG worst-case 2/6→4/6, zero hallucination;
+consonant-mutation recall ("köpek"→"köpeğin"→Zeus) now PASS; multi-upload: upload #2 does NOT overwrite
+upload #1's captured user facts, and contact-B's twin correctly knows user facts from contact-A's chat
+(cross-contact user knowledge — the "more uploads = knows me better" promise works). Note: profiles are
+written in English even for Turkish chats (twin still replies in Turkish; cosmetic, left as-is).
 
 **Remaining levers (roadmap, not yet done):**
 1. **Embeddings RAG** (biggest quality lever) — use the `embedding` column with pgvector + an embedding provider
