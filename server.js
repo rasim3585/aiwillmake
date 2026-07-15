@@ -64,7 +64,7 @@ app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }),
 
     if (['subscription_created', 'subscription_resumed', 'subscription_unpaused'].includes(eventName)) {
       if (userId && plan) {
-        const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+        const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
         const subResp = await fetch(`${SUPABASE_REST}/user_subscriptions`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
@@ -84,7 +84,7 @@ app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }),
 
     if (['subscription_cancelled', 'subscription_expired'].includes(eventName)) {
       if (userId) {
-        const svcKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+        const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
         await fetch(`${SUPABASE_REST}/user_subscriptions?user_id=eq.${userId}`, {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${svcKey}`, 'apikey': svcKey, 'Content-Type': 'application/json' },
@@ -102,16 +102,24 @@ app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }),
 });
 
 app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+)
-app.use(express.static(__dirname));
 
-app.get('/api/debug', (req, res) => {
-  const key = process.env.ANTHROPIC_API_KEY || '';
-  res.json({
-    version: 'SERVER VERSION: 4.0 - STRATEGIES',
-    api_key_prefix: key ? key.slice(0, 10) + '...' : 'NOT SET',
-    api_key_length: key.length,
-    node_env: process.env.NODE_ENV || 'not set'
-  });
+// ── Static serving (locked down) ──────────────────────────────────────────────
+// Only these files are publicly downloadable. Everything else in the project root
+// (server.js, package.json, test scripts, etc.) is NOT exposed. The HTML has no
+// local JS/CSS assets — all third-party libs load from a CDN — so an allow-list is safe.
+const PUBLIC_FILES = new Set([
+  '/', '/index.html', '/app.html', '/privacy.html',
+  '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
+]);
+// Route static ONLY through the allow-list. Do NOT chain a blanket express.static
+// after this — otherwise `/api/..%2fserver.js` (encoded traversal) skips the /api/
+// passthrough and reaches static, which normalizes back into the root and leaks source.
+const staticHandler = express.static(__dirname, { dotfiles: 'deny' });
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path === '/health') return next();
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (PUBLIC_FILES.has(req.path)) return staticHandler(req, res, next);
+  return res.status(404).send('Not found');
 });
 
 app.get('/api/config', (req, res) => {
@@ -158,15 +166,32 @@ const sbHeaders = (token) => ({
 });
 
 async function getUserPlan(userId, token) {
+  // Returns 'free' / plan name for a confirmed lookup, or null when the lookup itself
+  // FAILED (network/5xx/bad shape). Callers must treat null as "unknown", not "free",
+  // so a transient Supabase blip never fails closed on a paying customer.
   try {
     const r = await fetch(`${SUPABASE_REST}/user_subscriptions?user_id=eq.${userId}&select=plan,status`, {
       headers: sbHeaders(token)
     });
+    if (!r.ok) return null;
     const data = await r.json();
-    const sub = Array.isArray(data) ? data[0] : null;
+    if (!Array.isArray(data)) return null;
+    const sub = data[0] || null;
     return sub?.status === 'active' ? (sub.plan || 'free') : 'free';
-  } catch (_) { return 'free'; }
+  } catch (_) { return null; }
 }
+
+// Server-side paid-plan gate — mirrors the client-side window._userPlan checks so
+// paid-only endpoints can't be reached by calling the API directly.
+// Fails OPEN for authenticated users when the plan lookup errors (null): a rare outage
+// letting a free user through once is far better than 402-ing a paying customer mid-flow.
+async function isPaidUser(req) {
+  if (!req.user || !req.token) return false;
+  const plan = await getUserPlan(req.user.id, req.token);
+  if (plan === null) return true;
+  return plan !== 'free';
+}
+const FREE_GENERATION_LIMIT = 5;
 
 async function getCredits(token, userId) {
   const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
@@ -240,6 +265,8 @@ app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
     // ── Strategy card mode (Faz 3: goal → next-move) ──────────────────────────
     if (mode === 'strategy') {
       if (!goal) return res.status(400).json({ error: 'goal is required' });
+      // Strategy cards are a paid feature (client gates via window._userPlan) — enforce here too.
+      if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
       const lang = fields?.language || 'Turkish';
       const name = contactContext?.name || 'the other person';
       const charDoc = (() => {
@@ -282,6 +309,12 @@ ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr
     let creditsUsed = 0;
     if (req.user) {
       creditsUsed = await getCredits(req.token, req.user.id);
+      // Enforce the free-tier generation cap server-side (was UI-only before).
+      // Only cap a CONFIRMED free plan — a null (lookup failed) must not block a paying user.
+      const plan = await getUserPlan(req.user.id, req.token);
+      if (plan === 'free' && creditsUsed >= FREE_GENERATION_LIMIT) {
+        return res.status(402).json({ error: 'upgrade_required' });
+      }
     }
 
     const category = categories.categories.find(c => c.id === categoryId);
@@ -2515,6 +2548,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     if (history[history.length - 1]?.role !== 'user') {
       return res.status(400).json({ error: 'Last message must be from user' });
     }
+    // Simulator is a paid feature (client gates via window._userPlan) — enforce here too.
+    if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
     const lang = language || 'English';
     const name = character.name || 'the other person';
     const userLabel = character.user_name || character.character_profile?.user_name || 'the user';

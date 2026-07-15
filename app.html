@@ -3879,10 +3879,17 @@
           body: JSON.stringify({ categoryId: selectedCatId, subcategoryId: selectedSubId, fields, variation: variation || undefined, contactContext: activeContactContext || undefined })
         });
         if (res.status === 429) {
+          document.getElementById('captionsContainer').innerHTML = '';
           showToast("You're going too fast! Wait a few seconds and try again.", 'warning');
           return;
         }
+        if (res.status === 402) {
+          document.getElementById('captionsContainer').innerHTML = '';
+          showUpgradeModal('generate');
+          return;
+        }
         if (!res.ok) {
+          document.getElementById('captionsContainer').innerHTML = '';
           showToast('Something went wrong. Please try again.', 'error');
           return;
         }
@@ -3943,7 +3950,7 @@
             <div class="caption-metrics">
               ${reply_barrier ? `<div class="metric-item"><span class="metric-label">Ease of Reply</span><span class="metric-value ${scClass(reply_barrier)}">${escHtml(barrierMap[reply_barrier] || reply_barrier)}</span></div>` : ''}
               ${emotional_pressure ? `<div class="metric-item"><span class="metric-label">Emotional Risk</span><span class="metric-value ${prClass(emotional_pressure)}">${escHtml(erMap[emotional_pressure] || emotional_pressure)}</span></div>` : ''}
-              ${emotional_state ? `<div class="metric-item"><span class="metric-label" data-tooltip="Based on the message content — actual feelings may vary">Possible feeling</span><span class="metric-value es-${escHtml(emotional_state).toLowerCase()}">${escHtml(emotional_state)}</span></div>` : ''}
+              ${emotional_state ? `<div class="metric-item"><span class="metric-label" data-tooltip="Based on the message content — actual feelings may vary">Possible feeling</span><span class="metric-value es-${String(emotional_state).toLowerCase().replace(/[^a-z0-9-]/g,'')}">${escHtml(emotional_state)}</span></div>` : ''}
             </div>` : ''}
             ${hasAnalysis ? `
             <button type="button" class="show-analysis-btn">Show analysis ▾</button>
@@ -4045,16 +4052,23 @@
       const patterns = activeContactContext.observed_patterns;
       const hasPatterns = Array.isArray(patterns) && patterns.length > 0;
       const patId = (el.id || 'ctx') + '_pat';
+      const escA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       el.innerHTML = `
         <div class="ctx-badge-name">✨ Personalized for ${escH(name)}</div>
         ${hasPatterns ? `
-          <button type="button" class="ctx-badge-toggle"
-            onclick="var p=document.getElementById('${patId}');p.classList.toggle('open');this.textContent=p.classList.contains('open')?'Based on what we\'ve learned about ${escH(name).replace(/'/g,"\\'")} ▾':'Based on what we\'ve learned about ${escH(name).replace(/'/g,"\\'")} ›'">
+          <button type="button" class="ctx-badge-toggle" data-pat="${escA(patId)}" data-name="${escA(name)}">
             Based on what we've learned about ${escH(name)} ›
           </button>
           <div class="ctx-badge-patterns" id="${patId}">
             ${patterns.map(p => `<div class="ctx-badge-pattern-item">${escH(p)}</div>`).join('')}
           </div>` : ''}`;
+      const _ctxToggle = el.querySelector('.ctx-badge-toggle');
+      if (_ctxToggle) _ctxToggle.addEventListener('click', function () {
+        const p = document.getElementById(this.dataset.pat);
+        if (!p) return;
+        const open = p.classList.toggle('open');
+        this.textContent = `Based on what we've learned about ${this.dataset.name || ''} ${open ? '▾' : '›'}`;
+      });
       el.classList.remove('hidden');
     }
 
@@ -5551,13 +5565,15 @@
           container.classList.add('hidden');
           return;
         }
+        const escH = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        const safeField = s => String(s || '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40);
         container.innerHTML = fields.map(f => `
           <div class="goal-context-field">
-            <label class="goal-context-label">${f.label}</label>
+            <label class="goal-context-label">${escH(f.label)}</label>
             <input type="text"
-                   id="goalCtx_${f.field}"
-                   data-field="${f.field}"
-                   placeholder="${f.placeholder || ''}"
+                   id="goalCtx_${safeField(f.field)}"
+                   data-field="${escH(f.field)}"
+                   placeholder="${escH(f.placeholder || '')}"
                    class="goal-context-input"
                    ${f.required ? 'required' : ''}>
           </div>`).join('');
@@ -5673,6 +5689,12 @@
           body: JSON.stringify({ mode: 'strategy', goal, fields: { language: lang }, contactContext: activeContactContext })
         });
         const data = await r.json();
+        if (r.status === 402 || data.error === 'upgrade_required') {
+          cardsEl.innerHTML = '';
+          if (provaAllBtn) provaAllBtn.style.display = 'none';
+          showUpgradeModal();
+          return;
+        }
         if (!r.ok) throw new Error(data.error || 'Strategy could not be generated');
         const cards = Array.isArray(data.cards) ? data.cards : [];
         if (!cards.length) throw new Error('No strategy cards returned');
@@ -6702,7 +6724,7 @@
         if (!r.ok) throw new Error(data.error);
 
         const addEl = document.getElementById('contactsAddFormEl');
-        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         const patterns = data.observed_patterns || [];
         const displayName = data.name || '';
 
