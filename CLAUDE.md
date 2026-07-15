@@ -77,6 +77,30 @@ Rate limiting: single `express-rate-limit` limiter, **10 req/min/IP**, applied p
 
 ---
 
+## Infrastructure & free-tier operational risks (roadmap)
+The app runs on TWO free tiers, and **has real paying subscribers** — so pausing/sleeping is a real reliability problem, not just a nuisance.
+
+- **Supabase (free) — 7-day inactivity PAUSE. HIGH RISK.** Free projects pause after 7 days with no API
+  requests; a paused project = TOTAL outage (auth + data + everything) until manually restored from the dashboard.
+  Data survives a pause (90-day restore window) but is eventually deleted if left paused. As of 2026-07-15 the
+  project (dssgxmdcpeoifogiwqyw) was ACTIVE and Supabase had already emailed a freeze warning (hit the inactivity
+  threshold ~twice). Data volume is tiny (~128 chunks), nowhere near the 500 MB cap.
+  - **Mitigation shipped:** `GET /api/keepalive` (touches Supabase) + `.github/workflows/keepalive.yml` (daily cron).
+    Any request resets the 7-day timer. Add a free external uptime monitor (cron-job.org / UptimeRobot) hitting
+    `/api/keepalive` as a backup — GitHub scheduled workflows auto-disable after 60 days of no commits and can lag.
+- **Railway (free) — forced Serverless (scale-to-zero).** Site sleeps on inactivity; first request cold-starts
+  (Railway QUEUES it, no 502). Free plan also has a monthly usage/resource cap. Tolerable (no data loss), but the
+  keepalive cron also keeps it warm. `git push` did NOT auto-deploy in testing — may need Railway → Deployments →
+  "Deploy latest commit" (Cmd/Ctrl+K) or an Auto-Deploy toggle check.
+
+**Roadmap / recommendation:**
+1. **Now (free):** keepalive endpoint + cron (shipped) + external monitor backup. Deploy the pending commits.
+2. **The honest call for a paid product:** **Supabase Pro ($25/mo) removes the pause** and adds daily backups —
+   it's the load-bearing dependency; free-tier pausing is fundamentally incompatible with paying customers who
+   can't afford an outage. Railway can stay free (serverless) since cold-starts annoy but don't lose data (or
+   Railway Hobby $5/mo to remove sleep). If subscription revenue > ~$25/mo, upgrading Supabase is a no-brainer;
+   the free keepalive is a fragile stopgap (one missed ping window / CI hiccup → pause → outage → manual restore).
+
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.
 

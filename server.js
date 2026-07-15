@@ -2963,6 +2963,23 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
 
 app.get('/health', (_, res) => res.json({ ok: true }));
 
+// Keep-alive: an external cron (GitHub Actions / uptime monitor) hits this so the
+// request reaches Supabase and resets its free-tier 7-day inactivity pause timer.
+// Must actually TOUCH Supabase — pinging Railway alone does not keep Supabase awake.
+app.get('/api/keepalive', limiter, async (req, res) => {
+  let db = 'skip';
+  try {
+    if (supabaseUrl && process.env.SUPABASE_ANON_KEY) {
+      const r = await fetch(`${SUPABASE_REST}/contacts?select=id&limit=1`, {
+        headers: { apikey: process.env.SUPABASE_ANON_KEY, Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}` }
+      });
+      db = r.ok ? 'ok' : `err_${r.status}`;
+    }
+  } catch (_) { db = 'error'; }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true, db, ts: new Date().toISOString() });
+});
+
 process.stdin.resume();
 const port = process.env.PORT || 3000;
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');

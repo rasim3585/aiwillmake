@@ -1,0 +1,27 @@
+name: keepalive
+
+# Pings the app daily so Supabase (free tier) doesn't pause after 7 days of
+# inactivity, and Railway (serverless) gets woken. /api/keepalive touches the
+# Supabase REST API, which is what actually resets Supabase's inactivity timer.
+#
+# NOTE: GitHub disables scheduled workflows after 60 days with no repo commits,
+# and scheduled runs can be delayed under load. Keep a free external uptime
+# monitor (e.g. cron-job.org / UptimeRobot) pointed at the same URL as a backup.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'   # daily ~06:17 UTC (odd minute to avoid the top-of-hour rush)
+  workflow_dispatch: {}     # allows a manual run from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://www.aiwillmake.com/api/keepalive) && \
+            if [ "$code" = "200" ]; then echo "keepalive ok ($code)"; exit 0; fi
+            echo "attempt $i got $code, retrying…"; sleep 20
+          done
+          echo "keepalive failed after 3 attempts"; exit 1
