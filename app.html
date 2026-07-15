@@ -2287,6 +2287,24 @@
     .bys-v-send { background: rgba(34,197,94,.12); color: #4ade80; }
     .bys-v-soften { background: rgba(234,179,8,.12); color: #eab308; }
     .bys-v-rethink { background: rgba(239,68,68,.12); color: #f87171; }
+    /* ── Before You Send: home CTA + contact picker ── */
+    .bys-home-cta { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; margin-bottom: 14px; padding: 15px 16px; border: none; border-radius: 14px; cursor: pointer;
+      background: linear-gradient(120deg, #6d5bd0, #8b6fe0); color: #fff; }
+    .bys-home-cta:active { transform: scale(.99); }
+    .bys-home-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .bys-home-txt { display: flex; flex-direction: column; flex: 1; line-height: 1.3; }
+    .bys-home-txt b { font-size: .95rem; }
+    .bys-home-txt small { font-size: .76rem; opacity: .9; }
+    .bys-home-arrow { font-size: 1.2rem; opacity: .85; }
+    .bys-picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
+    .bys-picker { width: 100%; max-width: 480px; background: var(--bg2, #171614); border-radius: 18px 18px 0 0; padding: 18px 16px 24px; max-height: 70vh; overflow-y: auto; }
+    .bys-picker-head { font-size: .95rem; font-weight: 700; color: var(--txt); margin-bottom: 12px; text-align: center; }
+    .bys-picker-list { display: flex; flex-direction: column; gap: 8px; }
+    .bys-picker-item { display: flex; justify-content: space-between; align-items: center; padding: 13px 14px; border: 1px solid var(--bord); border-radius: 11px; background: var(--surf); color: var(--txt); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; }
+    .bys-picker-item:hover { border-color: var(--accent); }
+    .bys-picker-item span { font-size: .74rem; color: var(--muted); font-weight: 400; }
+    .bys-picker-cancel { width: 100%; margin-top: 12px; padding: 12px; border: none; border-radius: 11px; background: transparent; color: var(--sec); font: inherit; font-weight: 600; cursor: pointer; }
+    @media (min-width: 560px) { .bys-picker-overlay { align-items: center; } .bys-picker { border-radius: 18px; } }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -2865,6 +2883,11 @@
           <button type="button" class="btn-home-add" onclick="openNewConversation()">+ New person</button>
         </div>
       </div>
+      <button type="button" class="bys-home-cta" id="bysHomeCta">
+        <span class="bys-home-icon">🛡️</span>
+        <span class="bys-home-txt"><b>Bir mesaj mı yazdın?</b><small>Göndermeden önce nasıl karşılanacağını gör</small></span>
+        <span class="bys-home-arrow">→</span>
+      </button>
       <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Search people or conversations…" autocomplete="off" />
       <div id="homeConvList" class="home-conv-list"></div>
     </section>
@@ -5523,6 +5546,35 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     document.getElementById('bysAnalyzeBtn')?.addEventListener('click', runBys);
+
+    async function startBeforeYouSend() {
+      if (!accessToken) { showToast('Önce giriş yap', 'info'); return; }
+      if (window._userPlan === 'free') { showUpgradeModal(); return; }
+      let contacts = [];
+      try { contacts = await (await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } })).json(); } catch (_) {}
+      if (!Array.isArray(contacts) || !contacts.length) { showToast('Önce bir sohbet analiz et — sonra o kişiye göndermeden önce kontrol edebilirsin', 'info'); return; }
+      if (contacts.length === 1) return pickBysContact(contacts[0].id);
+      showBysPicker(contacts);
+    }
+    async function pickBysContact(id) {
+      try {
+        const c = await (await fetch('/api/contacts/' + id, { headers: { 'Authorization': `Bearer ${accessToken}` } })).json();
+        activeContactContext = { id: c.id, name: c.name, type: c.type, relationship_state: c.relationship_state, relationship_summary: c.relationship_summary, relationship_tier: c.relationship_tier, observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names, person_a: c.person_a };
+        openBeforeYouSend(activeContactContext);
+      } catch (_) { showToast('Kişi yüklenemedi', 'error'); }
+    }
+    function showBysPicker(contacts) {
+      const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      document.getElementById('bysPickerOverlay')?.remove();
+      const ov = document.createElement('div');
+      ov.id = 'bysPickerOverlay'; ov.className = 'bys-picker-overlay';
+      ov.innerHTML = `<div class="bys-picker"><div class="bys-picker-head">Kime göndereceksin?</div><div class="bys-picker-list">${contacts.map(c => `<button type="button" class="bys-picker-item" data-id="${escH(c.id)}">${escH(c.name || '?')}<span>${escH(c.type || '')}</span></button>`).join('')}</div><button type="button" class="bys-picker-cancel">Vazgeç</button></div>`;
+      document.body.appendChild(ov);
+      ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      ov.querySelector('.bys-picker-cancel').onclick = () => ov.remove();
+      ov.querySelectorAll('.bys-picker-item').forEach(b => b.onclick = () => { const id = b.dataset.id; ov.remove(); pickBysContact(id); });
+    }
+    document.getElementById('bysHomeCta')?.addEventListener('click', startBeforeYouSend);
 
     function wowStartTalking() {
       if (_wowContactId) {
