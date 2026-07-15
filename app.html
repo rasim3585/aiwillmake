@@ -2318,6 +2318,12 @@
     .wow-details-toggle { width: 100%; padding: 12px; border: 1px dashed var(--bord); border-radius: 12px; background: transparent; color: var(--sec); font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
     .wow-details-toggle:hover { border-color: var(--accent); color: var(--accent); }
     .wow-details { display: flex; flex-direction: column; gap: 14px; }
+    /* ── Danger zone (account deletion) ── */
+    .danger-zone { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--bord); }
+    .delete-account-btn { padding: 10px 16px; border: 1px solid rgba(239,68,68,.4); border-radius: 10px; background: transparent; color: #f87171; font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
+    .delete-account-btn:hover { background: rgba(239,68,68,.08); }
+    .delete-account-btn:disabled { opacity: .6; cursor: default; }
+    .danger-note { font-size: .74rem; color: var(--muted); margin: 8px 0 0; line-height: 1.4; }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -2917,6 +2923,10 @@
         <div class="user-profile-actions">
           <button id="userProfileSaveBtn" class="user-profile-save">Save</button>
           <span id="userProfileSaved" class="user-profile-saved hidden">✓ Saved</span>
+        </div>
+        <div class="danger-zone">
+          <button type="button" id="deleteAccountBtn" class="delete-account-btn">Hesabımı ve tüm verimi sil</button>
+          <p class="danger-note">Tüm kişilerin, sohbetlerin, profilin ve kayıtların kalıcı olarak silinir. Geri alınamaz.</p>
         </div>
       </div>
     </section>
@@ -5646,6 +5656,20 @@
       ov.querySelectorAll('.bys-picker-item').forEach(b => b.onclick = () => { const id = b.dataset.id; ov.remove(); pickBysContact(id); });
     }
     document.getElementById('bysHomeCta')?.addEventListener('click', startBeforeYouSend);
+    document.getElementById('deleteAccountBtn')?.addEventListener('click', async function () {
+      if (!accessToken) return;
+      const typed = prompt('Hesabın ve TÜM verin kalıcı olarak silinecek. Onaylamak için SIL yaz:');
+      if (typed == null) return;
+      if (typed.trim().toLocaleUpperCase('tr') !== 'SIL') { showToast('Silme iptal edildi', 'info'); return; }
+      this.disabled = true; this.textContent = 'Siliniyor…';
+      try {
+        const r = await fetch('/api/account', { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
+        if (!r.ok) throw new Error('fail');
+        showToast('Hesabın ve tüm verin silindi', 'success');
+        try { await sbClient?.auth.signOut(); } catch (_) {}
+        setTimeout(() => { location.href = '/'; }, 1200);
+      } catch (e) { showToast('Silme başarısız, tekrar dene', 'error'); this.disabled = false; this.textContent = 'Hesabımı ve tüm verimi sil'; }
+    });
     document.getElementById('wowDetailsToggle')?.addEventListener('click', function () {
       const d = document.getElementById('wowDetails');
       const open = d.classList.toggle('hidden') === false;

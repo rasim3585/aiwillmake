@@ -45,11 +45,15 @@ app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }),
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
     const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(req.body).digest('hex');
-    const signature = req.headers['x-signature'];
+    const signature = String(req.headers['x-signature'] || '');
 
-    console.log('[ls-webhook] digest:', digest?.slice(0,10), 'signature:', signature?.slice(0,10), 'match:', digest === signature);
+    // Constant-time compare (avoid leaking the signature via timing; also avoids logging it).
+    const dBuf = Buffer.from(digest, 'hex');
+    const sBuf = Buffer.from(signature, 'hex');
+    const valid = dBuf.length === sBuf.length && crypto.timingSafeEqual(dBuf, sBuf);
+    console.log('[ls-webhook] signature match:', valid);
 
-    if (digest !== signature) {
+    if (!valid) {
       console.error('[ls-webhook] signature mismatch');
       return res.status(400).json({ error: 'Invalid signature' });
     }
@@ -1800,6 +1804,11 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       })();
     }
 
+    // H3: only the paywalled user gets all mirror insights. Free/guest get the 2 shown on the
+    // wow screen — the rest were previously sent in full and readable in the network tab.
+    const _paidView = await isPaidUser(req);
+    const _allMirror = [extract('MIRROR_INSIGHT_1'), extract('MIRROR_INSIGHT_2'), extract('MIRROR_INSIGHT_3')].filter(Boolean);
+
     res.json({
       person_a:             personA,
       person_b:             chunkDerivedPersonBName || extract('PERSON_B'),
@@ -1824,7 +1833,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       how_user_addresses:   extract('ADDRESS_STYLE') || null,
       suggested_tier:       (() => { const v = extract('RELATIONSHIP_TIER'); return v === '1' ? 1 : v === '2' ? 2 : null; })(),
       tier_reason:          extract('TIER_REASON') || null,
-      mirror_insights:      [extract('MIRROR_INSIGHT_1'), extract('MIRROR_INSIGHT_2'), extract('MIRROR_INSIGHT_3')].filter(Boolean),
+      mirror_insights:      _paidView ? _allMirror : _allMirror.slice(0, 2),
       role_names:           (() => { const m = text.match(/^ROLE_NAMES_JSON:\s*(\{.+\})/m); if (!m) return {}; try { return JSON.parse(m[1]); } catch { return {}; } })(),
       relationship_loop:    (() => { const m = text.match(/^RELATIONSHIP_LOOP_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
       evidence:             (() => { const tq = extract('TWIN_QUOTE'); const ts = extract('TWIN_QUOTE_SHOWS'); const mq = extract('MIRROR_QUOTE'); const ms = extract('MIRROR_QUOTE_SHOWS'); const nul = v => !v || v === 'null'; return { twin: nul(tq) ? null : { quote: tq, shows: nul(ts) ? null : ts }, mirror: nul(mq) ? null : { quote: mq, shows: nul(ms) ? null : ms } }; })(),
@@ -2694,6 +2703,30 @@ app.patch('/api/user-profile', requireAuth, async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// Account & data deletion — makes privacy.html §5 ("data deleted on request") actually true.
+app.delete('/api/account', requireAuth, async (req, res) => {
+  const uid = req.user.id, token = req.token;
+  const del = (path) => fetch(`${SUPABASE_REST}/${path}`, { method: 'DELETE', headers: sbHeaders(token) }).catch(() => {});
+  try {
+    const convR = await fetch(`${SUPABASE_REST}/conversations?user_id=eq.${uid}&select=id`, { headers: sbHeaders(token) });
+    const convs = await convR.json().catch(() => []);
+    if (Array.isArray(convs) && convs.length) {
+      await del(`conversation_messages?conversation_id=in.(${convs.map(c => c.id).join(',')})`);
+    }
+    await del(`conversations?user_id=eq.${uid}`);
+    await del(`conversation_chunks?user_id=eq.${uid}`);
+    await del(`contacts?user_id=eq.${uid}`);
+    for (const t of ['user_profile', 'user_credits', 'user_subscriptions', 'user_behavior_snapshots', 'micro_feedback', 'passive_signals', 'prediction_ledger']) {
+      await del(`${t}?user_id=eq.${uid}`);
+    }
+    // best-effort: remove the auth user itself (needs the service role)
+    const svc = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+    if (svc) await fetch(`${supabaseUrl}/auth/v1/admin/users/${uid}`, { method: 'DELETE', headers: { apikey: svc, Authorization: `Bearer ${svc}` } }).catch(() => {});
+    console.log('[account-delete] wiped data for', uid);
+    res.json({ deleted: true });
+  } catch (e) { console.error('[account-delete]', e.message); res.status(500).json({ error: e.message }); }
 });
 
 // ── Communication archetype — named, shareable "personality" from cross-relationship patterns ──
