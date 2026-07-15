@@ -160,6 +160,22 @@ written in English even for Turkish chats (twin still replies in Turkish; cosmet
    conversation (main analysis + character profile + user profile) — merging character+user profile extraction into
    one call is the bigger win, do it with the twinlab harness re-run when volume justifies it.
 
+## Product features added (2026-07-15) — retention / virality / moat
+Shipped after a 5-lens product analysis (the data showed one-and-done use: 71 conversations but 89 messages).
+- **Cross-mirror on upload** — `analyze-conversation` now runs the behavior extractors (rule-based + a Haiku pattern
+  pass) over the USER's own messages in each uploaded chat and writes a `user_behavior_snapshots` row. So the flagship
+  "you apologize early with your boss AND partner AND friend" insight fires from the first analyses instead of needing
+  3+ roleplay sessions (which real users never do). Fixed a Turkish grammar bug in the cross_mirror sentence.
+- **Communication Archetype** — `GET /api/communication-archetype` (requireAuth) aggregates the snapshots → dominant
+  cross-relationship pattern → a named, shareable "personality" (e.g. "Erken Barıştıran 🕊️"). Deterministic (no
+  per-view LLM), privacy-safe (about the USER only), unlocks at 2+ contacts (pulls multi-upload). Rendered as a gradient
+  hero card on the wow screen with html2canvas share/download; 1-contact teaser nudges the 2nd upload.
+- **Before You Send** — `POST /api/before-you-send` (optionalAuth, **paid-gated**, single Sonnet call, contact-aware):
+  paste a draft → 3 weighted reactions from THIS person, the exact risky line + why it backfires, how they'll read it,
+  a lower-friction rewrite, and a Send/Soften/Rethink verdict. Frontend `bysSection` + a home hero CTA ("Bir mesaj mı
+  yazdın?") + contact picker; the person section's old "review before sending" button now opens this. The rewrite has
+  copy + "rehearse against the twin" actions. This is the retention keystone (one-and-done → per-message ritual).
+
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.
 
