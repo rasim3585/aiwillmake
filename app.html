@@ -2305,6 +2305,15 @@
     .bys-picker-item span { font-size: .74rem; color: var(--muted); font-weight: 400; }
     .bys-picker-cancel { width: 100%; margin-top: 12px; padding: 12px; border: none; border-radius: 11px; background: transparent; color: var(--sec); font: inherit; font-weight: 600; cursor: pointer; }
     @media (min-width: 560px) { .bys-picker-overlay { align-items: center; } .bys-picker { border-radius: 18px; } }
+    /* ── Return-moment outcome prompt ── */
+    .outcome-prompt-card { background: linear-gradient(135deg, rgba(109,91,208,.14), rgba(139,111,224,.08)); border: 1px solid rgba(139,111,224,.35); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .op-q { font-size: .92rem; font-weight: 700; color: var(--txt); margin: 0 0 8px; }
+    .op-msg { font-size: .82rem; color: var(--sec); font-style: italic; margin-bottom: 12px; line-height: 1.4; }
+    .op-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .op-btn { flex: 1 1 auto; padding: 10px 12px; border: 1px solid var(--bord); border-radius: 10px; background: var(--surf); color: var(--txt); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .op-btn:hover { border-color: var(--accent); }
+    .op-skip { flex-basis: 100%; color: var(--muted); font-weight: 500; }
+    .op-confirm { font-size: .9rem; font-weight: 700; color: #4ade80; text-align: center; padding: 4px; }
     .wow-card-eyebrow { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 10px; }
     .wow-card-summary { font-size: .88rem; color: var(--sec); margin: 0 0 10px; line-height: 1.5; }
     /* Mirror Card — star */
@@ -2911,6 +2920,7 @@
     <!-- Person Screen -->
     <section id="personSection" class="hidden" data-screen-id="person">
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div id="outcomePrompt" class="hidden"></div>
       <div id="personContent"></div>
       <button type="button" class="person-share-profile-btn" id="personShareProfileBtn">📊 Share Profile Card</button>
       <div class="profile-card-inline-panel" id="profileCardPanel">
@@ -4456,6 +4466,53 @@
       } catch (e) { console.warn('[outcome]', e.message); }
     }
 
+    // Return-moment outcome capture: when you come back to a contact, ask how the last
+    // message you sent them actually went. Fills the (dead) outcome data + feeds the twin.
+    async function maybeShowOutcomePrompt(contactId, contactName) {
+      const box = document.getElementById('outcomePrompt');
+      if (!box) return;
+      box.classList.add('hidden'); box.innerHTML = '';
+      if (!accessToken) return;
+      try {
+        const convs = await (await fetch('/api/conversations', { headers: { 'Authorization': `Bearer ${accessToken}` } })).json();
+        if (!Array.isArray(convs)) return;
+        let target = null;
+        for (const cv of convs) {
+          if (cv.contact_id !== contactId || cv.id === currentConvId) continue; // skip the active session (too soon)
+          const sent = (cv.conversation_messages || []).filter(m => m.role === 'sent' && !m.outcome && m.content);
+          if (sent.length) { target = { convId: cv.id, msg: sent[sent.length - 1] }; break; }
+        }
+        if (target) renderOutcomePrompt(box, target, contactName);
+      } catch (_) {}
+    }
+    function renderOutcomePrompt(box, target, contactName) {
+      const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const c = target.msg.content;
+      const preview = c.length > 90 ? c.slice(0, 90) + '…' : c;
+      box.innerHTML = `
+        <div class="outcome-prompt-card">
+          <div class="op-q">${escH(contactName || 'Bu kişiye')}'e gönderdiğin mesaj nasıl gitti?</div>
+          <div class="op-msg">“${escH(preview)}”</div>
+          <div class="op-btns">
+            <button type="button" class="op-btn" data-o="positive" data-n="İyi karşılandı">😊 İyi gitti</button>
+            <button type="button" class="op-btn" data-o="neutral" data-n="Nötr karşılandı">😐 İdare eder</button>
+            <button type="button" class="op-btn" data-o="negative" data-n="Ters gitti">😔 Ters gitti</button>
+            <button type="button" class="op-btn op-skip" data-o="" data-n="">Henüz bilmiyorum</button>
+          </div>
+        </div>`;
+      box.classList.remove('hidden');
+      box.querySelectorAll('.op-btn').forEach(b => b.onclick = async () => {
+        const o = b.dataset.o;
+        if (!o) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        box.innerHTML = '<div class="outcome-prompt-card"><div class="op-confirm">✓ Kaydedildi — twin bundan öğreniyor</div></div>';
+        await postOutcome(target.msg.id, o, b.dataset.n, target.convId);
+        try { await fetch(`/api/contacts/${contactId_for_outcome()}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }, body: JSON.stringify({ last_outcome: o, last_outcome_at: new Date().toISOString() }) }); } catch (_) {}
+        if (activeContactContext) activeContactContext.last_outcome = o;
+        setTimeout(() => { box.classList.add('hidden'); box.innerHTML = ''; }, 2200);
+      });
+    }
+    function contactId_for_outcome() { return activeContactContext?.id; }
+
     function showConvPanel() {
       document.getElementById('convPanel').classList.add('open');
       document.getElementById('convOverlay').classList.add('visible');
@@ -5512,7 +5569,8 @@
       const payload = { draft, language: (typeof lastFields !== 'undefined' && lastFields?.language) || 'Turkish',
         contactContext: { name: c.name, type: c.type, relationship_state: c.relationship_state,
           relationship_summary: c.relationship_summary, relationship_tier: c.relationship_tier ?? 2,
-          observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names || {} } };
+          observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names || {},
+          last_outcome: c.last_outcome || null } };
       try {
         const r = await fetch('/api/before-you-send', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) }, body: JSON.stringify(payload) });
         if (r.status === 402) { showUpgradeModal(); return; }
@@ -7079,9 +7137,11 @@
           relationship_summary: c.relationship_summary || null,
           character_profile: c.character_profile || null,
           person_a: c.character_profile?.user_name || null,
-          relationship_tier: c.relationship_tier ?? 2
+          relationship_tier: c.relationship_tier ?? 2,
+          last_outcome: c.last_outcome || null
         };
         updatePrevMsgFieldVisibility();
+        maybeShowOutcomePrompt(contactId, c.name);
 
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const convs = c.conversations || [];
