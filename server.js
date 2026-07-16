@@ -278,6 +278,20 @@ async function isPaidUser(req) {
 }
 const FREE_GENERATION_LIMIT = 5;
 
+// WhatsApp exports are chronological — a head-only slice reads the OLDEST part
+// and never sees the newest facts (kids born, moves, new jobs live at the END).
+// Sample three windows (head + middle + tail) so extraction covers the origin
+// story, the mid-life of the relationship, and current reality.
+function sampleConversation(text, sliceLen) {
+  if (!text || text.length <= sliceLen * 3) return text || '';
+  const midStart = Math.floor(text.length / 2 - sliceLen / 2);
+  return text.slice(0, sliceLen)
+    + '\n\n[... part of the conversation omitted ...]\n\n'
+    + text.slice(midStart, midStart + sliceLen)
+    + '\n\n[... part of the conversation omitted ...]\n\n'
+    + text.slice(-sliceLen);
+}
+
 async function getCredits(token, userId) {
   const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
   const res = await fetch(url, { headers: sbHeaders(token) });
@@ -1754,9 +1768,10 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
           const existingUserR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
           const existingUserData = await existingUserR.json();
           const existingUserProfile = existingUserData?.[0]?.profile_text || null;
+          const convSample = sampleConversation(conversationText, 60000);
           const userProfileContent = existingUserProfile
-            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
-            : conversationText.slice(0, 120000);
+            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION:\n${convSample}`
+            : convSample;
           const up_r = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -1772,6 +1787,7 @@ The USER is the person whose perspective we're building. Extract what we learn a
 - People in their life mentioned (their kids, spouse, friends, colleagues — with names and relationships)
 
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". BE EXHAUSTIVE: capture EVERY concrete fact revealed — every name and how they relate, every job/profession, city/neighborhood, hobby, pet, habit, and notable event — do NOT drop secondary details to keep it short. It is better to be complete than concise. Only include what's actually revealed in the conversation. Do not invent.
+HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Kemal'i okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Kemal — likely his son; a second Kemal may be a friend"). A profile that misses a family member's name is a failed profile.
 
 If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve existing facts, add new ones, refine where the new conversation gives better information.
 
@@ -2672,7 +2688,7 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
 
 app.post('/api/build-user-profile', requireAuth, async (req, res) => {
   try {
-    const chunksR = await fetch(`${SUPABASE_REST}/conversation_chunks?user_id=eq.${req.user.id}&select=chunk_text&order=chunk_index&limit=30`, {
+    const chunksR = await fetch(`${SUPABASE_REST}/conversation_chunks?user_id=eq.${req.user.id}&select=chunk_text&order=created_at.asc&limit=120`, {
       headers: sbHeaders(req.token)
     });
     const chunks = await chunksR.json();
@@ -2681,7 +2697,9 @@ app.post('/api/build-user-profile', requireAuth, async (req, res) => {
       return res.json({ profile_text: '', message: 'no_conversations' });
     }
 
-    const combinedText = chunks.map(c => c.chunk_text).join('\n').slice(0, 40000);
+    // head+middle+tail sample across ALL the user's chats — the old head-only 40K
+    // read a fraction of one chat's oldest messages and missed family names entirely.
+    const combinedText = sampleConversation(chunks.map(c => c.chunk_text).join('\n'), 60000);
 
     const existingR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
     const existingData = await existingR.json();
@@ -2703,7 +2721,8 @@ Extract what we learn about the USER across all these conversations:
 - Life details: family members (names, relationships), work, location, interests
 - People in their life (kids, spouse, friends — with names and relationships)
 
-Write 2-4 paragraphs in plain prose, third person, referring to the user as "the user". Be specific — capture names, facts, details revealed across the conversations. Only include what's actually revealed. Do not invent.
+Write 3-5 paragraphs in plain prose, third person, referring to the user as "the user". BE EXHAUSTIVE — capture every name, relationship, job, place, hobby, and notable event revealed across the conversations. Only include what's actually revealed. Do not invent.
+HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context, capture it with the inferred relationship; if ambiguous between two people, record both readings. A profile that misses a family member's name is a failed profile.
 
 After the profile, write exactly:
 USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
