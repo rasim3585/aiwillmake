@@ -21,6 +21,50 @@ User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server build
 contact with Claude → user practices hard conversations against that contact's AI twin, generates messages,
 and analyzes replies. Auth via Supabase (Google OAuth + email/pw). Payments via LemonSqueezy.
 
+## ROADMAP — prioritized pending work (verified sweep 2026-07-16)
+Every item below was VERIFIED against code + live prod (3-agent sweep); nothing else is parked — no hidden
+TODO/FIXME markers remain in code. Quick wins already shipped 2026-07-16 (commit ad7609f): OG/Twitter images wired
+on both pages, canonical/og:url → www, og:image dims corrected to real 1706×926, hidden-sandbox fetch guarded,
+compose Language dropdown defaults to UI language, setup-chunks-table RLS template (d4aef25).
+
+**🔴 Now:**
+1. **[USER] Supabase Pro ($25/mo)** — the one structural risk: free tier PAUSES after 7 idle days = total outage
+   for paying customers; keepalive cron is a fragile stopgap. If MRR > ~$25, upgrade is a no-brainer.
+2. **[USER] Next deploy** picks up the pushed polish commits (nothing broken without it — all cosmetic).
+
+**🟡 Soon (trigger-bound):**
+3. **[CLAUDE] Guest cap server-side** (H2 guest half) — guest 3-use ceiling lives only in `localStorage`; a direct
+   API caller gets unlimited generations within the 10/min limiter. Small fix. Trigger: Anthropic bill anomaly OR
+   before any marketing push.
+4. **[BOTH] H4-full: the 8 no-auth AI endpoints** (detect-category, goal-context, analyze-reply, likely-responses,
+   rehearse, next-steps, review-message, sandbox-simulate) — IP rotation can burn budget past the limiters.
+   Product decision needed on which stay public for the guest funnel. Same trigger as #3.
+5. **[CLAUDE] i18n phase-2 taxonomy** (~47 compose category/type/country strings; extension path documented in the
+   Internationalization section). Trigger: first real EN/ES users.
+6. **[USER→CLAUDE] Resend email outcome loop** — blocked on user creating `RESEND_API_KEY` (resend.com, free
+   3k/mo); then Claude builds send helper + 24-48h "nasıl gitti?" trigger. See memory `project-todo-resend-email-loop`.
+7. **[CLAUDE] Full e2e re-run** — suite hasn't done a complete pass since the paid-gating + i18n changes.
+   Trigger: before the next big feature.
+
+**🟢 Parked (deliberate, with wake-up conditions):**
+8. **Embeddings RAG** (biggest twin-quality lever; needs provider key + backfill + twinlab regression run) —
+   user's call: wait for negative quality feedback. When it fires, bundle #9 and #10 into the same session.
+9. **Twin accuracy calibration** — `prediction_ledger` ("AI was right/wrong") has both write legs wired but is
+   never read back into any prompt; `micro_feedback`/`passive_signals` are write-only. Data accrues meanwhile;
+   `user_behavior_snapshots` is ALIVE (feeds simulate-debrief cross-mirror + archetype) — do NOT bundle it with
+   the dead tables.
+10. **role_names owner split** (flat map mixes both people's relatives into RAG) + **profiles written in English**
+    (cosmetic; twin still replies in Turkish) — touch the same prompts, bundle with #8.
+11. **analyze-conversation cost consolidation** (3 Sonnet calls each re-read the conversation; 4 on large path;
+    merge character+user profile extraction) — saves pennies at current volume, recall-regression risk; do with
+    the twinlab harness when volume justifies. Also: small-path analyze response still returns
+    `relationship_summary: null` (saved async to contacts but not returned — minor).
+12. **Dead markup in index.html** (~150-line hidden sandbox section + ~260-line "REMOVED SECTIONS" comment block) —
+    delete when the import-first launch is considered final; recoverable from git history.
+13. **[USER] Railway hygiene** — delete 3 dead `STRIPE_*` vars; optionally rotate the service-role key
+    (⚠ Railway's var is named `SUPABASE_SERVICE_KEY` — write the new key to that exact name or payments silently
+    break; code also accepts `SUPABASE_SERVICE_ROLE_KEY` since the C2 fix).
+
 ## Stack & layout
 - **Backend:** single file `server.js` (~2940 lines), Node + Express 5. Serves `/api/*` and static files.
 - **Frontend:** no build step. `index.html` (marketing landing) + `app.html` (~8900-line SPA, hand-rolled
