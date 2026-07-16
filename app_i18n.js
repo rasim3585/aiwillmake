@@ -142,3 +142,19 @@ Object.assign(window.I18N_C, {
   "Free limit reached.": { "tr":"Ücretsiz sınıra ulaşıldı.", "en":"Free limit reached.", "es":"Límite gratuito alcanzado." },
   "/mo": { "tr":"/ay", "en":"/mo", "es":"/mes" }
 });
+
+/* Know-me nudge (wow screen) */
+Object.assign(window.I18N_C, {
+  "🧠 İkizler seni sohbetlerinden tanır": { "tr":"🧠 İkizler seni sohbetlerinden tanır", "en":"🧠 Twins know you from your chats", "es":"🧠 Los gemelos te conocen por tus chats" },
+  "Sohbette hiç geçmemiş şeyi bilemezler — eşinin, çocuklarının isimleri gibi. Bir cümleyle tanıt, her ikiz anında öğrensin:": {
+    "tr":"Sohbette hiç geçmemiş şeyi bilemezler — eşinin, çocuklarının isimleri gibi. Bir cümleyle tanıt, her ikiz anında öğrensin:",
+    "en":"They can't know what was never typed in a chat — like your spouse's or kids' names. Introduce yourself in one line and every twin learns it instantly:",
+    "es":"No pueden saber lo que nunca se escribió en un chat — como los nombres de tu pareja o tus hijos. Preséntate en una línea y cada gemelo lo aprende al instante:" },
+  "örn. Eşim Ayşe, çocuklarım Ali (7) ve Duru (4). Arkadaşlarım bana Memo der.": {
+    "tr":"örn. Eşim Ayşe, çocuklarım Ali (7) ve Duru (4). Arkadaşlarım bana Memo der.",
+    "en":"e.g. My wife is Ayşe, my kids are Ali (7) and Duru (4). Friends call me Memo.",
+    "es":"p. ej. Mi esposa es Ayşe, mis hijos son Ali (7) y Duru (4). Mis amigos me llaman Memo." },
+  "Ekle": { "tr":"Ekle", "en":"Add", "es":"Añadir" },
+  "Geç": { "tr":"Geç", "en":"Skip", "es":"Omitir" },
+  "✓ Eklendi — tüm ikizler artık biliyor": { "tr":"✓ Eklendi — tüm ikizler artık biliyor", "en":"✓ Added — every twin now knows", "es":"✓ Añadido — todos los gemelos ya lo saben" }
+});

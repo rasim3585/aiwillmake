@@ -3519,6 +3519,20 @@
           </div>
         </div>
 
+        <!-- Know-me nudge: twins only know what the chats contain — let the user seed
+             core facts (spouse/kids/nickname) into user_profile once. Shown until used
+             or dismissed (localStorage profile_nudge_done). -->
+        <div class="wow-card hidden" id="wowKnowMe" style="border-color:rgba(160,126,224,.4)">
+          <div class="wow-card-eyebrow">🧠 İkizler seni sohbetlerinden tanır</div>
+          <p class="wow-card-summary" style="margin:6px 0 10px">Sohbette hiç geçmemiş şeyi bilemezler — eşinin, çocuklarının isimleri gibi. Bir cümleyle tanıt, her ikiz anında öğrensin:</p>
+          <textarea id="wowKnowMeTa" class="wow-rehearse-textarea" rows="2" placeholder="örn. Eşim Ayşe, çocuklarım Ali (7) ve Duru (4). Arkadaşlarım bana Memo der."></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="wow-rehearse-btn" id="wowKnowMeSave" style="flex:1">Ekle</button>
+            <button class="wow-rehearse-again" id="wowKnowMeSkip" style="flex:0 0 auto">Geç</button>
+          </div>
+          <div class="hidden" id="wowKnowMeDone" style="color:var(--ok,#7fb069);font-size:.85rem;margin-top:8px">✓ Eklendi — tüm ikizler artık biliyor</div>
+        </div>
+
         <!-- Secondary depth, collapsed — keeps the first glance focused on the 2-3 cards that land -->
         <button type="button" class="wow-details-toggle" id="wowDetailsToggle">🔎 Daha fazla detay <span id="wowDetailsArrow">›</span></button>
         <div class="wow-details hidden" id="wowDetails">
@@ -5650,6 +5664,9 @@
       // details start collapsed on every fresh wow
       document.getElementById('wowDetails')?.classList.add('hidden');
       const _arr = document.getElementById('wowDetailsArrow'); if (_arr) _arr.textContent = '›';
+      // Know-me nudge: only for signed-in users who haven't used or dismissed it
+      const _km = document.getElementById('wowKnowMe');
+      if (_km) _km.classList.toggle('hidden', !accessToken || localStorage.getItem('profile_nudge_done') === '1');
 
       loadArchetype();
     }
@@ -5813,6 +5830,43 @@
       const d = document.getElementById('wowDetails');
       const open = d.classList.toggle('hidden') === false;
       document.getElementById('wowDetailsArrow').textContent = open ? '▾' : '›';
+    });
+
+    // Know-me nudge: append user-provided core facts to the global user_profile so
+    // EVERY twin knows them immediately (names never typed in any chat can't be
+    // learned any other way).
+    document.getElementById('wowKnowMeSave')?.addEventListener('click', async () => {
+      const ta = document.getElementById('wowKnowMeTa');
+      const text = (ta.value || '').trim();
+      if (!text || !accessToken) return;
+      const btn = document.getElementById('wowKnowMeSave');
+      btn.disabled = true;
+      try {
+        const cur = await fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
+          .then(r => r.json()).catch(() => ({ profile_text: '' }));
+        const existing = (cur.profile_text || '').trimEnd();
+        const marker = 'USER-PROVIDED FACTS (written by the user directly — authoritative, trust over extracted guesses):';
+        const updated = existing.includes(marker)
+          ? existing + '\n- ' + text
+          : (existing ? existing + '\n\n' : '') + marker + '\n- ' + text;
+        const r = await fetch('/api/user-profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ profile_text: updated })
+        });
+        if (!r.ok) throw new Error('save failed');
+        localStorage.setItem('profile_nudge_done', '1');
+        ta.classList.add('hidden');
+        btn.closest('div').classList.add('hidden');
+        document.getElementById('wowKnowMeDone').classList.remove('hidden');
+      } catch (e) {
+        console.error('[know-me]', e);
+        btn.disabled = false;
+      }
+    });
+    document.getElementById('wowKnowMeSkip')?.addEventListener('click', () => {
+      localStorage.setItem('profile_nudge_done', '1');
+      document.getElementById('wowKnowMe').classList.add('hidden');
     });
 
     function wowStartTalking() {
