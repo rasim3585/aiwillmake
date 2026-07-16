@@ -36,6 +36,18 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again in a minute.' }
 });
 
+// Practice chat gets its OWN bucket: `limiter` is one shared 10/min/IP pool across
+// every route, and a rapid-fire twin conversation (each send = 1 simulate call, plus
+// background app calls) legitimately exceeds it — the user then saw a generic error
+// mid-conversation. 20/min of short Sonnet replies is still cheap.
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many messages — take a breath, try again in a minute.' }
+});
+
 // Stricter cap for the most expensive endpoints (vision OCR, multi-Sonnet analysis) — an
 // abuser rotating IPs can still get through (only auth/captcha stops that), but this raises the
 // per-IP cost meaningfully without blocking a normal guest who analyzes a chat once.
@@ -1816,7 +1828,7 @@ The USER is the person whose perspective we're building. Extract what we learn a
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". BE EXHAUSTIVE: capture EVERY concrete fact revealed — every name and how they relate, every job/profession, city/neighborhood, hobby, pet, habit, and notable event — do NOT drop secondary details to keep it short. It is better to be complete than concise. Only include what's actually revealed in the conversation. Do not invent.
 HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Kemal'i okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Kemal — likely his son; a second Kemal may be a friend"). A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
 
-If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve existing facts, add new ones, refine where the new conversation gives better information.
+If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve ALL existing facts (names, relationships, jobs) even if this conversation never mentions them. If the existing profile contains a section starting with "USER-PROVIDED FACTS", reproduce that section VERBATIM at the end of your output — it is ground truth typed by the user and must never be dropped, edited, or reworded.
 
 After the profile, on a new line write exactly:
 USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
@@ -1827,7 +1839,22 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
           if (!upProse) { console.warn('[user-profile-extract] empty prose'); return; }
           const userConfMatch = upProse.match(/USER_CONFIDENCE:\s*(.+)/);
           const userConfidence = userConfMatch ? userConfMatch[1].trim().replace(/[\[\]]/g, '') : null;
-          const cleanUserProse = upProse.replace(/\n*USER_CONFIDENCE:.*$/m, '').trim();
+          let cleanUserProse = upProse.replace(/\n*USER_CONFIDENCE:.*$/m, '').trim();
+          // Optimistic write: this extraction ran for 30-90s on a snapshot. If the
+          // profile changed meanwhile (e.g. the user typed facts into the know-me
+          // card mid-import), the MANUAL edit wins — skip instead of clobbering it.
+          const freshR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+          const freshData = await freshR.json();
+          const freshProfile = freshData?.[0]?.profile_text || null;
+          if ((freshProfile || null) !== (existingUserProfile || null)) {
+            console.warn('[user-profile-extract] SKIPPED: profile changed during extraction — manual edit wins');
+            return;
+          }
+          // Belt: user-entered ground truth must survive even if the model dropped it.
+          const FACTS_MARKER = 'USER-PROVIDED FACTS';
+          if (freshProfile && freshProfile.includes(FACTS_MARKER) && !cleanUserProse.includes(FACTS_MARKER)) {
+            cleanUserProse = cleanUserProse.trimEnd() + '\n\n' + freshProfile.slice(freshProfile.indexOf(FACTS_MARKER));
+          }
           await fetch(`${SUPABASE_REST}/user_profile`, {
             method: 'POST',
             headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
@@ -2750,6 +2777,8 @@ Extract what we learn about the USER across all these conversations:
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "the user". BE EXHAUSTIVE — capture every name, relationship, job, place, hobby, and notable event revealed across the conversations. Only include what's actually revealed. Do not invent.
 HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context, capture it with the inferred relationship; if ambiguous between two people, record both readings. A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
 
+If an EXISTING PROFILE is provided in the input, preserve ALL its facts (names, relationships, jobs) even if these conversations never mention them. If it contains a section starting with "USER-PROVIDED FACTS", reproduce that section VERBATIM at the end of your output — it is ground truth typed by the user and must never be dropped, edited, or reworded.
+
 After the profile, write exactly:
 USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
         messages: [{ role: 'user', content: userMsg }]
@@ -2763,6 +2792,12 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
     const confMatch = profileText.match(/USER_CONFIDENCE:\s*(.+)/);
     const confidence = confMatch ? confMatch[1].trim().replace(/[\[\]]/g, '') : null;
     profileText = profileText.replace(/USER_CONFIDENCE:.*$/m, '').trim();
+
+    // User-entered ground truth must survive a rebuild even if the model drops it.
+    const FACTS_MARKER = 'USER-PROVIDED FACTS';
+    if (existing && existing.includes(FACTS_MARKER) && !profileText.includes(FACTS_MARKER)) {
+      profileText = profileText.trimEnd() + '\n\n' + existing.slice(existing.indexOf(FACTS_MARKER));
+    }
 
     await fetch(`${SUPABASE_REST}/user_profile`, {
       method: 'POST',
@@ -2880,7 +2915,7 @@ app.get('/api/communication-archetype', requireAuth, async (req, res) => {
   } catch (e) { console.error('[archetype]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
+app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
   try {
     const { character, language } = req.body;
     let history = req.body.history;
@@ -2999,7 +3034,8 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
     })();
 
     const noProfileGuard = !userProfileBlock
-      ? `\n\nNO USER PROFILE AVAILABLE: You have no verified data about ${userLabel}'s personal life. If asked about their family members, spouse, parents, children, or anyone they refer to as "mine" or "my" — do NOT substitute your own family details from WHO YOU ARE as an answer. Say you don't recall, in character: 'hatırlamıyorum, söylemiş miydin?' or 'I don't think you ever told me that'. YOUR own spouse/family from WHO YOU ARE are YOUR details — they are never the answer to a question about THE USER's family.`
+      ? `\n\nNO USER PROFILE AVAILABLE: You have no verified data about ${userLabel}'s personal life. If asked about their family members, spouse, parents, children, or anyone they refer to as "mine" or "my" — do NOT substitute your own family details from WHO YOU ARE as an answer. Say you don't recall, in character: 'hatırlamıyorum, söylemiş miydin?' or 'I don't think you ever told me that'. YOUR own spouse/family from WHO YOU ARE are YOUR details — they are never the answer to a question about THE USER's family.
+DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own people (first-person possessives: "eşim", "annem", "my wife"). When the user asks about YOUR family with second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?"), that is YOUR OWN spouse/family — answer confidently from WHO YOU ARE. You obviously remember your own spouse's name; never reply "hatırlamıyorum" to a question about your own family that WHO YOU ARE answers.`
       : '';
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
@@ -3017,7 +3053,7 @@ RULES:
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
 - PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life.
-  CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
+  CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). SECOND-PERSON MIRROR: when they use second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?") they are asking about YOUR OWN family from WHO YOU ARE — answer confidently from your own description; you always remember your own spouse/children. YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
   EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
   Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text.${tier === 1 ? ' NOTE: For this distant relationship, RELATIONSHIP DISTANCE (below) takes priority over this rule — even if you find a personal fact in the profile, do not reveal it.' : ''}
 ${tier === 1 ? `- RELATIONSHIP DISTANCE (overrides PROFILE PRIORITY for personal facts): You only know ${userLabel} at a surface/distant level (work acquaintance, not close). Even if the WHO YOU'RE TALKING TO profile contains personal details about them (family members' names, private matters, intimate history), you would NOT realistically know or bring these up — a distant contact doesn't have that access. If asked about their personal or family life: do NOT reveal any name or detail from the profile, even if you see it there. Respond as someone who genuinely doesn't know that side of them: 'I don't really know much about your family' or 'we've never gotten that personal'. Keep responses surface-level and professional. You do know work/practical topics from your shared chats.` : ''}

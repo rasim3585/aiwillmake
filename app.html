@@ -3523,8 +3523,10 @@
           <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
         </div>
 
-        <!-- Rehearsal Card -->
-        <div class="wow-card wow-card-rehearse" id="wowRehearsalCard">
+        <!-- Rehearsal Card — RETIRED 2026-07-16: a single-shot prediction was the
+             pre-paywall "free taste"; with practice one tap away it only competed
+             with the primary CTA. Markup kept dormant (hidden) for easy revival. -->
+        <div class="wow-card wow-card-rehearse hidden" id="wowRehearsalCard">
           <div class="wow-card-eyebrow" data-i18n="wow.rehearse.eyebrow">🎯 Ona ne diyeceksin?</div>
           <p class="wow-card-summary" style="margin-bottom:6px" data-i18n="wow.rehearse.sub">Söylemek istediğin cümleyi yaz — nasıl karşılanacağını görelim.</p>
           <textarea class="wow-rehearse-textarea" id="wowRehearseTa" placeholder="Örn: Seninle konuşmam gereken bir şey var…" data-i18n-ph="wow.rehearse.ph" rows="3"></textarea>
@@ -3577,11 +3579,12 @@
           </div>
         </div>
 
-        <!-- CTA -->
+        <!-- CTA — ONE primary action: the reveal's only natural next step is talking
+             to the twin. Tools (strategy/generate/analyze) live on the person page
+             for return visits; a small link leads there. -->
         <div class="wow-cta-area">
-          <button class="wow-cta-btn" id="wowTalkBtn">💬 Just talk with <span id="wowCtaName">them</span> →</button>
-          <button class="wow-cta-btn-sec" id="wowSayBtn">🎯 I have something to say</button>
-          <button class="wow-cta-profile" id="wowProfileBtn">view full profile →</button>
+          <button class="wow-cta-btn" id="wowTalkBtn">🎭 <span id="wowCtaName">them</span> ile konuşmaya başla →</button>
+          <button class="wow-cta-profile" id="wowProfileBtn">kişi sayfası →</button>
           <p class="wow-cta-note hidden" id="wowCtaNote">Sign in to save your twin &amp; start practicing. Free.</p>
         </div>
       </div>
@@ -5676,12 +5679,8 @@
       document.getElementById('wowRehearsalResult').classList.add('hidden');
       document.getElementById('wowRehearseSendBtn').disabled = false;
 
-      // Wire CTA buttons
-      document.getElementById('wowTalkBtn').onclick = wowStartTalking;
-      document.getElementById('wowSayBtn').onclick = () => {
-        if (window._userPlan === 'free') { showUpgradeModal(); return; }
-        if (_wowContactId) openGoalScreen();
-      };
+      // Wire CTA buttons — primary goes STRAIGHT to practice (not the person page)
+      document.getElementById('wowTalkBtn').onclick = wowStartPractice;
       document.getElementById('wowProfileBtn').onclick = () => {
         if (_wowContactId) loadPersonSection(_wowContactId);
       };
@@ -5901,6 +5900,34 @@
       } else {
         document.getElementById('screen-landing').classList.remove('hidden');
       }
+    }
+
+    // Reveal CTA → practice DIRECTLY. The post-import moment has exactly one
+    // natural next step (talking to the twin); routing through the person page
+    // added a menu screen and a second tap for nothing. If the twin profile is
+    // still being written, the simulator's own ensureTwinProfile poller shows
+    // "Twin hazırlanıyor…" — no need to block here.
+    async function wowStartPractice() {
+      if (!_wowContactId) { document.getElementById('screen-landing').classList.remove('hidden'); return; }
+      if (!window._userPlan) await checkSubscriptionAndShowReady();
+      if (window._userPlan === 'free') { showUpgradeModal(); return; }
+      try {
+        const fr = await fetch(`/api/contacts/${_wowContactId}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        if (fr.ok) {
+          const fc = await fr.json();
+          activeContactContext = {
+            id: fc.id, name: fc.name, type: fc.type || null,
+            relationship_state: fc.relationship_state || null,
+            observed_patterns: Array.isArray(fc.observed_patterns) && fc.observed_patterns.length ? fc.observed_patterns : null,
+            relationship_summary: fc.relationship_summary || null,
+            character_profile: fc.character_profile || null,
+            relationship_tier: fc.relationship_tier ?? 2,
+            last_outcome: fc.last_outcome || null
+          };
+        }
+      } catch {}
+      if (!activeContactContext || activeContactContext.id !== _wowContactId) { loadPersonSection(_wowContactId); return; }
+      openSimulatorFresh(activeContactContext, null);
     }
 
     async function doRehearsal() {

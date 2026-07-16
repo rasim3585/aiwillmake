@@ -159,3 +159,9 @@ Object.assign(window.I18N_C, {
   "Geç": { "tr":"Geç", "en":"Skip", "es":"Omitir" },
   "✓ Eklendi — tüm ikizler artık biliyor": { "tr":"✓ Eklendi — tüm ikizler artık biliyor", "en":"✓ Added — every twin now knows", "es":"✓ Añadido — todos los gemelos ya lo saben" }
 });
+
+/* Reveal CTA (single primary action) */
+Object.assign(window.I18N_C, {
+  "ile konuşmaya başla →": { "tr":"ile konuşmaya başla →", "en":"— start talking →", "es":"— empieza a hablar →" },
+  "kişi sayfası →": { "tr":"kişi sayfası →", "en":"person page →", "es":"página de la persona →" }
+});
