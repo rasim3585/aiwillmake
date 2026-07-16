@@ -5,7 +5,9 @@
 > (robots/sitemap → www, /app.html not indexed). **Deliberately left:** dead telemetry (micro_feedback/passive_signals/
 > prediction_ledger — harmless + partly wired to UI, cut/rewire later), role_names 0/8, embeddings RAG + analyze
 > cost-consolidation (deferred: external key / recall-regression risk), H4-full (IP-rotation needs auth/captcha),
-> cosmetic LOW (og-image dims etc.). **Everything is committed + pushed but NOT deployed** (Railway peak-hours block).
+> cosmetic LOW (og-image dims etc.). **DEPLOYED & LIVE-VERIFIED on prod 2026-07-16** (commit 190c365): /api/debug
+> gone, /api/..%2f bypass 404, C1 anon-read 0 rows, paid gates 402, CORS scoped, /api/keepalive db:ok. Only the
+> user-side items remain: apex-domain DNS (C4), run the keepalive GitHub Action once, optional Supabase Pro / Resend key.
 
 AI conversation navigator + "digital twin" rehearsal app. Turkish-first UI, English codebase/prompts.
 User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server builds a character profile of the
