@@ -2236,6 +2236,11 @@
     .ws-tag.det { background: rgba(127,176,105,.14); color: #9fc487; }
     .ws-tag.ai  { background: rgba(160,126,224,.16); color: #b9a1e8; }
     .ws-quote { border-left: 3px solid rgba(160,126,224,.55); background: rgba(255,255,255,.04); border-radius: 0 8px 8px 0; padding: 6px 10px; font-size: .76rem; color: var(--sec); font-style: italic; margin-top: 6px; }
+    .ws-share-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 2px 0; }
+    .ws-anon { display: flex; align-items: center; gap: 6px; font-size: .76rem; color: var(--sec); cursor: pointer; }
+    .ws-anon input { accent-color: var(--accent); }
+    .ws-share-btn { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); color: var(--text); border-radius: 10px; padding: 8px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .person-stats-strip { display: flex; flex-wrap: wrap; gap: 7px; margin: 2px 0 6px; }
 
     /* ── WOW Screen ── */
     .wow-inner { padding: 28px 20px 48px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
@@ -5986,6 +5991,9 @@
         emojiOnly:  { tr: 'İmzan {e1} · onunki {e2}', en: 'Your signature {e1} · theirs {e2}', es: 'Tu firma {e1} · la suya {e2}' },
         tagDet:     { tr: 'ölçüldü', en: 'measured', es: 'medido' },
         tagAi:      { tr: 'AI buldu', en: 'AI found', es: 'IA detectó' },
+        shareBtn:   { tr: '📸 Kartları paylaş', en: '📸 Share cards', es: '📸 Compartir tarjetas' },
+        anonLabel:  { tr: 'ismi gizle', en: 'hide name', es: 'ocultar nombre' },
+        anonName:   { tr: 'biri 💬', en: 'someone 💬', es: 'alguien 💬' },
         eyHumor:    { tr: 'Mizah', en: 'Humor', es: 'Humor' },
         eyConflict: { tr: 'Kavga & Barışma', en: 'Conflict & Repair', es: 'Conflicto y reconciliación' },
         eyDeep:     { tr: 'Derin Konular', en: 'Deep Topics', es: 'Temas profundos' },
@@ -6019,6 +6027,27 @@
       if (!contactKey) return null; // can't attribute — cards fall back to neutral labels
       const userKey = m.senders.find(s => s !== contactKey);
       return { userKey, contactKey };
+    }
+
+    // Compact, persistence-safe subset of the stats — stored in the import
+    // conversation's `fields` (no DDL) so the person screen can re-render the
+    // cards on later visits without the raw chat text.
+    function _wsCompact(m) {
+      const ps = {};
+      m.senders.forEach(s => {
+        const p = m.perSender[s];
+        ps[s] = { count: p.count, share: p.share, initiationShare: p.initiationShare,
+                  replyMedianMs: p.replyMedianMs, doubleTexts: p.doubleTexts,
+                  topEmojis: p.topEmojis.slice(0, 2) };
+      });
+      return {
+        ok: true, totalMessages: m.totalMessages, senders: m.senders,
+        firstTs: m.firstTs, activeDays: m.activeDays, spanDays: m.spanDays,
+        perSender: ps, recordDays: m.recordDays.slice(0, 1),
+        longestSilence: m.longestSilence ? { days: m.longestSilence.days, brokenBy: m.longestSilence.brokenBy } : null,
+        longestSession: m.longestSession ? { count: m.longestSession.count, minutes: m.longestSession.minutes } : null,
+        nightPct: m.nightPct, sharedWords: m.sharedWords.slice(0, 3)
+      };
     }
 
     function renderProcessingStats(m, contactName) {
@@ -6116,9 +6145,64 @@
         const eyKey = { humor: 'eyHumor', conflict: 'eyConflict', deep: 'eyDeep', turning: 'eyTurning', world: 'eyWorld' };
         ai.forEach(c => measured.push(card(_wsT(eyKey[c.key] || 'eyDeep'), `<span style="font-size:1.05rem">${esc(c.title || '')}</span>`, esc(c.insight), `<div class="ws-quote">“${esc(c.evidence)}”</div>`, true, 'ai')));
       }
+      window._wsShareName = contactName;
+      measured.push(
+        `<div class="ws-share-row ws-wide">` +
+        `<label class="ws-anon"><input type="checkbox" id="wsAnonToggle" checked> ${_wsT('anonLabel')}</label>` +
+        `<button type="button" class="ws-share-btn" id="wsShareBtn">${_wsT('shareBtn')}</button>` +
+        `</div>`
+      );
       grid.innerHTML = measured.join('');
       grid.classList.remove('hidden');
     }
+
+    // Share the stat-card grid as a branded PNG. Anonymize is ON by default —
+    // relationship recaps don't get shared without a hide-the-name option.
+    async function shareStatsCards() {
+      const grid = document.getElementById('wowStatsCards');
+      const btn = document.getElementById('wsShareBtn');
+      if (!grid || typeof html2canvas === 'undefined') { showToast('Image library not loaded — try refreshing', 'error'); return; }
+      const anon = document.getElementById('wsAnonToggle')?.checked !== false;
+      const name = window._wsShareName || '';
+      const old = btn.textContent; btn.disabled = true; btn.textContent = '…';
+      const shareRow = grid.querySelector('.ws-share-row');
+      const touched = [];
+      try {
+        if (shareRow) shareRow.style.display = 'none';
+        if (anon && name) {
+          const re = new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+          const tw = document.createTreeWalker(grid, NodeFilter.SHOW_TEXT, null);
+          let n; while ((n = tw.nextNode())) {
+            if (re.test(n.nodeValue)) { touched.push([n, n.nodeValue]); n.nodeValue = n.nodeValue.replace(re, _wsT('anonName')); }
+            re.lastIndex = 0;
+          }
+        }
+        const wm = document.createElement('div');
+        wm.className = 'ws-wide';
+        wm.style.cssText = 'text-align:center;font-size:.7rem;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:4px 0 2px';
+        wm.textContent = 'aiwillmake.com';
+        grid.appendChild(wm);
+        const canvas = await html2canvas(grid, { scale: 2, useCORS: true, backgroundColor: '#171615', logging: false });
+        grid.removeChild(wm);
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        const file = new File([blob], 'sayilarla-iliskimiz.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], text: 'aiwillmake.com' });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'sayilarla-iliskimiz.png'; a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+          showToast('Görsel indirildi', 'success');
+        }
+      } catch (e) {
+        if (e?.name !== 'AbortError') { console.error('[ws-share]', e); showToast('Paylaşım başarısız', 'error'); }
+      } finally {
+        touched.forEach(([n, v]) => { n.nodeValue = v; });
+        if (shareRow) shareRow.style.display = '';
+        btn.disabled = false; btn.textContent = old;
+      }
+    }
+    document.addEventListener('click', e => { if (e.target && e.target.id === 'wsShareBtn') shareStatsCards(); });
 
     const _PROCESSING_MSGS = [
       'Reading conversation…',
@@ -7236,7 +7320,10 @@
                 confidence_score:  data.confidence_score  || null,
                 confidence_label:  data.confidence_label  || null,
                 char_count:        data.char_count        || null,
-                message_count:     data.message_count     || null
+                message_count:     data.message_count     || null,
+                // persisted reveal-card data — person screen re-renders from these
+                chat_stats:        (window._lastChatStats?.ok ? _wsCompact(window._lastChatStats) : null),
+                relationship_cards: (Array.isArray(data.relationship_cards) && data.relationship_cards.length ? data.relationship_cards : null)
               }
             })
           });
@@ -7571,6 +7658,27 @@
         const convs = c.conversations || [];
         const latestConv = convs[0] || null;
 
+        // Persisted reveal-card data from the most recent import (fields.chat_stats /
+        // fields.relationship_cards) — resurface as a compact strip + insight cards.
+        const importConv = convs.find(cv => (cv.situation || '').startsWith('WhatsApp history') && cv.fields?.chat_stats) || null;
+        const pStats = importConv?.fields?.chat_stats || null;
+        const pCards = convs.find(cv => Array.isArray(cv.fields?.relationship_cards) && cv.fields.relationship_cards.length)?.fields?.relationship_cards || null;
+        let statsStrip = '';
+        if (pStats?.ok) {
+          const who = _wsWho(pStats, c.name);
+          const chips = [`<b>${(pStats.totalMessages || 0).toLocaleString('tr-TR')}</b> ${_wsT('msgWord')}`];
+          if (who) {
+            const u = pStats.perSender[who.userKey], k = pStats.perSender[who.contactKey];
+            const iniIns = u.initiationShare >= k.initiationShare
+              ? _wsT('iniYou', { p: u.initiationShare }) : _wsT('iniThem', { p: k.initiationShare, name: escH(c.name) });
+            if (Math.max(u.initiationShare, k.initiationShare) >= 62) chips.push(iniIns.replace(/<\/?em>/g, ''));
+            if (u.replyMedianMs != null && k.replyMedianMs != null)
+              chips.push(_wsT('medians', { a: _wsDur(u.replyMedianMs), b: _wsDur(k.replyMedianMs) }));
+          }
+          if (pStats.sharedWords?.[0]?.count >= 8) chips.push(`«${escH(pStats.sharedWords[0].value)}» ×${pStats.sharedWords[0].count}`);
+          statsStrip = `<div class="person-stats-strip">${chips.map(t => `<span class="ps-chip show">${t}</span>`).join('')}</div>`;
+        }
+
         const _daysAgo = (dateStr) => {
           if (!dateStr) return '';
           const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
@@ -7592,6 +7700,7 @@
             </div>
             ${c.relationship_summary ? `<p class="person-summary">${escH(c.relationship_summary)}</p>` : ''}
           </div>
+          ${statsStrip}
 
           <p class="person-tagline">Practice a conversation with AI ${escH(c.name)} before the real thing.</p>
 
@@ -7631,6 +7740,10 @@
           </div>
 
           <div id="personAnalysisPanel" class="person-section-panel hidden">
+            ${pCards ? `<div class="wow-stats-grid" style="margin-bottom:12px">${pCards.slice(0,3).map(cd => {
+              const eyKey = { humor: 'eyHumor', conflict: 'eyConflict', deep: 'eyDeep', turning: 'eyTurning', world: 'eyWorld' };
+              return `<div class="ws-card ws-wide"><span class="ws-tag ai">${_wsT('tagAi')}</span><div class="ws-eyebrow">${_wsT(eyKey[cd.key] || 'eyDeep')}</div><div class="ws-big"><span style="font-size:1.05rem">${escH(cd.title || '')}</span></div><div class="ws-insight">${escH(cd.insight)}</div><div class="ws-quote">“${escH(cd.evidence)}”</div></div>`;
+            }).join('')}</div>` : ''}
             <div id="patternsSectionEl">
               ${renderContactPatterns(c.name, c.observed_patterns)}
             </div>
