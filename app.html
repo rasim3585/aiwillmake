@@ -5935,6 +5935,7 @@
             relationship_tier: fc.relationship_tier ?? 2,
             last_outcome: fc.last_outcome || null,
             contact_status: window._importStatus || 'active',
+            last_message_ts: window._lastChatStats?.lastTs || null,
             opener_samples: (() => {
               const m = window._lastChatStats;
               if (!m?.ok) return null;
@@ -6087,7 +6088,7 @@
       });
       return {
         ok: true, totalMessages: m.totalMessages, senders: m.senders,
-        firstTs: m.firstTs, activeDays: m.activeDays, spanDays: m.spanDays,
+        firstTs: m.firstTs, lastTs: m.lastTs, activeDays: m.activeDays, spanDays: m.spanDays,
         perSender: ps, recordDays: m.recordDays.slice(0, 1),
         longestSilence: m.longestSilence ? { days: m.longestSilence.days, brokenBy: m.longestSilence.brokenBy } : null,
         longestSession: m.longestSession ? { count: m.longestSession.count, minutes: m.longestSession.minutes } : null,
@@ -6170,7 +6171,9 @@
       const recs = [
         rd && rd.count >= 30 ? { s: rd.count / 40, html: card(_wsT('eyRecord'), `${rd.count} <small>${_wsT('msgWord')}</small>`, _wsT('recDayIns', { date: _wsDate(rd.date) }), '', false) } : null,
         ls && ls.count >= 50 ? { s: ls.count / 50, html: card(_wsT('eyRecord'), `${ls.count} <small>${_wsT('msgWord')}</small>`, _wsT('recSesIns', { min: ls.minutes }), '', false) } : null,
-        sil && sil.days >= 7 && who ? { s: sil.days / 10, html: card(_wsT('eyRecord'), `${Math.round(sil.days)} <small>${{ tr: 'gün', en: 'days', es: 'días' }[window.APP_LANG] || 'gün'}</small>`, _wsT('recSilence', { d: Math.round(sil.days), who: sil.brokenBy === who.userKey ? _wsT('youShort') : contactName }), '', false) } : null,
+        // silence record is suppressed for unreachable contacts — "longest silence:
+        // 5 years" is the loss itself, never a fun stat
+        sil && sil.days >= 7 && who && window._importStatus !== 'unreachable' ? { s: sil.days / 10, html: card(_wsT('eyRecord'), `${Math.round(sil.days)} <small>${{ tr: 'gün', en: 'days', es: 'días' }[window.APP_LANG] || 'gün'}</small>`, _wsT('recSilence', { d: Math.round(sil.days), who: sil.brokenBy === who.userKey ? _wsT('youShort') : contactName }), '', false) } : null,
       ].filter(Boolean).sort((a, b) => b.s - a.s);
       if (recs[0]) cards.push(recs[0].html);
       // 5 — signatures
@@ -6603,7 +6606,7 @@
       if (!window._userPlan) await checkSubscriptionAndShowReady();
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2, role_names: contactCtx.role_names ?? {}, contact_status: contactCtx.contact_status || 'active', opener_samples: contactCtx.opener_samples || null }
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2, role_names: contactCtx.role_names ?? {}, contact_status: contactCtx.contact_status || 'active', opener_samples: contactCtx.opener_samples || null, last_message_ts: contactCtx.last_message_ts || null }
         : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null, relationship_tier: 2, role_names: {} };
       _simInitialMsg = '';
       _simHistory = [];
@@ -7740,6 +7743,7 @@
         activeContactContext.contact_status = convs.find(cv => cv.fields?.contact_status)?.fields?.contact_status || 'active';
         const _pWho = pStats?.ok ? _wsWho(pStats, c.name) : null;
         activeContactContext.opener_samples = _pWho ? (pStats.perSender[_pWho.contactKey].openers || null) : null;
+        activeContactContext.last_message_ts = pStats?.lastTs || null;
         const _unreachable = activeContactContext.contact_status === 'unreachable';
         // "What happened?" only makes sense when a real conversation can happen
         if (!_unreachable) maybeShowOutcomePrompt(contactId, c.name);

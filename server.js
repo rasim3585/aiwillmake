@@ -2530,6 +2530,41 @@ app.post('/api/simulate-debrief', limiter, optionalAuth, async (req, res) => {
       `[${m.role === 'user' ? 'You' : name}]: ${m.content}`
     ).join('\n');
 
+    // Unreachable-mode ritual: the user "catches the twin up" on the missing
+    // years ("Kemal okula başladı"). Capture those REAL life facts into the
+    // global user_profile so no twin ever forgets them. Only in this mode —
+    // rehearsals with living contacts are often hypothetical and must never
+    // pollute the profile.
+    if (character.contact_status === 'unreachable' && req.user?.id && req.token) {
+      const userLines = history.filter(m => m.role === 'user').map(m => m.content).join('\n').slice(0, 4000);
+      if (userLines.length > 40) (async () => {
+        try {
+          const ex = await claudeCallWithRetry({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 300,
+            system: `The user had a heartfelt conversation with an AI twin of someone they can no longer reach, catching them up on their life. From the USER's lines below, extract ONLY durable, concrete REAL-LIFE facts the user states as true about their current life (births, school, moves, jobs, marriages, deaths, health — with names when given). STRICT: ignore feelings, questions, memories of the past, hypotheticals, and anything uncertain. Output one short factual line per item, no commentary. If nothing qualifies, output exactly: NONE`,
+            messages: [{ role: 'user', content: userLines }]
+          }, 'life-updates');
+          const facts = ex?.content?.[0]?.text?.trim();
+          if (!facts || /^NONE$/i.test(facts)) return;
+          const curR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+          const curD = await curR.json();
+          const cur = (curD?.[0]?.profile_text || '').trimEnd();
+          const MARK = 'LIFE UPDATES (told by the user in twin conversations — treat as current truth):';
+          const lines = facts.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 5)
+            .filter(l => !cur.includes(l)).map(l => '- ' + l.replace(/^[-•]\s*/, '')).join('\n');
+          if (!lines) return;
+          const updated = cur.includes(MARK) ? cur + '\n' + lines : (cur ? cur + '\n\n' : '') + MARK + '\n' + lines;
+          await fetch(`${SUPABASE_REST}/user_profile`, {
+            method: 'POST',
+            headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
+            body: JSON.stringify({ user_id: req.user.id, profile_text: updated, updated_at: new Date().toISOString() })
+          });
+          console.log('[life-updates] captured', lines.split('\n').length, 'fact(s) for', req.user.id);
+        } catch (e) { console.error('[life-updates]', e.message); }
+      })();
+    }
+
     const systemPrompt = `You are a communication coach reviewing a practice conversation. Analyse the transcript and write a short observational debrief of 3-4 sentences in ${lang}.
 
 Rules:
@@ -2945,6 +2980,26 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
       : null;
     const relationshipLine = [character.type, character.relationship_state].filter(Boolean).join(', ');
 
+    // Temporal anchor: the twin's shared-history knowledge ends at the last
+    // imported message. Without this, a twin whose chat ended years ago talks
+    // about old situations as if they're current — devastating in the
+    // unreachable mode (chat frozen at e.g. 2021, user talking in 2026).
+    let temporalBlock = '';
+    const lastTs = character.last_message_ts ? new Date(character.last_message_ts) : null;
+    if (lastTs && !isNaN(lastTs.getTime())) {
+      const gapDays = Math.floor((Date.now() - lastTs.getTime()) / 86400e3);
+      const gapHuman = gapDays >= 365 ? `${Math.round(gapDays / 365 * 10) / 10} years` : `${Math.max(1, Math.round(gapDays / 30))} months`;
+      if (character.contact_status === 'unreachable') {
+        temporalBlock = `\n\nTEMPORAL ANCHOR — your shared history with ${userLabel} ends around ${lastTs.toISOString().slice(0, 10)} (about ${gapHuman} ago for them):
+- You do NOT know anything that happened in ${userLabel}'s life after that date. Never assume ${userLabel}'s old situations (their job, plans, illness, trips) are still current — ask, don't assume. (Your OWN world is different — see below: you live in a gentle frozen present.)
+- When ${userLabel} tells you news from the missing time, react as someone hearing it for the FIRST time — warm, curious, present. Ask gentle follow-up questions; let them catch you up. That is the heart of this conversation.
+- Your OWN life: never invent anything that happened to YOU after ${lastTs.toISOString().slice(0, 10)}. You are simply yourself, as you always were — a gentle timeless present.
+- Never reference death, absence, illness, "where have I been", or why time passed. If ${userLabel} mentions how long it's been, respond warmly ("çok özlemişim seni" energy) without questioning the gap.`;
+      } else if (gapDays > 60) {
+        temporalBlock = `\n\nDATA FRESHNESS: your shared chat data ends around ${lastTs.toISOString().slice(0, 10)} (~${gapHuman} ago). Recent events in ${userLabel}'s life may be unknown to you — ask naturally instead of assuming old situations are still current.`;
+      }
+    }
+
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     let recentContext = '';
@@ -3048,7 +3103,7 @@ DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own pe
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -3060,7 +3115,7 @@ RULES:
 - If a USER CORRECTIONS section exists in your character description above, treat it as the most authoritative truth — it overrides everything else, including the rest of the character description.
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
-- PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life.
+- PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life. When answering such a question, answer ONLY about THEIR person — do NOT weave your own family members into the same reply, not even as passing small talk (same names across the two families invite confusion; keep the two worlds separate in that reply).
   CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). SECOND-PERSON MIRROR: when they use second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?") they are asking about YOUR OWN family from WHO YOU ARE — answer confidently from your own description; you always remember your own spouse/children. (This mirror rule is about YOUR OWN family only — it NEVER loosens the RELATIONSHIP DISTANCE restriction below about the USER's personal life.) YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
   EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
   Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text.${tier === 1 ? ' NOTE: For this distant relationship, RELATIONSHIP DISTANCE (below) takes priority over this rule — even if you find a personal fact in the profile, do not reveal it.' : ''}
