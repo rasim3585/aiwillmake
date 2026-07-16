@@ -378,13 +378,18 @@ Ordered by severity. Line numbers are approximate — grep before trusting.
 ---
 
 ## Invariants — do not break
-- **Twin perspective fix (3 layers, all required).** In the `/api/simulate-reply` system prompt, three rules keep
-  the twin from confusing the contact's family with the *user's* family (e.g. answering "my wife's name?" with the
-  twin's own spouse). All three must stay together — removing any one regresses the bug:
-  1. `CRITICAL PERSPECTIVE RULE` (baseline possession rule).
+- **Twin perspective fix (4 elements, all required, measured 2026-07-16).** In the `/api/simulate-reply` system
+  prompt, these rules keep the twin from confusing the contact's family with the *user's* family AND from denying
+  its own. All must stay together — removing any one regresses a measured test:
+  1. `CRITICAL PERSPECTIVE RULE` (first-person possessives = user's people) **+ `SECOND-PERSON MIRROR`**
+     ("eşin/senin eşin" = the TWIN's own family — answer confidently; the mirror is explicitly scoped to never
+     loosen tier-1). Without the mirror, the twin says "hatırlamıyorum" about its OWN spouse (~2/5).
   2. `EXCERPT PERSPECTIVE TRAP` (RAG excerpts contain the twin's own "eşim [name]" — not the user's spouse).
-  3. `userProfileBlock` header separation + `noProfileGuard` (handles the no-RAG case; when no user profile exists,
-     the twin must say "I don't recall" instead of substituting its own family).
+  3. `userProfileBlock` header separation + `noProfileGuard` **with `DIRECTION CHECK`** (guard applies only to
+     first-person questions; without the check it misfires on questions about the twin's own family).
+  4. `RELATIONSHIP DISTANCE` (tier 1) is **ABSOLUTE — overrides every other rule incl. the mirror**, and bans
+     confirm-as-a-question leaks ("Simge değil mi?" counts as a leak). The mirror clause once loosened it: 4/5 leak.
+  Verified together with the suite fixture: tier-1 5/5 no-leak, tier-2 3/3, own-spouse 3/3.
   See memory `project-session-bug-fixes` for the full history.
 - **`relationship_tier` gating.** `tier === 1` (distant/work) makes RELATIONSHIP DISTANCE override PROFILE PRIORITY:
   the twin must NOT reveal personal facts from the user profile even if present. `tier === 2` (default) shares freely.
