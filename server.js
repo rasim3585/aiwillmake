@@ -1457,7 +1457,7 @@ app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, async (req, re
             const existingData = await existingProfileR.json();
             const existingProfile = existingData?.[0]?.character_profile || null;
             const userContentSmall = existingProfile
-              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 6000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
               : conversationText;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
@@ -1606,7 +1606,7 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
               `FULL CONVERSATION:\n${conversationText.slice(0, 180000)}`
             ].filter(Boolean).join('\n\n');
             const userContentLarge = existingProfileLarge
-              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 6000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
+              ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 12000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
               : profileInput;
             const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
               method: 'POST',
@@ -1755,7 +1755,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
           const existingUserData = await existingUserR.json();
           const existingUserProfile = existingUserData?.[0]?.profile_text || null;
           const userProfileContent = existingUserProfile
-            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 6000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
+            ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION:\n${conversationText.slice(0, 120000)}`
             : conversationText.slice(0, 120000);
           const up_r = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -2687,7 +2687,7 @@ app.post('/api/build-user-profile', requireAuth, async (req, res) => {
     const existingData = await existingR.json();
     const existing = existingData?.[0]?.profile_text || null;
 
-    const userMsg = (existing ? `EXISTING PROFILE (enrich, don't replace):\n${existing.slice(0, 6000)}\n\n---\nCONVERSATIONS:\n` : '') + combinedText;
+    const userMsg = (existing ? `EXISTING PROFILE (enrich, don't replace):\n${existing.slice(0, 12000)}\n\n---\nCONVERSATIONS:\n` : '') + combinedText;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -2935,7 +2935,7 @@ app.post('/api/simulate-reply', limiter, optionalAuth, async (req, res) => {
         const upR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
         const upData = await upR.json();
         const up = upData?.[0]?.profile_text;
-        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — facts about ${userLabel}, the person messaging you. CRITICAL: ${userLabel}'s family members listed here (spouse, parents, children, siblings) are COMPLETELY SEPARATE from your own family in WHO YOU ARE. When ${userLabel} says "eşim", "annem", "babam", "my wife", "my husband", "my spouse", or any possessive about their family — they mean the people listed HERE, never from WHO YOU ARE:\n${up.slice(0, 6000)}`;
+        if (up) userProfileBlock = `\n\nWHO YOU'RE TALKING TO — facts about ${userLabel}, the person messaging you. CRITICAL: ${userLabel}'s family members listed here (spouse, parents, children, siblings) are COMPLETELY SEPARATE from your own family in WHO YOU ARE. When ${userLabel} says "eşim", "annem", "babam", "my wife", "my husband", "my spouse", or any possessive about their family — they mean the people listed HERE, never from WHO YOU ARE:\n${up.slice(0, 12000)}`;
       } catch (e) {}
     }
 
