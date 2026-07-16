@@ -8,16 +8,18 @@
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
-  <meta property="og:url"         content="https://aiwillmake.com/app.html" />
+  <meta property="og:url"         content="https://www.aiwillmake.com/app.html" />
   <meta property="og:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
   <meta property="og:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
-  <!-- TODO: og:image 1200x630 -->
+  <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
+  <meta property="og:image:width"  content="1706" />
+  <meta property="og:image:height" content="926" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
   <meta name="twitter:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
-  <!-- TODO: twitter:image -->
-  <link rel="canonical" href="https://aiwillmake.com/app.html" />
+  <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
+  <link rel="canonical" href="https://www.aiwillmake.com/app.html" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3839,8 +3841,13 @@
     }
 
     function renderCommonFields() {
+      // Default the Language select to the UI language (was: first option = English)
+      const uiLang = aiLang();
       const commonHtml = appData.common_fields.map(f => {
-        const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        const opts = f.options.map(o => {
+          const sel = (f.key === 'language' && o === uiLang) ? ' selected' : '';
+          return `<option value="${o}"${sel}>${o}</option>`;
+        }).join('');
         return `<div><label for="cf-${f.key}">${f.label}<span class="field-req">*</span></label><select id="cf-${f.key}">${opts}</select></div>`;
       }).join('');
       const lengthHtml = `<div><label for="cf-message_length">Message length</label><select id="cf-message_length">

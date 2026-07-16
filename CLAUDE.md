@@ -10,10 +10,11 @@
 > domain RESOLVED 2026-07-16** (GoDaddy domain forwarding aiwillmake.com → https://www.aiwillmake.com, 301, live-verified).
 > Keepalive GitHub Action + cron-job.org backup both live. Only optional decisions remain: Supabase Pro ($25/mo) / Resend key.
 >
-> **Trilingual (TR/EN/ES) — COMMITTED, NOT YET DEPLOYED (2026-07-16).** `index.html` fully trilingual (content-keyed
+> **Trilingual (TR/EN/ES) — DEPLOYED & LIVE-VERIFIED (2026-07-16).** `index.html` fully trilingual (content-keyed
 > runtime translator). `app.html` UI localized via `app_i18n.js` (489-string content-keyed walker + MutationObserver,
-> dynamic AI/user containers skip-listed). AI output language now follows the UI language (aiLang() fallback). See
-> **Internationalization** section below. Deploy pending (user deploys last, off-peak window).
+> dynamic AI/user containers skip-listed). AI output language follows the UI language (aiLang() fallback), and the
+> compose Language dropdown defaults to the UI language. Live-verified on prod: /app_i18n.js 200, walker + aiLang
+> fallbacks present, security posture intact. See **Internationalization** section below.
 
 AI conversation navigator + "digital twin" rehearsal app. Turkish-first UI, English codebase/prompts.
 User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server builds a character profile of the
@@ -40,8 +41,8 @@ node -r dotenv/config e2e_test.js   # e2e suite (gitignored). Needs SUPABASE_SER
 There is no unit-test runner (`npm test` is a stub). `e2e_test.js` / `playwright_test.js` are gitignored.
 
 ## Environment variables
-Defined in `.env` (gitignored — verified not tracked). `.env.example` is **stale/incomplete** (missing the
-Supabase and LemonSqueezy vars the code actually reads, and still lists Stripe).
+Defined in `.env` (gitignored — verified not tracked). `.env.example` is **up to date** (2026-07-15: documents both
+service-key names, all LemonSqueezy vars, no Stripe).
 Actual vars the code reads:
 - `ANTHROPIC_API_KEY`
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`
@@ -163,8 +164,9 @@ written in English even for Turkish chats (twin still replies in Turkish; cosmet
 1. **Embeddings RAG** (biggest quality lever) — use the `embedding` column with pgvector + an embedding provider
    (Voyage/OpenAI/Cohere) for semantic retrieval; catches consonant mutation (k↔ğ), synonyms, paraphrase that the
    stem matcher still misses (e.g. "ortak"↔"ortağ"). Needs a provider decision + backfill.
-2. **Profile-readiness UX** — frontend should poll `contact.character_profile` and show "twin still learning…" /
-   gate practice until it's populated, so the race never surfaces. (Chunks-for-all-sizes already softens it.)
+2. ~~**Profile-readiness UX**~~ — DONE (verified 2026-07-16): `ensureTwinProfile()` (`app.html`, grep it) polls
+   `/api/contacts/:id` every 2.5 s up to 90 s, shows "Twin hazırlanıyor…", and blocks the first simulate call
+   until the profile lands (also refreshes role_names/tier/patterns).
 3. **role_names ownership** — currently a flat owner-less map (mixes both people's relatives); split into
    user_roles vs contact_roles.
 4. **relationship_summary** is null in the analyze RESPONSE for the small path (saved to the contacts row async but
@@ -253,9 +255,10 @@ Ordered by severity. Line numbers are approximate — grep before trusting.
   CREATE POLICY "chunks_owner" ON public.conversation_chunks FOR ALL TO authenticated
     USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
   ```
-  Verified closed: anon now reads 0 rows, all 11 tables clean, data intact. **Latent regression risk:** the
-  `/api/setup-chunks-table` endpoint still creates the table without RLS — never run it against a fresh DB without
-  adding the policy above, or the leak returns. (`privacy.html` §3's RLS promise is now actually true.)
+  Verified closed: anon now reads 0 rows, all 11 tables clean, data intact. **Latent regression risk CLOSED
+  (2026-07-16, commit d4aef25):** the `/api/setup-chunks-table` SQL template now includes `ENABLE ROW LEVEL SECURITY`
+  + the owner-only policy, so a fresh-DB provision can no longer recreate the leak. (`privacy.html` §3's RLS promise
+  is now actually true.)
 - **C2 — Env-var name mismatch on the payment webhook: LATENT footgun (not currently broken).** The LemonSqueezy
   webhook writes `user_subscriptions` with `process.env.SUPABASE_SERVICE_KEY` (`server.js:67,87`), but the code has
   ALWAYS read that name (since commit 104bdb7, 2026-06-26) while `.env`/`.env.example` use `SUPABASE_SERVICE_ROLE_KEY`.
@@ -265,10 +268,9 @@ Ordered by severity. Line numbers are approximate — grep before trusting.
   `SUPABASE_SERVICE_KEY` (verified from a screenshot) → the webhook path works, payments activate correctly. This also
   matches the forensic (3-way adversarially verified): `user_subscriptions` holds 2 rows with genuine LemonSqueezy
   webhook fingerprints, owned by real Google accounts, written while RLS was on (only possible with a working
-  service_role key under that exact name). **BUT the footgun stays live:** local `.env`/`.env.example` use the DIFFERENT
-  name `SUPABASE_SERVICE_ROLE_KEY`, so any future re-provision/rotation that follows the repo's own naming convention
-  silently breaks all payment activation. **Hygiene fix (not urgent):** make the code read
-  `SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_KEY`, and align `.env.example`. Also: Railway still holds 3 dead
+  service_role key under that exact name). **Footgun CLOSED (2026-07-15):** the code now reads
+  `SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_KEY` (`server.js:91,111`) and `.env.example` documents both names —
+  either naming convention works on a re-provision. Remaining (user, optional): Railway still holds 3 dead
   `STRIPE_*` vars — unused by code, safe to delete.
 - **C3 — Production was down, now RESOLVED (2026-07-15).** Cause: Railway trial ended → downgraded to free plan,
   which FORCES "Serverless" mode (scale-to-zero; can't disable without paying). The service had serverless off → deploy
@@ -319,13 +321,15 @@ Ordered by severity. Line numbers are approximate — grep before trusting.
   information" + no mention of LemonSqueezy as processor, though checkout + `user_subscriptions` exist. Also §1 says
   Google sign-in only, but email/password is supported too. See also C1: §3's RLS promise is currently false.
 
-### LOW
-- Webhook signature uses `digest !== signature` string compare (not `crypto.timingSafeEqual`) and logs signature
-  bytes. `/api/setup-chunks-table` returns raw SQL. `og-image.png` is gitignored (may 404 in prod) and its declared
-  1200×630 dims don't match the real 1706×926. `app.html` has TODO placeholders for OG/Twitter image. `robots.txt`
-  + sitemap index the authed `app.html`. index.html ships a hidden `display:none` sandbox demo that still
-  `fetch('/api/sandbox-challenges')` on every load, plus dead "REMOVED SECTIONS" markup. Many fire-and-forget
-  `fetch(...).catch(()=>{})` telemetry calls swallow errors silently (intentional).
+### LOW (all resolved 2026-07-16 except where noted)
+- ~~Webhook string compare~~ → `crypto.timingSafeEqual` (done). ~~setup-chunks-table SQL without RLS~~ → template
+  includes RLS+policy (d4aef25). ~~og-image gitignored/404~~ → stale claim: file is tracked, serves 200 in prod;
+  dims meta corrected to the real 1706×926. ~~app.html OG/Twitter image TODOs~~ → og:image/twitter:image added,
+  og:url+canonical aligned to www (both pages). ~~robots/sitemap indexing app.html~~ → www host, app.html
+  disallowed/not listed. ~~sandbox fetch on every load~~ → now guarded (fires only if the section is visible);
+  the hidden sandbox markup itself + dead "REMOVED SECTIONS" block (~260 lines, index.html) still ship — kept
+  deliberately for possible re-enable; delete when the import-first launch is considered final. Fire-and-forget
+  `fetch(...).catch(()=>{})` telemetry swallowing errors stays intentional.
 
 ---
 
