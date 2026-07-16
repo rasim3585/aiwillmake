@@ -2551,6 +2551,12 @@
     /* Logged-in: navUser + signOut already visible before async confirms */
     html.pre-logged-in #signOutBtn { display: inline-flex !important; }
 
+    /* Language switcher */
+    .lang-switch { display: inline-flex; gap: 2px; background: var(--surf); border: 1px solid var(--bord); border-radius: 8px; padding: 2px; }
+    .lang-btn { border: none; background: transparent; color: var(--sec); font: inherit; font-size: .72rem; font-weight: 700; padding: 4px 7px; border-radius: 6px; cursor: pointer; line-height: 1; }
+    .lang-btn.active { background: var(--accent); color: #fff; }
+    .lang-btn:not(.active):hover { color: var(--txt); }
+
     /* ═══ Mobile hardening (audit 2026-07-16, verified at 375px) ═══ */
     @media (max-width: 600px) {
       /* iOS Safari zoom-on-focus fires on any control < 16px — force 16px (wins per-component rules) */
@@ -2879,11 +2885,100 @@
     <header class="header" id="appHeader">
       <div class="brand">aiwillmake</div>
       <nav class="nav">
-        <a href="index.html">Home</a>
+        <a href="index.html" data-i18n="nav.home">Home</a>
+        <div class="lang-switch" id="langSwitch">
+          <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')">TR</button>
+          <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+          <button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
+        </div>
         <span class="nav-user" id="navUser"></span>
-        <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()">Sign out</button>
+        <button class="btn-signout hidden" id="signOutBtn" onclick="signOut()" data-i18n="nav.signout">Sign out</button>
       </nav>
     </header>
+    <script>
+      /* ═══ i18n: site language (TR default) drives UI strings + AI output language ═══ */
+      const I18N = {
+        tr: {
+          'nav.home':'Ana sayfa', 'nav.signout':'Çıkış',
+          'wow.badge':'✓ Twin hazır',
+          'wow.archetype.eyebrow':'İletişim Kişiliğin',
+          'wow.archetype.share':'📸 Paylaş / İndir',
+          'wow.archetype.teaserLock':'🔒 İletişim Kişiliğin',
+          'wow.archetype.teaserText':'Bir sohbet daha analiz et — birden fazla ilişkinde tekrar eden iletişim kişiliğini çıkaralım ve paylaşılabilir bir kart yapalım.',
+          'wow.mirror.eyebrow':'👁 Seni de gördük',
+          'wow.unexpected.eyebrow':'🔍 Beklemediğimiz bir şey',
+          'wow.rehearse.eyebrow':'🎯 Ona ne diyeceksin?',
+          'wow.rehearse.sub':'Söylemek istediğin cümleyi yaz — nasıl karşılanacağını görelim.',
+          'wow.rehearse.ph':'Örn: Seninle konuşmam gereken bir şey var…',
+          'wow.rehearse.send':'Tepkiyi tahmin et →',
+          'wow.rehearse.tipLabel':'💡 Kanıta dayalı ipucu',
+          'wow.rehearse.again':'Başka cümle dene →',
+          'wow.loop.label':'🔄 Tekrar eden döngünüz',
+          'wow.dna.label':'İlişki DNA’sı',
+          'bys.eyebrow':'🛡️ Göndermeden önce',
+          'bys.analyze':'Nasıl karşılanır? →',
+          'bys.draftPh':'Buraya göndermek istediğin mesajı yapıştır…',
+          'person.brief':'🛡️ Göndermeden önce kontrol et',
+        },
+        en: {
+          'nav.home':'Home', 'nav.signout':'Sign out',
+          'wow.badge':'✓ Twin built',
+          'wow.archetype.eyebrow':'Your Communication Personality',
+          'wow.archetype.share':'📸 Share / Download',
+          'wow.archetype.teaserLock':'🔒 Your Communication Personality',
+          'wow.archetype.teaserText':'Analyze one more chat — we’ll surface the communication personality that repeats across your relationships and make a shareable card.',
+          'wow.mirror.eyebrow':'👁 We saw you too',
+          'wow.unexpected.eyebrow':'🔍 Something we didn’t expect',
+          'wow.rehearse.eyebrow':'🎯 What will you say to them?',
+          'wow.rehearse.sub':'Type the line you want to say — let’s see how it lands.',
+          'wow.rehearse.ph':'e.g. There’s something I need to talk to you about…',
+          'wow.rehearse.send':'Predict their reaction →',
+          'wow.rehearse.tipLabel':'💡 Evidence-based tip',
+          'wow.rehearse.again':'Try another line →',
+          'wow.loop.label':'🔄 Your repeating loop',
+          'wow.dna.label':'Relationship DNA',
+          'bys.eyebrow':'🛡️ Before you send',
+          'bys.analyze':'How will it land? →',
+          'bys.draftPh':'Paste the message you want to send here…',
+          'person.brief':'🛡️ Check before you send',
+        },
+        es: {
+          'nav.home':'Inicio', 'nav.signout':'Cerrar sesión',
+          'wow.badge':'✓ Gemelo listo',
+          'wow.archetype.eyebrow':'Tu Personalidad de Comunicación',
+          'wow.archetype.share':'📸 Compartir / Descargar',
+          'wow.archetype.teaserLock':'🔒 Tu Personalidad de Comunicación',
+          'wow.archetype.teaserText':'Analiza un chat más — mostraremos la personalidad de comunicación que se repite en tus relaciones y haremos una tarjeta para compartir.',
+          'wow.mirror.eyebrow':'👁 A ti también te vimos',
+          'wow.unexpected.eyebrow':'🔍 Algo que no esperábamos',
+          'wow.rehearse.eyebrow':'🎯 ¿Qué le vas a decir?',
+          'wow.rehearse.sub':'Escribe la frase que quieres decir — veamos cómo cae.',
+          'wow.rehearse.ph':'Ej: Hay algo de lo que necesito hablar contigo…',
+          'wow.rehearse.send':'Predecir su reacción →',
+          'wow.rehearse.tipLabel':'💡 Consejo basado en evidencia',
+          'wow.rehearse.again':'Prueba otra frase →',
+          'wow.loop.label':'🔄 Tu ciclo que se repite',
+          'wow.dna.label':'ADN de la relación',
+          'bys.eyebrow':'🛡️ Antes de enviar',
+          'bys.analyze':'¿Cómo caerá? →',
+          'bys.draftPh':'Pega aquí el mensaje que quieres enviar…',
+          'person.brief':'🛡️ Revisar antes de enviar',
+        },
+      };
+      let APP_LANG = localStorage.getItem('app_lang') || (navigator.language || 'tr').slice(0,2).toLowerCase();
+      if (!['tr','en','es'].includes(APP_LANG)) APP_LANG = 'tr';
+      function t(key, fb) { const d = I18N[APP_LANG] || I18N.tr; return d[key] || I18N.tr[key] || fb || key; }
+      function aiLang() { return { tr:'Turkish', en:'English', es:'Spanish' }[APP_LANG] || 'Turkish'; }
+      function applyI18n(root) {
+        root = root || document;
+        root.querySelectorAll('[data-i18n]').forEach(el => { const v = t(el.getAttribute('data-i18n'), null); if (v) el.textContent = v; });
+        root.querySelectorAll('[data-i18n-ph]').forEach(el => { const v = t(el.getAttribute('data-i18n-ph'), null); if (v) el.setAttribute('placeholder', v); });
+        document.documentElement.lang = APP_LANG;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === APP_LANG));
+      }
+      function setLang(l) { if (!['tr','en','es'].includes(l)) return; APP_LANG = l; localStorage.setItem('app_lang', l); applyI18n(); }
+      document.addEventListener('DOMContentLoaded', () => applyI18n());
+    </script>
     <script>
       /* Sync: set navUser letter immediately for logged-in users. */
       if (window._preAuthEmail) {
@@ -2978,12 +3073,12 @@
       <button type="button" class="back-btn" onclick="goBack()">← Back</button>
       <div class="bys-wrap">
         <div class="bys-header">
-          <div class="bys-eyebrow">🛡️ Göndermeden önce</div>
+          <div class="bys-eyebrow" data-i18n="bys.eyebrow">🛡️ Göndermeden önce</div>
           <h2 class="bys-title" id="bysTitle">—</h2>
           <p class="bys-sub">Göndermeye çekindiğin mesajı yapıştır — <b id="bysName">bu kişi</b> nasıl karşılar, neresi riskli, birlikte görelim.</p>
         </div>
-        <textarea id="bysDraft" class="bys-textarea" rows="5" placeholder="Buraya göndermek istediğin mesajı yapıştır…"></textarea>
-        <button type="button" class="bys-analyze-btn" id="bysAnalyzeBtn">Nasıl karşılanır? →</button>
+        <textarea id="bysDraft" class="bys-textarea" rows="5" placeholder="Buraya göndermek istediğin mesajı yapıştır…" data-i18n-ph="bys.draftPh"></textarea>
+        <button type="button" class="bys-analyze-btn" id="bysAnalyzeBtn" data-i18n="bys.analyze">Nasıl karşılanır? →</button>
         <div id="bysResult" class="bys-result hidden"></div>
       </div>
     </section>
@@ -3364,7 +3459,7 @@
       <div class="wow-inner">
         <!-- Header -->
         <div class="wow-header">
-          <div class="wow-badge">✓ Twin built</div>
+          <div class="wow-badge" data-i18n="wow.badge">✓ Twin built</div>
           <h2 class="wow-header-name" id="wowThemName">—</h2>
           <div class="wow-meta" id="wowConfidenceMeta"></div>
         </div>
@@ -3372,7 +3467,7 @@
         <!-- Communication Archetype — shareable hero (unlocks at 2+ analyzed contacts) -->
         <div class="wow-card wow-archetype hidden" id="wowArchetypeCard">
           <div id="wowArchetypeShareable" class="archetype-shareable">
-            <div class="archetype-eyebrow">İletişim Kişiliğin</div>
+            <div class="archetype-eyebrow" data-i18n="wow.archetype.eyebrow">İletişim Kişiliğin</div>
             <div class="archetype-emoji" id="wowArchetypeEmoji">🕊️</div>
             <div class="archetype-name" id="wowArchetypeName">—</div>
             <div class="archetype-tagline" id="wowArchetypeTagline"></div>
@@ -3380,39 +3475,39 @@
             <div class="archetype-rel" id="wowArchetypeRel"></div>
             <div class="archetype-brand">aiwillmake.com</div>
           </div>
-          <button type="button" class="archetype-share-btn" id="wowArchetypeShareBtn">📸 Paylaş / İndir</button>
+          <button type="button" class="archetype-share-btn" id="wowArchetypeShareBtn" data-i18n="wow.archetype.share">📸 Paylaş / İndir</button>
         </div>
         <div class="wow-card wow-archetype-teaser hidden" id="wowArchetypeTeaser">
-          <div class="archetype-eyebrow">🔒 İletişim Kişiliğin</div>
-          <p class="wow-card-summary">Bir sohbet daha analiz et — birden fazla ilişkinde tekrar eden <b>iletişim kişiliğini</b> çıkaralım ve paylaşılabilir bir kart yapalım.</p>
+          <div class="archetype-eyebrow" data-i18n="wow.archetype.teaserLock">🔒 İletişim Kişiliğin</div>
+          <p class="wow-card-summary" data-i18n="wow.archetype.teaserText">Bir sohbet daha analiz et — birden fazla ilişkinde tekrar eden iletişim kişiliğini çıkaralım ve paylaşılabilir bir kart yapalım.</p>
         </div>
 
         <!-- Mirror Card — star -->
         <!-- Unexpected Findings Card — the "how did it know that" hero -->
         <div class="wow-card wow-card-unexpected hidden" id="wowUnexpectedCard">
-          <div class="wow-card-eyebrow">🔍 Beklemediğimiz bir şey</div>
+          <div class="wow-card-eyebrow" data-i18n="wow.unexpected.eyebrow">🔍 Beklemediğimiz bir şey</div>
           <ul class="wow-unexpected-list" id="wowUnexpectedList"></ul>
         </div>
 
         <div class="wow-card wow-card-mirror" id="wowMirrorCard">
-          <div class="wow-card-eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
+          <div class="wow-card-eyebrow" data-i18n="wow.mirror.eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
           <ul class="wow-mirror-list" id="wowMirrorList"></ul>
           <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
         </div>
 
         <!-- Rehearsal Card -->
         <div class="wow-card wow-card-rehearse" id="wowRehearsalCard">
-          <div class="wow-card-eyebrow">🎯 Ona ne diyeceksin?</div>
-          <p class="wow-card-summary" style="margin-bottom:6px">Söylemek istediğin cümleyi yaz — nasıl karşılanacağını görelim.</p>
-          <textarea class="wow-rehearse-textarea" id="wowRehearseTa" placeholder="Örn: Seninle konuşmam gereken bir şey var…" rows="3"></textarea>
-          <button class="wow-rehearse-btn" id="wowRehearseSendBtn" onclick="doRehearsal()">Tepkiyi tahmin et →</button>
+          <div class="wow-card-eyebrow" data-i18n="wow.rehearse.eyebrow">🎯 Ona ne diyeceksin?</div>
+          <p class="wow-card-summary" style="margin-bottom:6px" data-i18n="wow.rehearse.sub">Söylemek istediğin cümleyi yaz — nasıl karşılanacağını görelim.</p>
+          <textarea class="wow-rehearse-textarea" id="wowRehearseTa" placeholder="Örn: Seninle konuşmam gereken bir şey var…" data-i18n-ph="wow.rehearse.ph" rows="3"></textarea>
+          <button class="wow-rehearse-btn" id="wowRehearseSendBtn" onclick="doRehearsal()" data-i18n="wow.rehearse.send">Tepkiyi tahmin et →</button>
           <div class="wow-rehearse-result hidden" id="wowRehearsalResult">
             <div class="wow-rehearse-bars" id="wowRehearseBars"></div>
             <div class="wow-rehearse-coach hidden" id="wowRehearseCoach">
-              <div class="wow-rehearse-coach-label">💡 Kanıta dayalı ipucu</div>
+              <div class="wow-rehearse-coach-label" data-i18n="wow.rehearse.tipLabel">💡 Kanıta dayalı ipucu</div>
               <div id="wowRehearseCoachText"></div>
             </div>
-            <button class="wow-rehearse-again" id="wowRehearseTryAgainBtn" onclick="onRehearseTryAgain()">Başka cümle dene →</button>
+            <button class="wow-rehearse-again" id="wowRehearseTryAgainBtn" onclick="onRehearseTryAgain()" data-i18n="wow.rehearse.again">Başka cümle dene →</button>
           </div>
         </div>
 
@@ -3429,13 +3524,13 @@
 
           <!-- Relationship Loop -->
           <div class="wow-loop-section hidden" id="wowLoopSection">
-            <div class="wow-section-label">🔄 Tekrar eden döngünüz</div>
+            <div class="wow-section-label" data-i18n="wow.loop.label">🔄 Tekrar eden döngünüz</div>
             <div class="wow-loop-steps" id="wowLoopSteps"></div>
           </div>
 
           <!-- DNA Bars -->
           <div class="wow-dna-section hidden" id="wowDnaSection">
-            <div class="wow-section-label">İlişki DNA'sı</div>
+            <div class="wow-section-label" data-i18n="wow.dna.label">İlişki DNA'sı</div>
             <div id="wowDnaBars"></div>
           </div>
         </div>
@@ -5616,7 +5711,7 @@
       const btn = document.getElementById('bysAnalyzeBtn');
       btn.disabled = true; btn.textContent = 'Analiz ediliyor…';
       const c = _bysCtx || activeContactContext || {};
-      const payload = { draft, language: (typeof lastFields !== 'undefined' && lastFields?.language) || 'Turkish',
+      const payload = { draft, language: aiLang(),
         contactContext: { name: c.name, type: c.type, relationship_state: c.relationship_state,
           relationship_summary: c.relationship_summary, relationship_tier: c.relationship_tier ?? 2,
           observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names || {},
@@ -5728,7 +5823,7 @@
         const r = await fetch('/api/rehearse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, contactContext: _wowRehearsalContext, language: 'Turkish' })
+          body: JSON.stringify({ message: msg, contactContext: _wowRehearsalContext, language: aiLang() })
         });
         if (!r.ok) throw new Error('API error');
         const d = await r.json();
@@ -7248,7 +7343,7 @@
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
             <button type="button" class="person-secondary-btn" id="personAnalyzeBtn">📩 Analyze reply</button>
-            <button type="button" class="person-secondary-btn" id="personBriefBtn">🛡️ Göndermeden önce kontrol et</button>
+            <button type="button" class="person-secondary-btn" id="personBriefBtn" data-i18n="person.brief">🛡️ Göndermeden önce kontrol et</button>
           </div>
 
           <div class="person-actions-list">
