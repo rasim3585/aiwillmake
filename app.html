@@ -2550,6 +2550,33 @@
     html.pre-logged-out #screen-landing { display: flex !important; }
     /* Logged-in: navUser + signOut already visible before async confirms */
     html.pre-logged-in #signOutBtn { display: inline-flex !important; }
+
+    /* ═══ Mobile hardening (audit 2026-07-16, verified at 375px) ═══ */
+    @media (max-width: 600px) {
+      /* iOS Safari zoom-on-focus fires on any control < 16px — force 16px (wins per-component rules) */
+      input, textarea, select { font-size: 16px !important; }
+      /* Landing: when content is taller than the viewport, center-clip hides the top (brand + hook)
+         with no way to scroll up. `safe center` falls back to top-align on overflow. */
+      .screen-landing { align-items: safe center; }
+      /* Modals/overlays: scroll tall content + don't clip the top on short/landscape phones */
+      .credits-modal, .upgrade-modal-overlay, .import-auth-overlay { overflow-y: auto; align-items: safe center; }
+      .credits-plans { flex-direction: column; }
+      /* Roleplay practice modal → full-height edge-to-edge sheet so the input footer stays above the
+         keyboard (100dvh tracks the keyboard-shrunk viewport; older engines ignore it → max-height:90vh) */
+      .roleplay-modal { padding: 0; }
+      .roleplay-card { max-width: 100%; width: 100%; max-height: 100dvh; height: 100dvh; border-radius: 0; }
+      /* Debrief controls: tappable size + let outcome labels wrap instead of overflowing their pill */
+      .rp-outcome-btn { min-height: 40px; padding: 9px 10px; white-space: normal; }
+      .rp-star { font-size: 26px; padding: 6px; }
+      .rp-mfb-btn, .rp-mfb-tag { min-height: 34px; padding: 6px 10px; }
+      .rp-stars, .rp-real-outcome-btns { gap: 8px; }
+      /* Toast: wrap long unbreakable strings (server/error text) instead of clipping past the edge */
+      .toast { overflow-wrap: anywhere; }
+    }
+    /* Touch devices have no hover — reveal the hover-only row actions (delete / replay) */
+    @media (hover: none) {
+      .tl-del-btn, .tl-replay-btn, .home-conv-del { opacity: 1 !important; }
+    }
   </style>
   <script>
     /* Sync session sniff — same logic as index.html, adapted for app.html.
