@@ -127,6 +127,23 @@ app.post('/api/lemonsqueezy-webhook', express.raw({ type: 'application/json' }),
 
 app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+)
 
+// ── Provider-error sanitizer ─────────────────────────────────────────────────
+// Handlers pass raw e.message into 5xx bodies. When the message comes from the
+// AI provider (billing / key / quota details), replace it with a stable, safe
+// error code — clients key off `error === 'ai_unavailable'` for friendly copy.
+app.use((req, res, next) => {
+  const origJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 500 && body && typeof body.error === 'string' &&
+        /credit balance|billing|api key|x-api-key|anthropic|overloaded|rate.?limit/i.test(body.error)) {
+      console.error('[sanitized-error]', req.path, body.error);
+      body = { error: 'ai_unavailable' };
+    }
+    return origJson(body);
+  };
+  next();
+});
+
 // ── Static serving (locked down) ──────────────────────────────────────────────
 // Only these files are publicly downloadable. Everything else in the project root
 // (server.js, package.json, test scripts, etc.) is NOT exposed. The only local JS
@@ -3259,8 +3276,27 @@ app.get('/api/keepalive', limiter, async (req, res) => {
       db = r.ok ? 'ok' : `err_${r.status}`;
     }
   } catch (_) { db = 'error'; }
+  // Opt-in AI health check (?ai=1): a 1-token Haiku call (~$0.000002) catches an
+  // exhausted Anthropic credit balance BEFORE a customer does. Opt-in so the
+  // external uptime monitors hitting this route don't each burn a call; the
+  // GitHub Action passes ai=1 daily and goes red (→ email) when ai !== 'ok'.
+  let ai = 'skip';
+  if (req.query.ai === '1' && process.env.ANTHROPIC_API_KEY) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'ok' }] })
+      });
+      if (r.ok) ai = 'ok';
+      else {
+        const msg = (await r.json().catch(() => ({})))?.error?.message || '';
+        ai = /credit balance/i.test(msg) ? 'credit_low' : `err_${r.status}`;
+      }
+    } catch (_) { ai = 'error'; }
+  }
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ ok: true, db, ts: new Date().toISOString() });
+  res.json({ ok: true, db, ai, ts: new Date().toISOString() });
 });
 
 process.stdin.resume();

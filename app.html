@@ -8631,6 +8631,7 @@
         });
         const data = await resp.json();
         typingEl.remove();
+        if (resp.status === 402) { showUpgradeModal(); return; }
         if (!resp.ok) throw new Error(data.error || 'Failed');
         _simHistory.push({ role: 'assistant', content: data.reply });
         _rpAppendBubble('other', data.reply);
@@ -8640,7 +8641,16 @@
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
       } catch (e) {
         typingEl.remove();
-        _rpAppendBubble('other', 'Something went wrong — try again.');
+        // rp-messages is i18n-skip-listed (dynamic container), so pick language here.
+        const _lang = window.APP_LANG || 'tr';
+        const _msgs = (e && e.message === 'ai_unavailable')
+          ? { tr: 'AI hizmeti şu an geçici olarak kullanılamıyor — birazdan tekrar dene.',
+              en: 'The AI service is temporarily unavailable — try again shortly.',
+              es: 'El servicio de IA no está disponible temporalmente — inténtalo en un momento.' }
+          : { tr: 'Bir şeyler ters gitti — tekrar dene.',
+              en: 'Something went wrong — try again.',
+              es: 'Algo salió mal — inténtalo de nuevo.' };
+        _rpAppendBubble('other', _msgs[_lang] || _msgs.tr);
         console.error('[simulate-reply]', e);
       } finally {
         sendBtn.disabled = false;
