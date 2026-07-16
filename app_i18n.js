@@ -11,7 +11,8 @@
     'rp-messages':1, 'convListEl':1, 'contactsListEl':1, 'recentMsgsWidget':1,
     'wowMirrorList':1, 'wowUnexpectedList':1, 'wowThemSummary':1,
     'wowArchetypeName':1, 'wowArchetypeTagline':1, 'wowArchetypeTraits':1,
-    'wowLoopSteps':1, 'wowDnaBars':1, 'bysResult':1
+    'wowLoopSteps':1, 'wowDnaBars':1, 'bysResult':1,
+    'wowStatsCards':1, 'processingStats':1  // stat cards/chips render language-aware already
   };
   var origMap = new WeakMap();  // textNode -> original trimmed source string
   var origPh  = new WeakMap();  // element  -> original placeholder string

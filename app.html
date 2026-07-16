@@ -2229,6 +2229,24 @@
     .processing-msg { font-size: 1.25rem; font-weight: 700; color: var(--fg); min-height: 2.6em; line-height: 1.4; margin-bottom: 40px; transition: opacity .35s ease; }
     .processing-bar-wrap { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; overflow: hidden; }
     .processing-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width .9s ease; width: 0%; }
+    /* live stat chips under the processing bar */
+    .processing-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; min-height: 34px; max-width: 420px; margin-left: auto; margin-right: auto; }
+    .ps-chip { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 6px 13px; font-size: .8rem; color: var(--sec); opacity: 0; transform: translateY(6px); transition: opacity .5s, transform .5s; }
+    .ps-chip.show { opacity: 1; transform: none; }
+    .ps-chip b { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+    /* ── WOW measured stat cards ("Sayılarla ilişkiniz") ── */
+    .wow-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ws-card { background: var(--panel, rgba(255,255,255,.045)); border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 15px 15px 13px; display: flex; flex-direction: column; gap: 5px; }
+    .ws-card.ws-wide { grid-column: 1 / -1; }
+    .ws-eyebrow { font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--sec); font-weight: 700; }
+    .ws-big { font-size: 1.55rem; font-weight: 800; line-height: 1.1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+    .ws-big small { font-size: .85rem; font-weight: 600; color: var(--sec); }
+    .ws-insight { font-size: .8rem; color: var(--sec); line-height: 1.45; }
+    .ws-insight em { color: var(--accent); font-style: normal; font-weight: 700; }
+    .ws-ratio { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.07); margin-top: 4px; }
+    .ws-ratio i { display: block; height: 100%; }
+    .ws-legend { display: flex; justify-content: space-between; font-size: .7rem; color: var(--sec); margin-top: 4px; }
 
     /* ── WOW Screen ── */
     .wow-inner { padding: 28px 20px 48px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
@@ -2898,6 +2916,7 @@
       </nav>
     </header>
     <script src="/app_i18n.js"></script>
+    <script src="/app_stats.js"></script>
     <script>
       /* ═══ i18n: site language (TR default) drives UI strings + AI output language ═══ */
       const I18N = {
@@ -3459,6 +3478,9 @@
         <div class="processing-bar-wrap">
           <div class="processing-bar" id="processingBar"></div>
         </div>
+        <!-- Live stats computed on-device by app_stats.js the instant the text is read —
+             real numbers replace dead waiting while the AI analysis runs -->
+        <div class="processing-stats" id="processingStats"></div>
       </div>
     </section>
 
@@ -3471,6 +3493,10 @@
           <h2 class="wow-header-name" id="wowThemName">—</h2>
           <div class="wow-meta" id="wowConfidenceMeta"></div>
         </div>
+
+        <!-- Measured stat cards ("Sayılarla ilişkiniz") — deterministic, on-device,
+             rendered only when the data clears each card's salience threshold -->
+        <div class="wow-stats-grid hidden" id="wowStatsCards"></div>
 
         <!-- Communication Archetype — shareable hero (unlocks at 2+ analyzed contacts) -->
         <div class="wow-card wow-archetype hidden" id="wowArchetypeCard">
@@ -5536,6 +5562,10 @@
       document.getElementById('wowTwinLabel').textContent = name;
       document.getElementById('wowCtaName').textContent = name;
 
+      // Measured stat cards (on-device numbers from this import; hidden when absent)
+      try { renderWowStatCards(window._lastChatStats, name); }
+      catch (e) { console.error('[stat-cards]', e); document.getElementById('wowStatsCards')?.classList.add('hidden'); }
+
       const conf = data.confidence_score || 0;
       const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
       const metaParts = [];
@@ -5938,6 +5968,140 @@
       document.getElementById('wowRehearsalResult').classList.add('hidden');
       document.getElementById('wowRehearseTa').value = '';
       document.getElementById('wowRehearseTa').focus();
+    }
+
+    /* ═══ Measured stat cards + live processing chips (fed by app_stats.js) ═══ */
+    function _wsT(key, vars) {
+      const L = {
+        found:      { tr: '<b>{n}</b> mesaj bulundu', en: '<b>{n}</b> messages found', es: '<b>{n}</b> mensajes encontrados' },
+        split:      { tr: '<b>{a}</b> sen · <b>{b}</b> {name}', en: '<b>{a}</b> you · <b>{b}</b> {name}', es: '<b>{a}</b> tú · <b>{b}</b> {name}' },
+        medians:    { tr: 'medyan yanıt: sen <b>{a}</b> · o <b>{b}</b>', en: 'median reply: you <b>{a}</b> · them <b>{b}</b>', es: 'respuesta mediana: tú <b>{a}</b> · él/ella <b>{b}</b>' },
+        record:     { tr: 'rekor gün: <b>{date}</b> — {n} mesaj', en: 'record day: <b>{date}</b> — {n} messages', es: 'día récord: <b>{date}</b> — {n} mensajes' },
+        eyOpen:     { tr: 'Konuşmanız', en: 'Your conversation', es: 'Su conversación' },
+        openIns:    { tr: 'İlk mesaj: <em>{date}</em> · {days} aktif gün', en: 'First message: <em>{date}</em> · {days} active days', es: 'Primer mensaje: <em>{date}</em> · {days} días activos' },
+        msgWord:    { tr: 'mesaj', en: 'messages', es: 'mensajes' },
+        eyBalance:  { tr: 'Denge', en: 'Balance', es: 'Equilibrio' },
+        youShort:   { tr: 'sen', en: 'you', es: 'tú' },
+        iniYou:     { tr: 'Konuşmaların <em>%{p}</em>’ini <em>sen</em> başlatıyorsun', en: '<em>You</em> start <em>{p}%</em> of your conversations', es: '<em>Tú</em> inicias el <em>{p}%</em> de las conversaciones' },
+        iniThem:    { tr: 'Konuşmaların <em>%{p}</em>’ini <em>{name}</em> başlatıyor', en: '<em>{name}</em> starts <em>{p}%</em> of your conversations', es: '<em>{name}</em> inicia el <em>{p}%</em> de las conversaciones' },
+        eyTempo:    { tr: 'Tempo', en: 'Tempo', es: 'Ritmo' },
+        tempoYouFast: { tr: 'Sen daha hızlı dönüyorsun', en: 'You reply faster', es: 'Tú respondes más rápido' },
+        tempoThemFast:{ tr: '{name} daha hızlı dönüyor', en: '{name} replies faster', es: '{name} responde más rápido' },
+        eyRecord:   { tr: 'Rekor', en: 'Record', es: 'Récord' },
+        recDayIns:  { tr: 'Rekor gününüz: <em>{date}</em> — o gün ne oldu?', en: 'Your record day: <em>{date}</em> — what happened that day?', es: 'Su día récord: <em>{date}</em> — ¿qué pasó ese día?' },
+        recSesIns:  { tr: 'En uzun kesintisiz yazışmanız — <em>{min} dakika</em>', en: 'Your longest non-stop session — <em>{min} minutes</em>', es: 'Su sesión más larga sin parar — <em>{min} minutos</em>' },
+        recSilence: { tr: '<em>{d} gün</em> — en uzun sessizliğiniz. Kıran: <em>{who}</em>', en: '<em>{d} days</em> — your longest silence. Broken by <em>{who}</em>', es: '<em>{d} días</em> — su silencio más largo. Lo rompió <em>{who}</em>' },
+        eySign:     { tr: 'İmzalar', en: 'Signatures', es: 'Firmas' },
+        signIns:    { tr: '<em>{n} kez</em> — ikinizin kelimesi. İmzan {e1} · onunki {e2}', en: '<em>{n}×</em> — your shared word. Your signature {e1} · theirs {e2}', es: '<em>{n} veces</em> — su palabra compartida. Tu firma {e1} · la suya {e2}' },
+        emojiOnly:  { tr: 'İmzan {e1} · onunki {e2}', en: 'Your signature {e1} · theirs {e2}', es: 'Tu firma {e1} · la suya {e2}' },
+        minShort:   { tr: 'dk', en: 'min', es: 'min' },
+        hourShort:  { tr: 'sa', en: 'h', es: 'h' },
+        underMin:   { tr: '1 dk altı', en: 'under 1 min', es: 'menos de 1 min' },
+      };
+      const lang = window.APP_LANG || 'tr';
+      let s = (L[key] && (L[key][lang] || L[key].tr)) || key;
+      Object.entries(vars || {}).forEach(([k, v]) => { s = s.split('{' + k + '}').join(v); });
+      return s;
+    }
+    function _wsDur(ms) {
+      if (ms == null) return '—';
+      if (ms < 75e3) return _wsT('underMin');
+      if (ms < 100 * 60e3) return Math.round(ms / 60e3) + ' ' + _wsT('minShort');
+      const h = Math.floor(ms / 3600e3), m = Math.round((ms % 3600e3) / 60e3);
+      return h + ' ' + _wsT('hourShort') + (m ? ' ' + m + ' ' + _wsT('minShort') : '');
+    }
+    function _wsDate(d) {
+      const loc = { tr: 'tr-TR', en: 'en-GB', es: 'es-ES' }[window.APP_LANG || 'tr'];
+      try { return new Date(d).toLocaleDateString(loc, { day: 'numeric', month: 'long' }); } catch (_) { return String(d); }
+    }
+    // Map the two principal senders onto user vs contact using the contact's name.
+    function _wsWho(m, contactName) {
+      const norm = s => String(s || '').toLocaleLowerCase('tr').trim();
+      const cn = norm(contactName);
+      let contactKey = m.senders.find(s => { const ns = norm(s); return cn && (ns.includes(cn) || cn.includes(ns)); });
+      if (!contactKey) return null; // can't attribute — cards fall back to neutral labels
+      const userKey = m.senders.find(s => s !== contactKey);
+      return { userKey, contactKey };
+    }
+
+    function renderProcessingStats(m, contactName) {
+      const host = document.getElementById('processingStats');
+      if (!host || !m || !m.ok) return;
+      host.innerHTML = '';
+      const who = _wsWho(m, contactName);
+      const chips = [];
+      chips.push(_wsT('found', { n: m.totalMessages.toLocaleString('tr-TR') }));
+      if (who) chips.push(_wsT('split', { a: m.perSender[who.userKey].count.toLocaleString('tr-TR'), b: m.perSender[who.contactKey].count.toLocaleString('tr-TR'), name: contactName }));
+      if (who && m.perSender[who.userKey].replyMedianMs != null && m.perSender[who.contactKey].replyMedianMs != null) {
+        chips.push(_wsT('medians', { a: _wsDur(m.perSender[who.userKey].replyMedianMs), b: _wsDur(m.perSender[who.contactKey].replyMedianMs) }));
+      }
+      if (m.recordDays[0] && m.recordDays[0].count >= 25) chips.push(_wsT('record', { date: _wsDate(m.recordDays[0].date), n: m.recordDays[0].count }));
+      chips.forEach((html, i) => {
+        const el = document.createElement('span');
+        el.className = 'ps-chip';
+        el.innerHTML = html;
+        host.appendChild(el);
+        setTimeout(() => el.classList.add('show'), 600 + i * 900);
+      });
+    }
+
+    // Reveal cards: a card renders ONLY when its data deviates enough to say
+    // something (research rule: 50/50 = no card). Max 5 incl. the opener.
+    function renderWowStatCards(m, contactName) {
+      const grid = document.getElementById('wowStatsCards');
+      if (!grid) return;
+      grid.innerHTML = '';
+      if (!m || !m.ok || m.totalMessages < 30) { grid.classList.add('hidden'); return; }
+      const who = _wsWho(m, contactName);
+      const cards = [];
+      const card = (ey, big, insight, extra, wide) =>
+        `<div class="ws-card${wide ? ' ws-wide' : ''}"><div class="ws-eyebrow">${ey}</div><div class="ws-big">${big}</div><div class="ws-insight">${insight}</div>${extra || ''}</div>`;
+
+      // 1 — opener (always)
+      cards.push(card(_wsT('eyOpen'),
+        `${m.totalMessages.toLocaleString('tr-TR')} <small>${_wsT('msgWord')}</small>`,
+        _wsT('openIns', { date: _wsDate(m.firstTs), days: m.activeDays }), '', true));
+
+      if (who) {
+        const u = m.perSender[who.userKey], c = m.perSender[who.contactKey];
+        // 2 — balance (only if skewed)
+        const iniSkew = Math.max(u.initiationShare, c.initiationShare);
+        if (Math.max(u.share, c.share) >= 58 || iniSkew >= 62) {
+          const iniIns = u.initiationShare >= c.initiationShare
+            ? _wsT('iniYou', { p: u.initiationShare }) : _wsT('iniThem', { p: c.initiationShare, name: contactName });
+          const bar = `<div class="ws-ratio"><i style="width:${u.share}%;background:var(--accent)"></i><i style="width:${c.share}%;background:rgba(255,255,255,.28)"></i></div>` +
+            `<div class="ws-legend"><span>${u.count.toLocaleString('tr-TR')} ${_wsT('youShort')}</span><span>${c.count.toLocaleString('tr-TR')} ${contactName}</span></div>`;
+          cards.push(card(_wsT('eyBalance'), `%${Math.max(u.share, c.share)}`, iniIns, bar, false));
+        }
+        // 3 — tempo (both medians)
+        if (u.replyMedianMs != null && c.replyMedianMs != null) {
+          const fasterYou = u.replyMedianMs <= c.replyMedianMs;
+          cards.push(card(_wsT('eyTempo'),
+            `${_wsDur(u.replyMedianMs)} <small>${_wsT('youShort')}</small> · ${_wsDur(c.replyMedianMs)} <small>${contactName}</small>`,
+            fasterYou ? _wsT('tempoYouFast') : _wsT('tempoThemFast', { name: contactName }), '', false));
+        }
+      }
+      // 4 — record (most salient of day/session/silence)
+      const rd = m.recordDays[0], ls = m.longestSession, sil = m.longestSilence;
+      const recs = [
+        rd && rd.count >= 30 ? { s: rd.count / 40, html: card(_wsT('eyRecord'), `${rd.count} <small>${_wsT('msgWord')}</small>`, _wsT('recDayIns', { date: _wsDate(rd.date) }), '', false) } : null,
+        ls && ls.count >= 50 ? { s: ls.count / 50, html: card(_wsT('eyRecord'), `${ls.count} <small>${_wsT('msgWord')}</small>`, _wsT('recSesIns', { min: ls.minutes }), '', false) } : null,
+        sil && sil.days >= 7 && who ? { s: sil.days / 10, html: card(_wsT('eyRecord'), `${Math.round(sil.days)} <small>${{ tr: 'gün', en: 'days', es: 'días' }[window.APP_LANG] || 'gün'}</small>`, _wsT('recSilence', { d: Math.round(sil.days), who: sil.brokenBy === who.userKey ? _wsT('youShort') : contactName }), '', false) } : null,
+      ].filter(Boolean).sort((a, b) => b.s - a.s);
+      if (recs[0]) cards.push(recs[0].html);
+      // 5 — signatures
+      const sw = m.sharedWords[0];
+      if (who) {
+        const e1 = (m.perSender[who.userKey].topEmojis[0] || {}).value || '—';
+        const e2 = (m.perSender[who.contactKey].topEmojis[0] || {}).value || '—';
+        if (sw && sw.count >= 8) {
+          cards.push(card(_wsT('eySign'), `«${sw.value}»`, _wsT('signIns', { n: sw.count, e1, e2 }), '', true));
+        } else if (e1 !== '—' && e2 !== '—') {
+          cards.push(card(_wsT('eySign'), `${e1} · ${e2}`, _wsT('emojiOnly', { e1, e2 }), '', true));
+        }
+      }
+      grid.innerHTML = cards.slice(0, 5).join('');
+      grid.classList.remove('hidden');
     }
 
     const _PROCESSING_MSGS = [
@@ -6964,6 +7128,13 @@
           : await readImportFile(fileOrText);
         const text = rawText;
         const wasSampled = false;
+
+        // On-device stats: instant real numbers for the processing chips + wow cards.
+        // Never blocks the analysis — a parse failure just means no cards.
+        try {
+          window._lastChatStats = window.ChatStats ? ChatStats.compute(ChatStats.parse(text)) : null;
+          if (window._lastChatStats?.ok) renderProcessingStats(window._lastChatStats, contactName);
+        } catch (_) { window._lastChatStats = null; }
 
         // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
         let previousContext = null;
