@@ -146,11 +146,11 @@ app.use((req, res, next) => {
 
 // ── Static serving (locked down) ──────────────────────────────────────────────
 // Only these files are publicly downloadable. Everything else in the project root
-// (server.js, package.json, test scripts, etc.) is NOT exposed. The only local JS
-// asset is app_i18n.js (the app UI translation dictionary); everything else loads
-// from a CDN — so an explicit allow-list is safe.
+// (server.js, package.json, test scripts, etc.) is NOT exposed. Local JS assets:
+// app_i18n.js (UI translation dictionary) + app_stats.js (client-side chat stats
+// engine); everything else loads from a CDN — so an explicit allow-list is safe.
 const PUBLIC_FILES = new Set([
-  '/', '/index.html', '/app.html', '/privacy.html', '/app_i18n.js',
+  '/', '/index.html', '/app.html', '/privacy.html', '/app_i18n.js', '/app_stats.js',
   '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
 ]);
 // Route static ONLY through the allow-list. Do NOT chain a blanket express.static
