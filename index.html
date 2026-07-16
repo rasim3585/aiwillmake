@@ -700,6 +700,11 @@
       <span class="hdr-logo-icon">◈</span>
       <span class="hdr-logo-text">AIWILLMAKE</span>
     </a>
+    <div id="langSwitch" style="display:inline-flex;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:2px;margin-right:10px;">
+      <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">TR</button>
+      <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">EN</button>
+      <button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">ES</button>
+    </div>
     <div id="hdrAuthArea">
       <button id="hdrAuthBtn" class="hdr-auth-btn" onclick="window.location.href='app.html'">Sign in</button>
       <div id="hdrProfile" class="hdr-profile">
@@ -1580,5 +1585,82 @@ function scrollToBottom() {
 </section>
 
 -->
+<style>#langSwitch .lang-btn.active{background:var(--accent,#6d5bd0);color:#fff;opacity:1;}</style>
+<script>
+/* i18n for the landing: content-keyed runtime translator (EN authored → TR/ES). Shares the
+   'app_lang' localStorage key with app.html so the language choice carries into the app. */
+(function () {
+  const DICT = {
+    "AIWILLMAKE — The conversation before the conversation.":{tr:"AIWILLMAKE — Konuşmadan önceki konuşma.",es:"AIWILLMAKE — La conversación antes de la conversación."},
+    "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
+    "The conversation":{tr:"O konuşma",es:"La conversación"},"before the conversation.":{tr:"olmadan önce, burada.",es:"antes de la conversación."},
+    "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
+    "Rehearse the hard conversation before you have it.":{tr:"Zor konuşmayı yapmadan önce prova et.",es:"Ensaya la conversación difícil antes de tenerla."},
+    "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · takes 30 seconds":{tr:"WhatsApp .txt veya .zip · 30 saniye sürer",es:"WhatsApp .txt o .zip · tarda 30 segundos"},
+    "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Import chat":{tr:"Sohbet yükle",es:"Importar chat"},"Build the twin":{tr:"İkizi kur",es:"Crear el gemelo"},"Rehearse":{tr:"Prova et",es:"Ensaya"},
+    "Try the engine on a few characters.":{tr:"Motoru birkaç karakterle dene.",es:"Prueba el motor con algunos personajes."},
+    "Your Boss":{tr:"Patronun",es:"Tu jefe"},"Ask for a raise":{tr:"Zam iste",es:"Pide un aumento"},"Make him admit he took your credit":{tr:"Emeğini sahiplendiğini itiraf ettir",es:"Haz que admita que se llevó tu mérito"},
+    "Your Mom":{tr:"Annen",es:"Tu madre"},"Tell her you're skipping the holidays":{tr:"Bu bayram gelmeyeceğini söyle",es:"Dile que no irás en las fiestas"},"Tell her you're moving away":{tr:"Başka şehre taşınacağını söyle",es:"Dile que te mudas lejos"},
+    "Your Partner":{tr:"Sevgilin",es:"Tu pareja"},"Define the relationship":{tr:"İlişkiyi netleştir",es:"Define la relación"},"Bring up what's been bothering you":{tr:"Seni rahatsız eden şeyi gündeme getir",es:"Saca lo que te ha estado molestando"},
+    "Your Client":{tr:"Müşterin",es:"Tu cliente"},"Say no to out-of-scope work":{tr:"Kapsam dışı işlere hayır de",es:"Di no al trabajo fuera de alcance"},"Get the overdue invoice paid":{tr:"Geciken faturayı ödet",es:"Cobra la factura vencida"},
+    "Your Ex":{tr:"Eski Sevgilin",es:"Tu ex"},"Get closure — for real this time":{tr:"Defteri kapat — bu sefer gerçekten",es:"Pasa página — de verdad esta vez"},"Find out if they want you back":{tr:"Seni geri isteyip istemediğini öğren",es:"Descubre si quiere que vuelvas"},
+    "Your Best Friend":{tr:"En Yakın Arkadaşın",es:"Tu mejor amigo"},"Confess what you've been hiding":{tr:"Sakladığın şeyi itiraf et",es:"Confiesa lo que has estado ocultando"},"Get their honest take on a bad decision":{tr:"Kötü bir kararın hakkında dürüst fikrini al",es:"Consigue su opinión sincera sobre una mala decisión"},
+    "THE REAL THING":{tr:"GERÇEĞİN TA KENDİSİ",es:"LO REAL"},"Upload your real chat history → the AI becomes someone you actually know":{tr:"Gerçek sohbet geçmişini yükle → yapay zeka gerçekten tanıdığın birine dönüşsün",es:"Sube tu historial de chat real → la IA se convierte en alguien que conoces de verdad"},
+    "Attempts left:":{tr:"Kalan deneme:",es:"Intentos restantes:"},"This is a demo. The real version is different.":{tr:"Bu bir demo. Gerçek sürüm çok farklı.",es:"Esto es una demo. La versión real es diferente."},
+    "Try it with someone real →":{tr:"Gerçek biriyle dene →",es:"Pruébalo con alguien real →"},"Try again":{tr:"Tekrar dene",es:"Intentar de nuevo"},"That was a generic AI. Now try it with someone real →":{tr:"O sıradan bir yapay zekaydı. Şimdi gerçek biriyle dene →",es:"Esa era una IA genérica. Ahora pruébalo con alguien real →"},
+    "How it works":{tr:"Nasıl çalışır",es:"Cómo funciona"},"Import a WhatsApp chat":{tr:"Bir WhatsApp sohbeti içe aktar",es:"Importa un chat de WhatsApp"},"Paste or upload a .txt or .zip export. Takes 30 seconds.":{tr:".txt veya .zip dışa aktarımını yapıştır ya da yükle. 30 saniye sürer.",es:"Pega o sube una exportación .txt o .zip. Toma 30 segundos."},
+    "We build their twin":{tr:"İkizini oluşturuyoruz",es:"Creamos su gemelo"},"The AI studies how they talk, what they care about, how they argue.":{tr:"Yapay zeka nasıl konuştuğunu, nelere değer verdiğini, nasıl tartıştığını inceler.",es:"La IA estudia cómo habla, qué le importa y cómo discute."},
+    "Rehearse before it's real":{tr:"Gerçek olmadan önce prova et",es:"Ensaya antes de que sea real"},"Practice the hard conversation. See how they'll likely react. Walk in ready.":{tr:"Zor konuşmanın provasını yap. Nasıl tepki vereceğini gör. Hazır gir.",es:"Practica la conversación difícil. Anticipa cómo reaccionará. Entra preparado."},
+    "Who it's for":{tr:"Kimler için",es:"Para quién es"},"Reconnecting with an ex":{tr:"Eski sevgilinle yeniden bağ kurmak",es:"Reconectar con un ex"},"Asking your boss for a raise":{tr:"Patronundan zam istemek",es:"Pedirle un aumento a tu jefe"},
+    "Setting a boundary with family":{tr:"Ailene sınır koymak",es:"Poner límites con la familia"},"Closing a deal with a client":{tr:"Bir müşteriyle anlaşmayı kapatmak",es:"Cerrar un trato con un cliente"},"Telling someone how you really feel":{tr:"Birine gerçek hislerini söylemek",es:"Decirle a alguien lo que de verdad sientes"},
+    "Navigating a breakup":{tr:"Bir ayrılığı atlatmak",es:"Superar una ruptura"},"Every conversation that matters":{tr:"Önemli olan her konuşma",es:"Cada conversación que importa"},"Start with someone real":{tr:"Gerçek biriyle başla",es:"Empieza con alguien real"},
+    "Frequently asked questions":{tr:"Sıkça sorulan sorular",es:"Preguntas frecuentes"},"Is my chat data private?":{tr:"Sohbet verilerim gizli mi?",es:"¿Mis datos de chat son privados?"},
+    "Yes. Your chats are encrypted and only you can access them. We never share or sell your data.":{tr:"Evet. Sohbetlerin şifrelenir ve yalnızca sen erişebilirsin. Verilerini asla paylaşmaz ya da satmayız.",es:"Sí. Tus chats están cifrados y solo tú puedes acceder a ellos. Nunca compartimos ni vendemos tus datos."},
+    "How accurate is the twin?":{tr:"İkiz ne kadar isabetli?",es:"¿Qué tan preciso es el gemelo?"},"The more you import, the sharper it gets. It learns their patterns, phrases, and tendencies from real messages.":{tr:"Ne kadar çok içe aktarırsan o kadar keskinleşir. Gerçek mesajlardan kişinin kalıplarını, ifadelerini ve eğilimlerini öğrenir.",es:"Cuanto más importas, más afinado se vuelve. Aprende sus patrones, frases y tendencias a partir de mensajes reales."},
+    "Do I need the other person's permission?":{tr:"Karşı tarafın iznine ihtiyacım var mı?",es:"¿Necesito el permiso de la otra persona?"},"You're analyzing your own conversation history — the same messages already on your phone.":{tr:"Kendi konuşma geçmişini analiz ediyorsun — zaten telefonundaki aynı mesajları.",es:"Estás analizando tu propio historial de conversación — los mismos mensajes que ya están en tu teléfono."},
+    "What languages does it support?":{tr:"Hangi dilleri destekliyor?",es:"¿Qué idiomas admite?"},"It works in any language your chat is in — including Turkish, English, and more.":{tr:"Sohbetin hangi dildeyse o dilde çalışır — Türkçe, İngilizce ve daha fazlası dahil.",es:"Funciona en el idioma en que esté tu chat — incluyendo español, inglés y más."},
+    "How much does it cost?":{tr:"Ücreti ne kadar?",es:"¿Cuánto cuesta?"},"Start free. Upgrade when you're ready for unlimited conversations and twins.":{tr:"Ücretsiz başla. Sınırsız konuşma ve ikiz için hazır olduğunda yükselt.",es:"Empieza gratis. Mejora tu plan cuando quieras conversaciones y gemelos ilimitados."},
+    "Ready to rehearse?":{tr:"Prova yapmaya hazır mısın?",es:"¿Listo para ensayar?"},"Build your first twin in 30 seconds.":{tr:"İlk ikizini 30 saniyede oluştur.",es:"Crea tu primer gemelo en 30 segundos."},"Get started free →":{tr:"Ücretsiz başla →",es:"Empieza gratis →"},
+    "Built for the conversations that keep you up at night.":{tr:"Seni geceleri uyutmayan konuşmalar için tasarlandı.",es:"Creado para las conversaciones que te quitan el sueño."},
+    "Privacy":{tr:"Gizlilik",es:"Privacidad"},"Terms":{tr:"Koşullar",es:"Términos"},"Contact":{tr:"İletişim",es:"Contacto"},
+    "The conversation before the conversation":{tr:"Konuşmadan önceki konuşma",es:"La conversación antes de la conversación"},"Simulated from real WhatsApp history":{tr:"Gerçek WhatsApp geçmişinden canlandırıldı",es:"Simulado a partir de tu historial real de WhatsApp"},
+    "You said":{tr:"Sen dedin",es:"Dijiste"},"Send":{tr:"Gönder",es:"Enviar"},"Thinking…":{tr:"Düşünüyor…",es:"Pensando…"},"Type your message…":{tr:"Mesajını yaz…",es:"Escribe tu mensaje…"},"Powered by your real chat history":{tr:"Gerçek sohbet geçmişinle çalışır",es:"Impulsado por tu historial de chat real"},
+    "Reconnect":{tr:"Yeniden bağ kur",es:"Reconectar"},"Apologize":{tr:"Özür dile",es:"Pedir disculpas"},"Ask for something":{tr:"Bir şey iste",es:"Pedir algo"},"Set a boundary":{tr:"Sınır koy",es:"Poner un límite"},"Say goodbye":{tr:"Veda et",es:"Despedirte"},"Just talk":{tr:"Sadece konuş",es:"Solo hablar"},
+    "No credit card required":{tr:"Kredi kartı gerekmez",es:"Sin tarjeta de crédito"},"1 twin free":{tr:"1 ikiz ücretsiz",es:"1 gemelo gratis"},"Unlimited rehearsals":{tr:"Sınırsız prova",es:"Ensayos ilimitados"},"See how they'll react":{tr:"Nasıl tepki vereceğini gör",es:"Mira cómo reaccionará"},"Before you hit send":{tr:"Göndere basmadan önce",es:"Antes de darle a enviar"}
+  };
+  let LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();
+  if (!['tr','en','es'].includes(LANG)) LANG = 'en';
+  const origText = new WeakMap();
+  function walk(node) {
+    if (node.nodeType === 3) {
+      if (!origText.has(node)) origText.set(node, node.nodeValue);
+      const orig = origText.get(node); const key = orig.trim();
+      if (key && DICT[key]) node.nodeValue = (LANG === 'en') ? orig : orig.replace(key, DICT[key][LANG] || key);
+      return;
+    }
+    if (node.nodeType === 1) {
+      const tag = node.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') return;
+      if (node.hasAttribute && node.hasAttribute('placeholder')) {
+        if (!node.dataset._phOrig) node.dataset._phOrig = node.getAttribute('placeholder');
+        const o = node.dataset._phOrig.trim();
+        if (DICT[o]) node.setAttribute('placeholder', (LANG === 'en') ? node.dataset._phOrig : (DICT[o][LANG] || node.dataset._phOrig));
+      }
+      for (const c of Array.from(node.childNodes)) walk(c);
+    }
+  }
+  function applyLang() {
+    walk(document.body);
+    document.documentElement.lang = LANG;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+  }
+  window.setLang = function (l) { if (!['tr','en','es'].includes(l)) return; LANG = l; localStorage.setItem('app_lang', l); applyLang(); };
+  function boot() {
+    applyLang();
+    new MutationObserver(muts => { for (const m of muts) for (const n of m.addedNodes) walk(n); }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
 </body>
 </html>
