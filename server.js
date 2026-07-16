@@ -129,10 +129,11 @@ app.use(express.json({ limit: '10mb' })); // screenshots arrive as base64 (~1MB+
 
 // ── Static serving (locked down) ──────────────────────────────────────────────
 // Only these files are publicly downloadable. Everything else in the project root
-// (server.js, package.json, test scripts, etc.) is NOT exposed. The HTML has no
-// local JS/CSS assets — all third-party libs load from a CDN — so an allow-list is safe.
+// (server.js, package.json, test scripts, etc.) is NOT exposed. The only local JS
+// asset is app_i18n.js (the app UI translation dictionary); everything else loads
+// from a CDN — so an explicit allow-list is safe.
 const PUBLIC_FILES = new Set([
-  '/', '/index.html', '/app.html', '/privacy.html',
+  '/', '/index.html', '/app.html', '/privacy.html', '/app_i18n.js',
   '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
 ]);
 // Route static ONLY through the allow-list. Do NOT chain a blanket express.static
