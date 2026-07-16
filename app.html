@@ -880,13 +880,6 @@
       border: 1px solid var(--bord); border-bottom-left-radius: 4px;
     }
     .rp-bubble-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-    .rp-inline-correct-btn { background: none; border: none; color: var(--muted); font-size: .72rem; cursor: pointer; padding: 2px 4px; opacity: 0.55; transition: opacity .15s; }
-    .rp-inline-correct-btn:hover { opacity: 1; color: #e55; }
-    .rp-inline-correct-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 80%; }
-    .rp-inline-correct-input { flex: 1; min-width: 140px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--bord); background: var(--surf2); color: var(--text); font-size: .84rem; }
-    .rp-inline-correct-save { padding: 5px 10px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: .8rem; cursor: pointer; }
-    .rp-inline-correct-cancel { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--bord); background: transparent; color: var(--muted); font-size: .8rem; cursor: pointer; }
-    .rp-corrected-label { font-size: .7rem; color: var(--muted); font-style: italic; }
     .rp-bubble.system {
       background: transparent; border: 1px solid rgba(255,255,255,.1);
       color: var(--muted); font-style: italic; font-size: .78rem;
@@ -995,15 +988,6 @@
     .roleplay-card.debrief-active .roleplay-messages { flex: none; max-height: 140px; min-height: 0; }
     .roleplay-card.debrief-active { overflow-y: auto; }
     .rp-bubble-history { opacity: 0.45; font-size: 13px; }
-    .rp-mfb-row { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
-    .rp-mfb-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: var(--muted); font-size: 15px; padding: 2px 6px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, transform .1s; }
-    .rp-mfb-btn:hover { border-color: #444; transform: scale(1.15); }
-    .rp-mfb-ack { font-size: 11px; color: var(--sec); padding: 2px 0; }
-    .rp-mfb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .rp-mfb-tag { background: none; border: 1px solid #2a2a2a; border-radius: 5px; color: var(--muted); font-size: 11px; padding: 2px 7px; cursor: pointer; font-family: inherit; }
-    .rp-mfb-tag:hover { border-color: #ff6b35; color: #ff6b35; }
-    .rp-mfb-copy-btn { background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: var(--sec); font-size: 13px; padding: 2px 7px; cursor: pointer; line-height: 1.6; font-family: inherit; transition: border-color .15s, color .15s; margin-left: 2px; }
-    .rp-mfb-copy-btn:hover { border-color: #444; color: #aaa; }
     #rp-copy-conv-btn { flex: 1; min-width: 80px; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--bord); background: transparent; color: var(--sec); transition: all 0.15s; font-family: inherit; }
     .rp-date-divider { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 1px; padding: 8px 0; position: relative; }
     .rp-date-divider::before, .rp-date-divider::after { content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: #222; }
@@ -2599,7 +2583,7 @@
       /* Debrief controls: tappable size + let outcome labels wrap instead of overflowing their pill */
       .rp-outcome-btn { min-height: 40px; padding: 9px 10px; white-space: normal; }
       .rp-star { font-size: 26px; padding: 6px; }
-      .rp-mfb-btn, .rp-mfb-tag { min-height: 34px; padding: 6px 10px; }
+
       .rp-stars, .rp-real-outcome-btns { gap: 8px; }
       /* Toast: wrap long unbreakable strings (server/error text) instead of clipping past the edge */
       .toast { overflow-wrap: anywhere; }
@@ -8722,7 +8706,15 @@
         } catch (_) {}
         await new Promise(res => setTimeout(res, 2500));
       }
-      // timed out — proceed anyway; chunks/RAG still give the twin some memory
+      // Timed out — proceed (chunks/RAG still give the twin some memory), but be
+      // HONEST about the degraded state instead of silently pretending it's ready.
+      const _lang = window.APP_LANG || 'tr';
+      const _m = {
+        tr: 'Twin hâlâ öğreniyor — ilk cevaplar yüzeysel olabilir. Birkaç dakika sonra tekrar denemen daha iyi sonuç verir.',
+        en: 'The twin is still learning — first replies may be shallow. Trying again in a few minutes will give better results.',
+        es: 'El gemelo aún está aprendiendo — las primeras respuestas pueden ser superficiales. Inténtalo de nuevo en unos minutos.'
+      };
+      if (typeof showToast === 'function') showToast(_m[_lang] || _m.tr, 'info');
     }
 
     async function _rpCallSimulate() {

@@ -296,6 +296,25 @@ function sampleConversation(text) {
     + text.slice(-WIN);
 }
 
+// One retry after 30s for BACKGROUND extraction calls — a transient provider
+// blip (or a just-topped-up credit balance) otherwise leaves the twin
+// permanently profile-less with no signal to anyone. Returns parsed JSON or null.
+async function claudeCallWithRetry(body, tag) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body)
+      });
+      if (r.ok) return r.json();
+      console.error(`[${tag}] attempt ${attempt} failed:`, r.status, (await r.text()).slice(0, 160));
+    } catch (e) { console.error(`[${tag}] attempt ${attempt} error:`, e.message); }
+    if (attempt === 1) await new Promise(res => setTimeout(res, 30000));
+  }
+  return null;
+}
+
 // Structured people index appended to the user profile by extraction — twins get
 // a crisp lookup table instead of hunting names in prose. The ownership rule is
 // load-bearing: it prevented a real mis-attribution (someone else's child guessed
@@ -1492,10 +1511,7 @@ app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, async (req, re
             const userContentSmall = existingProfile
               ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${conversationText}`
               : conversationText;
-            const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-              body: JSON.stringify({
+            const pr_d = await claudeCallWithRetry({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 1800,
                 system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
@@ -1522,10 +1538,8 @@ CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] 
 
 Score each area 0-100 based ONLY on evidence in the conversation. If a topic never appears, score it 0. Be honest — do not inflate scores.`,
                 messages: [{ role: 'user', content: userContentSmall }]
-              })
-            });
-            if (!pr_r.ok) { console.error('[profile-extract] API fail (small):', pr_r.status); return; }
-            const pr_d = await pr_r.json();
+            }, 'profile-extract-small');
+            if (!pr_d) return;
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (small)'); return; }
             const relOneLineMatch = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
@@ -1641,10 +1655,7 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
             const userContentLarge = existingProfileLarge
               ? `EXISTING PROFILE (update and improve this, don't replace wholesale — preserve USER CORRECTIONS sections if present):\n${existingProfileLarge.slice(0, 12000)}\n\n---\nNEW CONVERSATION DATA TO INCORPORATE:\n${profileInput}`
               : profileInput;
-            const pr_r = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-              body: JSON.stringify({
+            const pr_d = await claudeCallWithRetry({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 2000,
                 system: `You are reading the FULL WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
@@ -1672,10 +1683,8 @@ CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] 
 
 Score each area 0-100 based ONLY on evidence in the conversation. If a topic never appears, score it 0. Be honest — do not inflate scores.`,
                 messages: [{ role: 'user', content: userContentLarge }]
-              })
-            });
-            if (!pr_r.ok) { console.error('[profile-extract] API fail (large):', pr_r.status); return; }
-            const pr_d = await pr_r.json();
+            }, 'profile-extract-large');
+            if (!pr_d) return;
             const prose = pr_d.content?.[0]?.text?.trim() || '';
             if (!prose) { console.warn('[profile-extract] empty prose (large)'); return; }
             const relOneLineMatchL = prose.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m);
@@ -1793,10 +1802,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
           const userProfileContent = existingUserProfile
             ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION:\n${convSample}`
             : convSample;
-          const up_r = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-            body: JSON.stringify({
+          const up_d = await claudeCallWithRetry({
               model: 'claude-sonnet-4-6',
               max_tokens: 2000,
               system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER${personA ? ` named "${personA}"` : ''}), NOT the contact.${contact_name ? ` The USER is the sender who is NOT "${contact_name}" — "${contact_name}" is the contact and must NOT be profiled here. If "${contact_name}" is the more active or help-seeking party, the USER is still the OTHER person.` : ''}
@@ -1815,10 +1821,8 @@ If an existing profile is provided below, UPDATE and ENRICH it with new informat
 After the profile, on a new line write exactly:
 USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
               messages: [{ role: 'user', content: userProfileContent }]
-            })
-          });
-          if (!up_r.ok) { console.error('[user-profile-extract] API fail:', up_r.status); return; }
-          const up_d = await up_r.json();
+          }, 'user-profile-extract');
+          if (!up_d) return;
           const upProse = up_d.content?.[0]?.text?.trim() || '';
           if (!upProse) { console.warn('[user-profile-extract] empty prose'); return; }
           const userConfMatch = upProse.match(/USER_CONFIDENCE:\s*(.+)/);
