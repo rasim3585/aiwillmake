@@ -2247,6 +2247,11 @@
     .ws-ratio { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.07); margin-top: 4px; }
     .ws-ratio i { display: block; height: 100%; }
     .ws-legend { display: flex; justify-content: space-between; font-size: .7rem; color: var(--sec); margin-top: 4px; }
+    .ws-card { position: relative; }
+    .ws-tag { position: absolute; top: 12px; right: 12px; font-size: .56rem; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
+    .ws-tag.det { background: rgba(127,176,105,.14); color: #9fc487; }
+    .ws-tag.ai  { background: rgba(160,126,224,.16); color: #b9a1e8; }
+    .ws-quote { border-left: 3px solid rgba(160,126,224,.55); background: rgba(255,255,255,.04); border-radius: 0 8px 8px 0; padding: 6px 10px; font-size: .76rem; color: var(--sec); font-style: italic; margin-top: 6px; }
 
     /* ── WOW Screen ── */
     .wow-inner { padding: 28px 20px 48px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
@@ -5562,8 +5567,9 @@
       document.getElementById('wowTwinLabel').textContent = name;
       document.getElementById('wowCtaName').textContent = name;
 
-      // Measured stat cards (on-device numbers from this import; hidden when absent)
-      try { renderWowStatCards(window._lastChatStats, name); }
+      // Reveal cards: on-device measured numbers + evidence-quoted AI relationship
+      // cards from the analysis response (hidden when neither is available)
+      try { renderWowStatCards(window._lastChatStats, name, data.relationship_cards); }
       catch (e) { console.error('[stat-cards]', e); document.getElementById('wowStatsCards')?.classList.add('hidden'); }
 
       const conf = data.confidence_score || 0;
@@ -5994,6 +6000,13 @@
         eySign:     { tr: 'İmzalar', en: 'Signatures', es: 'Firmas' },
         signIns:    { tr: '<em>{n} kez</em> — ikinizin kelimesi. İmzan {e1} · onunki {e2}', en: '<em>{n}×</em> — your shared word. Your signature {e1} · theirs {e2}', es: '<em>{n} veces</em> — su palabra compartida. Tu firma {e1} · la suya {e2}' },
         emojiOnly:  { tr: 'İmzan {e1} · onunki {e2}', en: 'Your signature {e1} · theirs {e2}', es: 'Tu firma {e1} · la suya {e2}' },
+        tagDet:     { tr: 'ölçüldü', en: 'measured', es: 'medido' },
+        tagAi:      { tr: 'AI buldu', en: 'AI found', es: 'IA detectó' },
+        eyHumor:    { tr: 'Mizah', en: 'Humor', es: 'Humor' },
+        eyConflict: { tr: 'Kavga & Barışma', en: 'Conflict & Repair', es: 'Conflicto y reconciliación' },
+        eyDeep:     { tr: 'Derin Konular', en: 'Deep Topics', es: 'Temas profundos' },
+        eyTurning:  { tr: 'Dönüm Noktası', en: 'Turning Point', es: 'Punto de inflexión' },
+        eyWorld:    { tr: 'Ortak Dünyanız', en: 'Your Shared World', es: 'Su mundo compartido' },
         minShort:   { tr: 'dk', en: 'min', es: 'min' },
         hourShort:  { tr: 'sa', en: 'h', es: 'h' },
         underMin:   { tr: '1 dk altı', en: 'under 1 min', es: 'menos de 1 min' },
@@ -6045,17 +6058,30 @@
       });
     }
 
-    // Reveal cards: a card renders ONLY when its data deviates enough to say
-    // something (research rule: 50/50 = no card). Max 5 incl. the opener.
-    function renderWowStatCards(m, contactName) {
+    // Reveal cards: measured cards render ONLY when the data deviates enough to
+    // say something (research rule: 50/50 = no card); AI relationship cards
+    // (evidence-quoted, from the analysis response) follow, max 3. When AI cards
+    // exist, measured are trimmed to 4 so the whole reveal stays ~6-7 cards.
+    function renderWowStatCards(m, contactName, aiCards) {
       const grid = document.getElementById('wowStatsCards');
       if (!grid) return;
       grid.innerHTML = '';
-      if (!m || !m.ok || m.totalMessages < 30) { grid.classList.add('hidden'); return; }
-      const who = _wsWho(m, contactName);
+      const hasStats = m && m.ok && m.totalMessages >= 30;
+      const ai = Array.isArray(aiCards) ? aiCards.filter(c => c && c.insight && c.evidence).slice(0, 3) : [];
+      if (!hasStats && !ai.length) { grid.classList.add('hidden'); return; }
+      const who = hasStats ? _wsWho(m, contactName) : null;
       const cards = [];
-      const card = (ey, big, insight, extra, wide) =>
-        `<div class="ws-card${wide ? ' ws-wide' : ''}"><div class="ws-eyebrow">${ey}</div><div class="ws-big">${big}</div><div class="ws-insight">${insight}</div>${extra || ''}</div>`;
+      const card = (ey, big, insight, extra, wide, tag) =>
+        `<div class="ws-card${wide ? ' ws-wide' : ''}"><span class="ws-tag ${tag === 'ai' ? 'ai' : 'det'}">${tag === 'ai' ? _wsT('tagAi') : _wsT('tagDet')}</span><div class="ws-eyebrow">${ey}</div><div class="ws-big">${big}</div><div class="ws-insight">${insight}</div>${extra || ''}</div>`;
+      if (!hasStats) {
+        // AI-only mode (e.g. screenshot import): render just the relationship cards
+        const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const eyKey = { humor: 'eyHumor', conflict: 'eyConflict', deep: 'eyDeep', turning: 'eyTurning', world: 'eyWorld' };
+        ai.forEach(c => cards.push(card(_wsT(eyKey[c.key] || 'eyDeep'), `<span style="font-size:1.05rem">${esc(c.title || '')}</span>`, esc(c.insight), `<div class="ws-quote">“${esc(c.evidence)}”</div>`, true, 'ai')));
+        grid.innerHTML = cards.join('');
+        grid.classList.remove('hidden');
+        return;
+      }
 
       // 1 — opener (always)
       cards.push(card(_wsT('eyOpen'),
@@ -6100,7 +6126,13 @@
           cards.push(card(_wsT('eySign'), `${e1} · ${e2}`, _wsT('emojiOnly', { e1, e2 }), '', true));
         }
       }
-      grid.innerHTML = cards.slice(0, 5).join('');
+      const measured = cards.slice(0, ai.length ? 4 : 5);
+      if (ai.length) {
+        const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const eyKey = { humor: 'eyHumor', conflict: 'eyConflict', deep: 'eyDeep', turning: 'eyTurning', world: 'eyWorld' };
+        ai.forEach(c => measured.push(card(_wsT(eyKey[c.key] || 'eyDeep'), `<span style="font-size:1.05rem">${esc(c.title || '')}</span>`, esc(c.insight), `<div class="ws-quote">“${esc(c.evidence)}”</div>`, true, 'ai')));
+      }
+      grid.innerHTML = measured.join('');
       grid.classList.remove('hidden');
     }
 

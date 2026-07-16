@@ -1744,6 +1744,8 @@ MIRROR_QUOTE: [a short verbatim quote — max 10 words — from Person A's messa
 MIRROR_QUOTE_SHOWS: [one short phrase (in the conversation's language) saying what this reveals about Person A. Omit if MIRROR_QUOTE was omitted.]
 UNEXPECTED_FINDINGS_JSON: [compact single-line JSON array of 1-2 genuinely surprising observations that the user probably hasn't noticed, but that are clearly visible in the conversation data. Must be specific to THIS conversation — counterintuitive, concrete, conversation-derived. The finding should make the user think "huh, I didn't realize that." Examples of the KIND of insight (do NOT copy these): "Sen direkt sanıyorsun ama gerginlikte mesajların iki katı uzuyor" / "Bu kişiye hep bekletiyorsun, başkalarına hızlı yanıt veriyorsun" / "O senin pratik sorularını atlamıyor — sadece duygusal olanları". Write findings in the conversation's language. Format: ["finding1"] or ["finding1","finding2"]. Output null if nothing clearly surprising stands out — never force it or make something up.]${whatChangedLine}
 
+RELATIONSHIP_CARDS_JSON: [compact single-line JSON array of 0-3 "relationship cards" — each included ONLY if strongly supported by multiple messages. Each card: {"key":"<one of: humor|conflict|deep|turning|world>","title":"<max 6 words, conversation's language>","insight":"<ONE sentence, conversation's language, soft observational wording (genellikle/sık sık) — an observation, never a diagnosis or clinical label>","evidence":"<short verbatim quote from the chat, max 12 words, message text only, no timestamps>"}. Card meanings: humor = the role jokes/humor play between them (tension-breaker? deflection?); conflict = the fight-and-repair pattern (trigger, duration, who repairs first) — include ONLY if at least two distinct conflict episodes are visible; deep = which emotional/deep topics get discussed vs repeatedly deferred; turning = a visible moment or period where tone/frequency clearly changed (name the approximate month); world = their shared world — the third people or recurring topics they keep returning to. Pick the 2-3 STRONGEST cards only. A card without solid verbatim evidence must be omitted. Output null if none qualify.]
+
 Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1755,7 +1757,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2800,
+        max_tokens: 3400,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Conversation:\n${snippet}` }]
       })
@@ -1926,6 +1928,7 @@ USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relati
       relationship_loop:    (() => { const m = text.match(/^RELATIONSHIP_LOOP_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
       evidence:             (() => { const tq = extract('TWIN_QUOTE'); const ts = extract('TWIN_QUOTE_SHOWS'); const mq = extract('MIRROR_QUOTE'); const ms = extract('MIRROR_QUOTE_SHOWS'); const nul = v => !v || v === 'null'; return { twin: nul(tq) ? null : { quote: tq, shows: nul(ts) ? null : ts }, mirror: nul(mq) ? null : { quote: mq, shows: nul(ms) ? null : ms } }; })(),
       unexpected_findings:  (() => { const m = text.match(/^UNEXPECTED_FINDINGS_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a : null; } catch { return null; } })(),
+      relationship_cards:   (() => { const m = text.match(/^RELATIONSHIP_CARDS_JSON:\s*(.+)/m); if (!m) return null; const v = m[1].trim(); if (v === 'null') return null; try { const a = JSON.parse(v); return Array.isArray(a) && a.length ? a.filter(c => c && c.insight && c.evidence).slice(0, 3) : null; } catch { return null; } })(),
       confidence_score:     confidence,
       confidence_label:     confidenceLabel,
       confidence_areas:     null, // populated async in Supabase after profile extraction completes
