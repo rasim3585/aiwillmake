@@ -278,19 +278,38 @@ async function isPaidUser(req) {
 }
 const FREE_GENERATION_LIMIT = 5;
 
-// WhatsApp exports are chronological — a head-only slice reads the OLDEST part
-// and never sees the newest facts (kids born, moves, new jobs live at the END).
-// Sample three windows (head + middle + tail) so extraction covers the origin
-// story, the mid-life of the relationship, and current reality.
-function sampleConversation(text, sliceLen) {
-  if (!text || text.length <= sliceLen * 3) return text || '';
-  const midStart = Math.floor(text.length / 2 - sliceLen / 2);
-  return text.slice(0, sliceLen)
+// Extraction input policy — measured on real data (2026-07-16): 3×60K window
+// sampling scored 3/7 on family-fact recall because the facts fell in the
+// omitted regions; the FULL text scored 6/7 (everything the corpus contains).
+// So: send the WHOLE conversation whenever it fits comfortably in context
+// (~600K chars ≈ 150-180K tokens, ~$0.5/call — correctness beats pennies at
+// current volume; map-reduce with Haiku is the documented scale path). Only
+// beyond that, fall back to three large windows.
+function sampleConversation(text) {
+  const FULL_LIMIT = 600000, WIN = 190000;
+  if (!text || text.length <= FULL_LIMIT) return text || '';
+  const midStart = Math.floor(text.length / 2 - WIN / 2);
+  return text.slice(0, WIN)
     + '\n\n[... part of the conversation omitted ...]\n\n'
-    + text.slice(midStart, midStart + sliceLen)
+    + text.slice(midStart, midStart + WIN)
     + '\n\n[... part of the conversation omitted ...]\n\n'
-    + text.slice(-sliceLen);
+    + text.slice(-WIN);
 }
+
+// Structured people index appended to the user profile by extraction — twins get
+// a crisp lookup table instead of hunting names in prose. The ownership rule is
+// load-bearing: it prevented a real mis-attribution (someone else's child guessed
+// into the user's family).
+const KEY_PEOPLE_SECTION = `
+
+After the prose, you MUST end with a structured section, exactly this format:
+KEY PEOPLE:
+- spouse: <name or unknown>
+- children: <names with elder/younger if inferable, or unknown>
+- parents: <names or unknown>
+- siblings: <names, incl. their spouses/kids if mentioned>
+- other important: <name — relation>
+RULES for KEY PEOPLE: commit to your best-supported reading for each slot; if the SAME name fills two slots (e.g. a child named after a grandparent), list it in BOTH with a note; a name goes under children ONLY if the text clearly shows it is the USER's own child — if ownership is unclear or it could be someone else's child, it MUST go under "other important" with "ownership unclear".`;
 
 async function getCredits(token, userId) {
   const url = `${SUPABASE_REST}/user_credits?user_id=eq.${userId}&select=credits_used`;
@@ -1768,7 +1787,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
           const existingUserR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
           const existingUserData = await existingUserR.json();
           const existingUserProfile = existingUserData?.[0]?.profile_text || null;
-          const convSample = sampleConversation(conversationText, 60000);
+          const convSample = sampleConversation(conversationText);
           const userProfileContent = existingUserProfile
             ? `EXISTING USER PROFILE (update and enrich, don't replace):\n${existingUserProfile.slice(0, 12000)}\n\n---\nNEW CONVERSATION:\n${convSample}`
             : convSample;
@@ -1777,7 +1796,7 @@ Reply with ONLY these labeled lines. No markdown, no extra commentary.`;
             headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
             body: JSON.stringify({
               model: 'claude-sonnet-4-6',
-              max_tokens: 1500,
+              max_tokens: 2000,
               system: `You are reading a WhatsApp conversation and writing a prose profile of the CHAT OWNER (the USER${personA ? ` named "${personA}"` : ''}), NOT the contact.${contact_name ? ` The USER is the sender who is NOT "${contact_name}" — "${contact_name}" is the contact and must NOT be profiled here. If "${contact_name}" is the more active or help-seeking party, the USER is still the OTHER person.` : ''}
 
 The USER is the person whose perspective we're building. Extract what we learn about THEM (the owner, not "${contact_name || 'the contact'}") from this conversation:
@@ -1787,7 +1806,7 @@ The USER is the person whose perspective we're building. Extract what we learn a
 - People in their life mentioned (their kids, spouse, friends, colleagues — with names and relationships)
 
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". BE EXHAUSTIVE: capture EVERY concrete fact revealed — every name and how they relate, every job/profession, city/neighborhood, hobby, pet, habit, and notable event — do NOT drop secondary details to keep it short. It is better to be complete than concise. Only include what's actually revealed in the conversation. Do not invent.
-HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Kemal'i okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Kemal — likely his son; a second Kemal may be a friend"). A profile that misses a family member's name is a failed profile.
+HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Kemal'i okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Kemal — likely his son; a second Kemal may be a friend"). A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
 
 If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve existing facts, add new ones, refine where the new conversation gives better information.
 
@@ -2697,9 +2716,9 @@ app.post('/api/build-user-profile', requireAuth, async (req, res) => {
       return res.json({ profile_text: '', message: 'no_conversations' });
     }
 
-    // head+middle+tail sample across ALL the user's chats — the old head-only 40K
-    // read a fraction of one chat's oldest messages and missed family names entirely.
-    const combinedText = sampleConversation(chunks.map(c => c.chunk_text).join('\n'), 60000);
+    // Full text across ALL the user's chats when it fits (see sampleConversation) —
+    // the old head-only 40K read a fraction of one chat and missed family names.
+    const combinedText = sampleConversation(chunks.map(c => c.chunk_text).join('\n'));
 
     const existingR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
     const existingData = await existingR.json();
@@ -2712,7 +2731,7 @@ app.post('/api/build-user-profile', requireAuth, async (req, res) => {
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: `You are reading WhatsApp conversations and writing a prose profile of the CHAT OWNER (the USER) — the person who appears in MULTIPLE of these conversations as one consistent participant. These are conversations between the user and different contacts.
 
 Extract what we learn about the USER across all these conversations:
@@ -2722,7 +2741,7 @@ Extract what we learn about the USER across all these conversations:
 - People in their life (kids, spouse, friends — with names and relationships)
 
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "the user". BE EXHAUSTIVE — capture every name, relationship, job, place, hobby, and notable event revealed across the conversations. Only include what's actually revealed. Do not invent.
-HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context, capture it with the inferred relationship; if ambiguous between two people, record both readings. A profile that misses a family member's name is a failed profile.
+HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context, capture it with the inferred relationship; if ambiguous between two people, record both readings. A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
 
 After the profile, write exactly:
 USER_CONFIDENCE: Personal Details:[0-100] | Communication Style:[0-100] | Relationships & People:[0-100] | Work & Life:[0-100]`,
