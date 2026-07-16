@@ -115,7 +115,8 @@
     var S = {};
     senders.forEach(function (s) {
       S[s] = { count: counts[s], media: 0, chars: 0, textMsgs: 0, initiations: 0, doubleTexts: 0,
-               night: 0, replies: [], repliesDay: [], repliesEvening: [], words: {}, emojis: {} };
+               night: 0, replies: [], repliesDay: [], repliesEvening: [], words: {}, emojis: {},
+               openers: [] };  // this sender's actual conversation-opening lines
     });
 
     var heat = []; for (var d7 = 0; d7 < 7; d7++) { heat.push([0, 0, 0, 0]); } // [gece 0-6, sabah 6-12, öğlen 12-18, akşam 18-24]
@@ -135,6 +136,11 @@
       if (hour < 6) { st.night++; nightTotal++; }
       if (m.isMedia) st.media++; else { st.chars += m.text.length; st.textMsgs++; }
 
+      var isInitiation = !prev || (m.ts - prev.ts) >= GAP_NEW_CONVO_MS;
+      if (isInitiation && !m.isMedia && m.text.length >= 2 && m.text.length <= 120) {
+        st.openers.push(m.text.split('\n')[0]);          // how this person actually opens chats
+        if (st.openers.length > 6) st.openers.shift();   // keep the most recent
+      }
       if (!prev) { st.initiations++; }
       else {
         var gap = m.ts - prev.ts;
@@ -201,7 +207,8 @@
         replyMedianDayMs: median(st.repliesDay),
         replyMedianEveningMs: median(st.repliesEvening),
         topWords: topN(st.words, 5),
-        topEmojis: topN(st.emojis, 3)
+        topEmojis: topN(st.emojis, 3),
+        openers: st.openers.slice(-3)
       };
     });
 

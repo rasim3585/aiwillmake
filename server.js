@@ -2919,12 +2919,20 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
   try {
     const { character, language } = req.body;
     let history = req.body.history;
-    if (!character || !Array.isArray(history) || history.length === 0) {
-      return res.status(400).json({ error: 'character and history are required' });
-    }
-    if (history.length > 30) history = history.slice(-30);
-    if (history[history.length - 1]?.role !== 'user') {
-      return res.status(400).json({ error: 'Last message must be from user' });
+    if (!character) return res.status(400).json({ error: 'character is required' });
+    // Opening mode: the TWIN sends the first message of a fresh chat, in the way
+    // this person actually opens conversations (real opener samples from stats).
+    const isOpening = req.body.open === true && (!Array.isArray(history) || history.length === 0);
+    if (isOpening) {
+      history = [{ role: 'user', content: '[[OPENING]]' }];
+    } else {
+      if (!Array.isArray(history) || history.length === 0) {
+        return res.status(400).json({ error: 'character and history are required' });
+      }
+      if (history.length > 30) history = history.slice(-30);
+      if (history[history.length - 1]?.role !== 'user') {
+        return res.status(400).json({ error: 'Last message must be from user' });
+      }
     }
     // Simulator is a paid feature (client gates via window._userPlan) — enforce here too.
     if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
@@ -3063,7 +3071,18 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE (overrides PROFILE PRIORITY for personal
 - If the user corrects you ('no, my wife is Simge'), accept it immediately and naturally — don't argue.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
-- Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
+- Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}${isOpening ? (() => {
+      const samples = Array.isArray(character.opener_samples) && character.opener_samples.length
+        ? ` Real examples of how you have actually opened chats before (match this style, don't copy verbatim): ${character.opener_samples.slice(0, 3).map(s => `"${String(s).slice(0, 100)}"`).join(' | ')}.`
+        : '';
+      const status = character.contact_status;
+      const tone = status === 'estranged'
+        ? ' The relationship is currently strained — open the way this person would after a long silence: a touch tentative, softer than usual, maybe acknowledging the gap, but still unmistakably in their own voice.'
+        : status === 'unreachable'
+        ? ' Open warmly with your classic greeting — exactly the way you always used to. Do not reference absence, distance, illness or anything somber; just be your everyday self.'
+        : ' Open casually about everyday life — do NOT bring up any heavy topic; just be your everyday self.';
+      return `\n\nOPENING MODE: The first user message is the literal token "[[OPENING]]" — it is NOT from ${userLabel}. Ignore it entirely and instead SEND THE FIRST MESSAGE of a brand-new chat yourself, as ${name}: 1-2 short lines, your typical greeting style.${samples}${tone}`;
+    })() : ''}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },

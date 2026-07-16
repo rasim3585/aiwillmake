@@ -3459,6 +3459,16 @@
             <option>Other</option>
           </select>
         </div>
+        <!-- Relationship status drives the twin's opening tone + which actions make
+             sense (e.g. "before you send" is meaningless for someone unreachable).
+             Umbrella framing: "yarım kalan konuşmalar" — never leads with death. -->
+        <div class="import-meta" style="margin-top:8px">
+          <select id="importStatus" style="width:100%">
+            <option value="active">Bu kişiyle aran nasıl? — Konuşuyoruz</option>
+            <option value="estranged">Aramız bozuk / küsüz</option>
+            <option value="unreachable">Artık ulaşamıyorum</option>
+          </select>
+        </div>
 
         <button class="btn-analyze" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analyze →</button>
       </div>
@@ -5413,6 +5423,7 @@
     async function runImportAnalysis() {
       const name = (document.getElementById('importName').value || '').trim();
       if (!name) { showToast('Name is required', 'error'); return; }
+      window._importStatus = document.getElementById('importStatus')?.value || 'active';
 
       let dataSource = null;
       if (_importMode === 'text') {
@@ -5922,7 +5933,14 @@
             relationship_summary: fc.relationship_summary || null,
             character_profile: fc.character_profile || null,
             relationship_tier: fc.relationship_tier ?? 2,
-            last_outcome: fc.last_outcome || null
+            last_outcome: fc.last_outcome || null,
+            contact_status: window._importStatus || 'active',
+            opener_samples: (() => {
+              const m = window._lastChatStats;
+              if (!m?.ok) return null;
+              const who = _wsWho(m, fc.name);
+              return who ? (m.perSender[who.contactKey].openers || null) : null;
+            })()
           };
         }
       } catch {}
@@ -6065,7 +6083,7 @@
         const p = m.perSender[s];
         ps[s] = { count: p.count, share: p.share, initiationShare: p.initiationShare,
                   replyMedianMs: p.replyMedianMs, doubleTexts: p.doubleTexts,
-                  topEmojis: p.topEmojis.slice(0, 2) };
+                  topEmojis: p.topEmojis.slice(0, 2), openers: (p.openers || []).slice(-3) };
       });
       return {
         ok: true, totalMessages: m.totalMessages, senders: m.senders,
@@ -6585,7 +6603,7 @@
       if (!window._userPlan) await checkSubscriptionAndShowReady();
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       _simCharacter = contactCtx
-        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2, role_names: contactCtx.role_names ?? {} }
+        ? { name: contactCtx.name, type: contactCtx.type, relationship_state: contactCtx.relationship_state, observed_patterns: contactCtx.observed_patterns, relationship_summary: contactCtx.relationship_summary, contact_id: contactCtx.id || null, character_profile: contactCtx.character_profile || null, user_name: contactCtx.person_a || null, intent_goal: intentGoal || null, relationship_tier: contactCtx.relationship_tier ?? 2, role_names: contactCtx.role_names ?? {}, contact_status: contactCtx.contact_status || 'active', opener_samples: contactCtx.opener_samples || null }
         : { name: 'them', type: '', relationship_state: '', observed_patterns: [], relationship_summary: '', contact_id: null, character_profile: null, user_name: null, intent_goal: intentGoal || null, relationship_tier: 2, role_names: {} };
       _simInitialMsg = '';
       _simHistory = [];
@@ -6654,6 +6672,34 @@
         noteEl.textContent = `Goal: ${intentGoal}`;
         document.getElementById('rp-messages').appendChild(noteEl);
       }
+      // The twin opens the conversation — in this person's real opening style.
+      // The blank-page moment is gone; the user's first task is the real one:
+      // steering an everyday chat toward what they actually want to say.
+      _rpTwinOpens();
+    }
+
+    async function _rpTwinOpens() {
+      if (_simHistory.length || !_simCharacter) return;
+      const sendBtn = document.getElementById('rp-send');
+      sendBtn.disabled = true;
+      const typingEl = _rpShowTyping();
+      try {
+        await ensureTwinProfile(typingEl);
+        const resp = await fetch('/api/simulate-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
+          body: JSON.stringify({ character: _simCharacter, history: [], open: true, language: lastFields?.language || aiLang() })
+        });
+        const data = await resp.json();
+        typingEl.remove();
+        if (resp.ok && data.reply) {
+          _simHistory.push({ role: 'assistant', content: data.reply });
+          _rpAppendBubble('other', data.reply);
+          _rpSpeak(data.reply);
+        }
+        // any failure: silent — user simply opens the conversation themselves
+      } catch (e) { typingEl.remove(); console.error('[twin-opens]', e); }
+      finally { sendBtn.disabled = false; document.getElementById('rp-input').focus(); }
     }
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -7350,7 +7396,8 @@
                 message_count:     data.message_count     || null,
                 // persisted reveal-card data — person screen re-renders from these
                 chat_stats:        (window._lastChatStats?.ok ? _wsCompact(window._lastChatStats) : null),
-                relationship_cards: (Array.isArray(data.relationship_cards) && data.relationship_cards.length ? data.relationship_cards : null)
+                relationship_cards: (Array.isArray(data.relationship_cards) && data.relationship_cards.length ? data.relationship_cards : null),
+                contact_status:    window._importStatus || 'active'
               }
             })
           });
@@ -7679,7 +7726,6 @@
           last_outcome: c.last_outcome || null
         };
         updatePrevMsgFieldVisibility();
-        maybeShowOutcomePrompt(contactId, c.name);
 
         const escH = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const convs = c.conversations || [];
@@ -7690,6 +7736,13 @@
         const importConv = convs.find(cv => (cv.situation || '').startsWith('WhatsApp history') && cv.fields?.chat_stats) || null;
         const pStats = importConv?.fields?.chat_stats || null;
         const pCards = convs.find(cv => Array.isArray(cv.fields?.relationship_cards) && cv.fields.relationship_cards.length)?.fields?.relationship_cards || null;
+        // Thread status + real opener samples into the practice context
+        activeContactContext.contact_status = convs.find(cv => cv.fields?.contact_status)?.fields?.contact_status || 'active';
+        const _pWho = pStats?.ok ? _wsWho(pStats, c.name) : null;
+        activeContactContext.opener_samples = _pWho ? (pStats.perSender[_pWho.contactKey].openers || null) : null;
+        const _unreachable = activeContactContext.contact_status === 'unreachable';
+        // "What happened?" only makes sense when a real conversation can happen
+        if (!_unreachable) maybeShowOutcomePrompt(contactId, c.name);
         let statsStrip = '';
         if (pStats?.ok) {
           const who = _wsWho(pStats, c.name);
@@ -7736,10 +7789,11 @@
           </div>
 
           <div class="person-secondary-btns">
+            ${_unreachable ? '' : `
             <button type="button" class="person-secondary-btn" id="personGoalBtn">🎯 Strategy cards</button>
             <button type="button" class="person-secondary-btn" id="personGenerateBtn">✍️ Generate message</button>
             <button type="button" class="person-secondary-btn" id="personAnalyzeBtn">📩 Analyze reply</button>
-            <button type="button" class="person-secondary-btn" id="personBriefBtn" data-i18n="person.brief">🛡️ Göndermeden önce kontrol et</button>
+            <button type="button" class="person-secondary-btn" id="personBriefBtn" data-i18n="person.brief">🛡️ Göndermeden önce kontrol et</button>`}
           </div>
 
           <div class="person-actions-list">
@@ -7899,15 +7953,15 @@
           }
           openSimulatorFresh(activeContactContext, null);
         });
-        document.getElementById('personGoalBtn').addEventListener('click', () => openGoalScreen());
-        document.getElementById('personGenerateBtn').addEventListener('click', () => {
+        document.getElementById('personGoalBtn')?.addEventListener('click', () => openGoalScreen());
+        document.getElementById('personGenerateBtn')?.addEventListener('click', () => {
           hideAllMainSections();
           selectMode(1);
           const _si = document.getElementById('smartInput');
           if (_si) { _si.value = ''; _si.placeholder = `What do you want to say to ${activeContactContext?.name || 'them'}?`; }
         });
 
-        document.getElementById('personAnalyzeBtn').addEventListener('click', () => {
+        document.getElementById('personAnalyzeBtn')?.addEventListener('click', () => {
           hideAllMainSections();
           selectMode(2);
           const el = document.getElementById('contPasteOpt');
@@ -7915,7 +7969,7 @@
           document.getElementById('continueSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
 
-        document.getElementById('personBriefBtn').addEventListener('click', () => {
+        document.getElementById('personBriefBtn')?.addEventListener('click', () => {
           openBeforeYouSend(activeContactContext);
         });
 

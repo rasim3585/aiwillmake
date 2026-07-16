@@ -165,3 +165,10 @@ Object.assign(window.I18N_C, {
   "ile konuşmaya başla →": { "tr":"ile konuşmaya başla →", "en":"— start talking →", "es":"— empieza a hablar →" },
   "kişi sayfası →": { "tr":"kişi sayfası →", "en":"person page →", "es":"página de la persona →" }
 });
+
+/* Relationship status select (import) */
+Object.assign(window.I18N_C, {
+  "Bu kişiyle aran nasıl? — Konuşuyoruz": { "tr":"Bu kişiyle aran nasıl? — Konuşuyoruz", "en":"How are things with them? — We talk", "es":"¿Cómo estás con esta persona? — Hablamos" },
+  "Aramız bozuk / küsüz": { "tr":"Aramız bozuk / küsüz", "en":"We're on bad terms / not speaking", "es":"Estamos mal / no nos hablamos" },
+  "Artık ulaşamıyorum": { "tr":"Artık ulaşamıyorum", "en":"I can't reach them anymore", "es":"Ya no puedo contactarle" }
+});
