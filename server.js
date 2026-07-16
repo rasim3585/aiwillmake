@@ -167,7 +167,8 @@ app.use((req, res, next) => {
 app.get('/api/config', (req, res) => {
   res.json({
     supabaseUrl,
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+    paywall: PAYWALL_ENABLED
   });
 });
 
@@ -261,7 +262,15 @@ async function getUserPlan(userId, token) {
 // paid-only endpoints can't be reached by calling the API directly.
 // Fails OPEN for authenticated users when the plan lookup errors (null): a rare outage
 // letting a free user through once is far better than 402-ing a paying customer mid-flow.
+// Monetization master switch. Paywall is OFF while we build the funnel (2026-07-16,
+// user decision: "paywall'u kaldıralım, sistemi kuralım, sonra uygun yere yerleştiririz").
+// To re-enable ALL gates (paid endpoints, free credit cap, 1-contact limit, mirror
+// slicing, client modals): set PAYWALL_ENABLED=1 in Railway Variables. Webhook/checkout
+// keep working either way — subscriptions still record.
+const PAYWALL_ENABLED = process.env.PAYWALL_ENABLED === '1';
+
 async function isPaidUser(req) {
+  if (!PAYWALL_ENABLED) return true;
   if (!req.user || !req.token) return false;
   const plan = await getUserPlan(req.user.id, req.token);
   if (plan === null) return true;
@@ -391,7 +400,7 @@ ${charDoc ? `\nWHO ${name.toUpperCase()} IS:\n${charDoc}\n` : ''}${contactCtxStr
       // Enforce the free-tier generation cap server-side (was UI-only before).
       // Only cap a CONFIRMED free plan — a null (lookup failed) must not block a paying user.
       const plan = await getUserPlan(req.user.id, req.token);
-      if (plan === 'free' && creditsUsed >= FREE_GENERATION_LIMIT) {
+      if (PAYWALL_ENABLED && plan === 'free' && creditsUsed >= FREE_GENERATION_LIMIT) {
         return res.status(402).json({ error: 'upgrade_required' });
       }
     }
@@ -1391,7 +1400,7 @@ app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, async (req, re
     const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
     // Defense-in-depth: free users may only analyze when they have no OTHER contacts
-    if (req.user && req.token && contact_id) {
+    if (PAYWALL_ENABLED && req.user && req.token && contact_id) {
       const plan = await getUserPlan(req.user.id, req.token);
       if (plan === 'free') {
         const othersR = await fetch(
@@ -2278,11 +2287,13 @@ app.post('/api/contacts', requireAuth, async (req, res) => {
   try {
     const { name, type, relationship_summary, relationship_state, observed_patterns, source, relationship_tier } = req.body;
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' });
-    const plan = await getUserPlan(req.user.id, req.token);
-    if (plan === 'free') {
-      const countR = await fetch(`${SUPABASE_REST}/contacts?user_id=eq.${req.user.id}&select=id`, { headers: sbHeaders(req.token) });
-      const existing = await countR.json();
-      if (Array.isArray(existing) && existing.length >= 1) return res.status(402).json({ error: 'upgrade_required' });
+    if (PAYWALL_ENABLED) {
+      const plan = await getUserPlan(req.user.id, req.token);
+      if (plan === 'free') {
+        const countR = await fetch(`${SUPABASE_REST}/contacts?user_id=eq.${req.user.id}&select=id`, { headers: sbHeaders(req.token) });
+        const existing = await countR.json();
+        if (Array.isArray(existing) && existing.length >= 1) return res.status(402).json({ error: 'upgrade_required' });
+      }
     }
     const insertBody = {
       user_id: req.user.id, name: name.trim(),
@@ -2971,11 +2982,12 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE (overrides PROFILE PRIORITY for personal
 - If the user corrects you ('no, my wife is Simge'), accept it immediately and naturally — don't argue.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
-- Respond entirely in ${lang}${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
+- Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, system: systemPrompt, messages: history })
+      // temperature 0.8: default 1.0 occasionally leaked foreign-script tokens into casual Turkish
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, temperature: 0.8, system: systemPrompt, messages: history })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
@@ -3254,10 +3266,11 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
     const sub = data?.[0];
     res.json({
       plan:   sub?.status === 'active' ? sub.plan : 'free',
-      status: sub?.status || 'free'
+      status: sub?.status || 'free',
+      paywall: PAYWALL_ENABLED
     });
   } catch (e) {
-    res.json({ plan: 'free', status: 'free' });
+    res.json({ plan: 'free', status: 'free', paywall: PAYWALL_ENABLED });
   }
 });
 

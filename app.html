@@ -3647,6 +3647,10 @@
     async function initAuth() {
       try {
         const cfg = await fetch('/api/config').then(r => r.json());
+        // Paywall off (server flag): guests get the full experience too — no lock
+        // UI, no guest ceiling. checkSubscriptionAndShowReady refines this for
+        // signed-in users from /api/subscription.
+        if (cfg.paywall === false) window._userPlan = 'unlimited';
         if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
           document.getElementById('authGate').classList.add('hidden');
           document.getElementById('screen-landing').classList.remove('hidden');
@@ -5933,7 +5937,9 @@
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         const data = await r.json();
-        window._userPlan = data.plan || 'free';
+        // Paywall globally off (server flag): treat everyone as unlimited so no
+        // upgrade modal / lock UI fires. Real plan still recorded server-side.
+        window._userPlan = data.paywall === false ? 'unlimited' : (data.plan || 'free');
       } catch (e) {
         window._userPlan = 'free';
       }
@@ -8403,101 +8409,16 @@
     }
 
     function _rpAppendBubble(role, text) {
+      // Feedback UI (✅🤔❌📋 row) removed 2026-07-16 — it was cryptic, write-only
+      // telemetry. The twin-teaching path is the debrief's correction flow.
       const container = document.getElementById('rp-messages');
       if (role === 'other') {
-        let histIdx = -1;
-        for (let i = _simHistory.length - 1; i >= 0; i--) {
-          if (_simHistory[i].role === 'assistant' && _simHistory[i].content === text) { histIdx = i; break; }
-        }
         const wrapper = document.createElement('div');
         wrapper.className = 'rp-bubble-wrapper';
         const el = document.createElement('div');
         el.className = 'rp-bubble other';
         el.textContent = text;
         wrapper.appendChild(el);
-
-        // ── Micro-feedback row ────────────────────────────────────────────────
-        const turnIndex = Math.floor(_simHistory.length / 2);
-        const contactId = _simCharacter?.contact_id || null;
-
-        function _mfbPost(payload) {
-          if (!accessToken) return;
-          fetch('/api/feedback/micro', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-            body: JSON.stringify({ contact_id: contactId, turn_index: turnIndex, ...payload })
-          }).catch(() => {});
-        }
-
-        const mfbRow = document.createElement('div');
-        mfbRow.className = 'rp-mfb-row';
-
-        const exactBtn = document.createElement('button');
-        exactBtn.className = 'rp-mfb-btn';
-        exactBtn.textContent = '✅';
-        exactBtn.title = 'Just like them';
-        exactBtn.addEventListener('click', () => {
-          _mfbPost({ verdict: 'exact' });
-          mfbRow.innerHTML = '<span class="rp-mfb-ack">✓ thanks</span>';
-        });
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'rp-mfb-btn';
-        closeBtn.textContent = '🤔';
-        closeBtn.title = 'Close / not sure';
-        closeBtn.addEventListener('click', () => {
-          _mfbPost({ verdict: 'close' });
-          mfbRow.innerHTML = '';
-          const tagRow = document.createElement('div');
-          tagRow.className = 'rp-mfb-tags';
-          ['too formal', 'wrong tone', 'softened too fast', 'wrong memory', 'too long', 'wouldn\'t say'].forEach(label => {
-            const t = document.createElement('button');
-            t.className = 'rp-mfb-tag';
-            t.textContent = label;
-            t.addEventListener('click', () => {
-              _mfbPost({ verdict: 'close', tag: label });
-              mfbRow.innerHTML = '<span class="rp-mfb-ack">✓ noted</span>';
-            });
-            tagRow.appendChild(t);
-          });
-          mfbRow.appendChild(tagRow);
-        });
-
-        const wrongBtn = document.createElement('button');
-        wrongBtn.className = 'rp-mfb-btn';
-        wrongBtn.textContent = '❌';
-        wrongBtn.title = 'They\'d never say this';
-        wrongBtn.addEventListener('click', () => {
-          _mfbPost({ verdict: 'wrong' });
-          if (histIdx >= 0) {
-            wrongBtn.replaceWith(_rpBuildCorrectForm(el, histIdx));
-            // remove remaining mfb buttons if correction form opened
-            mfbRow.querySelectorAll('.rp-mfb-btn').forEach(b => b.remove());
-          } else {
-            mfbRow.innerHTML = '<span class="rp-mfb-ack">✗ logged</span>';
-          }
-        });
-
-        mfbRow.appendChild(exactBtn);
-        mfbRow.appendChild(closeBtn);
-        mfbRow.appendChild(wrongBtn);
-
-        const copyBubbleBtn = document.createElement('button');
-        copyBubbleBtn.className = 'rp-mfb-copy-btn';
-        copyBubbleBtn.textContent = '📋';
-        copyBubbleBtn.title = 'Copy this message';
-        copyBubbleBtn.addEventListener('click', () => {
-          navigator.clipboard.writeText(text).then(() => {
-            copyBubbleBtn.textContent = '✓';
-            setTimeout(() => { copyBubbleBtn.textContent = '📋'; }, 1500);
-            _signalSend('copy', null, turnIndex);
-          }).catch(() => {});
-        });
-        mfbRow.appendChild(copyBubbleBtn);
-
-        wrapper.appendChild(mfbRow);
-        // ─────────────────────────────────────────────────────────────────────
-
         container.appendChild(wrapper);
       } else {
         const el = document.createElement('div');
@@ -8506,74 +8427,6 @@
         container.appendChild(el);
       }
       container.scrollTop = container.scrollHeight;
-    }
-
-    function _rpBuildCorrectForm(bubbleEl, histIdx) {
-      const form = document.createElement('div');
-      form.className = 'rp-inline-correct-form';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'rp-inline-correct-input';
-      input.placeholder = 'What should they have said?';
-      input.value = bubbleEl.textContent;
-
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'rp-inline-correct-save';
-      saveBtn.textContent = 'Save';
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'rp-inline-correct-cancel';
-      cancelBtn.textContent = 'Cancel';
-
-      const doSave = async () => {
-        const newText = input.value.trim();
-        if (!newText) return;
-        const original = bubbleEl.textContent;
-        bubbleEl.textContent = newText;
-        if (_simHistory[histIdx]) _simHistory[histIdx].content = newText;
-        const label = document.createElement('span');
-        label.className = 'rp-corrected-label';
-        label.textContent = '✓ corrected';
-        form.replaceWith(label);
-        if (_simCharacter?.contact_id && accessToken) {
-          try {
-            const existing = _simCharacter.character_profile || '';
-            const entry = `- Original: "${original}"\n  Corrected: "${newText}"`;
-            const marker = 'USER CORRECTIONS';
-            const newProfile = existing.includes(marker)
-              ? existing.trimEnd() + '\n' + entry
-              : (existing.trimEnd() ? existing.trimEnd() + '\n\n' : '') + marker + '\n' + entry;
-            await fetch(`/api/contacts/${_simCharacter.contact_id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-              body: JSON.stringify({ character_profile: newProfile })
-            });
-            _simCharacter.character_profile = newProfile;
-          } catch (e) { console.error('[inline-correction]', e); }
-        }
-      };
-
-      const doCancel = () => {
-        const btn = document.createElement('button');
-        btn.className = 'rp-inline-correct-btn';
-        btn.textContent = '✗ Wrong';
-        btn.addEventListener('click', () => btn.replaceWith(_rpBuildCorrectForm(bubbleEl, histIdx)));
-        form.replaceWith(btn);
-      };
-
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); doSave(); }
-        if (e.key === 'Escape') doCancel();
-      });
-      saveBtn.addEventListener('click', doSave);
-      cancelBtn.addEventListener('click', doCancel);
-
-      form.appendChild(input);
-      form.appendChild(saveBtn);
-      form.appendChild(cancelBtn);
-      setTimeout(() => input.focus(), 0);
-      return form;
     }
 
     function _rpShowTyping() {
