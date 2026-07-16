@@ -9,6 +9,11 @@
 > gone, /api/..%2f bypass 404, C1 anon-read 0 rows, paid gates 402, CORS scoped, /api/keepalive db:ok. **C4 apex
 > domain RESOLVED 2026-07-16** (GoDaddy domain forwarding aiwillmake.com → https://www.aiwillmake.com, 301, live-verified).
 > Keepalive GitHub Action + cron-job.org backup both live. Only optional decisions remain: Supabase Pro ($25/mo) / Resend key.
+>
+> **Trilingual (TR/EN/ES) — COMMITTED, NOT YET DEPLOYED (2026-07-16).** `index.html` fully trilingual (content-keyed
+> runtime translator). `app.html` UI localized via `app_i18n.js` (489-string content-keyed walker + MutationObserver,
+> dynamic AI/user containers skip-listed). AI output language now follows the UI language (aiLang() fallback). See
+> **Internationalization** section below. Deploy pending (user deploys last, off-peak window).
 
 AI conversation navigator + "digital twin" rehearsal app. Turkish-first UI, English codebase/prompts.
 User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server builds a character profile of the
@@ -195,6 +200,40 @@ Shipped after a 5-lens product analysis (the data showed one-and-done use: 71 co
   RECOMMENDED pick toward the user's revealed style. Zero DDL.
 - **Wow screen simplified** — unexpected-finding is the hero (above mirror); twin detail card + relationship loop +
   DNA bars are collapsed behind a "Daha fazla detay" toggle (first glance = archetype/unexpected/mirror/Prova + CTAs).
+
+## Internationalization (i18n) — TR/EN/ES (2026-07-16, committed, not yet deployed)
+Site language lives in `localStorage.app_lang` (shared by both pages); a TR/EN/ES switcher sits in the nav. Default
+follows `navigator.language`, else `tr`.
+
+- **`index.html` (marketing landing):** fully trilingual via an inline **content-keyed runtime translator** — a
+  text-node walker keyed on the *current* English source text → `{tr,es}`, caching originals in a WeakMap, re-run by a
+  MutationObserver. Self-contained in the page.
+- **`app.html` (SPA):** two cooperating layers.
+  1. **Inline scaffold** (`I18N` dotted-key dict + `t()` / `aiLang()` / `applyI18n()` / `setLang()`): handles the
+     `[data-i18n]` / `[data-i18n-ph]` elements (wow/bys/nav) and exposes `window.APP_LANG`.
+  2. **`app_i18n.js`** (served; in the static allow-list): a **489-string content-keyed dictionary** (keys =
+     entity-decoded current source text, mixed EN/TR) + a text-node **walker + MutationObserver** (`window.i18nWalk` /
+     `window.i18nObserve`, called from `applyI18n` / DOMContentLoaded). Translates all remaining STATIC UI by exact
+     source match; caches originals per-node so language switching is reversible.
+     - **Safety — never mangles dynamic content:** the walker skips SCRIPT/STYLE/TEXTAREA, `[data-i18n*]` subtrees, and
+       a fixed **skip-list of dynamic AI/user container ids** (`rp-messages`, `convListEl`, `contactsListEl`,
+       `recentMsgsWidget`, `wowMirrorList`, `wowUnexpectedList`, `wowThemSummary`, `wowArchetypeName/Tagline/Traits`,
+       `wowLoopSteps`, `wowDnaBars`, `bysResult`). Verified adversarially in-browser: dict-key text injected INTO a skip
+       container stays untouched; injected OUTSIDE it translates. Exact-full-node-match means long AI/user text is inert
+       even outside skip containers.
+     - **Observer uses `setTimeout(16)`, NOT `requestAnimationFrame`** — rAF is paused in hidden/background tabs, which
+       would defer translation of freshly-rendered UI indefinitely. (This was a real bug caught in testing.)
+- **AI output language:** `aiLang()` maps `APP_LANG`→`Turkish|English|Spanish`. All AI calls default their `language`
+  param to `lastFields.language || aiLang()` (was hardcoded `'English'`). `lastFields` starts `{}` and is only set by
+  the compose flow, so twin-practice-entered-directly + voice input previously forced English for TR users; now they
+  follow the UI language.
+
+**Deferred (phase 2, documented gaps, ~47 strings):** the compose **category/type/language/country taxonomy**
+(`categories.json`-driven, partly proper nouns) and JS-built strings not yet in `app_i18n.js`'s dict; the compose
+"Language" dropdown default still starts at English (wire to `aiLang()` with the taxonomy pass). To extend coverage:
+add the source string → `{tr,en,es}` to the `Object.assign(window.I18N_C, {…})` block at the end of `app_i18n.js`
+(no rebuild needed). **Regenerate note:** the dict was produced by a translation workflow over extracted UI strings;
+keys are entity-decoded (`&amp;`→`&`, `&nbsp;`→space, `&#39;`→`'`) so they match decoded DOM text nodes.
 
 ## ⚠ KNOWN ISSUES / SECURITY FINDINGS (audit 2026-07-15)
 Ordered by severity. Line numbers are approximate — grep before trusting.
