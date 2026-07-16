@@ -1309,6 +1309,8 @@ Write in ${lang}.`;
 });
 
 app.post('/api/setup-chunks-table', requireAuth, async (req, res) => {
+  // RLS + owner-only policy are part of the template: this table holds raw private
+  // chat text, and provisioning it without RLS is exactly how the C1 leak happened.
   const sql = `CREATE TABLE IF NOT EXISTS conversation_chunks (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   contact_id uuid REFERENCES contacts(id) ON DELETE CASCADE,
@@ -1318,7 +1320,11 @@ app.post('/api/setup-chunks-table', requireAuth, async (req, res) => {
   date_range text,
   created_at timestamptz DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_chunks_contact ON conversation_chunks(contact_id);`;
+CREATE INDEX IF NOT EXISTS idx_chunks_contact ON conversation_chunks(contact_id);
+ALTER TABLE conversation_chunks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "chunks_owner" ON conversation_chunks;
+CREATE POLICY "chunks_owner" ON conversation_chunks FOR ALL TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);`;
   try {
     const r = await fetch(`${SUPABASE_REST}/conversation_chunks?select=id&limit=0`, {
       headers: sbHeaders(req.token)
