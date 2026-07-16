@@ -6,8 +6,9 @@
 > prediction_ledger — harmless + partly wired to UI, cut/rewire later), role_names 0/8, embeddings RAG + analyze
 > cost-consolidation (deferred: external key / recall-regression risk), H4-full (IP-rotation needs auth/captcha),
 > cosmetic LOW (og-image dims etc.). **DEPLOYED & LIVE-VERIFIED on prod 2026-07-16** (commit 190c365): /api/debug
-> gone, /api/..%2f bypass 404, C1 anon-read 0 rows, paid gates 402, CORS scoped, /api/keepalive db:ok. Only the
-> user-side items remain: apex-domain DNS (C4), run the keepalive GitHub Action once, optional Supabase Pro / Resend key.
+> gone, /api/..%2f bypass 404, C1 anon-read 0 rows, paid gates 402, CORS scoped, /api/keepalive db:ok. **C4 apex
+> domain RESOLVED 2026-07-16** (GoDaddy domain forwarding aiwillmake.com → https://www.aiwillmake.com, 301, live-verified).
+> Keepalive GitHub Action + cron-job.org backup both live. Only optional decisions remain: Supabase Pro ($25/mo) / Resend key.
 
 AI conversation navigator + "digital twin" rehearsal app. Turkish-first UI, English codebase/prompts.
 User imports a WhatsApp chat (.txt / .zip / screenshot / paste) → server builds a character profile of the
