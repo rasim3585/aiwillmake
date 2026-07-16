@@ -4360,7 +4360,7 @@
         const resp = await fetch('/api/analyze-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || 'English', contactContext: activeContactContext || undefined, previousMessage })
+          body: JSON.stringify({ reply, categoryId: selectedCatId, situation, language: lastFields.language || aiLang(), contactContext: activeContactContext || undefined, previousMessage })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -4453,7 +4453,7 @@
             situation,
             originalMessage: selectedMsgText,
             theirReply:      reply,
-            language:        lastFields.language || 'English',
+            language:        lastFields.language || aiLang(),
             contactContext:  activeContactContext || undefined
           })
         });
@@ -5135,7 +5135,7 @@
         const resp = await fetch('/api/likely-responses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ categoryId: selectedCatId, situation, selectedMessage: selectedMsgText, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
+          body: JSON.stringify({ categoryId: selectedCatId, situation, selectedMessage: selectedMsgText, language: lastFields.language || aiLang(), contactContext: activeContactContext || undefined })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error);
@@ -5189,7 +5189,7 @@
                 if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
                 const r2 = await fetch('/api/next-reply', {
                   method: 'POST', headers,
-                  body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || 'English', contactContext: activeContactContext || undefined })
+                  body: JSON.stringify({ categoryId: selectedCatId, situation, originalMessage: selectedMsgText, theirReply: r.example, language: lastFields.language || aiLang(), contactContext: activeContactContext || undefined })
                 });
                 const d2 = await r2.json();
                 if (r2.status === 403) { deepEl.innerHTML = `<p style="color:var(--sec);font-size:.83rem">Sign in to see reply suggestions.</p>`; genBtn.remove(); return; }
@@ -5238,7 +5238,7 @@
           body: JSON.stringify({
             categoryId: selectedCatId, situation,
             selectedMessage: selectedMsgText,
-            language: lastFields.language || 'English',
+            language: lastFields.language || aiLang(),
             scenario, theirMessage
           })
         });
@@ -5285,7 +5285,7 @@
             categoryId: selectedCatId,
             situation,
             selectedMessage: selectedMsgText,
-            language: lastFields.language || 'English'
+            language: lastFields.language || aiLang()
           })
         });
         const data = await resp.json();
@@ -6711,7 +6711,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             reply: message, categoryId: selectedCatId || 'general', situation: '',
-            language: lastFields.language || 'English', senderType: 'review',
+            language: lastFields.language || aiLang(), senderType: 'review',
             contactContext: activeContactContext || undefined
           })
         });
@@ -6929,7 +6929,7 @@
             headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
             body: JSON.stringify({
               conversationText: text,
-              language: lastFields.language || 'English',
+              language: lastFields.language || aiLang(),
               contact_id: contactId || null,
               contact_name: contactName || null,
               ...(previousContext ? { previousContext } : {})
@@ -7195,7 +7195,7 @@
         const r = await fetch('/api/contacts/from-text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ text, language: lastFields.language || 'English' })
+          body: JSON.stringify({ text, language: lastFields.language || aiLang() })
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error);
@@ -7958,7 +7958,7 @@
         const resp = await fetch('/api/analyze-conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conversationText: trimmedConv, language: lastFields.language || 'English' })
+          body: JSON.stringify({ conversationText: trimmedConv, language: lastFields.language || aiLang() })
         });
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) throw new Error(data.error || (resp.status === 413 ? 'File too large — please try a shorter conversation or paste the text.' : `Server error (${resp.status})`));
@@ -8616,7 +8616,7 @@
       const typingEl = _rpShowTyping();
       try {
         await ensureTwinProfile(typingEl);
-        const lang = lastFields?.language || 'English';
+        const lang = lastFields?.language || aiLang();
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
@@ -8680,7 +8680,7 @@
       debriefTextEl.textContent = '…';
 
       try {
-        const lang = lastFields?.language || 'English';
+        const lang = lastFields?.language || aiLang();
         const resp = await fetch('/api/simulate-debrief', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
@@ -9336,7 +9336,7 @@
         if (_isListening) {
           _recognition.stop();
         } else {
-          const lang = (typeof lastFields !== 'undefined' && lastFields.language) || 'English';
+          const lang = (typeof lastFields !== 'undefined' && lastFields.language) || aiLang();
           const langMap = {
             'Turkish': 'tr-TR', 'English': 'en-US', 'Spanish': 'es-ES',
             'French': 'fr-FR', 'German': 'de-DE', 'Italian': 'it-IT',
