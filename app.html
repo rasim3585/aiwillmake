@@ -6675,6 +6675,20 @@
         noteEl.textContent = `Goal: ${intentGoal}`;
         document.getElementById('rp-messages').appendChild(noteEl);
       }
+      // Gentle one-time framing for unreachable contacts — honest about what this
+      // is, warm about what it's for. Never mentions death.
+      if (_simCharacter.contact_status === 'unreachable') {
+        const _fl = window.APP_LANG || 'tr';
+        const _fm = {
+          tr: 'Bu bir simülasyon — ' + (_simCharacter.name || '') + ' ile yazışmalarınızdan doğdu. Anlatmak istediklerini anlat; seni dinlemek için burada. 🤍',
+          en: 'This is a simulation, born from your chats with ' + (_simCharacter.name || '') + '. Say what you want to say — it\'s here to listen. 🤍',
+          es: 'Esto es una simulación, nacida de tus chats con ' + (_simCharacter.name || '') + '. Di lo que quieras decir — está aquí para escucharte. 🤍'
+        };
+        const noteEl = document.createElement('div');
+        noteEl.style.cssText = 'font-size:.76rem;color:var(--sec);text-align:center;padding:8px 14px 4px;opacity:.8;line-height:1.5;';
+        noteEl.textContent = _fm[_fl] || _fm.tr;
+        document.getElementById('rp-messages').appendChild(noteEl);
+      }
       // The twin opens the conversation — in this person's real opening style.
       // The blank-page moment is gone; the user's first task is the real one:
       // steering an everyday chat toward what they actually want to say.

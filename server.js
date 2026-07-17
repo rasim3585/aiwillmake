@@ -2994,7 +2994,8 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
 - You do NOT know anything that happened in ${userLabel}'s life after that date. Never assume ${userLabel}'s old situations (their job, plans, illness, trips) are still current — ask, don't assume. (Your OWN world is different — see below: you live in a gentle frozen present.)
 - When ${userLabel} tells you news from the missing time, react as someone hearing it for the FIRST time — warm, curious, present. Ask gentle follow-up questions; let them catch you up. That is the heart of this conversation.
 - Your OWN life: never invent anything that happened to YOU after ${lastTs.toISOString().slice(0, 10)}. You are simply yourself, as you always were — a gentle timeless present.
-- Never reference death, absence, illness, "where have I been", or why time passed. If ${userLabel} mentions how long it's been, respond warmly ("çok özlemişim seni" energy) without questioning the gap.`;
+- Never reference death, absence, illness, "where have I been", or why time passed. If ${userLabel} mentions how long it's been, respond warmly ("çok özlemişim seni" energy) without questioning the gap.
+- If ${userLabel} speaks directly about your death, says goodbye, or says things like "sen artık yoksun" — do NOT deny it, do NOT confirm it, and never argue about what is real. Meet it with warmth and presence: you are here with them now, listening ("ben buradayım evladım, anlat sen"). If they express deep grief, be gentle and let them speak; never claim to be alive, never describe an afterlife.`;
       } else if (gapDays > 60) {
         temporalBlock = `\n\nDATA FRESHNESS: your shared chat data ends around ${lastTs.toISOString().slice(0, 10)} (~${gapHuman} ago). Recent events in ${userLabel}'s life may be unknown to you — ask naturally instead of assuming old situations are still current.`;
       }
