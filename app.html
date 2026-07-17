@@ -9400,6 +9400,25 @@
             });
             box.classList.remove('hidden');
           } else if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
+          // Contact-side facts were appended to the twin silently — just inform.
+          const cl = Array.isArray(data.contact_learned) ? data.contact_learned : [];
+          if (box && cl.length) {
+            const L2 = window.APP_LANG || 'tr';
+            const T2 = { tr: '🌱 ' + ( _simCharacter?.name || '') + ' hakkında not ettiklerim (twin güçlendi):', en: '🌱 Noted about ' + (_simCharacter?.name || 'them') + ' (the twin got stronger):', es: '🌱 Anotado sobre ' + (_simCharacter?.name || '') + ' (el gemelo se fortaleció):' };
+            const sec = document.createElement('div');
+            sec.className = 'rp-learned-title';
+            sec.style.marginTop = '10px';
+            sec.textContent = T2[L2] || T2.tr;
+            box.appendChild(sec);
+            cl.forEach(f => {
+              const li = document.createElement('div');
+              li.className = 'rp-learned-fact';
+              li.style.cssText = 'padding:2px 0;opacity:.85';
+              li.textContent = '• ' + f;
+              box.appendChild(li);
+            });
+            box.classList.remove('hidden');
+          }
         } catch (e) { console.error('[learned-chips]', e); }
 
         // ── Reaction Bet result (internal only, not displayed) ───────

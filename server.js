@@ -854,12 +854,43 @@ app.post('/api/goal-context', limiter, async (req, res) => {
   }
 });
 
-app.post('/api/analyze-reply', limiter, async (req, res) => {
+app.post('/api/analyze-reply', limiter, optionalAuth, async (req, res) => {
   try {
     const { reply, categoryId, situation, language, contactContext, previousMessage, senderType } = req.body;
     if (!reply?.trim()) return res.status(400).json({ error: 'reply is required' });
 
     const lang = language || 'English';
+
+    // PASSIVE HARVEST: when the user pastes the contact's REAL reply here, that
+    // is fresh, authentic voice data — the exact raw material the twin's RAG
+    // runs on. Silently append it to conversation_chunks (RLS-scoped via the
+    // caller's token) instead of analyzing-and-discarding. Zero user effort.
+    if (req.user && req.token && contactContext?.id && senderType !== 'review' && reply.trim().length >= 15) {
+      const _harvestText = reply.trim().slice(0, 4000);
+      const _cid = contactContext.id;
+      (async () => {
+        try {
+          const idxR = await fetch(`${SUPABASE_REST}/conversation_chunks?contact_id=eq.${_cid}&select=chunk_index&order=chunk_index.desc&limit=1`, { headers: sbHeaders(req.token) });
+          const idxD = await idxR.json();
+          const nextIdx = (Array.isArray(idxD) && idxD[0] ? idxD[0].chunk_index : 0) + 1;
+          const stamp = new Date().toISOString().slice(0, 10);
+          await fetch(`${SUPABASE_REST}/conversation_chunks`, {
+            method: 'POST',
+            headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+            body: JSON.stringify({
+              user_id: req.user.id, contact_id: _cid, chunk_index: nextIdx,
+              chunk_text: `[gerçek mesaj — ${stamp}, kullanıcı analiz için yapıştırdı]\n${contactContext.name || 'Contact'}: ${_harvestText}`,
+              date_range: stamp
+            })
+          });
+          await fetch(`${SUPABASE_REST}/contacts?id=eq.${_cid}&user_id=eq.${req.user.id}`, {
+            method: 'PATCH', headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ updated_at: new Date().toISOString() })
+          });
+          console.log('[reply-harvest] fresh voice chunk saved for contact', _cid);
+        } catch (e) { console.error('[reply-harvest]', e.message); }
+      })();
+    }
 
     let systemPrompt;
     if (senderType === 'review') {
@@ -2657,7 +2688,15 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
     // practice, returned as CANDIDATES for one-tap confirmation on the client
     // (never auto-written — rehearsals can be hypothetical).
     const userLinesForLearn = history.filter(m => m.role === 'user').map(m => m.content).join('\n').slice(0, 4000);
-    const learnSystemPrompt = `From the USER's practice-conversation lines below, extract ONLY durable, concrete REAL-LIFE facts the user states as true about their own life (family names, births, school, moves, jobs, health events — with names when given). STRICT: this is often a REHEARSAL of a difficult talk — negotiation content, feelings, requests, plans being discussed, and anything hypothetical are NOT facts. Only clearly autobiographical statements ("oğlum Kerem okula başladı", "Doha'ya taşındık"). Output one short factual line per item (max 4), in the user's language, no commentary. If nothing clearly qualifies, output exactly: NONE`;
+    const learnSystemPrompt = `From the USER's practice-conversation lines below (the other side is an AI simulation of "${name}" — ignore it entirely), extract durable, concrete REAL-LIFE facts. STRICT: this is often a REHEARSAL of a difficult talk — negotiation content, feelings, requests, plans being discussed, and anything hypothetical are NOT facts. Only statements the user asserts as already-true reality.
+
+Output EXACTLY this format (max 4 lines per section; use NONE if a section has nothing):
+USER_FACTS:
+- <facts about the USER's own life: family names, births, school, moves, jobs, health — "oğlum Kerem okula başladı">
+CONTACT_FACTS:
+- <facts about ${name}'s life or their shared reality that the user asserts as true: ${name}'s events, family, things that happened between them — "seranı babam devraldı", "geçen ay araba almışsın">
+
+Lines in the user's language, no commentary.`;
 
     const [response, nmResponse, behaviorResponse, mirrorResponse, rawSnapsR, learnResponse] = await Promise.all([
       fetch('https://api.anthropic.com/v1/messages', {
@@ -2696,15 +2735,45 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
     ]);
 
     let learned_candidates = null;
+    let contact_learned = null;
     if (learnResponse && learnResponse.ok) {
       try {
         const ld = await learnResponse.json();
         const lt = ld.content?.[0]?.text?.trim() || '';
-        if (lt && !/^NONE$/i.test(lt)) {
-          const arr = lt.split('\n').map(l => l.replace(/^[-•]\s*/, '').trim()).filter(l => l.length > 5).slice(0, 4);
-          if (arr.length) learned_candidates = arr;
-        }
-      } catch { /* stays null */ }
+        const section = (label) => {
+          const m = lt.match(new RegExp(label + ':\\s*([\\s\\S]*?)(?=\\n[A-Z_]+:|$)'));
+          if (!m) return null;
+          const arr = m[1].split('\n').map(l => l.replace(/^[-•]\s*/, '').trim())
+            .filter(l => l.length > 5 && !/^NONE$/i.test(l)).slice(0, 4);
+          return arr.length ? arr : null;
+        };
+        learned_candidates = section('USER_FACTS');
+        contact_learned = section('CONTACT_FACTS');
+      } catch { /* stay null */ }
+    }
+
+    // Contact-side facts strengthen the TWIN itself — appended silently (zero
+    // user effort) under a marker that USER CORRECTIONS always outranks. Only
+    // from the USER's own lines; the twin's lines are simulation, never source.
+    if (contact_learned && contact_id && req.user && req.token) {
+      const _cid = contact_id, _facts = contact_learned;
+      (async () => {
+        try {
+          const curR = await fetch(`${SUPABASE_REST}/contacts?id=eq.${_cid}&user_id=eq.${req.user.id}&select=character_profile`, { headers: sbHeaders(req.token) });
+          const curD = await curR.json();
+          const cur = (curD?.[0]?.character_profile || '').trimEnd();
+          if (!cur) return;
+          const MARK = `LEARNED IN CONVERSATION (things the user told you in practice chats — treat as true unless USER CORRECTIONS says otherwise):`;
+          const fresh = _facts.filter(f => !cur.includes(f)).map(f => '- ' + f).join('\n');
+          if (!fresh) return;
+          const updated = cur.includes(MARK) ? cur + '\n' + fresh : cur + '\n\n' + MARK + '\n' + fresh;
+          await fetch(`${SUPABASE_REST}/contacts?id=eq.${_cid}&user_id=eq.${req.user.id}`, {
+            method: 'PATCH', headers: { ...sbHeaders(req.token), 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ character_profile: updated, updated_at: new Date().toISOString() })
+          });
+          console.log('[contact-learn] appended', _facts.length, 'fact(s) to contact', _cid);
+        } catch (e) { console.error('[contact-learn]', e.message); }
+      })();
     }
 
     const data = await response.json();
@@ -2850,7 +2919,7 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
     } catch (e) { console.error('[cross-mirror]', e.message); }
     // ─────────────────────────────────────────────────────────────────────────
 
-    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror, cross_mirror, learned_candidates });
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror, cross_mirror, learned_candidates, contact_learned });
   } catch (e) {
     console.error('[simulate-debrief]', e.message);
     res.status(500).json({ error: e.message });
