@@ -944,6 +944,8 @@
     .rp-stars { display: flex; gap: 4px; }
     .rp-star { background: none; border: none; font-size: 22px; color: #333; cursor: pointer; transition: color 0.15s; padding: 0 2px; font-family: inherit; }
     .rp-star.selected, .rp-star:hover { color: #ff6b35; }
+    .rp-invite-row { display: flex; gap: 8px; justify-content: center; padding: 6px 4px 2px; flex-wrap: wrap; }
+    .rp-invite-chip { border: 1px solid rgba(160,126,224,.45); background: rgba(160,126,224,.1); color: var(--text); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: .8rem; cursor: pointer; }
     .rp-learned { margin: 0 20px 4px; padding: 12px 14px; border-radius: 10px; background: rgba(160,126,224,.07); border: 1px solid rgba(160,126,224,.28); }
     .rp-learned-title { font-size: .78rem; font-weight: 700; color: #b9a1e8; margin-bottom: 8px; }
     .rp-learned-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
@@ -6393,8 +6395,21 @@
       }).join('') + '</div>';
     }
 
-    // Knowledge meter: avg of USER_CONFIDENCE area scores + a small bonus for
-    // user-provided/confirmed facts. Weakest area drives the targeted nudge.
+    // Shared knowledge score: avg of USER_CONFIDENCE area scores + a small bonus
+    // for user-provided facts. Used by the meter AND the in-chat data invite.
+    function _knowScore(data) {
+      const txt = data.profile_text || '';
+      const areas = [];
+      (data.confidence_areas || '').split('|').forEach(part => {
+        const m = part.match(/([^:]+):\s*(\d+)/);
+        if (m) areas.push(Math.min(100, parseInt(m[2], 10)));
+      });
+      const base = areas.length ? Math.round(areas.reduce((s, a) => s + a, 0) / areas.length) : (txt ? Math.min(45, Math.round(txt.length / 150)) : 0);
+      const factCount = (txt.match(/^- /gm) || []).length;
+      return Math.min(100, base + Math.min(20, factCount * 2));
+    }
+
+    // Knowledge meter: weakest area drives the targeted nudge.
     function _renderKnowMeter(data) {
       const box = document.getElementById('upMeter');
       if (!box) return;
@@ -6405,9 +6420,7 @@
         const m = part.match(/([^:]+):\s*(\d+)/);
         if (m) areas.push({ name: m[1].trim(), score: Math.min(100, parseInt(m[2], 10)) });
       });
-      let base = areas.length ? Math.round(areas.reduce((s, a) => s + a.score, 0) / areas.length) : (txt ? Math.min(45, Math.round(txt.length / 150)) : 0);
-      const factCount = (txt.match(/^- /gm) || []).length;
-      const score = Math.min(100, base + Math.min(20, factCount * 2));
+      const score = _knowScore(data);
       const T = {
         label: { tr: '🧠 İkizler seni ne kadar tanıyor?', en: '🧠 How well do the twins know you?', es: '🧠 ¿Qué tan bien te conocen los gemelos?' },
         hintArea: { tr: 'En zayıf alan: <b>{a}</b> — aşağıdaki 5 soruyu yanıtla ya da o dünyadan bir sohbet daha yükle.', en: 'Weakest area: <b>{a}</b> — answer the 5 questions below, or import another chat from that world.', es: 'Área más débil: <b>{a}</b> — responde las 5 preguntas o importa otro chat.' },
@@ -6714,6 +6727,13 @@
       _simInitialMsg = '';
       _simHistory = [];
       _simTurn = 0;
+      _inviteAsked = false;
+      // Knowledge score powers the in-chat data invite (thin profile → the twin
+      // itself asks for more of the user's world at a natural moment).
+      if (accessToken) {
+        fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
+          .then(r => r.json()).then(d => { window._userKnowScore = _knowScore(d); }).catch(() => {});
+      }
       document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
@@ -8893,6 +8913,7 @@
     let _simCharacter  = null;
     let _simTurn       = 1;
     let _simInitialMsg = '';
+    let _inviteAsked   = false; // in-chat data invite fires at most once per session
     let _userPrediction = null; // { key: 'positive'|'resistant'|'deflect', label: string }
     let _predictionId = null;
 
@@ -9008,6 +9029,29 @@
       container.scrollTop = container.scrollHeight;
     }
 
+    // Action chips under a data-invite reply — the twin asked for more of the
+    // user's world; these make the ask actionable in one tap.
+    function _rpRenderInviteChips() {
+      const c = document.getElementById('rp-messages');
+      if (!c) return;
+      const L = window.APP_LANG || 'tr';
+      const T = {
+        imp:  { tr: '📤 Bir sohbet yükle', en: '📤 Import a chat', es: '📤 Importar un chat' },
+        know: { tr: '🎙 Beni tanı (5 soru)', en: '🎙 Get to know me (5 questions)', es: '🎙 Conóceme (5 preguntas)' }
+      };
+      const row = document.createElement('div');
+      row.className = 'rp-invite-row';
+      const b1 = document.createElement('button');
+      b1.className = 'rp-invite-chip'; b1.textContent = T.imp[L] || T.imp.tr;
+      b1.addEventListener('click', () => { _rpClose(); App.navigateTo('import'); });
+      const b2 = document.createElement('button');
+      b2.className = 'rp-invite-chip'; b2.textContent = T.know[L] || T.know.tr;
+      b2.addEventListener('click', () => { _rpClose(); openUserProfile(); });
+      row.appendChild(b1); row.appendChild(b2);
+      c.appendChild(row);
+      c.scrollTop = c.scrollHeight;
+    }
+
     function _rpShowTyping() {
       const el = document.createElement('div');
       el.className = 'rp-typing';
@@ -9064,10 +9108,16 @@
       try {
         await ensureTwinProfile(typingEl);
         const lang = lastFields?.language || aiLang();
+        // In-chat data invite: once per session, mid-conversation, only when the
+        // twin barely knows the user — or it's an unreachable contact with a big
+        // missing-time gap ("bring me your current world" moment).
+        const _gapDays = _simCharacter?.last_message_ts ? Math.floor((Date.now() - new Date(_simCharacter.last_message_ts)) / 86400e3) : 0;
+        const inviteNow = !_inviteAsked && !!accessToken && _simTurn >= 2 &&
+          (((window._userKnowScore ?? 100) < 60) || (_simCharacter?.contact_status === 'unreachable' && _gapDays > 180));
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
-          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang })
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: inviteNow || undefined })
         });
         const data = await resp.json();
         typingEl.remove();
@@ -9076,6 +9126,7 @@
         _simHistory.push({ role: 'assistant', content: data.reply });
         _rpAppendBubble('other', data.reply);
         _rpSpeak(data.reply);
+        if (inviteNow) { _inviteAsked = true; _rpRenderInviteChips(); }
         _simTurn++;
         document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');

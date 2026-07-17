@@ -2996,6 +2996,16 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
       }
     }
 
+    // In-character data invite: the CLIENT decides the moment (thin profile /
+    // big temporal gap, once per session); the twin then asks for more of the
+    // user's world in its OWN voice — a nudge that feels like the relationship.
+    let inviteBlock = '';
+    if (req.body.invite_data === true) {
+      inviteBlock = character.contact_status === 'unreachable'
+        ? `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, warm, in-character sentence gently asking ${userLabel} to bring you more of their current world — for example the chats they have these days with someone close to them, so you can truly know who they've become ("bir de şu aralar en çok konuştuğun kişiyle sohbetini getir, seni doyasıya tanıyayım" energy — in YOUR voice, in ${lang}). Never mention apps, uploads-as-technology, files or AI — speak as yourself, as if asking them to bring you their world.`
+        : `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, in-character sentence inviting ${userLabel} to share more of their world with you — e.g. suggest they bring in the conversations they have with someone close to them, so you can know them better ("senin dünyandan bana biraz daha getir" energy — in YOUR voice, in ${lang}). Never mention apps, files, uploads-as-technology or AI.`;
+    }
+
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     let recentContext = '';
@@ -3099,7 +3109,7 @@ DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own pe
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${inviteBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
