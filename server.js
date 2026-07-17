@@ -2530,40 +2530,10 @@ app.post('/api/simulate-debrief', limiter, optionalAuth, async (req, res) => {
       `[${m.role === 'user' ? 'You' : name}]: ${m.content}`
     ).join('\n');
 
-    // Unreachable-mode ritual: the user "catches the twin up" on the missing
-    // years ("Kemal okula başladı"). Capture those REAL life facts into the
-    // global user_profile so no twin ever forgets them. Only in this mode —
-    // rehearsals with living contacts are often hypothetical and must never
-    // pollute the profile.
-    if (character.contact_status === 'unreachable' && req.user?.id && req.token) {
-      const userLines = history.filter(m => m.role === 'user').map(m => m.content).join('\n').slice(0, 4000);
-      if (userLines.length > 40) (async () => {
-        try {
-          const ex = await claudeCallWithRetry({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 300,
-            system: `The user had a heartfelt conversation with an AI twin of someone they can no longer reach, catching them up on their life. From the USER's lines below, extract ONLY durable, concrete REAL-LIFE facts the user states as true about their current life (births, school, moves, jobs, marriages, deaths, health — with names when given). STRICT: ignore feelings, questions, memories of the past, hypotheticals, and anything uncertain. Output one short factual line per item, no commentary. If nothing qualifies, output exactly: NONE`,
-            messages: [{ role: 'user', content: userLines }]
-          }, 'life-updates');
-          const facts = ex?.content?.[0]?.text?.trim();
-          if (!facts || /^NONE$/i.test(facts)) return;
-          const curR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
-          const curD = await curR.json();
-          const cur = (curD?.[0]?.profile_text || '').trimEnd();
-          const MARK = 'LIFE UPDATES (told by the user in twin conversations — treat as current truth):';
-          const lines = facts.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 5)
-            .filter(l => !cur.includes(l)).map(l => '- ' + l.replace(/^[-•]\s*/, '')).join('\n');
-          if (!lines) return;
-          const updated = cur.includes(MARK) ? cur + '\n' + lines : (cur ? cur + '\n\n' : '') + MARK + '\n' + lines;
-          await fetch(`${SUPABASE_REST}/user_profile`, {
-            method: 'POST',
-            headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
-            body: JSON.stringify({ user_id: req.user.id, profile_text: updated, updated_at: new Date().toISOString() })
-          });
-          console.log('[life-updates] captured', lines.split('\n').length, 'fact(s) for', req.user.id);
-        } catch (e) { console.error('[life-updates]', e.message); }
-      })();
-    }
+    // Learned-facts capture is CONFIRMED, not automatic (user decision 2026-07-17):
+    // candidates are extracted in parallel below and returned in the response as
+    // learned_candidates; the client shows one-tap ✓/✗ chips and only confirmed
+    // facts get appended to user_profile. Applies to every mode incl. unreachable.
 
     const systemPrompt = `You are a communication coach reviewing a practice conversation. Analyse the transcript and write a short observational debrief of 3-4 sentences in ${lang}.
 
@@ -2595,7 +2565,13 @@ Good examples:
 - "When the tension rose, you shifted to a lighter topic instead of staying with it."
 Bad (never write these): "You show avoidant patterns." / "70% defensive responses." / "Your attachment style..."`;
 
-    const [response, nmResponse, behaviorResponse, mirrorResponse, rawSnapsR] = await Promise.all([
+    // Learned-candidates extraction: durable self-facts the user stated during
+    // practice, returned as CANDIDATES for one-tap confirmation on the client
+    // (never auto-written — rehearsals can be hypothetical).
+    const userLinesForLearn = history.filter(m => m.role === 'user').map(m => m.content).join('\n').slice(0, 4000);
+    const learnSystemPrompt = `From the USER's practice-conversation lines below, extract ONLY durable, concrete REAL-LIFE facts the user states as true about their own life (family names, births, school, moves, jobs, health events — with names when given). STRICT: this is often a REHEARSAL of a difficult talk — negotiation content, feelings, requests, plans being discussed, and anything hypothetical are NOT facts. Only clearly autobiographical statements ("oğlum Kerem okula başladı", "Doha'ya taşındık"). Output one short factual line per item (max 4), in the user's language, no commentary. If nothing clearly qualifies, output exactly: NONE`;
+
+    const [response, nmResponse, behaviorResponse, mirrorResponse, rawSnapsR, learnResponse] = await Promise.all([
       fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -2621,8 +2597,27 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
       }),
       (req.user && req.token)
         ? fetch(`${SUPABASE_REST}/user_behavior_snapshots?user_id=eq.${req.user.id}&select=contact_id,patterns,relationship_type&order=created_at.desc&limit=30`, { headers: sbHeaders(req.token) })
+        : Promise.resolve(null),
+      (req.user && userLinesForLearn.length > 40)
+        ? fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 250, system: learnSystemPrompt, messages: [{ role: 'user', content: userLinesForLearn }] })
+          }).catch(() => null)
         : Promise.resolve(null)
     ]);
+
+    let learned_candidates = null;
+    if (learnResponse && learnResponse.ok) {
+      try {
+        const ld = await learnResponse.json();
+        const lt = ld.content?.[0]?.text?.trim() || '';
+        if (lt && !/^NONE$/i.test(lt)) {
+          const arr = lt.split('\n').map(l => l.replace(/^[-•]\s*/, '').trim()).filter(l => l.length > 5).slice(0, 4);
+          if (arr.length) learned_candidates = arr;
+        }
+      } catch { /* stays null */ }
+    }
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
@@ -2767,7 +2762,7 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
     } catch (e) { console.error('[cross-mirror]', e.message); }
     // ─────────────────────────────────────────────────────────────────────────
 
-    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror, cross_mirror });
+    res.json({ debrief: data.content?.[0]?.text?.trim() || '', next_move, mirror, cross_mirror, learned_candidates });
   } catch (e) {
     console.error('[simulate-debrief]', e.message);
     res.status(500).json({ error: e.message });

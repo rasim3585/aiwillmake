@@ -172,3 +172,10 @@ Object.assign(window.I18N_C, {
   "Aramız bozuk / küsüz": { "tr":"Aramız bozuk / küsüz", "en":"We're on bad terms / not speaking", "es":"Estamos mal / no nos hablamos" },
   "Artık ulaşamıyorum": { "tr":"Artık ulaşamıyorum", "en":"I can't reach them anymore", "es":"Ya no puedo contactarle" }
 });
+
+/* Learning system: interview + meter statics */
+Object.assign(window.I18N_C, {
+  "🎙 Beni tanı — 5 kısa soru": { "tr":"🎙 Beni tanı — 5 kısa soru", "en":"🎙 Get to know me — 5 quick questions", "es":"🎙 Conóceme — 5 preguntas rápidas" },
+  "Kaydet ve devam →": { "tr":"Kaydet ve devam →", "en":"Save & continue →", "es":"Guardar y continuar →" },
+  "✓ Teşekkürler — ikizler artık seni daha iyi tanıyor": { "tr":"✓ Teşekkürler — ikizler artık seni daha iyi tanıyor", "en":"✓ Thanks — the twins know you better now", "es":"✓ Gracias — los gemelos ya te conocen mejor" }
+});

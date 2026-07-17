@@ -944,6 +944,14 @@
     .rp-stars { display: flex; gap: 4px; }
     .rp-star { background: none; border: none; font-size: 22px; color: #333; cursor: pointer; transition: color 0.15s; padding: 0 2px; font-family: inherit; }
     .rp-star.selected, .rp-star:hover { color: #ff6b35; }
+    .rp-learned { margin: 0 20px 4px; padding: 12px 14px; border-radius: 10px; background: rgba(160,126,224,.07); border: 1px solid rgba(160,126,224,.28); }
+    .rp-learned-title { font-size: .78rem; font-weight: 700; color: #b9a1e8; margin-bottom: 8px; }
+    .rp-learned-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .rp-learned-fact { flex: 1; font-size: .82rem; color: var(--text); line-height: 1.4; }
+    .rp-learned-yes, .rp-learned-no { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: var(--text); border-radius: 8px; min-width: 34px; min-height: 30px; cursor: pointer; font-size: .85rem; }
+    .rp-learned-yes { border-color: rgba(127,176,105,.5); color: #9fc487; }
+    .rp-learned-no { color: var(--sec); }
+    .rp-learned-done .rp-learned-fact { color: #9fc487; }
     .rp-mirror-block { margin: 0 20px 4px; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); }
     .rp-mirror-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
     .rp-mirror-text { font-size: .85rem; line-height: 1.55; color: var(--sec); font-style: italic; }
@@ -2178,6 +2186,25 @@
     .user-profile-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
     .user-profile-sub { font-size: 14px; color: var(--txt2); line-height: 1.6; margin-bottom: 20px; }
     .user-profile-confidence { margin-bottom: 20px; }
+    /* knowledge meter + interview */
+    .up-meter { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+    .up-meter-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .up-meter-label { font-size: .84rem; font-weight: 700; }
+    .up-meter-pct { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .up-meter-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); margin: 8px 0 8px; overflow: hidden; }
+    .up-meter-bar i { display: block; height: 100%; border-radius: 99px; transition: width .6s ease; }
+    .up-meter-hint { font-size: .78rem; color: var(--sec); line-height: 1.45; }
+    .up-interview { margin-bottom: 14px; }
+    .up-interview-start { width: 100%; padding: 12px; border-radius: 12px; border: 1px dashed rgba(160,126,224,.5); background: rgba(160,126,224,.08); color: var(--text); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
+    .up-interview-body { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 16px; }
+    .up-interview-q { font-size: .9rem; font-weight: 600; margin-bottom: 8px; line-height: 1.45; }
+    .up-interview-input { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.2); color: var(--text); padding: 9px 11px; font: inherit; font-size: 16px; resize: vertical; }
+    .up-interview-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .up-interview-next { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--accent); color: #14130f; font: inherit; font-weight: 700; cursor: pointer; }
+    .up-interview-skip { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: none; color: var(--sec); font: inherit; cursor: pointer; }
+    .up-interview-progress { text-align: right; font-size: .72rem; color: var(--sec); margin-top: 6px; }
+    .up-interview-done { color: #9fc487; font-size: .85rem; padding: 10px 4px; }
+    .person-fresh-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; color: #d9b06a; background: rgba(217,176,106,.1); border: 1px solid rgba(217,176,106,.35); border-radius: 999px; padding: 5px 12px; margin: 4px 0 8px; cursor: pointer; }
     .conf-areas-grid { display: flex; flex-direction: column; gap: 10px; }
     .conf-area { display: grid; grid-template-columns: 140px 1fr 40px; align-items: center; gap: 10px; }
     .conf-area-label { font-size: 12px; color: var(--txt2); }
@@ -2767,6 +2794,10 @@
             <button type="button" class="rp-copy-btn" id="rp-copy-btn">Copy message</button>
           </div>
         </div>
+        <!-- Confirmed learning: facts the user stated about their life during
+             practice — one-tap ✓ writes to the global profile, ✗ dismisses.
+             Rendered by endSimulation from data.learned_candidates. -->
+        <div id="rp-learned" class="rp-learned hidden"></div>
         <div id="rp-mirror-block" class="rp-mirror-block hidden">
           <div class="rp-mirror-label">👁 Senin için bir gözlem</div>
           <div class="rp-mirror-text" id="rp-mirror-text"></div>
@@ -3060,6 +3091,30 @@
         <button type="button" class="back-btn" onclick="App.navigateTo('home')">← Back</button>
         <h2 class="user-profile-title">Your Profile</h2>
         <p class="user-profile-sub">This is what the AI twins know about you. It grows with every import. If you've already imported conversations, build your profile from them below — or write about yourself manually.</p>
+        <!-- Knowledge meter: how well the twins know the user (from USER_CONFIDENCE
+             area scores + user-provided facts). The weakest area drives the nudge. -->
+        <div class="up-meter hidden" id="upMeter">
+          <div class="up-meter-row">
+            <span class="up-meter-label">🧠 İkizler seni ne kadar tanıyor?</span>
+            <span class="up-meter-pct" id="upMeterPct">—</span>
+          </div>
+          <div class="up-meter-bar"><i id="upMeterFill"></i></div>
+          <div class="up-meter-hint" id="upMeterHint"></div>
+        </div>
+        <!-- Interview: 5 short questions targeting what imports rarely reveal -->
+        <div class="up-interview" id="upInterview">
+          <button type="button" class="up-interview-start" id="upInterviewStart">🎙 Beni tanı — 5 kısa soru</button>
+          <div class="up-interview-body hidden" id="upInterviewBody">
+            <div class="up-interview-q" id="upInterviewQ"></div>
+            <textarea id="upInterviewA" rows="2" class="up-interview-input"></textarea>
+            <div class="up-interview-actions">
+              <button type="button" id="upInterviewNext" class="up-interview-next">Kaydet ve devam →</button>
+              <button type="button" id="upInterviewSkip" class="up-interview-skip">Atla</button>
+            </div>
+            <div class="up-interview-progress" id="upInterviewProgress"></div>
+          </div>
+          <div class="up-interview-done hidden" id="upInterviewDone">✓ Teşekkürler — ikizler artık seni daha iyi tanıyor</div>
+        </div>
         <div class="user-profile-confidence" id="userProfileConfidence"></div>
         <button id="userProfileBuildBtn" class="user-profile-build-btn hidden"></button>
         <textarea id="userProfileText" class="user-profile-textarea" placeholder="Your profile will appear here after your first import. You can also write about yourself manually — your name, family, work, interests, anything the AI should know."></textarea>
@@ -5867,6 +5922,32 @@
       document.getElementById('wowDetailsArrow').textContent = open ? '▾' : '›';
     });
 
+    // Shared: append user-stated facts to the global user_profile under the
+    // authoritative marker — used by the know-me card, the interview, and the
+    // confirmed learned-facts chips. Every twin sees the result immediately.
+    async function _appendUserFacts(lines) {
+      if (!accessToken) return false;
+      const arr = (Array.isArray(lines) ? lines : [lines]).map(s => String(s || '').trim()).filter(Boolean);
+      if (!arr.length) return false;
+      try {
+        const cur = await fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
+          .then(r => r.json()).catch(() => ({ profile_text: '' }));
+        const existing = (cur.profile_text || '').trimEnd();
+        const marker = 'USER-PROVIDED FACTS (written by the user directly — authoritative, trust over extracted guesses):';
+        const fresh = arr.filter(l => !existing.includes(l)).map(l => '- ' + l).join('\n');
+        if (!fresh) return true;
+        const updated = existing.includes(marker)
+          ? existing + '\n' + fresh
+          : (existing ? existing + '\n\n' : '') + marker + '\n' + fresh;
+        const r = await fetch('/api/user-profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ profile_text: updated })
+        });
+        return r.ok;
+      } catch (e) { console.error('[append-facts]', e); return false; }
+    }
+
     // Know-me nudge: append user-provided core facts to the global user_profile so
     // EVERY twin knows them immediately (names never typed in any chat can't be
     // learned any other way).
@@ -5876,28 +5957,13 @@
       if (!text || !accessToken) return;
       const btn = document.getElementById('wowKnowMeSave');
       btn.disabled = true;
-      try {
-        const cur = await fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
-          .then(r => r.json()).catch(() => ({ profile_text: '' }));
-        const existing = (cur.profile_text || '').trimEnd();
-        const marker = 'USER-PROVIDED FACTS (written by the user directly — authoritative, trust over extracted guesses):';
-        const updated = existing.includes(marker)
-          ? existing + '\n- ' + text
-          : (existing ? existing + '\n\n' : '') + marker + '\n- ' + text;
-        const r = await fetch('/api/user-profile', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ profile_text: updated })
-        });
-        if (!r.ok) throw new Error('save failed');
+      const ok = await _appendUserFacts(text);
+      if (ok) {
         localStorage.setItem('profile_nudge_done', '1');
         ta.classList.add('hidden');
         btn.closest('div').classList.add('hidden');
         document.getElementById('wowKnowMeDone').classList.remove('hidden');
-      } catch (e) {
-        console.error('[know-me]', e);
-        btn.disabled = false;
-      }
+      } else { btn.disabled = false; }
     });
     document.getElementById('wowKnowMeSkip')?.addEventListener('click', () => {
       localStorage.setItem('profile_nudge_done', '1');
@@ -6327,6 +6393,42 @@
       }).join('') + '</div>';
     }
 
+    // Knowledge meter: avg of USER_CONFIDENCE area scores + a small bonus for
+    // user-provided/confirmed facts. Weakest area drives the targeted nudge.
+    function _renderKnowMeter(data) {
+      const box = document.getElementById('upMeter');
+      if (!box) return;
+      const L = window.APP_LANG || 'tr';
+      const txt = data.profile_text || '';
+      const areas = [];
+      (data.confidence_areas || '').split('|').forEach(part => {
+        const m = part.match(/([^:]+):\s*(\d+)/);
+        if (m) areas.push({ name: m[1].trim(), score: Math.min(100, parseInt(m[2], 10)) });
+      });
+      let base = areas.length ? Math.round(areas.reduce((s, a) => s + a.score, 0) / areas.length) : (txt ? Math.min(45, Math.round(txt.length / 150)) : 0);
+      const factCount = (txt.match(/^- /gm) || []).length;
+      const score = Math.min(100, base + Math.min(20, factCount * 2));
+      const T = {
+        label: { tr: '🧠 İkizler seni ne kadar tanıyor?', en: '🧠 How well do the twins know you?', es: '🧠 ¿Qué tan bien te conocen los gemelos?' },
+        hintArea: { tr: 'En zayıf alan: <b>{a}</b> — aşağıdaki 5 soruyu yanıtla ya da o dünyadan bir sohbet daha yükle.', en: 'Weakest area: <b>{a}</b> — answer the 5 questions below, or import another chat from that world.', es: 'Área más débil: <b>{a}</b> — responde las 5 preguntas o importa otro chat.' },
+        hintEmpty: { tr: 'Henüz seni tanımıyorlar — bir sohbet yükle ya da aşağıdaki sorularla başla.', en: "They don't know you yet — import a chat or start with the questions below.", es: 'Aún no te conocen — importa un chat o empieza con las preguntas.' },
+        areaMap: { 'Personal Details': { tr: 'Kişisel detaylar', en: 'Personal details', es: 'Detalles personales' }, 'Communication Style': { tr: 'İletişim tarzı', en: 'Communication style', es: 'Estilo de comunicación' }, 'Relationships & People': { tr: 'İlişkiler ve yakınlar', en: 'Relationships & people', es: 'Relaciones y personas' }, 'Work & Life': { tr: 'İş ve yaşam', en: 'Work & life', es: 'Trabajo y vida' } }
+      };
+      box.querySelector('.up-meter-label').textContent = T.label[L] || T.label.tr;
+      document.getElementById('upMeterPct').textContent = '%' + score;
+      const fill = document.getElementById('upMeterFill');
+      fill.style.width = Math.max(3, score) + '%';
+      fill.style.background = score >= 70 ? '#7fb069' : score >= 40 ? 'var(--accent)' : '#c96f6f';
+      const hint = document.getElementById('upMeterHint');
+      if (!txt) hint.textContent = (T.hintEmpty[L] || T.hintEmpty.tr).replace(/<[^>]+>/g, '');
+      else if (areas.length) {
+        const weakest = areas.slice().sort((a, b) => a.score - b.score)[0];
+        const an = (T.areaMap[weakest.name] || {})[L] || weakest.name;
+        hint.innerHTML = (T.hintArea[L] || T.hintArea.tr).replace('{a}', an);
+      } else hint.textContent = '';
+      box.classList.remove('hidden');
+    }
+
     async function openUserProfile() {
       App.navigateTo('userProfile');
       const textarea = document.getElementById('userProfileText');
@@ -6341,6 +6443,7 @@
         const data = await r.json();
         textarea.value = data.profile_text || '';
         confEl.innerHTML = data.confidence_areas ? renderConfidenceAreas(data.confidence_areas) : '';
+        try { _renderKnowMeter(data); } catch (e) { console.error('[know-meter]', e); }
         if (!data.profile_text) {
           const convR = await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } });
           const contacts = await convR.json();
@@ -6622,6 +6725,8 @@
       document.getElementById('rp-next-move').classList.add('hidden');
       document.getElementById('rp-mirror-block').classList.add('hidden');
       document.getElementById('rp-cross-mirror-block').classList.add('hidden');
+      const _rlFresh = document.getElementById('rp-learned');
+      if (_rlFresh) { _rlFresh.classList.add('hidden'); _rlFresh.innerHTML = ''; }
       document.querySelector('.roleplay-card').classList.remove('debrief-active');
       document.getElementById('rp-correction').classList.add('hidden');
       document.getElementById('rp-correction-input').value = '';
@@ -7761,6 +7866,22 @@
         const _unreachable = activeContactContext.contact_status === 'unreachable';
         // "What happened?" only makes sense when a real conversation can happen
         if (!_unreachable) maybeShowOutcomePrompt(contactId, c.name);
+
+        // Freshness badge: nudge a re-import when the twin's data has gone stale.
+        // Not for unreachable contacts — their history is complete by definition.
+        let freshBadge = '';
+        if (!_unreachable && importConv?.created_at) {
+          const ageDays = Math.floor((Date.now() - new Date(importConv.created_at)) / 86400e3);
+          if (ageDays > 45) {
+            const _fbL = window.APP_LANG || 'tr';
+            const _fbT = {
+              tr: `🕐 Twin'in bilgisi ${ageDays} günlük — sohbeti güncelle`,
+              en: `🕐 The twin's data is ${ageDays} days old — update the chat`,
+              es: `🕐 Los datos del gemelo tienen ${ageDays} días — actualiza el chat`
+            };
+            freshBadge = `<button type="button" class="person-fresh-badge" id="personFreshBadge">${_fbT[_fbL] || _fbT.tr}</button>`;
+          }
+        }
         let statsStrip = '';
         if (pStats?.ok) {
           const who = _wsWho(pStats, c.name);
@@ -7798,6 +7919,7 @@
             </div>
             ${c.relationship_summary ? `<p class="person-summary">${escH(c.relationship_summary)}</p>` : ''}
           </div>
+          ${freshBadge}
           ${statsStrip}
 
           <p class="person-tagline">Practice a conversation with AI ${escH(c.name)} before the real thing.</p>
@@ -7997,6 +8119,10 @@
         });
         document.getElementById('personHistoryToggle').addEventListener('click', () => {
           document.getElementById('personHistoryPanel').classList.toggle('hidden');
+        });
+        // Freshness badge routes to the same update flow
+        document.getElementById('personFreshBadge')?.addEventListener('click', () => {
+          document.getElementById('personUpdateBtn')?.click();
         });
         document.getElementById('personUpdateBtn').addEventListener('click', () => {
           const panel = document.getElementById('personUpdatePanel');
@@ -9021,6 +9147,41 @@
         if (!resp.ok) throw new Error(data.error || 'Failed');
         debriefTextEl.textContent = data.debrief;
 
+        // ── Confirmed learning chips ("Şunu öğrendim — ekleyeyim mi?") ───────
+        try {
+          const lc = Array.isArray(data.learned_candidates) ? data.learned_candidates : [];
+          const box = document.getElementById('rp-learned');
+          if (box && lc.length && accessToken) {
+            const L = window.APP_LANG || 'tr';
+            const T = {
+              title: { tr: '🧠 Senden öğrendiklerim — profiline ekleyeyim mi?', en: '🧠 Things I learned from you — add to your profile?', es: '🧠 Cosas que aprendí de ti — ¿añadir a tu perfil?' },
+              added: { tr: '✓ eklendi', en: '✓ added', es: '✓ añadido' }
+            };
+            box.innerHTML = `<div class="rp-learned-title">${(T.title[L] || T.title.tr)}</div>`;
+            lc.forEach(fact => {
+              const row = document.createElement('div');
+              row.className = 'rp-learned-row';
+              const txt = document.createElement('span');
+              txt.className = 'rp-learned-fact';
+              txt.textContent = fact;
+              const yes = document.createElement('button');
+              yes.className = 'rp-learned-yes'; yes.textContent = '✓';
+              const no = document.createElement('button');
+              no.className = 'rp-learned-no'; no.textContent = '✕';
+              yes.addEventListener('click', async () => {
+                yes.disabled = no.disabled = true;
+                const ok = await _appendUserFacts(fact);
+                if (ok) { row.classList.add('rp-learned-done'); yes.remove(); no.remove(); txt.textContent += '  ' + (T.added[L] || T.added.tr); }
+                else { yes.disabled = no.disabled = false; }
+              });
+              no.addEventListener('click', () => row.remove());
+              row.appendChild(txt); row.appendChild(yes); row.appendChild(no);
+              box.appendChild(row);
+            });
+            box.classList.remove('hidden');
+          } else if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
+        } catch (e) { console.error('[learned-chips]', e); }
+
         // ── Reaction Bet result (internal only, not displayed) ───────
         if (_userPrediction) {
           const debriefLower = (data.debrief || '').toLowerCase();
@@ -9723,6 +9884,56 @@
         showToast('Could not save', 'error');
       }
     });
+
+    // ── "Beni tanı" interview: 5 targeted questions covering what imports rarely
+    // reveal. Answers land in USER-PROVIDED FACTS with the question as context.
+    (function wireInterview() {
+      const startBtn = document.getElementById('upInterviewStart');
+      if (!startBtn) return;
+      const QS = [
+        { tr: 'Ailende kimler var? (eşin, çocukların — isimleriyle)', en: 'Who is in your family? (spouse, kids — with names)', es: '¿Quiénes están en tu familia? (pareja, hijos — con nombres)', tag: { tr: 'Aile', en: 'Family', es: 'Familia' } },
+        { tr: 'Ne iş yapıyorsun ve nerede yaşıyorsun?', en: 'What do you do for work, and where do you live?', es: '¿A qué te dedicas y dónde vives?', tag: { tr: 'İş/yaşam', en: 'Work/life', es: 'Trabajo/vida' } },
+        { tr: 'Yakınların sana nasıl hitap eder? (lakapların)', en: 'What do people close to you call you? (nicknames)', es: '¿Cómo te llaman tus cercanos? (apodos)', tag: { tr: 'Hitap', en: 'Nicknames', es: 'Apodos' } },
+        { tr: 'Şu sıralar hayatında neler oluyor? (yeni iş, taşınma, önemli olaylar)', en: "What's going on in your life lately? (new job, move, big events)", es: '¿Qué pasa en tu vida últimamente?', tag: { tr: 'Güncel', en: 'Current', es: 'Actual' } },
+        { tr: 'Seni iyi tanıyan biri, senin hakkında başkalarının bilmediği ne bilir?', en: 'What would someone who knows you well know about you that others don’t?', es: '¿Qué sabría de ti alguien que te conoce bien?', tag: { tr: 'Derin', en: 'Deep', es: 'Profundo' } },
+      ];
+      let idx = 0;
+      const L = () => window.APP_LANG || 'tr';
+      function show() {
+        const q = QS[idx];
+        document.getElementById('upInterviewQ').textContent = q[L()] || q.tr;
+        document.getElementById('upInterviewA').value = '';
+        document.getElementById('upInterviewProgress').textContent = (idx + 1) + ' / ' + QS.length;
+        document.getElementById('upInterviewA').focus();
+      }
+      async function advance(save) {
+        const a = (document.getElementById('upInterviewA').value || '').trim();
+        if (save && a) {
+          const tag = QS[idx].tag[L()] || QS[idx].tag.tr;
+          await _appendUserFacts(tag + ': ' + a);
+        }
+        idx++;
+        if (idx >= QS.length) {
+          document.getElementById('upInterviewBody').classList.add('hidden');
+          document.getElementById('upInterviewDone').classList.remove('hidden');
+          try {
+            const r = await fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            const d = await r.json();
+            document.getElementById('userProfileText').value = d.profile_text || '';
+            _renderKnowMeter(d);
+          } catch {}
+        } else show();
+      }
+      startBtn.addEventListener('click', () => {
+        idx = 0;
+        startBtn.classList.add('hidden');
+        document.getElementById('upInterviewDone').classList.add('hidden');
+        document.getElementById('upInterviewBody').classList.remove('hidden');
+        show();
+      });
+      document.getElementById('upInterviewNext').addEventListener('click', () => advance(true));
+      document.getElementById('upInterviewSkip').addEventListener('click', () => advance(false));
+    })();
 
     document.getElementById('userProfileBuildBtn').addEventListener('click', async function() {
       const textarea = document.getElementById('userProfileText');
