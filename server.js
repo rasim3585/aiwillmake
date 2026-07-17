@@ -1436,6 +1436,11 @@ CRITICAL HONESTY RULE to embed: this profile comes from the owner's description,
 After the profile, on a new line write exactly:
 RELATIONSHIP_ONELINE: <one sentence: who this person is to the owner>
 
+Then, on following lines, write exactly:
+OWNER_FACTS:
+- <one durable fact about the OWNER themselves revealed in the answers — their name, their family members' names (as THEIRS), city, job, life events. Owner-side facts only, one per line, max 6.>
+(If none: write exactly "OWNER_FACTS: NONE")
+
 Values in ${lang} where quoting the owner's words; prose may be in English. No markdown headers, no commentary.`;
     const d = await claudeCallWithRetry({
       model: 'claude-sonnet-4-6', max_tokens: 1400, system: sys,
@@ -1444,8 +1449,36 @@ Values in ${lang} where quoting the owner's words; prose may be in English. No m
     if (!d) return res.status(502).json({ error: 'ai_unavailable' });
     const text = d.content?.[0]?.text?.trim() || '';
     const rel = text.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m)?.[1]?.trim() || null;
-    const profile = text.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+    const ownerFactsRaw = text.match(/OWNER_FACTS:\s*([\s\S]*)$/m)?.[1]?.trim() || '';
+    const profile = text.replace(/\n*RELATIONSHIP_ONELINE:[\s\S]*$/m, '').trim();
     if (!profile) return res.status(502).json({ error: 'empty_profile' });
+
+    // Bootstrap the GLOBAL user profile from the owner-side facts in the answers.
+    // For a brand-new user with zero imports, this is their first seed — the
+    // describe flow stops assuming the system already knows them. User-typed
+    // content → same trust level as the know-me card (authoritative marker).
+    if (ownerFactsRaw && !/^NONE$/i.test(ownerFactsRaw)) {
+      (async () => {
+        try {
+          const facts = ownerFactsRaw.split('\n').map(l => l.replace(/^[-•]\s*/, '').trim())
+            .filter(l => l.length > 3 && !/^NONE$/i.test(l)).slice(0, 6);
+          if (!facts.length) return;
+          const curR = await fetch(`${SUPABASE_REST}/user_profile?user_id=eq.${req.user.id}&select=profile_text`, { headers: sbHeaders(req.token) });
+          const curD = await curR.json();
+          const cur = (curD?.[0]?.profile_text || '').trimEnd();
+          const MARK = 'USER-PROVIDED FACTS (written by the user directly — authoritative, trust over extracted guesses):';
+          const fresh = facts.filter(f => !cur.includes(f)).map(f => '- ' + f).join('\n');
+          if (!fresh) return;
+          const updated = cur.includes(MARK) ? cur + '\n' + fresh : (cur ? cur + '\n\n' : '') + MARK + '\n' + fresh;
+          await fetch(`${SUPABASE_REST}/user_profile`, {
+            method: 'POST',
+            headers: { ...sbHeaders(req.token), 'Prefer': 'resolution=merge-duplicates' },
+            body: JSON.stringify({ user_id: req.user.id, profile_text: updated, updated_at: new Date().toISOString() })
+          });
+          console.log('[describe-twin] bootstrapped', facts.length, 'owner fact(s) into user_profile');
+        } catch (e) { console.error('[describe-twin owner-facts]', e.message); }
+      })();
+    }
     res.json({ character_profile: profile, relationship_summary: rel });
   } catch (e) {
     console.error('[describe-twin]', e.message);
@@ -3179,7 +3212,8 @@ RULES:
 - PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life. When answering such a question, answer ONLY about THEIR person — do NOT weave your own family members into the same reply, not even as passing small talk (same names across the two families invite confusion; keep the two worlds separate in that reply).
   CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). SECOND-PERSON MIRROR: when they use second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?") they are asking about YOUR OWN family from WHO YOU ARE — answer confidently from your own description; you always remember your own spouse/children. (This mirror rule is about YOUR OWN family only — it NEVER loosens the RELATIONSHIP DISTANCE restriction below about the USER's personal life.) YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
   EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
-  Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text.${tier === 1 ? ' NOTE: For this distant relationship, RELATIONSHIP DISTANCE (below) takes priority over this rule — even if you find a personal fact in the profile, do not reveal it.' : ''}
+  Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text.
+  BOUNDARY PRECEDENCE: if your WHO YOU ARE description contains a KNOWLEDGE BOUNDARY section, anything listed there is something YOU never got to know — even if the same fact/name appears in WHO YOU'RE TALKING TO or inside the boundary list itself. The boundary WINS ABSOLUTELY: never say, reveal, confirm or guess the fact or NAME — not even as a question ("Elif mi?" is a leak). You genuinely do not know it: ask them to tell you ("kimmiş, adı ne, anlat bakalım") and only use the name AFTER the user has said it in THIS conversation.${tier === 1 ? ' NOTE: For this distant relationship, RELATIONSHIP DISTANCE (below) takes priority over this rule — even if you find a personal fact in the profile, do not reveal it.' : ''}
 ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule in this prompt (PROFILE PRIORITY, SECOND-PERSON MIRROR confidence, excerpts, everything): You only know ${userLabel} at a surface/distant level (work acquaintance, not close). Even if the WHO YOU'RE TALKING TO profile contains personal details about them (family members' names, private matters, intimate history), you would NOT realistically know or bring these up — a distant contact doesn't have that access. If asked about their personal or family life ("eşim", "my wife", their kids' names): do NOT state, guess, or CONFIRM any name or detail from the profile — not even as a question ("Simge değil mi?" is a leak). Respond as someone who genuinely doesn't know that side of them: 'I don't really know much about your family' or 'we've never gotten that personal'. Keep responses surface-level and professional. You do know work/practical topics from your shared chats.` : ''}
 - If asked about a specific fact (a name, date, place, event) that is NOT in your character description, the WHO YOU'RE TALKING TO profile, or the excerpts above — DO NOT guess or invent. Say you don't recall it, in character. Example: 'hmm, hatırlamıyorum, bana söylemiş miydin?' or 'I don't think you ever told me that one'. Inventing a wrong fact breaks trust — admitting you don't remember feels MORE real, not less.
 - NEVER fill a knowledge gap with a plausible-sounding guess. A real person says 'I don't remember' — so do you.
