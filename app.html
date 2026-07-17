@@ -3496,8 +3496,28 @@
         </div>
 
         <div id="import-pane-text" class="hidden">
-          <p class="import-quality">★☆☆ Basic: strategy only</p>
-          <textarea id="importTextArea" placeholder="Describe this person… who they are, how they communicate, what's happened between you." style="width:100%;min-height:140px;padding:12px;background:var(--card);border:1px solid var(--bord);border-radius:10px;color:var(--fg);font:inherit;font-size:.88rem;resize:vertical;box-sizing:border-box;margin-bottom:4px"></textarea>
+          <!-- Guided describe-twin builder: for people who can't or won't export a
+               chat. Answers → /api/describe-twin → character_profile → practice. -->
+          <p class="import-quality">★★☆ Anlattıkça güçlenir — sohbet yüklemeden, hafızandan kuralım</p>
+          <div class="dt-builder" id="dtBuilder">
+            <div class="up-meter" style="margin-bottom:10px">
+              <div class="up-meter-row">
+                <span class="up-meter-label" id="dtMeterLabel">🎭 Twin hazırlığı</span>
+                <span class="up-meter-pct" id="dtMeterPct">%0</span>
+              </div>
+              <div class="up-meter-bar"><i id="dtMeterFill" style="width:3%"></i></div>
+            </div>
+            <div class="up-interview-body" id="dtBody">
+              <div class="up-interview-q" id="dtQ"></div>
+              <textarea id="dtA" rows="3" class="up-interview-input"></textarea>
+              <div class="up-interview-actions">
+                <button type="button" id="dtNext" class="up-interview-next">Kaydet ve devam →</button>
+                <button type="button" id="dtSkip" class="up-interview-skip">Atla</button>
+              </div>
+              <div class="up-interview-progress" id="dtProgress"></div>
+            </div>
+            <button type="button" class="btn-analyze hidden" id="dtFinishBtn" style="margin-top:10px">🎭 Twin'i kur ve konuşmaya başla →</button>
+          </div>
         </div>
 
         <p class="import-file-note" id="importFileName"></p>
@@ -5468,7 +5488,134 @@
         document.getElementById('import-pane-' + t)?.classList.toggle('hidden', t !== tab);
         document.getElementById('importTab-' + t)?.classList.toggle('active', t === tab);
       });
+      // The describe-twin builder has its own finish button; the shared Analyze
+      // button only applies to chat/screenshot imports.
+      document.getElementById('importAnalyzeBtn')?.classList.toggle('hidden', tab === 'text');
+      if (tab === 'text') _dtStart();
     }
+
+    // ── Describe-twin builder (no-import path) ────────────────────────────────
+    // Guided questions about the PERSON; core coverage (hitap+tarz+laflar) gates
+    // the finish button. Answers → /api/describe-twin → profile → straight into
+    // practice, where the twin opens with the address style just taught.
+    const _DT_QS = [
+      { key: 'who',    core: false, tr: 'O senin neyin? Kısaca anlat (dedem, en yakın arkadaşım, eski sevgilim...)', en: 'Who are they to you? (my grandfather, my best friend, my ex...)', es: '¿Quién es para ti? (mi abuelo, mi mejor amigo, mi ex...)' },
+      { key: 'hitap',  core: true,  tr: 'Sana nasıl hitap ederdi? (evladım, kanka, aşkım, lakabın...)', en: 'How did they address you? (nicknames, pet names...)', es: '¿Cómo te llamaba? (apodos, cariños...)' },
+      { key: 'tarz',   core: true,  tr: 'Nasıl konuşurdu/yazardı? (kısa mı uzun mu, esprili mi ciddi mi, emoji kullanır mıydı, şivesi...)', en: 'How did they talk/text? (short or long, funny or serious, emojis, dialect...)', es: '¿Cómo hablaba/escribía? (corto o largo, gracioso o serio, emojis...)' },
+      { key: 'laflar', core: true,  tr: 'Onun ağzından 2-3 tipik cümle yaz — tam onun diyeceği gibi, her biri ayrı satıra', en: 'Write 2-3 typical sentences in THEIR words — exactly as they would say them, one per line', es: 'Escribe 2-3 frases típicas suyas — tal como las diría, una por línea' },
+      { key: 'dunya',  core: false, tr: 'Ortak dünyanız neydi? En çok neleri konuşurdunuz, senin hakkında neleri bilirdi?', en: 'What was your shared world? What did you talk about most, what did they know about you?', es: '¿Cuál era su mundo compartido? ¿De qué hablaban más?' },
+      { key: 'ani',    core: false, tr: 'Aranızda unutamadığın bir an ya da içi dolu bir şaka?', en: 'A moment you can\'t forget, or an inside joke between you?', es: '¿Un momento inolvidable o una broma interna entre ustedes?' },
+      { key: 'zaman',  core: false, tr: 'En son ne zaman konuştunuz? (örn. 5 yıl önce, 2023 baharı, geçen ay...)', en: 'When did you last talk? (e.g. 5 years ago, spring 2023, last month...)', es: '¿Cuándo hablaron por última vez?' },
+      { key: 'serbest',core: false, tr: 'Eklemek istediğin başka bir şey? Ondan kalan birkaç mesaj örneği varsa buraya yapıştırabilirsin', en: 'Anything else? If you have a few of their old messages, paste them here', es: '¿Algo más? Si tienes algunos mensajes suyos, pégalos aquí' },
+    ];
+    let _dtIdx = 0, _dtAnswers = null;
+
+    function _dtScore() {
+      if (!_dtAnswers) return 0;
+      let s = 0;
+      _DT_QS.forEach(q => { if ((_dtAnswers[q.key] || '').trim()) s += q.core ? 25 : 5; });
+      return Math.min(100, s);
+    }
+    function _dtRenderMeter() {
+      const score = _dtScore();
+      document.getElementById('dtMeterPct').textContent = '%' + score;
+      const fill = document.getElementById('dtMeterFill');
+      fill.style.width = Math.max(3, score) + '%';
+      fill.style.background = score >= 50 ? '#7fb069' : 'var(--accent)';
+      const fin = document.getElementById('dtFinishBtn');
+      fin.classList.toggle('hidden', score < 50);
+    }
+    function _dtShow() {
+      const L = window.APP_LANG || 'tr';
+      if (_dtIdx >= _DT_QS.length) {
+        document.getElementById('dtBody').classList.add('hidden');
+        return;
+      }
+      const q = _DT_QS[_dtIdx];
+      document.getElementById('dtBody').classList.remove('hidden');
+      document.getElementById('dtQ').textContent = q[L] || q.tr;
+      document.getElementById('dtA').value = (_dtAnswers && _dtAnswers[q.key]) || '';
+      document.getElementById('dtProgress').textContent = (_dtIdx + 1) + ' / ' + _DT_QS.length;
+    }
+    function _dtStart() {
+      if (!_dtAnswers) { _dtAnswers = {}; _dtIdx = 0; }
+      _dtShow();
+      _dtRenderMeter();
+    }
+    function _dtAdvance(save) {
+      if (save) {
+        const a = (document.getElementById('dtA').value || '').trim();
+        if (a) _dtAnswers[_DT_QS[_dtIdx].key] = a;
+      }
+      _dtIdx++;
+      _dtShow();
+      _dtRenderMeter();
+    }
+    function _dtParseWhen(s) {
+      s = (s || '').toLocaleLowerCase('tr');
+      let m = s.match(/(\d+)\s*(yıl|yil|sene|year)/); if (m) return new Date(Date.now() - parseInt(m[1], 10) * 365 * 86400e3).toISOString();
+      m = s.match(/(\d+)\s*(ay|month)/); if (m) return new Date(Date.now() - parseInt(m[1], 10) * 30 * 86400e3).toISOString();
+      m = s.match(/(20\d\d)/); if (m) return new Date(parseInt(m[1], 10), 5, 15).toISOString();
+      return null;
+    }
+    async function finishDescribeTwin() {
+      const name = (document.getElementById('importName').value || '').trim();
+      if (!name) { showToast('Name is required', 'error'); document.getElementById('importName').focus(); return; }
+      if (!accessToken) { showToast('Sign in to use this feature', 'error'); return; }
+      const status = document.getElementById('importStatus')?.value || 'active';
+      window._importStatus = status;
+      const btn = document.getElementById('dtFinishBtn');
+      const old = btn.textContent;
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const answers = _DT_QS.filter(q => (_dtAnswers[q.key] || '').trim())
+          .map(q => ({ key: q.key, q: q.tr, a: _dtAnswers[q.key] }));
+        const dr = await fetch('/api/describe-twin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ name, status, answers, language: aiLang() })
+        });
+        const dd = await dr.json();
+        if (!dr.ok || !dd.character_profile) throw new Error(dd.error || 'profile failed');
+        const cr = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ name, relationship_summary: dd.relationship_summary || null, source: 'described', relationship_tier: 2 })
+        });
+        const contact = await cr.json();
+        if (!cr.ok || !contact.id) throw new Error(contact.error || 'contact failed');
+        await fetch(`/api/contacts/${contact.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ character_profile: dd.character_profile })
+        });
+        const lastTs = _dtParseWhen(_dtAnswers.zaman);
+        fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ contact_id: contact.id, situation: `Described from memory — ${name}`, categoryId: 'personal', subcategoryId: null,
+            fields: { contact_status: status, described: true, chat_stats: lastTs ? { ok: false, lastTs } : null } })
+        }).catch(() => {});
+        const openers = (_dtAnswers.laflar || '').split('\n').map(l => l.trim()).filter(l => l.length > 2).slice(0, 3);
+        const ctx = {
+          id: contact.id, name, type: null, relationship_state: null,
+          observed_patterns: null, relationship_summary: dd.relationship_summary || null,
+          character_profile: dd.character_profile, relationship_tier: 2,
+          contact_status: status, opener_samples: openers.length ? openers : null,
+          last_message_ts: lastTs
+        };
+        _dtAnswers = null; _dtIdx = 0;
+        loadPersonSection(contact.id);        // background screen for when the modal closes
+        openSimulatorFresh(ctx, null);        // the magic moment: the twin greets you as taught
+      } catch (e) {
+        console.error('[describe-twin]', e);
+        showToast('Something went wrong. Please try again.', 'error');
+        btn.disabled = false; btn.textContent = old;
+      }
+    }
+    document.getElementById('dtNext')?.addEventListener('click', () => _dtAdvance(true));
+    document.getElementById('dtSkip')?.addEventListener('click', () => _dtAdvance(false));
+    document.getElementById('dtFinishBtn')?.addEventListener('click', finishDescribeTwin);
 
     function handleImportFileSelect(input) {
       const file = input.files[0];
@@ -5484,8 +5631,8 @@
 
       let dataSource = null;
       if (_importMode === 'text') {
-        dataSource = (document.getElementById('importTextArea').value || '').trim();
-        if (!dataSource) { showToast('Write something first', 'error'); return; }
+        // Describe-twin mode has its own flow (dtFinishBtn → finishDescribeTwin)
+        return;
       } else {
         if (!_importFile) { showToast('Select a file first', 'error'); return; }
         dataSource = _importFile;
@@ -5546,7 +5693,8 @@
       try {
         let rawText;
         if (_importMode === 'text') {
-          rawText = (document.getElementById('importTextArea').value || '').trim();
+          // Describe-twin mode: serialize the guided answers as the pending payload
+          rawText = _dtAnswers ? Object.entries(_dtAnswers).map(([k, v]) => k + ': ' + v).join('\n') : '';
           if (!rawText) throw new Error('Write something first');
         } else if (_importMode === 'screenshot') {
           if (!_importFile) throw new Error('No file selected');

@@ -1398,6 +1398,50 @@ Write in ${lang}.`;
   }
 });
 
+// No-import twin path: the user DESCRIBES the person from memory (guided Q&A)
+// and we synthesize a roleplay character_profile — for people who can't or
+// won't export a chat (deceased/estranged/ex, or simply iOS-export friction).
+app.post('/api/describe-twin', limiter, requireAuth, async (req, res) => {
+  try {
+    const { name, status, answers, language } = req.body;
+    if (!name?.trim() || !Array.isArray(answers) || !answers.length) {
+      return res.status(400).json({ error: 'name and answers are required' });
+    }
+    const lang = language || 'Turkish';
+    const qa = answers.filter(a => a && a.a && String(a.a).trim())
+      .map(a => `Q: ${String(a.q || a.key || '').slice(0, 200)}\nA: ${String(a.a).slice(0, 1200)}`).join('\n\n').slice(0, 8000);
+    const sys = `You are composing a roleplay character profile of a REAL person named "${name.trim()}", built ONLY from the chat owner's own memories below (there is NO chat history). The profile will drive an AI twin that talks to the owner as this person.
+
+Write 3-5 paragraphs of plain prose covering: who they are and their relationship to the owner; EXACTLY how they address the owner (this is sacred — use the owner's words verbatim); how they talk/write (length, humor, emoji, dialect); their shared world and what they know about the owner; meaningful memories/jokes the owner mentioned.
+
+Then add a section exactly like this:
+VOICE — typical phrases (verbatim, use these as style anchors, don't overuse):
+- "<phrase 1>"
+- "<phrase 2>"
+(take these ONLY from the owner's answers — never invent phrases)
+
+CRITICAL HONESTY RULE to embed in the profile text: this profile comes from the owner's description, not from chat data — the twin must NEVER invent specific facts, events, names or dates beyond what is written here; when asked about something not covered, it says it doesn't recall, in character.
+
+After the profile, on a new line write exactly:
+RELATIONSHIP_ONELINE: <one sentence: who this person is to the owner>
+
+Values in ${lang} where quoting the owner's words; prose may be in English. No markdown headers, no commentary.`;
+    const d = await claudeCallWithRetry({
+      model: 'claude-sonnet-4-6', max_tokens: 1400, system: sys,
+      messages: [{ role: 'user', content: `Relationship status: ${status || 'active'}\n\n${qa}` }]
+    }, 'describe-twin');
+    if (!d) return res.status(502).json({ error: 'ai_unavailable' });
+    const text = d.content?.[0]?.text?.trim() || '';
+    const rel = text.match(/^RELATIONSHIP_ONELINE:\s*(.+)$/m)?.[1]?.trim() || null;
+    const profile = text.replace(/\n*RELATIONSHIP_ONELINE:.*$/m, '').trim();
+    if (!profile) return res.status(502).json({ error: 'empty_profile' });
+    res.json({ character_profile: profile, relationship_summary: rel });
+  } catch (e) {
+    console.error('[describe-twin]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/setup-chunks-table', requireAuth, async (req, res) => {
   // RLS + owner-only policy are part of the template: this table holds raw private
   // chat text, and provisioning it without RLS is exactly how the C1 leak happened.

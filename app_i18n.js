@@ -179,3 +179,10 @@ Object.assign(window.I18N_C, {
   "Kaydet ve devam →": { "tr":"Kaydet ve devam →", "en":"Save & continue →", "es":"Guardar y continuar →" },
   "✓ Teşekkürler — ikizler artık seni daha iyi tanıyor": { "tr":"✓ Teşekkürler — ikizler artık seni daha iyi tanıyor", "en":"✓ Thanks — the twins know you better now", "es":"✓ Gracias — los gemelos ya te conocen mejor" }
 });
+
+/* Describe-twin builder */
+Object.assign(window.I18N_C, {
+  "★★☆ Anlattıkça güçlenir — sohbet yüklemeden, hafızandan kuralım": { "tr":"★★☆ Anlattıkça güçlenir — sohbet yüklemeden, hafızandan kuralım", "en":"★★☆ Grows as you tell — built from memory, no chat needed", "es":"★★☆ Crece mientras cuentas — desde la memoria, sin chat" },
+  "🎭 Twin hazırlığı": { "tr":"🎭 Twin hazırlığı", "en":"🎭 Twin readiness", "es":"🎭 Preparación del gemelo" },
+  "🎭 Twin'i kur ve konuşmaya başla →": { "tr":"🎭 Twin'i kur ve konuşmaya başla →", "en":"🎭 Build the twin & start talking →", "es":"🎭 Crea el gemelo y empieza a hablar →" }
+});
