@@ -3506,6 +3506,7 @@
                 <span class="up-meter-pct" id="dtMeterPct">%0</span>
               </div>
               <div class="up-meter-bar"><i id="dtMeterFill" style="width:3%"></i></div>
+              <div class="up-meter-hint" id="dtMeterHint"></div>
             </div>
             <div class="up-interview-body" id="dtBody">
               <div class="up-interview-q" id="dtQ"></div>
@@ -5498,32 +5499,52 @@
     // Guided questions about the PERSON; core coverage (hitap+tarz+laflar) gates
     // the finish button. Answers → /api/describe-twin → profile → straight into
     // practice, where the twin opens with the address style just taught.
+    // Three acts — the person's VOICE, then YOU THROUGH THEIR EYES (a twin that
+    // doesn't know you isn't your person: "dedem beni bildiği kadar dedemdir"),
+    // then the KNOWLEDGE BOUNDARY (what they never got to know → the twin asks).
     const _DT_QS = [
-      { key: 'who',    core: false, tr: 'O senin neyin? Kısaca anlat (dedem, en yakın arkadaşım, eski sevgilim...)', en: 'Who are they to you? (my grandfather, my best friend, my ex...)', es: '¿Quién es para ti? (mi abuelo, mi mejor amigo, mi ex...)' },
-      { key: 'hitap',  core: true,  tr: 'Sana nasıl hitap ederdi? (evladım, kanka, aşkım, lakabın...)', en: 'How did they address you? (nicknames, pet names...)', es: '¿Cómo te llamaba? (apodos, cariños...)' },
-      { key: 'tarz',   core: true,  tr: 'Nasıl konuşurdu/yazardı? (kısa mı uzun mu, esprili mi ciddi mi, emoji kullanır mıydı, şivesi...)', en: 'How did they talk/text? (short or long, funny or serious, emojis, dialect...)', es: '¿Cómo hablaba/escribía? (corto o largo, gracioso o serio, emojis...)' },
-      { key: 'laflar', core: true,  tr: 'Onun ağzından 2-3 tipik cümle yaz — tam onun diyeceği gibi, her biri ayrı satıra', en: 'Write 2-3 typical sentences in THEIR words — exactly as they would say them, one per line', es: 'Escribe 2-3 frases típicas suyas — tal como las diría, una por línea' },
-      { key: 'dunya',  core: false, tr: 'Ortak dünyanız neydi? En çok neleri konuşurdunuz, senin hakkında neleri bilirdi?', en: 'What was your shared world? What did you talk about most, what did they know about you?', es: '¿Cuál era su mundo compartido? ¿De qué hablaban más?' },
-      { key: 'ani',    core: false, tr: 'Aranızda unutamadığın bir an ya da içi dolu bir şaka?', en: 'A moment you can\'t forget, or an inside joke between you?', es: '¿Un momento inolvidable o una broma interna entre ustedes?' },
-      { key: 'zaman',  core: false, tr: 'En son ne zaman konuştunuz? (örn. 5 yıl önce, 2023 baharı, geçen ay...)', en: 'When did you last talk? (e.g. 5 years ago, spring 2023, last month...)', es: '¿Cuándo hablaron por última vez?' },
-      { key: 'serbest',core: false, tr: 'Eklemek istediğin başka bir şey? Ondan kalan birkaç mesaj örneği varsa buraya yapıştırabilirsin', en: 'Anything else? If you have a few of their old messages, paste them here', es: '¿Algo más? Si tienes algunos mensajes suyos, pégalos aquí' },
+      { key: 'who',        w: 5,  tr: 'O senin neyin, adı ne? Senin adın ne? (örn. "Dedem Osman, ben Rasim")', en: 'Who are they to you, and what are your names? (e.g. "My grandfather Osman, I\'m Rasim")', es: '¿Quién es para ti y cómo se llaman? (ej. "Mi abuelo Osman, yo soy Rasim")' },
+      { key: 'hitap',      w: 15, tr: 'Sana nasıl hitap ederdi? (evladım, kanka, aşkım, lakabın...)', en: 'How did they address you? (nicknames, pet names...)', es: '¿Cómo te llamaba? (apodos, cariños...)' },
+      { key: 'tarz',       w: 10, tr: 'Nasıl konuşurdu/yazardı? (kısa mı uzun mu, esprili mi ciddi mi, emoji, şive...)', en: 'How did they talk/text? (short or long, funny or serious, emojis, dialect...)', es: '¿Cómo hablaba/escribía?' },
+      { key: 'laflar',     w: 15, tr: 'Onun ağzından 2-3 tipik cümle yaz — tam onun diyeceği gibi, her biri ayrı satıra', en: 'Write 2-3 typical sentences in THEIR words — one per line', es: 'Escribe 2-3 frases típicas suyas — una por línea' },
+      { key: 'gozunden',   w: 15, tr: 'O SENİ nasıl görürdü? Birine seni anlatsa ne derdi? (sabırsız ama çalışkan, evin şakacısı...)', en: 'How did they SEE you? If they described you to someone, what would they say?', es: '¿Cómo te veía? ¿Cómo te describiría a otra persona?' },
+      { key: 'bildikleri', w: 15, tr: 'Senin hakkında neleri bilirdi? En çok neyinle ilgilenirdi, seni ne için över ya da azarlardı?', en: 'What did they know about you? What did they care about most, praise or scold you for?', es: '¿Qué sabía de ti? ¿Qué le importaba más de ti?' },
+      { key: 'bilmedikleri', w: 10, tr: 'Ondan sonra hayatında neler değişti — neleri HİÇ bilmiyor? (yeni işin, evliliğin, çocukların...)', en: 'What changed in your life after them — what do they NOT know at all? (new job, marriage, kids...)', es: '¿Qué cambió en tu vida después — qué NO sabe en absoluto?' },
+      { key: 'dunya',      w: 10, tr: 'Ortak dünyanız: beraber ne yapardınız, klasik muhabbetiniz neydi, unutamadığın bir an?', en: 'Your shared world: what did you do together, your classic topic, a moment you can\'t forget?', es: 'Su mundo compartido: ¿qué hacían juntos, un momento inolvidable?' },
+      { key: 'zaman',      w: 5,  tr: 'En son ne zaman konuştunuz? (örn. 5 yıl önce, 2023 baharı, geçen ay...)', en: 'When did you last talk? (e.g. 5 years ago, spring 2023...)', es: '¿Cuándo hablaron por última vez?' },
+      { key: 'serbest',    w: 0,  tr: 'Eklemek istediğin başka bir şey? Ondan kalan birkaç mesaj örneği varsa buraya yapıştırabilirsin', en: 'Anything else? Paste a few of their old messages if you have them', es: '¿Algo más? Pega algunos mensajes suyos si los tienes' },
     ];
     let _dtIdx = 0, _dtAnswers = null;
 
     function _dtScore() {
       if (!_dtAnswers) return 0;
       let s = 0;
-      _DT_QS.forEach(q => { if ((_dtAnswers[q.key] || '').trim()) s += q.core ? 25 : 5; });
+      _DT_QS.forEach(q => { if ((_dtAnswers[q.key] || '').trim()) s += q.w; });
       return Math.min(100, s);
+    }
+    // Without the relational leg the twin is a stranger with their mannerisms.
+    function _dtRelationalOk() {
+      return !!((_dtAnswers?.gozunden || '').trim() || (_dtAnswers?.bildikleri || '').trim());
     }
     function _dtRenderMeter() {
       const score = _dtScore();
+      const relOk = _dtRelationalOk();
+      const ready = score >= 60 && relOk;
       document.getElementById('dtMeterPct').textContent = '%' + score;
       const fill = document.getElementById('dtMeterFill');
       fill.style.width = Math.max(3, score) + '%';
-      fill.style.background = score >= 50 ? '#7fb069' : 'var(--accent)';
-      const fin = document.getElementById('dtFinishBtn');
-      fin.classList.toggle('hidden', score < 50);
+      fill.style.background = ready ? '#7fb069' : 'var(--accent)';
+      document.getElementById('dtFinishBtn').classList.toggle('hidden', !ready);
+      const hint = document.getElementById('dtMeterHint');
+      if (hint) {
+        const L = window.APP_LANG || 'tr';
+        const T = {
+          needRel: { tr: 'Bu twin henüz SENİ tanımıyor — "seni nasıl görürdü" sorularını yanıtla, yoksa o sadece onun gibi konuşan bir yabancı olur.', en: "This twin doesn't know YOU yet — answer the 'how did they see you' questions, or it's just a stranger with their voice.", es: 'Este gemelo aún no TE conoce — responde cómo te veía, o será un extraño con su voz.' },
+          more:    { tr: 'Biraz daha anlat — ses ve ilişki güçlendikçe twin gerçekleşir.', en: 'Tell a bit more — the twin becomes real as voice and relationship fill in.', es: 'Cuenta un poco más — el gemelo se vuelve real al llenar voz y relación.' },
+          ready:   { tr: '✓ Simüle edilebilir düzeyde — konuşurken de öğrenmeye devam eder.', en: '✓ Ready to simulate — it keeps learning as you talk.', es: '✓ Listo para simular — sigue aprendiendo mientras hablan.' }
+        };
+        hint.textContent = ready ? (T.ready[L] || T.ready.tr) : (!relOk && score >= 35 ? (T.needRel[L] || T.needRel.tr) : (T.more[L] || T.more.tr));
+      }
     }
     function _dtShow() {
       const L = window.APP_LANG || 'tr';

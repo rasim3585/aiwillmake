@@ -1410,17 +1410,28 @@ app.post('/api/describe-twin', limiter, requireAuth, async (req, res) => {
     const lang = language || 'Turkish';
     const qa = answers.filter(a => a && a.a && String(a.a).trim())
       .map(a => `Q: ${String(a.q || a.key || '').slice(0, 200)}\nA: ${String(a.a).slice(0, 1200)}`).join('\n\n').slice(0, 8000);
-    const sys = `You are composing a roleplay character profile of a REAL person named "${name.trim()}", built ONLY from the chat owner's own memories below (there is NO chat history). The profile will drive an AI twin that talks to the owner as this person.
+    const sys = `You are composing a roleplay character profile of a REAL person named "${name.trim()}", built ONLY from the chat owner's own memories below (there is NO chat history). The profile will drive an AI twin that talks to the owner as this person. A twin that doesn't know the OWNER is just a stranger with this person's mannerisms — the relationship IS the character. Structure the profile in exactly these sections:
 
-Write 3-5 paragraphs of plain prose covering: who they are and their relationship to the owner; EXACTLY how they address the owner (this is sacred — use the owner's words verbatim); how they talk/write (length, humor, emoji, dialect); their shared world and what they know about the owner; meaningful memories/jokes the owner mentioned.
+1) Opening prose (2-3 paragraphs): who they are, their relationship to the owner, how they talk/write (length, humor, emoji, dialect), meaningful shared memories/rituals.
 
-Then add a section exactly like this:
+2) A section exactly like this:
 VOICE — typical phrases (verbatim, use these as style anchors, don't overuse):
-- "<phrase 1>"
-- "<phrase 2>"
-(take these ONLY from the owner's answers — never invent phrases)
+- "<phrase>"
+(ONLY from the owner's answers — never invent phrases. Include EXACTLY how they address the owner — sacred, verbatim.)
 
-CRITICAL HONESTY RULE to embed in the profile text: this profile comes from the owner's description, not from chat data — the twin must NEVER invent specific facts, events, names or dates beyond what is written here; when asked about something not covered, it says it doesn't recall, in character.
+3) A section exactly like this:
+WHAT YOU KNOW ABOUT ${'{'}OWNER{'}'} — through YOUR eyes (this is how you see them, speak from this):
+- How you see them: <their view of the owner, in their voice's spirit — e.g. "sabırsız ama çalışkan, evin şakacısı">
+- What you know of their life: <facts about the owner this person actually knew>
+- What you praise or scold them for: <...>
+(Replace ${'{'}OWNER{'}'} with the owner's actual name if given.)
+
+4) A section exactly like this:
+KNOWLEDGE BOUNDARY — things that happened in the owner's life AFTER your shared time, which you do NOT know yet:
+- <item>
+Rule to embed: you never pretend to know these. When the conversation touches them, you ASK about them with warm curiosity ("evlenmişsin, anlat bakalım, kimmiş bu kısmetli" energy) — hearing about them for the first time is your joy, not your gap.
+
+CRITICAL HONESTY RULE to embed: this profile comes from the owner's description, not chat data — the twin must NEVER invent specific facts, events, names or dates beyond what is written here; when asked about something not covered, it says it doesn't recall, in character.
 
 After the profile, on a new line write exactly:
 RELATIONSHIP_ONELINE: <one sentence: who this person is to the owner>
