@@ -43,8 +43,12 @@ compose Language dropdown defaults to UI language, setup-chunks-table RLS templa
    Internationalization section). Trigger: first real EN/ES users.
 6. **[USER→CLAUDE] Resend email outcome loop** — blocked on user creating `RESEND_API_KEY` (resend.com, free
    3k/mo); then Claude builds send helper + 24-48h "nasıl gitti?" trigger. See memory `project-todo-resend-email-loop`.
-7. **[CLAUDE] Full e2e re-run** — suite hasn't done a complete pass since the paid-gating + i18n changes.
-   Trigger: before the next big feature.
+7. ~~**[CLAUDE] Full e2e re-run**~~ — DONE (2026-07-18): 56 PASS / 2 FAIL / 1 CANNOT_TEST after ALL July
+   features (describe-twin, learning, harvest, status modes, cost armor, analytics, landing rebuild). The 2
+   FAILs were stale suite expectations (paywall gates, deliberately OFF) — suite is now paywall-aware via
+   /api/config.paywall. Paywall-ON path targeted-tested separately: 402 gate fires ✓. Environment gotcha
+   discovered: a months-old env-less PM2 zombie squatted :3000 (503 "Auth not configured" + empty LLM
+   replies, respawns on kill) — `pm2 kill` + dump removed; check `pm2 list` if the suite ever drowns in 503s.
 
 **🟢 Parked (deliberate, with wake-up conditions):**
 8. **Embeddings RAG** (biggest twin-quality lever; needs provider key + backfill + twinlab regression run) —
