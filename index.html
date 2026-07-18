@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AIWILLMAKE — The conversation before the conversation.</title>
-  <meta name="description" content="Build a digital twin of someone you know. Upload your real WhatsApp history and rehearse hard conversations before they happen — see exactly how they'll react." />
+  <title>AIWILLMAKE — Say the things you never said.</title>
+  <meta name="description" content="Talk with the AI twin of someone in your life — built from your real WhatsApp history or from memory. Rehearse the hard conversation. Finish the unfinished one." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/" />
-  <meta property="og:title"       content="AIWILLMAKE — The conversation before the conversation." />
-  <meta property="og:description" content="Upload any chat history. Practice hard conversations with their AI twin before the real thing." />
+  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta property="og:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
   <meta property="og:image:width"  content="1706" />
   <meta property="og:image:height" content="926" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — The conversation before the conversation." />
-  <meta name="twitter:description" content="Upload any chat history. Practice hard conversations with their AI twin before the real thing." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta name="twitter:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -218,7 +218,8 @@
     .hero-section { padding: 80px 0 60px; text-align: center; }
     .hero-inner { max-width: 540px; margin: 0 auto; }
     .hero-h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
+      font-size: clamp(1.7rem, 5vw, 3rem);
+      overflow-wrap: break-word;
       font-weight: 800; line-height: 1.1; letter-spacing: -0.025em;
       margin-bottom: 14px;
     }
@@ -330,6 +331,16 @@
     .how-footer-text { font-size: 14px; color: var(--sec); line-height: 1.7; }
     .how-footer-text strong { color: var(--text); }
 
+    /* ── Quiet door: conversations that never got to happen (deliberately calm) ── */
+    .qd { padding: 24px 0 56px; }
+    .qd-box { max-width: 520px; margin: 0 auto; text-align: center; border-top: 1px solid var(--bord); padding-top: 56px; }
+    .qd-eyebrow { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .qd-title { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; letter-spacing: -.02em; margin-bottom: 14px; }
+    .qd-text { color: var(--sec); font-size: .95rem; line-height: 1.75; margin-bottom: 24px; }
+    .qd-cta { display: inline-block; border: 1px solid var(--bord2); color: var(--text); text-decoration: none; border-radius: 12px; padding: 12px 22px; font-weight: 700; font-size: .92rem; transition: border-color .2s, background .2s; }
+    .qd-cta:hover { border-color: var(--accent); background: rgba(212,113,90,.06); }
+    .qd-note { font-size: .75rem; color: var(--muted); margin-top: 12px; }
+
     /* ── Auth-flicker prevention: class set synchronously before first paint ── */
     html.logged-in #hdrAuthBtn   { display: none !important; }
     html.logged-in #hdrProfile   { display: block !important; }
@@ -409,8 +420,8 @@
 <section class="hero-section">
   <div class="wrap">
     <div class="hero-inner">
-      <h1 class="hero-h1">The conversation<br>before the conversation.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.<br><a href="app.html?import=1&amp;mode=describe" class="hero-describe-link">No chat export? Describe them from memory — that works too.</a></p>
+      <h1 class="hero-h1">Say the things you never said.</h1>
+      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation. Finish the unfinished one.<br><a href="app.html?import=1&amp;mode=describe" class="hero-describe-link">No chat export? Describe them from memory — that works too.</a></p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
       <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
@@ -562,6 +573,20 @@
   </div>
 </section>
 
+<!-- Quiet door: for conversations that never got to happen. Deliberately below the
+     fold and calm — grief is never a headline here; the door is simply findable. -->
+<section class="qd" id="unfinished">
+  <div class="wrap">
+    <div class="qd-box">
+      <div class="qd-eyebrow">For the ones out of reach</div>
+      <h2 class="qd-title">Some conversations never got to happen.</h2>
+      <p class="qd-text">Someone you drifted apart from. Someone you never got to say goodbye to. This is a space for the unsaid words — you knew them best, so describe them, and talk.</p>
+      <a href="app.html?import=1&amp;mode=describe" class="qd-cta">Describe them from memory →</a>
+      <p class="qd-note">No chat history needed. Private, always.</p>
+    </div>
+  </div>
+</section>
+
 <!-- Bottom CTA -->
 <section>
   <div class="wrap">
@@ -657,11 +682,11 @@
    'app_lang' localStorage key with app.html so the language choice carries into the app. */
 (function () {
   const DICT = {
-    "AIWILLMAKE — The conversation before the conversation.":{tr:"AIWILLMAKE — Konuşmadan önceki konuşma.",es:"AIWILLMAKE — La conversación antes de la conversación."},
+    "AIWILLMAKE — Say the things you never said.":{tr:"AIWILLMAKE — Söyleyemediklerini söyle.",es:"AIWILLMAKE — Di lo que nunca dijiste."},
     "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
-    "The conversation":{tr:"O konuşma",es:"La conversación"},"before the conversation.":{tr:"olmadan önce, burada.",es:"antes de la conversación."},
+    "Say the things you never said.":{tr:"Söyleyemediklerini söyle.",es:"Di lo que nunca dijiste."},
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
-    "Rehearse the hard conversation before you have it.":{tr:"Zor konuşmayı yapmadan önce prova et.",es:"Ensaya la conversación difícil antes de tenerla."},
+    "Rehearse the hard conversation. Finish the unfinished one.":{tr:"Zor konuşmayı prova et. Yarım kalanı tamamla.",es:"Ensaya la conversación difícil. Termina la que quedó a medias."},
     "No chat export? Describe them from memory — that works too.":{tr:"Sohbet dosyan yok mu? Onu hafızandan anlat — o da olur.",es:"¿Sin exportar el chat? Descríbelo de memoria — también funciona."},
     "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · takes 30 seconds":{tr:"WhatsApp .txt veya .zip · 30 saniye sürer",es:"WhatsApp .txt o .zip · tarda 30 segundos"},
     "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Go to your twins →":{tr:"İkizlerine git →",es:"Ir a tus gemelos →"},"Open App →":{tr:"Uygulamayı aç →",es:"Abrir la app →"},
@@ -688,6 +713,11 @@
     "The longer you use it, the more it knows them.":{tr:"Ne kadar uzun kullanırsan, onu o kadar iyi tanır.",es:"Cuanto más lo usas, más lo conoce."},
     "Eventually, it's not simulating. It's predicting.":{tr:"Bir noktadan sonra canlandırmaz — öngörür.",es:"Al final ya no simula. Predice."},
     "Stop guessing":{tr:"Ne diyeceğini",es:"Deja de adivinar"},"what to say next.":{tr:"tahmin etmeyi bırak.",es:"qué decir."},
+    "For the ones out of reach":{tr:"Konuşamadıkların için",es:"Para los que están fuera de alcance"},
+    "Some conversations never got to happen.":{tr:"Bazı konuşmalar hiç yapılamadı.",es:"Algunas conversaciones nunca llegaron a pasar."},
+    "Someone you drifted apart from. Someone you never got to say goodbye to. This is a space for the unsaid words — you knew them best, so describe them, and talk.":{tr:"Uzaklaştığın biri. Vedalaşamadığın biri. Burası söylenmemiş sözler için bir alan — onu en iyi bilen sensin. Anlat ve konuş.",es:"Alguien de quien te alejaste. Alguien de quien no pudiste despedirte. Este es un espacio para las palabras no dichas — tú lo conocías mejor que nadie. Descríbelo y habla."},
+    "Describe them from memory →":{tr:"Onu hafızandan anlat →",es:"Descríbelo de memoria →"},
+    "No chat history needed. Private, always.":{tr:"Sohbet geçmişi gerekmez. Her zaman gizli.",es:"No necesitas historial de chat. Privado, siempre."},
     "AI that helps you navigate your most important conversations.":{tr:"En önemli konuşmalarında sana yol gösteren yapay zeka.",es:"IA que te ayuda a navegar tus conversaciones más importantes."},
     "App":{tr:"Uygulama",es:"App"},"Privacy Policy":{tr:"Gizlilik Politikası",es:"Política de privacidad"},"Terms of Use":{tr:"Kullanım Koşulları",es:"Términos de uso"},
     "© 2026 aiwillmake. All rights reserved.":{tr:"© 2026 aiwillmake. Tüm hakları saklıdır.",es:"© 2026 aiwillmake. Todos los derechos reservados."},"Built by":{tr:"Geliştiren:",es:"Creado por"}
