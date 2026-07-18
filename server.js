@@ -192,7 +192,7 @@ app.use((req, res, next) => {
 // app_i18n.js (UI translation dictionary) + app_stats.js (client-side chat stats
 // engine); everything else loads from a CDN — so an explicit allow-list is safe.
 const PUBLIC_FILES = new Set([
-  '/', '/index.html', '/app.html', '/privacy.html', '/app_i18n.js', '/app_stats.js',
+  '/', '/index.html', '/app.html', '/privacy.html', '/terms.html', '/app_i18n.js', '/app_stats.js',
   '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
 ]);
 // Route static ONLY through the allow-list. Do NOT chain a blanket express.static

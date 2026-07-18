@@ -186,3 +186,8 @@ Object.assign(window.I18N_C, {
   "🎭 Twin hazırlığı": { "tr":"🎭 Twin hazırlığı", "en":"🎭 Twin readiness", "es":"🎭 Preparación del gemelo" },
   "🎭 Twin'i kur ve konuşmaya başla →": { "tr":"🎭 Twin'i kur ve konuşmaya başla →", "en":"🎭 Build the twin & start talking →", "es":"🎭 Crea el gemelo y empieza a hablar →" }
 });
+
+// Footer legal links
+Object.assign(window.I18N_C, {
+  "Terms of Use": { "tr":"Kullanım Koşulları", "en":"Terms of Use", "es":"Términos de uso" }
+});

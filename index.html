@@ -227,6 +227,11 @@
       color: var(--sec); line-height: 1.65;
       max-width: 440px; margin: 0 auto 36px;
     }
+    .hero-describe-link {
+      color: inherit; text-decoration: underline dotted;
+      text-underline-offset: 3px; transition: color .15s;
+    }
+    .hero-describe-link:hover { color: var(--accent); }
     .hero-import-card {
       display: flex; align-items: center; gap: 16px;
       padding: 18px 20px 18px 22px; margin-bottom: 14px;
@@ -405,7 +410,7 @@
   <div class="wrap">
     <div class="hero-inner">
       <h1 class="hero-h1">The conversation<br>before the conversation.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.<br>No chat export? Describe them from memory — that works too.</p>
+      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.<br><a href="app.html?import=1&amp;mode=describe" class="hero-describe-link">No chat export? Describe them from memory — that works too.</a></p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
       <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
@@ -581,6 +586,7 @@
       <a href="#how" class="ft-link">How it works</a>
       <a href="app.html" class="ft-link">App</a>
       <a href="privacy.html" class="ft-link">Privacy Policy</a>
+      <a href="terms.html" class="ft-link">Terms of Use</a>
     </nav>
   </div>
   <div class="ft-bottom">
@@ -683,7 +689,7 @@
     "Eventually, it's not simulating. It's predicting.":{tr:"Bir noktadan sonra canlandırmaz — öngörür.",es:"Al final ya no simula. Predice."},
     "Stop guessing":{tr:"Ne diyeceğini",es:"Deja de adivinar"},"what to say next.":{tr:"tahmin etmeyi bırak.",es:"qué decir."},
     "AI that helps you navigate your most important conversations.":{tr:"En önemli konuşmalarında sana yol gösteren yapay zeka.",es:"IA que te ayuda a navegar tus conversaciones más importantes."},
-    "App":{tr:"Uygulama",es:"App"},"Privacy Policy":{tr:"Gizlilik Politikası",es:"Política de privacidad"},
+    "App":{tr:"Uygulama",es:"App"},"Privacy Policy":{tr:"Gizlilik Politikası",es:"Política de privacidad"},"Terms of Use":{tr:"Kullanım Koşulları",es:"Términos de uso"},
     "© 2026 aiwillmake. All rights reserved.":{tr:"© 2026 aiwillmake. Tüm hakları saklıdır.",es:"© 2026 aiwillmake. Todos los derechos reservados."},"Built by":{tr:"Geliştiren:",es:"Creado por"}
   };
   let LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();

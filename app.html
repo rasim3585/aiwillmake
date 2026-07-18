@@ -3730,7 +3730,11 @@
     <!-- Footer -->
     <footer style="border-top:1px solid var(--bord);padding:20px 0 4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:.78rem;color:var(--muted)">
       <span>© 2026 aiwillmake</span>
-      <a href="privacy.html" style="color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--sec)'" onmouseout="this.style.color='var(--muted)'">Privacy Policy</a>
+      <span>
+        <a href="terms.html" style="color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--sec)'" onmouseout="this.style.color='var(--muted)'">Terms of Use</a>
+        ·
+        <a href="privacy.html" style="color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--sec)'" onmouseout="this.style.color='var(--muted)'">Privacy Policy</a>
+      </span>
     </footer>
 
   </div><!-- /.page -->
@@ -3801,9 +3805,11 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('import') === '1') {
-          window.history.replaceState({}, '', '/app.html');
           // handled after auth check below — flag for checkFirstRunAndRoute
           window._forceImport = true;
+          // deep link from the landing "describe them from memory" line
+          if (urlParams.get('mode') === 'describe') window._forceDescribe = true;
+          window.history.replaceState({}, '', '/app.html');
         }
         if (urlParams.get('payment') === 'success') {
           showToast('Payment successful! Welcome to Pro 🎉', 'success');
@@ -3825,7 +3831,10 @@
           await checkFirstRunAndRoute();
         } else {
           document.getElementById('authGate').classList.add('hidden');
-          if (window._forceImport) { window._forceImport = false; App.navigateTo('import'); }
+          if (window._forceImport) {
+            window._forceImport = false; App.navigateTo('import');
+            if (window._forceDescribe) { window._forceDescribe = false; switchImportTab('text'); }
+          }
           else document.getElementById('screen-landing').classList.remove('hidden');
         }
 
@@ -3857,7 +3866,11 @@
 
     async function checkFirstRunAndRoute() {
       if (App.state.currentScreen !== null) return;
-      if (window._forceImport) { window._forceImport = false; App.navigateTo('import'); return; }
+      if (window._forceImport) {
+        window._forceImport = false; App.navigateTo('import');
+        if (window._forceDescribe) { window._forceDescribe = false; switchImportTab('text'); }
+        return;
+      }
       const pendingRaw = sessionStorage.getItem('_pendingImport');
       if (pendingRaw) {
         sessionStorage.removeItem('_pendingImport');
