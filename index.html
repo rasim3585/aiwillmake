@@ -177,236 +177,22 @@
     .hero-value-title { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
     .hero-value-desc { font-size: .76rem; color: var(--sec); line-height: 1.45; }
 
-    /* ════════ DIVIDER ════════ */
-    .hr {
-      border: none; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--bord) 25%, var(--bord) 75%, transparent);
-    }
-
-    /* ════════ CONVERSATION FOCUS ════════ */
-    .conv-focus { text-align: center; padding: 100px 0 88px; }
-    .conv-focus h2 {
-      font-size: clamp(2rem, 5.5vw, 4rem);
-      font-weight: 800; line-height: 1.05; letter-spacing: -.03em;
-      color: var(--text); margin-bottom: 8px;
-    }
-    .conv-focus-gradient {
-      display: block;
-      font-size: clamp(2rem, 5.5vw, 4rem);
-      font-weight: 800; line-height: 1.1; letter-spacing: -.02em;
-      background: linear-gradient(135deg, var(--accent), var(--acc2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 32px;
-    }
-    .conv-focus-desc {
-      color: var(--sec); font-size: clamp(.93rem, 1.8vw, 1.05rem);
-      line-height: 1.78; max-width: 420px; margin: 0 auto;
-    }
 
     /* ════════ SECTIONS ════════ */
     .s { padding: 60px 0; }
 
-    .s-label {
-      display: inline-block;
-      font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .14em; color: var(--accent);
-      background: rgba(212,113,90,0.10);
-      border: 1px solid rgba(212,113,90,0.18);
-      padding: 4px 13px; border-radius: 99px;
-      margin-bottom: 14px;
-    }
-    .s-title {
-      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-      font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
-      margin-bottom: 14px;
-    }
-    .s-sub { color: var(--sec); font-size: .97rem; line-height: 1.68; max-width: 460px; }
-    .s-head { margin-bottom: 56px; }
-    .s-head.c { text-align: center; }
-    .s-head.c .s-sub { margin: 0 auto; }
 
-    /* ════════ REPLY FLOW ════════ */
-    .reply-flow {
-      background: linear-gradient(145deg, rgba(212,113,90,0.06), rgba(232,149,110,0.02));
-      border: 1.5px solid rgba(212,113,90,0.15); border-radius: 24px; padding: 52px 48px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.22);
-    }
-    .reply-flow-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; margin-top: 36px; }
-    .reply-step { display: flex; flex-direction: column; gap: 8px; }
-    .reply-step-num {
-      font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
-      color: var(--accent); margin-bottom: 4px;
-    }
-    .reply-step-title { font-size: 1rem; font-weight: 700; }
-    .reply-step-desc  { color: var(--sec); font-size: .87rem; line-height: 1.6; }
-    .reply-flow-cta   { margin-top: 36px; }
-    @media (max-width: 860px) { .reply-flow { padding: 36px 24px; } .reply-flow-steps { grid-template-columns: 1fr; gap: 24px; } }
 
-    /* ════════ STORY FLOW ════════ */
-    .story-flow { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
-    .story-step {
-      flex: 1; border-radius: 16px; padding: 20px 18px; border: 1px solid var(--bord);
-      background: var(--surf);
-      box-shadow: 0 2px 14px rgba(0,0,0,0.22);
-    }
-    .story-step.story-strategy { background: rgba(212,113,90,0.07); border-color: rgba(212,113,90,0.18); }
-    .story-step.story-reply    { background: rgba(232,149,110,0.05); border-color: rgba(232,149,110,0.16); }
-    .story-arrow { padding: 16px 10px; font-size: 1.3rem; color: var(--muted); align-self: center; flex-shrink: 0; }
-    .story-step-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .story-badge { background: rgba(212,113,90,0.12); border: 1px solid rgba(212,113,90,0.22); color: var(--accent); padding: 2px 7px; border-radius: 4px; font-size: .63rem; text-transform: none; letter-spacing: 0; }
-    .story-step-text { font-size: .86rem; line-height: 1.65; color: var(--text); font-style: italic; }
-    .story-meta { font-size: .72rem; color: var(--sec); margin-top: 8px; }
-    .story-next {
-      background: linear-gradient(135deg, rgba(212,113,90,0.08), rgba(232,149,110,0.03));
-      border: 1px solid rgba(212,113,90,0.15); border-radius: 14px; padding: 16px 20px; margin-bottom: 22px;
-    }
-    .story-next-label { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); margin-bottom: 6px; }
-    .story-next-text { font-size: .9rem; line-height: 1.6; color: var(--text); }
-    .story-caption { text-align: center; color: var(--muted); font-size: .88rem; font-style: italic; margin-top: 4px; }
-    @media (max-width: 860px) {
-      .story-flow { flex-direction: column; gap: 0; }
-      .story-arrow { transform: rotate(90deg); align-self: center; padding: 6px 16px; }
-    }
 
-    /* ════════ FEATURES ════════ */
-    .feat-grid {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
-      background: var(--bord); border: 1px solid var(--bord); border-radius: 20px; overflow: hidden;
-    }
-    .feat-card { background: var(--surf); padding: 36px 32px; transition: background .25s; }
-    .feat-card:hover { background: var(--surf2); }
-    .feat-icon {
-      font-size: 1.6rem; width: 52px; height: 52px; border-radius: 14px;
-      background: rgba(212,113,90,0.10); border: 1px solid rgba(212,113,90,0.18);
-      display: grid; place-items: center; margin-bottom: 20px;
-    }
-    .feat-name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-    .feat-desc { color: var(--sec); font-size: .87rem; line-height: 1.62; margin-bottom: 18px; }
-    .feat-list { display: grid; gap: 7px; }
-    .feat-li { display: flex; align-items: center; gap: 9px; font-size: .82rem; color: var(--muted); }
-    .feat-li::before {
-      content: ''; display: block; flex-shrink: 0;
-      width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: .7;
-    }
 
-    /* ════════ STEPS ════════ */
-    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; }
-    .step-card {
-      background: var(--surf); border: 1px solid var(--bord);
-      border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.14);
-      transition: box-shadow .22s, transform .22s;
-    }
-    .step-card:hover {
-      box-shadow: 0 8px 40px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.18);
-      transform: translateY(-3px);
-    }
-    .step-num {
-      font-size: 3.5rem; font-weight: 800; line-height: 1;
-      background: linear-gradient(135deg, var(--accent), var(--acc2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 14px; letter-spacing: -.04em;
-    }
-    .step-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
-    .step-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
-    .step-desc  { color: var(--sec); font-size: .87rem; line-height: 1.65; }
-    .steps-cta  { text-align: center; margin-top: 36px; }
 
-    /* ════════ SAMPLE OUTPUT ════════ */
-    .samples { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-    .sample-card {
-      background: var(--surf); border: 1px solid var(--bord);
-      border-radius: 18px; padding: 22px;
-      display: flex; flex-direction: column; gap: 14px;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.22);
-      transition: box-shadow .2s, transform .2s;
-    }
-    .sample-card:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.32); transform: translateY(-2px); }
-    .sample-meta { display: flex; align-items: center; gap: 9px; }
-    .sample-ic {
-      font-size: .95rem; width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-      background: rgba(212,113,90,0.10); border: 1px solid rgba(212,113,90,0.18); display: grid; place-items: center;
-    }
-    .sample-cat { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); }
-    .sample-prompt {
-      font-size: .79rem; color: var(--sec); font-style: italic; line-height: 1.52;
-      padding: 9px 12px; background: rgba(255,255,255,0.04);
-      border: 1px solid var(--bord); border-radius: 9px;
-    }
-    .sample-sep {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
-    }
-    .sample-sep::before, .sample-sep::after { content: ''; flex: 1; height: 1px; background: var(--bord); }
-    .sample-out { font-size: .85rem; line-height: 1.7; color: var(--sec); }
 
-    /* ════════ PRICING ════════ */
-    .price-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; align-items: start; }
-    .price-card {
-      background: var(--surf); border: 1px solid var(--bord);
-      border-radius: 20px; padding: 28px; display: flex; flex-direction: column;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.22);
-      transition: box-shadow .2s;
-    }
-    .price-card:hover { box-shadow: 0 6px 30px rgba(0,0,0,0.32); }
-    .price-card.hi {
-      background: linear-gradient(160deg, #2c2220, #261e1c);
-      border-color: rgba(212,113,90,0.32);
-      box-shadow: 0 6px 36px rgba(212,113,90,0.16), 0 0 0 1px rgba(212,113,90,0.08);
-    }
-    .price-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .price-plan { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--sec); }
-    .price-popular {
-      font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-      padding: 3px 10px; border-radius: 99px;
-      background: linear-gradient(90deg, var(--accent), var(--acc2)); color: #fff;
-    }
-    .price-amt { font-size: 2.8rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; margin-bottom: 4px; }
-    .price-amt sup { font-size: .9rem; font-weight: 600; vertical-align: top; margin-top: 8px; }
-    .price-amt small { font-size: .85rem; font-weight: 400; color: var(--muted); }
-    .price-tagline { font-size: .84rem; color: var(--sec); line-height: 1.5; margin-bottom: 22px; }
-    .price-hr { border: none; border-top: 1px solid var(--bord); margin-bottom: 20px; }
-    .price-feats { display: grid; gap: 9px; margin-bottom: 24px; flex: 1; }
-    .price-feat { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--sec); }
-    .price-chk {
-      width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; font-size: .6rem;
-      background: rgba(212,113,90,0.12); border: 1px solid rgba(212,113,90,0.22);
-      display: grid; place-items: center; color: var(--accent); font-weight: 800;
-    }
-    .btn-plan {
-      display: block; text-align: center; padding: 12px;
-      border-radius: 10px; font: inherit; font-size: .9rem; font-weight: 700;
-      cursor: pointer; text-decoration: none;
-      border: 1px solid var(--bord2); color: var(--sec); background: transparent;
-      transition: background .2s, color .2s, border-color .2s;
-    }
-    .btn-plan:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: rgba(255,255,255,0.18); }
-    .btn-plan.hi {
-      background: var(--accent); border-color: transparent; color: #fff;
-      box-shadow: 0 4px 18px rgba(212,113,90,0.32);
-    }
-    .btn-plan.hi:hover { background: #c0614a; box-shadow: 0 6px 24px rgba(212,113,90,0.42); }
-    .price-note { text-align: center; margin-top: 20px; font-size: .81rem; color: var(--muted); }
-    .price-note a { color: var(--accent); text-decoration: none; }
-    .price-note a:hover { text-decoration: underline; }
 
     /* ════════ BOTTOM CTA ════════ */
     .bcta { text-align: center; padding: 60px 24px; }
     .bcta h2 { font-size: clamp(2rem, 5vw, 3.8rem); font-weight: 800; letter-spacing: -.03em; margin-bottom: 16px; }
     .bcta p { color: var(--sec); font-size: 1rem; margin-bottom: 40px; }
 
-    /* ════════ AUTH ════════ */
-    .btn-google {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--surf); border: 1px solid var(--bord2);
-      color: var(--text); padding: 14px 26px; border-radius: 12px;
-      font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
-      text-decoration: none; transition: background .2s, box-shadow .2s;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.22);
-    }
-    .btn-google:hover { background: var(--surf2); box-shadow: 0 4px 18px rgba(0,0,0,0.30); }
-    .btn-google svg { flex-shrink: 0; }
-    #authStatus { color: var(--sec); font-size: .83rem; }
 
     /* ════════ FOOTER ════════ */
     footer { border-top: 1px solid var(--bord); padding: 40px 24px 36px; background: var(--bg2); }
@@ -427,32 +213,7 @@
       font-size: .78rem; color: var(--muted);
     }
 
-    /* ════════ MOAT GRID ════════ */
-    .moat-grid {
-      display: grid; grid-template-columns: repeat(2,1fr); gap: 20px;
-    }
-    .moat-card {
-      background: linear-gradient(145deg, rgba(212,113,90,0.09), rgba(232,149,110,0.03));
-      border: 1.5px solid rgba(212,113,90,0.22); border-radius: 24px; padding: 40px 36px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.22);
-      transition: box-shadow .22s, transform .22s;
-    }
-    .moat-card:hover { box-shadow: 0 8px 40px rgba(212,113,90,0.18); transform: translateY(-2px); }
-    .moat-icon {
-      font-size: 1.8rem; width: 58px; height: 58px; border-radius: 16px;
-      background: rgba(212,113,90,0.12); border: 1px solid rgba(212,113,90,0.22);
-      display: grid; place-items: center; margin-bottom: 22px;
-    }
-    .moat-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; letter-spacing: -.01em; }
-    .moat-tagline { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 14px; }
-    .moat-desc { color: var(--sec); font-size: .9rem; line-height: 1.7; margin-bottom: 16px; }
-    .moat-vs {
-      display: inline-block; font-size: .75rem; font-weight: 700;
-      background: rgba(212,113,90,0.10); border: 1px solid rgba(212,113,90,0.20);
-      color: var(--accent); padding: 5px 12px; border-radius: 6px;
-    }
 
-    /* ════════ COMPACT HERO ════════ */
     /* ════════ HERO (import-first) ════════ */
     .hero-section { padding: 80px 0 60px; text-align: center; }
     .hero-inner { max-width: 540px; margin: 0 auto; }
@@ -534,103 +295,13 @@
 
     /* ════════ RESPONSIVE ════════ */
     @media (max-width: 860px) {
-      .feat-grid  { grid-template-columns: 1fr; }
-      .moat-grid  { grid-template-columns: 1fr; }
-      .steps      { grid-template-columns: 1fr; gap: 16px; }
-      .samples    { grid-template-columns: 1fr; }
-      .price-grid { grid-template-columns: 1fr; }
       .ft-inner   { flex-direction: column; gap: 24px; }
     }
     @media (max-width: 600px) {
-      .hero       { padding: 56px 0 48px; }
       .s          { padding: 40px 0; }
       .bcta       { padding: 40px 0; }
-      .hdr-nav a:not(.hdr-cta) { display: none; }
-      .trust-item { padding: 0 10px; font-size: .75rem; }
     }
 
-    /* ════════ SANDBOX ════════ */
-    .sandbox-inner { max-width: 560px; margin: 32px auto 0; }
-    .sandbox-header { text-align: center; margin-bottom: 36px; }
-    .sandbox-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #ff6b35; margin-bottom: 12px; }
-    .sandbox-title { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 10px; }
-    .sandbox-sub { font-size: 15px; color: var(--sec); line-height: 1.6; }
-    .sandbox-characters { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
-    .sandbox-char-emoji { font-size: 24px; margin-bottom: 4px; }
-    .sandbox-char-name { font-size: 13px; font-weight: 700; color: #fff; }
-    .sandbox-char-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
-    .sandbox-chat { background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 20px; overflow: hidden; }
-    .sandbox-chat.hidden { display: none; }
-    .sandbox-chat-header { background: #111; border-bottom: 1px solid #1e1e1e; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
-    .sandbox-back-btn { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 6px; flex-shrink: 0; }
-    .sandbox-back-btn:hover { color: #fff; background: #1e1e1e; }
-    .sandbox-chat-who { display: flex; align-items: center; gap: 10px; flex: 1; }
-    .sandbox-chat-who > span { font-size: 24px; }
-    .sandbox-chat-name { font-size: 14px; font-weight: 700; color: #fff; }
-    .sandbox-chat-role { font-size: 11px; color: #888; }
-    .sandbox-ai-badge { font-size: 9px; letter-spacing: 2px; color: #ff6b35; border: 1px solid rgba(255,107,53,0.25); padding: 2px 6px; border-radius: 4px; }
-    .sandbox-messages { padding: 16px; min-height: 200px; max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-    .sandbox-msg { max-width: 80%; padding: 9px 13px; border-radius: 16px; font-size: 13px; line-height: 1.5; animation: msgPop .2s ease; }
-    @keyframes msgPop { from { opacity:0; transform:translateY(6px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
-    .sandbox-msg.user { background: #ff6b35; color: #fff; border-radius: 16px 16px 4px 16px; align-self: flex-end; }
-    .sandbox-msg.ai { background: #1c1c1e; color: #e8e8e8; border-radius: 16px 16px 16px 4px; align-self: flex-start; }
-    .sandbox-typing { padding: 8px 16px; display: flex; gap: 4px; align-items: center; }
-    .sandbox-typing.hidden { display: none; }
-    .sandbox-typing span { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: sandboxDot 1.2s infinite; }
-    .sandbox-typing span:nth-child(2) { animation-delay: .2s; }
-    .sandbox-typing span:nth-child(3) { animation-delay: .4s; }
-    @keyframes sandboxDot { 0%,60%,100% { opacity:.3; transform:scale(.8); } 30% { opacity:1; transform:scale(1); } }
-    .sandbox-input-row { border-top: 1px solid #1e1e1e; padding: 12px 16px; display: flex; gap: 10px; align-items: flex-end; }
-    #sandboxInput { flex: 1; background: #1c1c1e; border: 1px solid #2a2a2a; border-radius: 12px; color: #fff; font-size: 13px; padding: 10px 14px; resize: none; outline: none; font-family: inherit; max-height: 100px; }
-    #sandboxInput:focus { border-color: #ff6b35; }
-    #sandboxSend { background: #ff6b35; color: #000; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer; flex-shrink: 0; }
-    #sandboxSend:disabled { opacity: .4; cursor: not-allowed; }
-    .sandbox-upgrade { border-top: 1px solid #1e1e1e; padding: 16px; background: rgba(255,107,53,0.04); }
-    .sandbox-upgrade.hidden { display: none; }
-    .sandbox-upgrade-hook { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-    .sandbox-upgrade-real { font-size: 14px; color: #888; margin-bottom: 8px; }
-    .sandbox-upgrade-real span { color: #ff6b35; font-weight: 700; }
-    .sandbox-upgrade-desc { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 16px; }
-    .sandbox-upgrade-desc em { color: #fff; font-style: normal; font-weight: 700; }
-    .sandbox-upgrade-btn { display: block; background: #ff6b35; color: #000; text-align: center; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
-    .sandbox-char-real { border-color: #ff6b35 !important; background: rgba(255,107,53,0.06) !important; grid-column: 1 / -1; }
-    .sandbox-char-real .sandbox-char-name { color: #ff6b35 !important; }
-    .sandbox-char-real:hover { background: rgba(255,107,53,0.12) !important; }
-    .sandbox-challenge-goal { font-size: 12px; color: #ff6b35; padding: 6px 16px; background: rgba(255,107,53,0.06); border-bottom: 1px solid rgba(255,107,53,0.15); display: none; }
-    .sandbox-turns-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid #1e1e1e; }
-    .sandbox-turns-label { font-size: 11px; color: #888; }
-    .sandbox-turns-dots { display: flex; gap: 4px; }
-    .sandbox-turn-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff6b35; transition: background 0.3s; }
-    .sandbox-turn-dot.used { background: #222; }
-    .sandbox-outcome { padding: 20px 16px; text-align: center; border-top: 1px solid #1e1e1e; }
-    .sandbox-outcome.hidden { display: none; }
-    .sandbox-outcome-icon { font-size: 40px; margin-bottom: 12px; }
-    .sandbox-outcome-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-    .sandbox-outcome-reason { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 8px; }
-    .sandbox-outcome-tip { font-size: 12px; color: #ff6b35; background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; line-height: 1.6; }
-    .sandbox-outcome-actions { display: flex; flex-direction: column; gap: 8px; }
-    .sandbox-outcome-retry { background: transparent; border: 1px solid #2a2a2a; color: #888; border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; }
-    .sandbox-outcome-cta { display: block; background: #ff6b35; color: #000; font-weight: 700; font-size: 14px; padding: 12px; border-radius: 10px; text-decoration: none; text-align: center; }
-    .sandbox-outcome-score { font-size: 48px; font-weight: 900; margin-bottom: 4px; }
-    .sandbox-intro { text-align: center; margin-bottom: 24px; max-width: 520px; margin-left: auto; margin-right: auto; }
-    .sandbox-intro-free { font-size: 11px; letter-spacing: 2px; color: var(--accent, #ff6b35); font-weight: 700; margin-bottom: 8px; }
-    .sandbox-intro-headline { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .sandbox-intro-desc { font-size: 14px; color: var(--sec); line-height: 1.6; }
-    .sandbox-intro-desc em { color: #aaa; font-style: normal; font-weight: 600; }
-    .sandbox-challenge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-    .sandbox-challenge-card { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; align-items: flex-start; gap: 10px; width: 100%; }
-    .sandbox-challenge-card:hover { border-color: #ff6b35; background: rgba(255,107,53,0.06); }
-    .sandbox-challenge-card-real { border: 1.5px solid var(--accent, #ff6b35); background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(255,107,53,0.04)); padding: 18px; align-items: center; }
-    .sandbox-challenge-card-real .scc-emoji { font-size: 24px; }
-    .scc-arrow { font-size: 20px; color: var(--accent, #ff6b35); margin-left: auto; flex-shrink: 0; }
-    .scc-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-    .scc-body { flex: 1; }
-    .scc-who { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-    .scc-label { font-size: 13px; font-weight: 600; color: #d0d0d0; line-height: 1.4; }
-    .sandbox-progress-wrap { padding: 8px 16px; border-bottom: 1px solid #1e1e1e; }
-    .sandbox-progress-bar-outer { height: 4px; background: #1a1a1a; border-radius: 2px; overflow: hidden; margin-bottom: 5px; }
-    .sandbox-progress-bar-inner { height: 100%; border-radius: 2px; transition: width 0.6s ease, background-color 0.4s ease; width: 0%; }
-    .sandbox-progress-signal { font-size: 11px; color: #888; text-align: right; }
     .how-wrap { max-width: 560px; margin: 0 auto; padding: 20px 0; }
     .how-eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; text-align: center; }
     .how-headline { font-size: 26px; font-weight: 700; color: #fff; text-align: center; line-height: 1.4; margin-bottom: 56px; }
@@ -653,7 +324,6 @@
     .how-footer { margin-top: 48px; padding-top: 28px; border-top: 1px solid #0f0f0f; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
     .how-footer-text { font-size: 14px; color: var(--sec); line-height: 1.7; }
     .how-footer-text strong { color: var(--text); }
-    .how-cta { font-size: 13px; font-weight: 700; color: #000; background: #ff6b35; padding: 10px 20px; border-radius: 100px; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
 
     /* ── Auth-flicker prevention: class set synchronously before first paint ── */
     html.logged-in #hdrAuthBtn   { display: none !important; }
@@ -812,166 +482,6 @@
   </div>
 </section>
 
-<!-- SANDBOX HIDDEN — import-first launch. Re-enable by removing display:none -->
-<section style="display:none">
-  <div class="wrap">
-    <div class="sandbox-inner">
-        <!-- Character + challenge picker -->
-        <div class="sandbox-intro">
-          <div class="sandbox-intro-free">▶ FREE DEMO — no signup</div>
-          <div class="sandbox-intro-headline">Try the engine on a few characters.</div>
-          <div class="sandbox-intro-desc">These are generic AI personalities. The real magic happens when you upload someone you actually know — the AI becomes <em>them</em>.</div>
-        </div>
-        <div id="sandboxCharacters" class="sandbox-challenge-grid">
-          <button class="sandbox-challenge-card" data-char="boss" data-challenge="raise">
-            <span class="scc-emoji">👔</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Boss</div>
-              <div class="scc-label">Ask for a raise</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="boss" data-challenge="credit">
-            <span class="scc-emoji">👔</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Boss</div>
-              <div class="scc-label">Make him admit he took your credit</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="mom" data-challenge="holiday">
-            <span class="scc-emoji">💛</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Mom</div>
-              <div class="scc-label">Tell her you're skipping the holidays</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="mom" data-challenge="moving">
-            <span class="scc-emoji">💛</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Mom</div>
-              <div class="scc-label">Tell her you're moving away</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="partner" data-challenge="dtf">
-            <span class="scc-emoji">💔</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Partner</div>
-              <div class="scc-label">Define the relationship</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="partner" data-challenge="issue">
-            <span class="scc-emoji">💔</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Partner</div>
-              <div class="scc-label">Bring up what's been bothering you</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="client" data-challenge="scope">
-            <span class="scc-emoji">💼</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Client</div>
-              <div class="scc-label">Say no to out-of-scope work</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="client" data-challenge="invoice">
-            <span class="scc-emoji">💼</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Client</div>
-              <div class="scc-label">Get the overdue invoice paid</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="ex" data-challenge="closure">
-            <span class="scc-emoji">👻</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Ex</div>
-              <div class="scc-label">Get closure — for real this time</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="ex" data-challenge="back">
-            <span class="scc-emoji">👻</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Ex</div>
-              <div class="scc-label">Find out if they want you back</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="bestie" data-challenge="confess">
-            <span class="scc-emoji">🫂</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Best Friend</div>
-              <div class="scc-label">Confess what you've been hiding</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card" data-char="bestie" data-challenge="advice">
-            <span class="scc-emoji">🫂</span>
-            <div class="scc-body">
-              <div class="scc-who">Your Best Friend</div>
-              <div class="scc-label">Get their honest take on a bad decision</div>
-            </div>
-          </button>
-          <button class="sandbox-challenge-card sandbox-challenge-card-real" data-char="real" data-challenge="free" style="grid-column: 1 / -1;">
-            <span class="scc-emoji">⭐</span>
-            <div class="scc-body">
-              <div class="scc-who" style="color:#ff6b35">THE REAL THING</div>
-              <div class="scc-label" style="font-size:15px">Upload your real chat history → the AI becomes someone you actually know</div>
-            </div>
-            <span class="scc-arrow">→</span>
-          </button>
-        </div>
-
-
-        <!-- Chat window -->
-        <div class="sandbox-chat hidden" id="sandboxChat">
-          <div class="sandbox-chat-header">
-            <button class="sandbox-back-btn" id="sandboxBack">← Back</button>
-            <div class="sandbox-chat-who">
-              <span id="sandboxCharEmoji"></span>
-              <div>
-                <div class="sandbox-chat-name" id="sandboxCharName"></div>
-                <div class="sandbox-chat-role" id="sandboxCharRole"></div>
-              </div>
-            </div>
-            <div class="sandbox-ai-badge">AI</div>
-          </div>
-          <div class="sandbox-challenge-goal" id="sandboxChallengeGoal"></div>
-          <div class="sandbox-turns-bar" id="sandboxTurnsBar" style="display:none">
-            <span class="sandbox-turns-label">Attempts left:</span>
-            <div class="sandbox-turns-dots" id="sandboxTurnsDots"></div>
-          </div>
-          <div class="sandbox-progress-wrap" id="sandboxProgressWrap" style="display:none">
-            <div class="sandbox-progress-bar-outer">
-              <div class="sandbox-progress-bar-inner" id="sandboxProgressBar"></div>
-            </div>
-            <div class="sandbox-progress-signal" id="sandboxProgressSignal"></div>
-          </div>
-          <div class="sandbox-messages" id="sandboxMessages"></div>
-          <div class="sandbox-typing hidden" id="sandboxTyping">
-            <span></span><span></span><span></span>
-          </div>
-          <div class="sandbox-upgrade hidden" id="sandboxUpgrade">
-            <div class="sandbox-upgrade-hook">This is a demo. The real version is different.</div>
-            <div class="sandbox-upgrade-real">A generic <span id="sandbox-upgrade-type"></span> character — not yours. Upload real chat history and the AI becomes <em>that actual person</em>.</div>
-            <div class="sandbox-upgrade-desc">Their tone. Their patterns. Your shared history. The way they actually respond to you — not a simulation of a type.</div>
-            <a href="app.html" class="sandbox-upgrade-btn">Try it with someone real →</a>
-          </div>
-          <div class="sandbox-outcome hidden" id="sandboxOutcome">
-            <div class="sandbox-outcome-icon" id="sandboxOutcomeIcon"></div>
-            <div class="sandbox-outcome-score" id="sandboxOutcomeScore"></div>
-            <div class="sandbox-outcome-title" id="sandboxOutcomeTitle"></div>
-            <div class="sandbox-outcome-reason" id="sandboxOutcomeReason"></div>
-            <div class="sandbox-outcome-tip" id="sandboxOutcomeTip"></div>
-            <div class="sandbox-outcome-actions">
-              <button class="sandbox-outcome-retry" id="sandboxOutcomeRetry">Try again</button>
-              <a href="app.html" class="sandbox-outcome-cta">That was a generic AI. Now try it with someone real →</a>
-            </div>
-          </div>
-          <div class="sandbox-input-row" id="sandboxInputRow">
-            <textarea id="sandboxInput" placeholder="Type your message…" rows="1"></textarea>
-            <button id="sandboxSend">Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- How it works -->
 <section class="s" id="how">
@@ -1041,7 +551,6 @@
           The longer you use it, the more it knows them.<br>
           <strong>Eventually, it's not simulating. It's predicting.</strong>
         </div>
-        <a href="app.html?import=1" class="how-cta">Create your twin →</a>
       </div>
 
     </div>
@@ -1053,7 +562,6 @@
   <div class="wrap">
     <div class="bcta">
       <h2>Stop guessing<br><span class="g">what to say next.</span></h2>
-      <p>Describe what's going on. We'll map the conversation, read every reply, and keep you moving forward.</p>
       <a href="app.html?import=1" class="hero-cta" id="ctaBottom">
         Create your twin →
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1066,12 +574,11 @@
 <footer>
   <div class="ft-inner">
     <div>
-      <div class="ft-brand g">aiwillmake</div>
+      <div class="ft-brand g" lang="en">aiwillmake</div>
       <div class="ft-desc">AI that helps you navigate your most important conversations.</div>
     </div>
     <nav class="ft-links">
       <a href="#how" class="ft-link">How it works</a>
-      <a href="#pricing" class="ft-link">Pricing</a>
       <a href="app.html" class="ft-link">App</a>
       <a href="privacy.html" class="ft-link">Privacy Policy</a>
     </nav>
@@ -1110,9 +617,6 @@
         if (heroOpenAppCta) heroOpenAppCta.style.display = 'inline-flex';
         // Secondary CTAs → app.html (no import mode for returning users)
         if (ctaBottom) { ctaBottom.href = 'app.html'; ctaBottom.textContent = 'Open App →'; }
-        document.querySelectorAll('.how-cta, .reply-flow-cta a').forEach(el => {
-          el.href = 'app.html'; el.textContent = 'Open App →';
-        });
       } else {
         document.getElementById('hdrAuthBtn').style.display = 'inline-flex';
         document.getElementById('hdrProfile').style.display = 'none';
@@ -1140,503 +644,7 @@
   });
 </script>
 
-<script>
-const CHAR_EMOJIS = { boss: '💼', mom: '💛', partner: '💔', client: '💼', ex: '👻', bestie: '🫂', real: '👤' };
-const CHAR_NAMES  = { boss: 'Michael', mom: 'Mom', partner: 'Jordan', client: 'David', ex: 'Alex', bestie: 'Sam' };
-const CHAR_ROLES  = { boss: 'Your Boss', mom: 'Your Mom', partner: 'Your Partner', client: 'Your Client', ex: 'Your Ex', bestie: 'Your Best Friend' };
 
-const OPENING_MSGS = {
-  boss:    "I wanted to circle back on a few things. My calendar's pretty packed this week — what did you need?",
-  mom:     "Hi sweetheart! I was just thinking about you. Are you eating? You look tired in your last photo.",
-  partner: "hey you 🙂 what are you up to?",
-  client:  "Hey! So excited about everything. Quick thing while I have you — super small ask.",
-  ex:      "hey. hope you're good. saw something that reminded me of you lol",
-  bestie:  "OKAY I've been waiting for you to text me all day what is going on with you"
-};
-
-let currentChar = null;
-let currentChallenge = null;
-let sandboxHistory = [];
-let turnsUsed = 0;
-let allChallenges = {};
-let outcomeShown = false;
-
-// Only fetch challenges when the sandbox section is actually shown — it ships
-// hidden (display:none) since the import-first launch, and this call hit the API
-// on every visit for nothing. Re-enabling the section re-enables the fetch.
-const _sandboxCard = document.querySelector('.sandbox-challenge-card');
-if (_sandboxCard && _sandboxCard.offsetParent !== null) {
-  fetch('/api/sandbox-challenges')
-    .then(r => r.json())
-    .then(data => { allChallenges = data; })
-    .catch(() => {});
-}
-
-document.querySelectorAll('.sandbox-challenge-card').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const charId = btn.dataset.char;
-    const challengeId = btn.dataset.challenge;
-    if (charId === 'real') { window.location.href = 'app.html'; return; }
-    currentChar = charId;
-    currentChallenge = challengeId === 'free' ? null : (allChallenges[charId]?.find(c => c.id === challengeId) || null);
-    startChat();
-  });
-});
-
-
-function startChat() {
-  sandboxHistory = [];
-  turnsUsed = 0;
-  outcomeShown = false;
-
-  document.getElementById('sandboxMessages').innerHTML = '';
-  document.getElementById('sandboxOutcome').classList.add('hidden');
-  document.getElementById('sandboxUpgrade').classList.add('hidden');
-  document.getElementById('sandboxInput').value = '';
-  document.getElementById('sandboxInput').disabled = false;
-  document.getElementById('sandboxSend').disabled = false;
-  document.getElementById('sandboxInput').placeholder = 'Type your message...';
-
-  const goalEl = document.getElementById('sandboxChallengeGoal');
-  if (currentChallenge) {
-    goalEl.textContent = '🎯 ' + currentChallenge.label;
-    goalEl.style.display = 'block';
-  } else {
-    goalEl.style.display = 'none';
-  }
-
-  if (currentChallenge) {
-    document.getElementById('sandboxProgressWrap').style.display = 'block';
-    document.getElementById('sandboxProgressBar').style.width = '0%';
-    document.getElementById('sandboxProgressBar').style.background = '#ff453a';
-    document.getElementById('sandboxProgressSignal').textContent = '0% · ' + currentChallenge.max_turns + ' attempts left';
-    document.getElementById('sandboxTurnsBar').style.display = 'none';
-  } else {
-    document.getElementById('sandboxProgressWrap').style.display = 'none';
-    document.getElementById('sandboxTurnsBar').style.display = 'none';
-  }
-
-  document.getElementById('sandboxCharEmoji').textContent = CHAR_EMOJIS[currentChar];
-  document.getElementById('sandboxCharName').textContent = CHAR_NAMES[currentChar];
-  document.getElementById('sandboxCharRole').textContent = CHAR_ROLES[currentChar];
-
-  document.getElementById('sandboxChat').classList.remove('hidden');
-
-  const opening = OPENING_MSGS[currentChar];
-  sandboxHistory.push({ role: 'assistant', content: opening });
-  appendMsg('ai', opening);
-
-  setTimeout(() => document.getElementById('sandboxInput').focus(), 100);
-}
-
-function updateTurnsBar() {
-  if (!currentChallenge) {
-    document.getElementById('sandboxTurnsBar').style.display = 'none';
-    return;
-  }
-  document.getElementById('sandboxTurnsBar').style.display = 'flex';
-  const max = currentChallenge.max_turns;
-  const left = Math.max(0, max - turnsUsed);
-  document.getElementById('sandboxTurnsDots').innerHTML = Array.from({length: max}, (_, i) =>
-    `<div class="sandbox-turn-dot ${i >= left ? 'used' : ''}"></div>`
-  ).join('');
-}
-
-document.getElementById('sandboxBack').addEventListener('click', () => {
-  document.getElementById('sandboxChat').classList.add('hidden');
-  document.getElementById('sandboxCharacters').classList.remove('hidden');
-  currentChar = null;
-  currentChallenge = null;
-});
-
-
-async function sendMessage() {
-  const input = document.getElementById('sandboxInput');
-  const text = input.value.trim();
-  if (!text || !currentChar || document.getElementById('sandboxSend').disabled) return;
-
-  input.value = '';
-  input.style.height = 'auto';
-  appendMsg('user', text);
-  sandboxHistory.push({ role: 'user', content: text });
-  turnsUsed++;
-
-  const signal = document.getElementById('sandboxProgressSignal');
-  if (signal && currentChallenge) {
-    const attemptsLeft = Math.max(0, currentChallenge.max_turns - turnsUsed);
-    const currentScore = document.getElementById('sandboxProgressBar')?.style.width || '0%';
-    signal.textContent = currentScore.replace('%', '') + '% · ' + attemptsLeft + ' attempts left';
-  }
-
-  document.getElementById('sandboxSend').disabled = true;
-  input.disabled = true;
-  document.getElementById('sandboxTyping').classList.remove('hidden');
-  scrollToBottom();
-
-  try {
-    const resp = await fetch('/api/sandbox-simulate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        character_id: currentChar,
-        history: sandboxHistory,
-        challenge_id: currentChallenge?.id || null
-      })
-    });
-    const data = await resp.json();
-    document.getElementById('sandboxTyping').classList.add('hidden');
-
-    if (data.reply) {
-      sandboxHistory.push({ role: 'assistant', content: data.reply });
-      appendMsg('ai', data.reply);
-    }
-
-    if (data.evaluation && currentChallenge) {
-      const score = data.evaluation.score || 0;
-      const bar = document.getElementById('sandboxProgressBar');
-      const signal = document.getElementById('sandboxProgressSignal');
-      const wrap = document.getElementById('sandboxProgressWrap');
-
-      wrap.style.display = 'block';
-      bar.style.width = score + '%';
-      bar.style.background = score >= 71 ? '#34c759' : score >= 31 ? '#ff9f0a' : '#ff453a';
-      signal.textContent = (data.evaluation.signal || '') + ' · ' + score + '% · ' + Math.max(0, currentChallenge.max_turns - turnsUsed) + ' attempts left';
-
-    }
-
-    if (currentChallenge && !data.evaluation) {
-      const attemptsLeft = Math.max(0, currentChallenge.max_turns - turnsUsed);
-      const bar = document.getElementById('sandboxProgressBar');
-      const currentPct = parseInt(bar?.style.width) || 0;
-      document.getElementById('sandboxProgressSignal').textContent = currentPct + '% · ' + attemptsLeft + ' attempts left';
-    }
-
-    if (currentChallenge && turnsUsed >= currentChallenge.max_turns && !outcomeShown) {
-      outcomeShown = true;
-      setTimeout(() => showOutcome(data.evaluation || { outcome: 'fail', score: 0, reason: "You've used all your attempts.", tip: "Try being more direct next time." }), 600);
-      return;
-    }
-
-  } catch(e) {
-    document.getElementById('sandboxTyping').classList.add('hidden');
-    appendMsg('ai', 'Something went wrong. Please try again.');
-  }
-
-  document.getElementById('sandboxSend').disabled = false;
-  input.disabled = false;
-  input.focus();
-  scrollToBottom();
-}
-
-function showOutcome(evaluation) {
-  document.getElementById('sandboxSend').disabled = true;
-  document.getElementById('sandboxInput').disabled = true;
-  document.getElementById('sandboxInput').placeholder = 'Challenge ended';
-
-  const icons  = { success: '🎉', partial: '🤔', fail: '😬' };
-  const titles = { success: 'You nailed it.', partial: 'Almost there.', fail: "Didn't land this time." };
-
-  document.getElementById('sandboxOutcomeIcon').textContent  = icons[evaluation.outcome]  || '🤔';
-  document.getElementById('sandboxOutcomeTitle').textContent = titles[evaluation.outcome] || 'Done.';
-  document.getElementById('sandboxOutcomeReason').textContent = evaluation.reason || '';
-  document.getElementById('sandboxOutcomeTip').textContent    = evaluation.tip ? '💡 ' + evaluation.tip : '';
-
-  const scoreEl = document.getElementById('sandboxOutcomeScore');
-  if (scoreEl && evaluation.score !== undefined) {
-    scoreEl.textContent = evaluation.score + '%';
-    scoreEl.style.color = evaluation.score >= 71 ? '#34c759' : evaluation.score >= 31 ? '#ff9f0a' : '#ff453a';
-  }
-
-  document.getElementById('sandboxOutcome').classList.remove('hidden');
-  document.getElementById('sandboxOutcome').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-document.getElementById('sandboxOutcomeRetry').addEventListener('click', () => { startChat(); });
-document.getElementById('sandboxSend').addEventListener('click', sendMessage);
-document.getElementById('sandboxInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-document.getElementById('sandboxInput').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-});
-
-function appendMsg(role, text) {
-  const div = document.createElement('div');
-  div.className = `sandbox-msg ${role}`;
-  div.textContent = text;
-  document.getElementById('sandboxMessages').appendChild(div);
-  scrollToBottom();
-}
-
-function scrollToBottom() {
-  const msgs = document.getElementById('sandboxMessages');
-  msgs.scrollTop = msgs.scrollHeight;
-}
-</script>
-
-<!-- REMOVED SECTIONS - RESTORE IF NEEDED
-
-[SECTION: Conversation Focus]
-<section>
-  <div class="wrap">
-    <div class="conv-focus">
-      <h2>Most AI helps you write one message.</h2>
-      <span class="conv-focus-gradient">We remember the whole conversation.</span>
-      <p class="conv-focus-desc">Context doesn't reset when they reply. We track what's been said, read every turn, and help you navigate to where you want to be.</p>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: Story Flow]
-<section class="s">
-  <div class="wrap">
-    <div class="s-head c">
-      <div class="s-label">See it in action</div>
-      <h2 class="s-title">See how it works in real life.</h2>
-    </div>
-    <div class="story-flow">
-      <div class="story-step story-before">
-        <div class="story-step-label">You felt this</div>
-        <p class="story-step-text">"I want to reconnect with my ex but I don't know what to say without looking desperate..."</p>
-      </div>
-      <div class="story-arrow">→</div>
-      <div class="story-step story-strategy">
-        <div class="story-step-label">AI strategy <span class="story-badge">Warm &amp; Hopeful</span></div>
-        <p class="story-step-text">"I know it's been a while. I almost didn't send this — but I found myself thinking about that weekend in Porto. Hope you're doing well."</p>
-        <div class="story-meta">Low pressure · Opens a door · Easy to reply</div>
-      </div>
-      <div class="story-arrow">→</div>
-      <div class="story-step story-reply">
-        <div class="story-step-label">Their reply</div>
-        <p class="story-step-text">"Hey... wasn't expecting this. I've been thinking about you too, honestly."</p>
-      </div>
-    </div>
-    <div class="story-next">
-      <div class="story-next-label">⭐ Recommended next move</div>
-      <p class="story-next-text">"That makes me really glad to hear. Would you want to grab coffee sometime and actually talk? No pressure at all."</p>
-    </div>
-    <p class="story-caption">This is what communication coaching looks like.</p>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: Features]
-<section class="s">
-  <div class="wrap">
-    <div class="s-head">
-      <div class="s-label">What it does</div>
-      <h2 class="s-title">From first message to final outcome.</h2>
-      <p class="s-sub">A navigator for every turn — not just the opener, but the reply, and the reply after that.</p>
-    </div>
-    <div class="feat-grid">
-      <div class="feat-card">
-        <div class="feat-icon">🎯</div>
-        <div class="feat-name">Start the right way</div>
-        <p class="feat-desc">The right opening changes everything. See 6 strategic approaches with risk analysis, then move forward confidently.</p>
-        <div class="feat-list">
-          <div class="feat-li">6 strategies, each with a different angle</div>
-          <div class="feat-li">Risk analysis & best timing for each</div>
-          <div class="feat-li">One recommended pick for your situation</div>
-        </div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">🔍</div>
-        <div class="feat-name">Read what they're really saying</div>
-        <p class="feat-desc">Paste their reply. We decode the real signals — not just what they wrote, but what they mean.</p>
-        <div class="feat-list">
-          <div class="feat-li">Interest level & emotional warmth decoded</div>
-          <div class="feat-li">Hidden signals & what they really mean</div>
-          <div class="feat-li">A clear next move — not just analysis</div>
-        </div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon">💬</div>
-        <div class="feat-name">Know your next move</div>
-        <p class="feat-desc">The conversation keeps moving. Get your next message guided by what they actually said — and where you want this to go.</p>
-        <div class="feat-list">
-          <div class="feat-li">3 strategic responses to choose from</div>
-          <div class="feat-li">Tailored to what they actually said</div>
-          <div class="feat-li">Navigate each turn with intent</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: What makes it different]
-<section class="s">
-  <div class="wrap">
-    <div class="s-head c">
-      <div class="s-label">What makes it different</div>
-      <h2 class="s-title">Two things no other tool does.</h2>
-      <p class="s-sub">These aren't just features — they're why navigating a real conversation is fundamentally different from generating a single message.</p>
-    </div>
-    <div class="moat-grid">
-      <div class="moat-card">
-        <div class="moat-icon">🧠</div>
-        <div class="moat-name">Contact Memory</div>
-        <p class="moat-tagline">It remembers the people who matter.</p>
-        <p class="moat-desc">For every contact, we build a picture: how they communicate, how the relationship has evolved, and what's worked before. Every new conversation starts with that context already loaded — not from scratch.</p>
-        <span class="moat-vs">ChatGPT forgets. We remember.</span>
-      </div>
-      <div class="moat-card">
-        <div class="moat-icon">🎭</div>
-        <div class="moat-name">Conversation Simulator</div>
-        <p class="moat-tagline">Practice before you send.</p>
-        <p class="moat-desc">The AI plays the other person — based on everything you've told us about them. Run the conversation before it's real. See how they're likely to respond and adjust your approach before you press send.</p>
-        <span class="moat-vs">Test the real conversation first.</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: They replied?]
-<section class="s">
-  <div class="wrap">
-    <div class="reply-flow">
-      <div class="s-head" style="margin-bottom:0">
-        <div class="s-label">After the first message</div>
-        <h2 class="s-title">The conversation doesn't end after the first message.</h2>
-        <p class="s-sub">Paste their reply. We remember what you've already said and tell you exactly where things stand.</p>
-      </div>
-      <div class="reply-flow-steps">
-        <div class="reply-step">
-          <div class="reply-step-num">Step 01</div>
-          <div class="reply-step-title">Paste their reply</div>
-          <p class="reply-step-desc">Paste whatever they said — short, long, cold, or warm. No formatting needed.</p>
-        </div>
-        <div class="reply-step">
-          <div class="reply-step-num">Step 02</div>
-          <div class="reply-step-title">Get the full read</div>
-          <p class="reply-step-desc">Interest level, hidden signals, emotional tone — decoded with the full context of your conversation.</p>
-        </div>
-        <div class="reply-step">
-          <div class="reply-step-num">Step 03</div>
-          <div class="reply-step-title">Know what to say next</div>
-          <p class="reply-step-desc">Get 3 responses built around what they actually said — and where you want this to go.</p>
-        </div>
-      </div>
-      <div class="reply-flow-cta">
-        <a href="app.html?import=1" class="hero-cta">Create your twin →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: Sample outputs]
-<section class="s">
-  <div class="wrap">
-    <div class="s-head c">
-      <div class="s-label">See it in action</div>
-      <h2 class="s-title">Real inputs. Real output.</h2>
-      <p class="s-sub">Not templates — personalized to your actual situation.</p>
-    </div>
-    <div class="samples">
-      <div class="sample-card">
-        <div class="sample-meta">
-          <div class="sample-ic">💬</div>
-          <span class="sample-cat">Personal · Ex Partner</span>
-        </div>
-        <div class="sample-prompt">"We broke up 4 months ago after a fight. I want to reach out — not pressure her, just see how she's doing."</div>
-        <div class="sample-sep">Output · Version 1</div>
-        <div class="sample-out">Hey — I know it's been a while and I've gone back and forth on whether to text. I'm not trying to reopen anything. I just realized I genuinely miss talking to you. Hope things have been good on your end.</div>
-      </div>
-      <div class="sample-card">
-        <div class="sample-meta">
-          <div class="sample-ic">🔄</div>
-          <span class="sample-cat">Work · Follow-up</span>
-        </div>
-        <div class="sample-prompt">"My manager gave me vague feedback in my review three weeks ago. I want to follow up but don't want to come across as insecure or pushy."</div>
-        <div class="sample-sep">Output · Version 1</div>
-        <div class="sample-out">Hey — I've been sitting with the feedback from our review and wanted to check in. I have a clearer sense of what I want to work on, but I'd love 20 minutes to make sure I'm focused on the right things. Does that work this week?</div>
-      </div>
-      <div class="sample-card">
-        <div class="sample-meta">
-          <div class="sample-ic">💸</div>
-          <span class="sample-cat">Personal · Difficult Conversation</span>
-        </div>
-        <div class="sample-prompt">"A close friend borrowed $300 three months ago and hasn't mentioned it once. I need to bring it up without damaging the friendship."</div>
-        <div class="sample-sep">Output · Version 1</div>
-        <div class="sample-out">Hey — I've been putting off saying this because I don't want it to be weird, but I could really use that money back when you're able. No urgency at all, I just didn't want to let it sit unsaid. You good?</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="hr" />
-
-[SECTION: Pricing]
-<section class="s" id="pricing">
-  <div class="wrap">
-    <div class="s-head c">
-      <div class="s-label">Pricing</div>
-      <h2 class="s-title">Simple pricing.</h2>
-      <p class="s-sub">Start free. Upgrade when you need more.</p>
-    </div>
-    <div class="price-grid">
-
-      <div class="price-card">
-        <div class="price-top"><span class="price-plan">Free</span></div>
-        <div class="price-amt">$0</div>
-        <p class="price-tagline">Try it out, no commitment.</p>
-        <hr class="price-hr" />
-        <div class="price-feats">
-          <div class="price-feat"><span class="price-chk">✓</span>3 free conversations</div>
-          <div class="price-feat"><span class="price-chk">✓</span>3 communication strategies</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Basic reply analysis</div>
-          <div class="price-feat"><span class="price-chk">✓</span>What happens next guidance</div>
-        </div>
-        <a href="app.html" class="btn-plan">Start free</a>
-      </div>
-
-      <div class="price-card hi">
-        <div class="price-top">
-          <span class="price-plan">Pro</span>
-          <span class="price-popular">Most popular</span>
-        </div>
-        <div class="price-amt"><sup>$</sup>14<small> / month</small></div>
-        <p class="price-tagline">Full conversation coaching.</p>
-        <hr class="price-hr" />
-        <div class="price-feats">
-          <div class="price-feat"><span class="price-chk">✓</span>Unlimited conversations, end to end</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Full reply analysis (interest level, hidden signals, next move)</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Conversation history — save and revisit</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Priority speed</div>
-          <div class="price-feat"><span class="price-chk">✓</span>All 9 categories, 7 languages</div>
-        </div>
-        <a href="app.html" class="btn-plan hi">Get Pro</a>
-      </div>
-
-      <div class="price-card">
-        <div class="price-top"><span class="price-plan">Business</span></div>
-        <div class="price-amt"><sup>$</sup>49<small> / month</small></div>
-        <p class="price-tagline">For teams navigating complex communications.</p>
-        <hr class="price-hr" />
-        <div class="price-feats">
-          <div class="price-feat"><span class="price-chk">✓</span>Everything in Pro</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Unlimited team members</div>
-          <div class="price-feat"><span class="price-chk">✓</span>Custom communication playbooks</div>
-          <div class="price-feat"><span class="price-chk">✓</span>API access</div>
-        </div>
-        <a href="app.html" class="btn-plan">Contact us</a>
-      </div>
-
-    </div>
-    <p class="price-note">Not ready? <a href="app.html">Try 3 free conversations</a> — no sign-up required.</p>
-  </div>
-</section>
-
--->
 <style>#langSwitch .lang-btn.active{background:var(--accent,#6d5bd0);color:#fff;opacity:1;}</style>
 <script>
 /* i18n for the landing: content-keyed runtime translator (EN authored → TR/ES). Shares the
@@ -1644,47 +652,39 @@ function scrollToBottom() {
 (function () {
   const DICT = {
     "AIWILLMAKE — The conversation before the conversation.":{tr:"AIWILLMAKE — Konuşmadan önceki konuşma.",es:"AIWILLMAKE — La conversación antes de la conversación."},
+    "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
+    "The conversation":{tr:"O konuşma",es:"La conversación"},"before the conversation.":{tr:"olmadan önce, burada.",es:"antes de la conversación."},
+    "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
+    "Rehearse the hard conversation before you have it.":{tr:"Zor konuşmayı yapmadan önce prova et.",es:"Ensaya la conversación difícil antes de tenerla."},
     "No chat export? Describe them from memory — that works too.":{tr:"Sohbet dosyan yok mu? Onu hafızandan anlat — o da olur.",es:"¿Sin exportar el chat? Descríbelo de memoria — también funciona."},
+    "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · takes 30 seconds":{tr:"WhatsApp .txt veya .zip · 30 saniye sürer",es:"WhatsApp .txt o .zip · tarda 30 segundos"},
+    "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Go to your twins →":{tr:"İkizlerine git →",es:"Ir a tus gemelos →"},"Open App →":{tr:"Uygulamayı aç →",es:"Abrir la app →"},
+    "🔒 Your chats stay private. Analyzed once, never used to train AI models.":{tr:"🔒 Sohbetlerin gizli kalır. Bir kez analiz edilir, asla yapay zeka eğitiminde kullanılmaz.",es:"🔒 Tus chats permanecen privados. Se analizan una vez y nunca se usan para entrenar IA."},
+    "Import chat":{tr:"Sohbet yükle",es:"Importar chat"},"Build the twin":{tr:"İkizi kur",es:"Crear el gemelo"},"Rehearse":{tr:"Prova et",es:"Ensaya"},
     "⚡ Try it in 10 seconds":{tr:"⚡ 10 saniyede dene",es:"⚡ Pruébalo en 10 segundos"},
     "No signup, no upload — talk to a ready-made twin.":{tr:"Kayıt yok, yükleme yok — hazır bir ikizle konuş.",es:"Sin registro, sin subir nada — habla con un gemelo listo."},
     "Now bring YOUR person →":{tr:"Şimdi KENDİ insanını getir →",es:"Ahora trae a TU persona →"},
     "These are generic characters. The real magic is someone you actually know.":{tr:"Bunlar genel karakterler. Asıl sihir, gerçekten tanıdığın biri.",es:"Estos son personajes genéricos. La magia real es alguien que conoces."},
     "🔒 Demo messages aren't stored.":{tr:"🔒 Demo mesajları kaydedilmez.",es:"🔒 Los mensajes del demo no se guardan."},
-    "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
-    "The conversation":{tr:"O konuşma",es:"La conversación"},"before the conversation.":{tr:"olmadan önce, burada.",es:"antes de la conversación."},
-    "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
-    "Rehearse the hard conversation before you have it.":{tr:"Zor konuşmayı yapmadan önce prova et.",es:"Ensaya la conversación difícil antes de tenerla."},
-    "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · takes 30 seconds":{tr:"WhatsApp .txt veya .zip · 30 saniye sürer",es:"WhatsApp .txt o .zip · tarda 30 segundos"},
-    "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Import chat":{tr:"Sohbet yükle",es:"Importar chat"},"Build the twin":{tr:"İkizi kur",es:"Crear el gemelo"},"Rehearse":{tr:"Prova et",es:"Ensaya"},
-    "Try the engine on a few characters.":{tr:"Motoru birkaç karakterle dene.",es:"Prueba el motor con algunos personajes."},
-    "Your Boss":{tr:"Patronun",es:"Tu jefe"},"Ask for a raise":{tr:"Zam iste",es:"Pide un aumento"},"Make him admit he took your credit":{tr:"Emeğini sahiplendiğini itiraf ettir",es:"Haz que admita que se llevó tu mérito"},
-    "Your Mom":{tr:"Annen",es:"Tu madre"},"Tell her you're skipping the holidays":{tr:"Bu bayram gelmeyeceğini söyle",es:"Dile que no irás en las fiestas"},"Tell her you're moving away":{tr:"Başka şehre taşınacağını söyle",es:"Dile que te mudas lejos"},
-    "Your Partner":{tr:"Sevgilin",es:"Tu pareja"},"Define the relationship":{tr:"İlişkiyi netleştir",es:"Define la relación"},"Bring up what's been bothering you":{tr:"Seni rahatsız eden şeyi gündeme getir",es:"Saca lo que te ha estado molestando"},
-    "Your Client":{tr:"Müşterin",es:"Tu cliente"},"Say no to out-of-scope work":{tr:"Kapsam dışı işlere hayır de",es:"Di no al trabajo fuera de alcance"},"Get the overdue invoice paid":{tr:"Geciken faturayı ödet",es:"Cobra la factura vencida"},
-    "Your Ex":{tr:"Eski Sevgilin",es:"Tu ex"},"Get closure — for real this time":{tr:"Defteri kapat — bu sefer gerçekten",es:"Pasa página — de verdad esta vez"},"Find out if they want you back":{tr:"Seni geri isteyip istemediğini öğren",es:"Descubre si quiere que vuelvas"},
-    "Your Best Friend":{tr:"En Yakın Arkadaşın",es:"Tu mejor amigo"},"Confess what you've been hiding":{tr:"Sakladığın şeyi itiraf et",es:"Confiesa lo que has estado ocultando"},"Get their honest take on a bad decision":{tr:"Kötü bir kararın hakkında dürüst fikrini al",es:"Consigue su opinión sincera sobre una mala decisión"},
-    "THE REAL THING":{tr:"GERÇEĞİN TA KENDİSİ",es:"LO REAL"},"Upload your real chat history → the AI becomes someone you actually know":{tr:"Gerçek sohbet geçmişini yükle → yapay zeka gerçekten tanıdığın birine dönüşsün",es:"Sube tu historial de chat real → la IA se convierte en alguien que conoces de verdad"},
-    "Attempts left:":{tr:"Kalan deneme:",es:"Intentos restantes:"},"This is a demo. The real version is different.":{tr:"Bu bir demo. Gerçek sürüm çok farklı.",es:"Esto es una demo. La versión real es diferente."},
-    "Try it with someone real →":{tr:"Gerçek biriyle dene →",es:"Pruébalo con alguien real →"},"Try again":{tr:"Tekrar dene",es:"Intentar de nuevo"},"That was a generic AI. Now try it with someone real →":{tr:"O sıradan bir yapay zekaydı. Şimdi gerçek biriyle dene →",es:"Esa era una IA genérica. Ahora pruébalo con alguien real →"},
-    "How it works":{tr:"Nasıl çalışır",es:"Cómo funciona"},"Import a WhatsApp chat":{tr:"Bir WhatsApp sohbeti içe aktar",es:"Importa un chat de WhatsApp"},"Paste or upload a .txt or .zip export. Takes 30 seconds.":{tr:".txt veya .zip dışa aktarımını yapıştır ya da yükle. 30 saniye sürer.",es:"Pega o sube una exportación .txt o .zip. Toma 30 segundos."},
-    "We build their twin":{tr:"İkizini oluşturuyoruz",es:"Creamos su gemelo"},"The AI studies how they talk, what they care about, how they argue.":{tr:"Yapay zeka nasıl konuştuğunu, nelere değer verdiğini, nasıl tartıştığını inceler.",es:"La IA estudia cómo habla, qué le importa y cómo discute."},
-    "Rehearse before it's real":{tr:"Gerçek olmadan önce prova et",es:"Ensaya antes de que sea real"},"Practice the hard conversation. See how they'll likely react. Walk in ready.":{tr:"Zor konuşmanın provasını yap. Nasıl tepki vereceğini gör. Hazır gir.",es:"Practica la conversación difícil. Anticipa cómo reaccionará. Entra preparado."},
-    "Who it's for":{tr:"Kimler için",es:"Para quién es"},"Reconnecting with an ex":{tr:"Eski sevgilinle yeniden bağ kurmak",es:"Reconectar con un ex"},"Asking your boss for a raise":{tr:"Patronundan zam istemek",es:"Pedirle un aumento a tu jefe"},
-    "Setting a boundary with family":{tr:"Ailene sınır koymak",es:"Poner límites con la familia"},"Closing a deal with a client":{tr:"Bir müşteriyle anlaşmayı kapatmak",es:"Cerrar un trato con un cliente"},"Telling someone how you really feel":{tr:"Birine gerçek hislerini söylemek",es:"Decirle a alguien lo que de verdad sientes"},
-    "Navigating a breakup":{tr:"Bir ayrılığı atlatmak",es:"Superar una ruptura"},"Every conversation that matters":{tr:"Önemli olan her konuşma",es:"Cada conversación que importa"},"Start with someone real":{tr:"Gerçek biriyle başla",es:"Empieza con alguien real"},
-    "Frequently asked questions":{tr:"Sıkça sorulan sorular",es:"Preguntas frecuentes"},"Is my chat data private?":{tr:"Sohbet verilerim gizli mi?",es:"¿Mis datos de chat son privados?"},
-    "Yes. Your chats are encrypted and only you can access them. We never share or sell your data.":{tr:"Evet. Sohbetlerin şifrelenir ve yalnızca sen erişebilirsin. Verilerini asla paylaşmaz ya da satmayız.",es:"Sí. Tus chats están cifrados y solo tú puedes acceder a ellos. Nunca compartimos ni vendemos tus datos."},
-    "How accurate is the twin?":{tr:"İkiz ne kadar isabetli?",es:"¿Qué tan preciso es el gemelo?"},"The more you import, the sharper it gets. It learns their patterns, phrases, and tendencies from real messages.":{tr:"Ne kadar çok içe aktarırsan o kadar keskinleşir. Gerçek mesajlardan kişinin kalıplarını, ifadelerini ve eğilimlerini öğrenir.",es:"Cuanto más importas, más afinado se vuelve. Aprende sus patrones, frases y tendencias a partir de mensajes reales."},
-    "Do I need the other person's permission?":{tr:"Karşı tarafın iznine ihtiyacım var mı?",es:"¿Necesito el permiso de la otra persona?"},"You're analyzing your own conversation history — the same messages already on your phone.":{tr:"Kendi konuşma geçmişini analiz ediyorsun — zaten telefonundaki aynı mesajları.",es:"Estás analizando tu propio historial de conversación — los mismos mensajes que ya están en tu teléfono."},
-    "What languages does it support?":{tr:"Hangi dilleri destekliyor?",es:"¿Qué idiomas admite?"},"It works in any language your chat is in — including Turkish, English, and more.":{tr:"Sohbetin hangi dildeyse o dilde çalışır — Türkçe, İngilizce ve daha fazlası dahil.",es:"Funciona en el idioma en que esté tu chat — incluyendo español, inglés y más."},
-    "How much does it cost?":{tr:"Ücreti ne kadar?",es:"¿Cuánto cuesta?"},"Start free. Upgrade when you're ready for unlimited conversations and twins.":{tr:"Ücretsiz başla. Sınırsız konuşma ve ikiz için hazır olduğunda yükselt.",es:"Empieza gratis. Mejora tu plan cuando quieras conversaciones y gemelos ilimitados."},
-    "Ready to rehearse?":{tr:"Prova yapmaya hazır mısın?",es:"¿Listo para ensayar?"},"Build your first twin in 30 seconds.":{tr:"İlk ikizini 30 saniyede oluştur.",es:"Crea tu primer gemelo en 30 segundos."},"Get started free →":{tr:"Ücretsiz başla →",es:"Empieza gratis →"},
-    "Built for the conversations that keep you up at night.":{tr:"Seni geceleri uyutmayan konuşmalar için tasarlandı.",es:"Creado para las conversaciones que te quitan el sueño."},
-    "Privacy":{tr:"Gizlilik",es:"Privacidad"},"Terms":{tr:"Koşullar",es:"Términos"},"Contact":{tr:"İletişim",es:"Contacto"},
-    "The conversation before the conversation":{tr:"Konuşmadan önceki konuşma",es:"La conversación antes de la conversación"},"Simulated from real WhatsApp history":{tr:"Gerçek WhatsApp geçmişinden canlandırıldı",es:"Simulado a partir de tu historial real de WhatsApp"},
-    "You said":{tr:"Sen dedin",es:"Dijiste"},"Send":{tr:"Gönder",es:"Enviar"},"Thinking…":{tr:"Düşünüyor…",es:"Pensando…"},"Type your message…":{tr:"Mesajını yaz…",es:"Escribe tu mensaje…"},"Powered by your real chat history":{tr:"Gerçek sohbet geçmişinle çalışır",es:"Impulsado por tu historial de chat real"},
-    "Reconnect":{tr:"Yeniden bağ kur",es:"Reconectar"},"Apologize":{tr:"Özür dile",es:"Pedir disculpas"},"Ask for something":{tr:"Bir şey iste",es:"Pedir algo"},"Set a boundary":{tr:"Sınır koy",es:"Poner un límite"},"Say goodbye":{tr:"Veda et",es:"Despedirte"},"Just talk":{tr:"Sadece konuş",es:"Solo hablar"},
-    "No credit card required":{tr:"Kredi kartı gerekmez",es:"Sin tarjeta de crédito"},"1 twin free":{tr:"1 ikiz ücretsiz",es:"1 gemelo gratis"},"Unlimited rehearsals":{tr:"Sınırsız prova",es:"Ensayos ilimitados"},"See how they'll react":{tr:"Nasıl tepki vereceğini gör",es:"Mira cómo reaccionará"},"Before you hit send":{tr:"Göndere basmadan önce",es:"Antes de darle a enviar"}
+    "How it works":{tr:"Nasıl çalışır",es:"Cómo funciona"},
+    "The AI learns them.":{tr:"Yapay zeka onu öğreniyor.",es:"La IA aprende cómo es."},
+    "The more you use it, the better it knows them.":{tr:"Kullandıkça onu daha iyi tanıyor.",es:"Cuanto más la usas, mejor lo conoce."},
+    "Upload your conversation history.":{tr:"Konuşma geçmişini yükle.",es:"Sube tu historial de conversación."},
+    "WhatsApp, iMessage, email. We read how they write, what they care about, the people in their life — and your shared history together.":{tr:"WhatsApp, iMessage, e-posta. Nasıl yazdığını, nelere önem verdiğini, hayatındaki insanları — ve ortak geçmişinizi okuyoruz.",es:"WhatsApp, iMessage, correo. Leemos cómo escribe, qué le importa, las personas de su vida — y su historia compartida."},
+    "We build their AI twin.":{tr:"Yapay zeka ikizini kuruyoruz.",es:"Creamos su gemelo de IA."},
+    "Not a generic AI. One that knows their tone, their patterns, and your specific dynamic with them.":{tr:"Sıradan bir yapay zeka değil. Onun tonunu, kalıplarını ve ikinizin arasındaki dinamiği bilen bir ikiz.",es:"No una IA genérica. Una que conoce su tono, sus patrones y la dinámica específica entre ustedes."},
+    "Practice the hard conversation.":{tr:"Zor konuşmanın provasını yap.",es:"Practica la conversación difícil."},
+    "Say what you've been meaning to say. See how they react. Try a different approach. Every practice session teaches the AI more about them.":{tr:"Söylemek istediğini söyle. Nasıl tepki verdiğini gör. Farklı bir yol dene. Her prova, yapay zekaya onun hakkında daha çok şey öğretir.",es:"Di lo que llevas tiempo queriendo decir. Mira cómo reacciona. Prueba otro enfoque. Cada práctica le enseña más a la IA."},
+    "The AI keeps learning.":{tr:"Yapay zeka öğrenmeye devam eder.",es:"La IA sigue aprendiendo."},
+    "After each practice, after each real conversation, after every correction you make — the twin gets more accurate. Over time it stops guessing and starts knowing.":{tr:"Her provadan, her gerçek konuşmadan, yaptığın her düzeltmeden sonra ikiz daha isabetli hale gelir. Zamanla tahmin etmeyi bırakır, bilmeye başlar.",es:"Después de cada práctica, cada conversación real y cada corrección, el gemelo se vuelve más preciso. Con el tiempo deja de adivinar y empieza a saber."},
+    "Go have the real conversation.":{tr:"Git, gerçek konuşmayı yap.",es:"Ve y ten la conversación real."},
+    "With a strategy. With confidence. And when it's done — tell us how it went. The AI learns from that too.":{tr:"Bir stratejiyle. Özgüvenle. Bittiğinde de nasıl geçtiğini anlat — yapay zeka ondan da öğrenir.",es:"Con estrategia. Con confianza. Y cuando termine, cuéntanos cómo fue — la IA también aprende de eso."},
+    "The longer you use it, the more it knows them.":{tr:"Ne kadar uzun kullanırsan, onu o kadar iyi tanır.",es:"Cuanto más lo usas, más lo conoce."},
+    "Eventually, it's not simulating. It's predicting.":{tr:"Bir noktadan sonra canlandırmaz — öngörür.",es:"Al final ya no simula. Predice."},
+    "Stop guessing":{tr:"Ne diyeceğini",es:"Deja de adivinar"},"what to say next.":{tr:"tahmin etmeyi bırak.",es:"qué decir."},
+    "AI that helps you navigate your most important conversations.":{tr:"En önemli konuşmalarında sana yol gösteren yapay zeka.",es:"IA que te ayuda a navegar tus conversaciones más importantes."},
+    "App":{tr:"Uygulama",es:"App"},"Privacy Policy":{tr:"Gizlilik Politikası",es:"Política de privacidad"},
+    "© 2026 aiwillmake. All rights reserved.":{tr:"© 2026 aiwillmake. Tüm hakları saklıdır.",es:"© 2026 aiwillmake. Todos los derechos reservados."},"Built by":{tr:"Geliştiren:",es:"Creado por"}
   };
   let LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();
   if (!['tr','en','es'].includes(LANG)) LANG = 'en';

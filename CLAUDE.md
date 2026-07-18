@@ -59,8 +59,10 @@ compose Language dropdown defaults to UI language, setup-chunks-table RLS templa
     merge character+user profile extraction) — saves pennies at current volume, recall-regression risk; do with
     the twinlab harness when volume justifies. Also: small-path analyze response still returns
     `relationship_summary: null` (saved async to contacts but not returned — minor).
-12. **Dead markup in index.html** (~150-line hidden sandbox section + ~260-line "REMOVED SECTIONS" comment block) —
-    delete when the import-first launch is considered final; recoverable from git history.
+12. ~~**Dead markup in index.html**~~ — DONE (2026-07-18): landing simplified 1816→816 lines (hidden sandbox
+    section + its script + "REMOVED SECTIONS" block + all orphaned CSS deleted; recoverable from git history).
+    DICT rebuilt: orphan entries dropped, previously-untranslated live sections (how/hero-trust/bcta/footer)
+    now fully TR/ES. Page flow: hero → 10s demo → how → CTA → footer.
 13. **[USER] Railway hygiene** — delete 3 dead `STRIPE_*` vars; optionally rotate the service-role key
     (⚠ Railway's var is named `SUPABASE_SERVICE_KEY` — write the new key to that exact name or payments silently
     break; code also accepts `SUPABASE_SERVICE_ROLE_KEY` since the C2 fix).
