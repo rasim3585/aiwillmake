@@ -2945,6 +2945,22 @@
     <script src="/app_i18n.js"></script>
     <script src="/app_stats.js"></script>
     <script>
+      /* Minimal event tracking — own endpoint, no third party, never throws. */
+      window._track = function (e, p) {
+        try {
+          let sid = sessionStorage.getItem('_sid');
+          if (!sid) { sid = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('_sid', sid); }
+          var tok = null; try { tok = accessToken; } catch (err2) {}
+          fetch('/api/e', {
+            method: 'POST', keepalive: true,
+            headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'Authorization': 'Bearer ' + tok } : {}),
+            body: JSON.stringify({ e: e, p: p || null, sid: sid })
+          }).catch(function () {});
+        } catch (err) {}
+      };
+      document.addEventListener('DOMContentLoaded', function () { window._track('app_view'); });
+    </script>
+    <script>
       /* ═══ i18n: site language (TR default) drives UI strings + AI output language ═══ */
       const I18N = {
         tr: {
@@ -3821,6 +3837,7 @@
             document.getElementById('authGate').classList.add('hidden');
             document.getElementById('screen-landing').classList.add('hidden');
             fetchAndShowCredits();
+            if (event === 'SIGNED_IN') window._track?.('signin_done');
             if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') await checkFirstRunAndRoute();
             else loadHomeConvList();
           } else {
@@ -3953,6 +3970,7 @@
         _ALL_SECTIONS.forEach(id => document.getElementById(id)?.classList.add('hidden'));
         const target = document.querySelector(`[data-screen-id="${screenId}"]`);
         if (target) target.classList.remove('hidden');
+        if (this.state.currentScreen !== screenId) window._track?.('screen', { s: screenId });
         this.state.currentScreen = screenId;
       },
     };
@@ -5559,7 +5577,7 @@
       document.getElementById('dtProgress').textContent = (_dtIdx + 1) + ' / ' + _DT_QS.length;
     }
     function _dtStart() {
-      if (!_dtAnswers) { _dtAnswers = {}; _dtIdx = 0; }
+      if (!_dtAnswers) { _dtAnswers = {}; _dtIdx = 0; window._track?.('describe_start'); }
       _dtShow();
       _dtRenderMeter();
     }
@@ -5626,6 +5644,7 @@
           last_message_ts: lastTs
         };
         _dtAnswers = null; _dtIdx = 0;
+        window._track?.('describe_done');
         loadPersonSection(contact.id);        // background screen for when the modal closes
         openSimulatorFresh(ctx, null);        // the magic moment: the twin greets you as taught
       } catch (e) {
@@ -5649,6 +5668,7 @@
       const name = (document.getElementById('importName').value || '').trim();
       if (!name) { showToast('Name is required', 'error'); return; }
       window._importStatus = document.getElementById('importStatus')?.value || 'active';
+      window._track?.('import_start', { mode: _importMode, status: window._importStatus });
 
       let dataSource = null;
       if (_importMode === 'text') {
@@ -6001,6 +6021,7 @@
       setTimeout(() => document.getElementById('bysDraft').focus(), 60);
     }
     async function runBys() {
+      window._track?.('bys_run');
       const draft = document.getElementById('bysDraft').value.trim();
       if (!draft) { document.getElementById('bysDraft').focus(); return; }
       const btn = document.getElementById('bysAnalyzeBtn');
@@ -6467,6 +6488,7 @@
         wm.style.cssText = 'text-align:center;font-size:.7rem;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:4px 0 2px';
         wm.textContent = 'aiwillmake.com';
         grid.appendChild(wm);
+        window._track?.('share_cards');
         const canvas = await html2canvas(grid, { scale: 2, useCORS: true, backgroundColor: '#171615', logging: false });
         grid.removeChild(wm);
         const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
@@ -6897,6 +6919,7 @@
       _simHistory = [];
       _simTurn = 0;
       _inviteAsked = false;
+      window._track?.('practice_open', { status: (contactCtx && contactCtx.contact_status) || 'active' });
       // Knowledge score powers the in-chat data invite (thin profile → the twin
       // itself asks for more of the user's world at a natural moment).
       if (accessToken) {
@@ -7618,6 +7641,7 @@
         try {
           window._lastChatStats = window.ChatStats ? ChatStats.compute(ChatStats.parse(text)) : null;
           if (window._lastChatStats?.ok) renderProcessingStats(window._lastChatStats, contactName);
+          window._track?.('analyze_done', { msgs: window._lastChatStats?.totalMessages || 0 });
         } catch (_) { window._lastChatStats = null; }
 
         // Fetch last snapshot to build previousContext for what_changed (2nd+ imports only)
@@ -9348,6 +9372,7 @@
     }
 
     async function endSimulation() {
+      window._track?.('practice_end', { turns: _simTurn });
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-footer').classList.add('hidden');
 
@@ -9391,7 +9416,7 @@
               yes.addEventListener('click', async () => {
                 yes.disabled = no.disabled = true;
                 const ok = await _appendUserFacts(fact);
-                if (ok) { row.classList.add('rp-learned-done'); yes.remove(); no.remove(); txt.textContent += '  ' + (T.added[L] || T.added.tr); }
+                if (ok) { window._track?.('learned_confirm'); row.classList.add('rp-learned-done'); yes.remove(); no.remove(); txt.textContent += '  ' + (T.added[L] || T.added.tr); }
                 else { yes.disabled = no.disabled = false; }
               });
               no.addEventListener('click', () => row.remove());

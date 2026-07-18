@@ -36,6 +36,36 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again in a minute.' }
 });
 
+// ── AI cost armor ────────────────────────────────────────────────────────────
+// With the paywall off, these are the only hard walls between a traffic spike
+// (or an abuser) and the Anthropic bill:
+//   AI_DISABLED=1          → every AI endpoint answers 503 ai_unavailable (kill switch)
+//   MAX_AI_CALLS_PER_DAY   → process-wide daily ceiling (default 2500)
+//   aiGate(name, perDay)   → per-user (or per-IP for guests) daily cap, generous
+//                            enough that a real human never meets it.
+// Counters are in-memory: they reset on restart, which is acceptable — sustained
+// abuse keeps the instance warm, which is exactly when the counters matter.
+const _aiDay = { key: '', global: 0, buckets: new Map() };
+function aiGate(capName, maxPerDay) {
+  return (req, res, next) => {
+    if (process.env.AI_DISABLED === '1') return res.status(503).json({ error: 'ai_unavailable' });
+    const today = new Date().toISOString().slice(0, 10);
+    if (_aiDay.key !== today) { _aiDay.key = today; _aiDay.global = 0; _aiDay.buckets.clear(); }
+    const globalMax = parseInt(process.env.MAX_AI_CALLS_PER_DAY || '2500', 10);
+    if (_aiDay.global >= globalMax) {
+      console.error('[ai-armor] GLOBAL daily AI budget exhausted (', globalMax, ') — refusing until midnight UTC');
+      return res.status(503).json({ error: 'ai_unavailable' });
+    }
+    const who = (req.user && req.user.id) || req.ip || 'anon';
+    const bkey = capName + ':' + who;
+    const used = _aiDay.buckets.get(bkey) || 0;
+    if (used >= maxPerDay) return res.status(429).json({ error: 'daily_limit', message: 'Günlük kullanım sınırına ulaştın — yarın devam edebilirsin.' });
+    _aiDay.buckets.set(bkey, used + 1);
+    _aiDay.global++;
+    next();
+  };
+}
+
 // Practice chat gets its OWN bucket: `limiter` is one shared 10/min/IP pool across
 // every route, and a rapid-fire twin conversation (each send = 1 simulate call, plus
 // background app calls) legitimately exceeds it — the user then saw a generic error
@@ -410,7 +440,7 @@ Use these observations to make your strategies, predictions, and analysis more a
 STRICT RULES: Do not diagnose personality traits. Do not assume intent or label them psychologically. Use these observed tendencies only as soft probabilistic signals, never as certainties.`;
 }
 
-app.post('/api/generate', optionalAuth, limiter, async (req, res) => {
+app.post('/api/generate', optionalAuth, limiter, aiGate('generate', 80), async (req, res) => {
   try {
     const { categoryId, subcategoryId, fields, variation, contactContext, mode, goal } = req.body;
 
@@ -672,7 +702,7 @@ Rules: use specific details provided, no clichés, each message sounds like a re
   }
 });
 
-app.post('/api/detect-category', limiter, async (req, res) => {
+app.post('/api/detect-category', limiter, aiGate('detect', 60), async (req, res) => {
   try {
     const { text } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: 'text is required' });
@@ -830,7 +860,7 @@ Reply with ONLY a valid JSON object — no markdown, no explanation:
   }
 });
 
-app.post('/api/goal-context', limiter, async (req, res) => {
+app.post('/api/goal-context', limiter, aiGate('goalctx', 40), async (req, res) => {
   try {
     const { goal } = req.body;
     if (!goal?.trim()) return res.json([]);
@@ -854,7 +884,7 @@ app.post('/api/goal-context', limiter, async (req, res) => {
   }
 });
 
-app.post('/api/analyze-reply', limiter, optionalAuth, async (req, res) => {
+app.post('/api/analyze-reply', limiter, optionalAuth, aiGate('areply', 60), async (req, res) => {
   try {
     const { reply, categoryId, situation, language, contactContext, previousMessage, senderType } = req.body;
     if (!reply?.trim()) return res.status(400).json({ error: 'reply is required' });
@@ -1057,7 +1087,7 @@ const DISENGAGEMENT_NEXT_REPLY = {
 };
 // ────────────────────────────────────────────────────────────────
 
-app.post('/api/next-reply', optionalAuth, limiter, async (req, res) => {
+app.post('/api/next-reply', optionalAuth, limiter, aiGate('nreply', 60), async (req, res) => {
   try {
     if (!req.user) return res.status(403).json({ error: 'Sign in required to use this feature.' });
     const { categoryId, situation, originalMessage, theirReply, language, contactContext } = req.body;
@@ -1131,7 +1161,7 @@ Their reply: ${theirReply}`;
   }
 });
 
-app.post('/api/likely-responses', limiter, async (req, res) => {
+app.post('/api/likely-responses', limiter, aiGate('likely', 60), async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, contactContext } = req.body;
     if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
@@ -1180,7 +1210,7 @@ RESPONSE_2_NEXT_MOVE: ...
   }
 });
 
-app.post('/api/rehearse', limiter, async (req, res) => {
+app.post('/api/rehearse', limiter, aiGate('rehearse', 40), async (req, res) => {
   try {
     const { message, contactContext, language } = req.body;
     if (!message?.trim()) return res.status(400).json({ error: 'message is required' });
@@ -1237,7 +1267,7 @@ Write entirely in ${lang}.`;
 // "Before You Send" — the copilot for the highest-stakes moment: you wrote a draft and you're
 // scared to send it. Contact-aware (uses this person's profile + patterns), single Sonnet call:
 // how THEY will react, the risky line in your draft, how they'll read it, and a safer rewrite.
-app.post('/api/before-you-send', limiter, optionalAuth, async (req, res) => {
+app.post('/api/before-you-send', limiter, optionalAuth, aiGate('bys', 40), async (req, res) => {
   try {
     const { draft, contactContext, language } = req.body;
     if (!draft?.trim()) return res.status(400).json({ error: 'draft is required' });
@@ -1296,7 +1326,7 @@ No markdown, no commentary.`;
   } catch (e) { console.error('[before-you-send]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/next-steps', limiter, async (req, res) => {
+app.post('/api/next-steps', limiter, aiGate('nsteps', 40), async (req, res) => {
   try {
     const { categoryId, situation, selectedMessage, language, scenario, theirMessage } = req.body;
     if (!selectedMessage?.trim()) return res.status(400).json({ error: 'selectedMessage is required' });
@@ -1363,7 +1393,7 @@ Be realistic, not optimistic. Write in ${lang}.`;
   }
 });
 
-app.post('/api/review-message', limiter, async (req, res) => {
+app.post('/api/review-message', limiter, aiGate('review', 60), async (req, res) => {
   try {
     const { message, context, language } = req.body;
     if (!message?.trim()) return res.status(400).json({ error: 'message is required' });
@@ -1432,7 +1462,7 @@ Write in ${lang}.`;
 // No-import twin path: the user DESCRIBES the person from memory (guided Q&A)
 // and we synthesize a roleplay character_profile — for people who can't or
 // won't export a chat (deceased/estranged/ex, or simply iOS-export friction).
-app.post('/api/describe-twin', limiter, requireAuth, async (req, res) => {
+app.post('/api/describe-twin', limiter, requireAuth, aiGate('describe', 10), async (req, res) => {
   try {
     const { name, status, answers, language } = req.body;
     if (!name?.trim() || !Array.isArray(answers) || !answers.length) {
@@ -1578,7 +1608,7 @@ function parseJsonSafe(text) {
   return null;
 }
 
-app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, async (req, res) => {
+app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, aiGate('analyze', 12), async (req, res) => {
   try {
     const { conversationText, language, previousContext, contact_id, contact_name } = req.body;
     if (!conversationText?.trim()) return res.status(400).json({ error: 'conversationText is required' });
@@ -2589,7 +2619,7 @@ app.delete('/api/contacts/:id', requireAuth, async (req, res) => {
   } catch (e) { console.error('[contacts DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/extract-screenshot', optionalAuth, heavyLimiter, async (req, res) => {
+app.post('/api/extract-screenshot', optionalAuth, heavyLimiter, aiGate('ocr', 12), async (req, res) => {
   const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   try {
     let { images } = req.body; // array of { media_type, data }
@@ -2637,7 +2667,7 @@ app.post('/api/extract-screenshot', optionalAuth, heavyLimiter, async (req, res)
   }
 });
 
-app.post('/api/simulate-debrief', limiter, optionalAuth, async (req, res) => {
+app.post('/api/simulate-debrief', limiter, optionalAuth, aiGate('debrief', 40), async (req, res) => {
   try {
     const { character, history, language, contact_id, conversation_id } = req.body;
     if (!character || !Array.isArray(history) || history.length < 2) {
@@ -2926,7 +2956,7 @@ Lines in the user's language, no commentary.`;
   }
 });
 
-app.post('/api/build-user-profile', requireAuth, async (req, res) => {
+app.post('/api/build-user-profile', requireAuth, aiGate('buildprof', 6), async (req, res) => {
   try {
     const chunksR = await fetch(`${SUPABASE_REST}/conversation_chunks?user_id=eq.${req.user.id}&select=chunk_text&order=created_at.asc&limit=120`, {
       headers: sbHeaders(req.token)
@@ -3102,7 +3132,7 @@ app.get('/api/communication-archetype', requireAuth, async (req, res) => {
   } catch (e) { console.error('[archetype]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/simulate-reply', chatLimiter, optionalAuth, async (req, res) => {
+app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), async (req, res) => {
   try {
     const { character, language } = req.body;
     let history = req.body.history;
@@ -3352,7 +3382,7 @@ app.get('/api/sandbox-challenges', (req, res) => {
   res.json(result);
 });
 
-app.post('/api/sandbox-simulate', limiter, async (req, res) => {
+app.post('/api/sandbox-simulate', limiter, aiGate('demo', 15), async (req, res) => {
   const { character_id, history, challenge_id } = req.body;
   if (!character_id || !Array.isArray(history)) return res.status(400).json({ error: 'invalid' });
   if (history.length > 20) return res.status(400).json({ error: 'too long' });
@@ -3476,6 +3506,9 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
   const challengeContext = challenge
     ? `\n\nSCENARIO: The person you're talking to is trying to: "${challenge.goal}". React naturally and authentically — don't make it easy. Make them earn it. If they use a genuinely good approach, you can soften. If they're clumsy or aggressive, resist. Be real.`
     : '';
+  // Landing 10-second demo passes the visitor's language — reply in it.
+  const demoLang = { tr: 'Turkish', en: 'English', es: 'Spanish' }[req.body.language] || null;
+  const langLine = demoLang ? `\n\nRespond entirely in ${demoLang}, using only that language's own alphabet.` : '';
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -3488,7 +3521,7 @@ Respond in 1-2 short sentences maximum. Be brief and punchy. Stay completely in 
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 100,
-        system: archetype.system + challengeContext,
+        system: archetype.system + challengeContext + langLine,
         messages: history
       })
     });
@@ -3595,6 +3628,41 @@ app.get('/api/subscription', requireAuth, async (req, res) => {
 
 app.get('/health', (_, res) => res.json({ ok: true }));
 
+// ── Minimal self-hosted event analytics ──────────────────────────────────────
+// No third party: the privacy story stays clean. Whitelisted names only, tiny
+// payloads, service-role insert into app_events. If the table doesn't exist yet,
+// events are silently skipped (run the MIGRATION NEEDED SQL printed at boot).
+const EVENT_WHITELIST = new Set([
+  'landing_view', 'app_view', 'screen', 'signin_done',
+  'import_start', 'analyze_done', 'describe_start', 'describe_done',
+  'practice_open', 'practice_first_msg', 'practice_end',
+  'learned_confirm', 'share_cards',
+  'bys_run', 'generate_run', 'analyze_reply_run',
+  'demo_open', 'demo_msg', 'demo_cta', 'cta_app'
+]);
+const eventsLimiter = rateLimit({ windowMs: 60e3, max: 40, standardHeaders: true, legacyHeaders: false });
+let _eventsTableMissing = false;
+app.post('/api/e', eventsLimiter, optionalAuth, (req, res) => {
+  res.json({ ok: true }); // analytics never blocks or errors the client
+  (async () => {
+    try {
+      if (_eventsTableMissing) return;
+      const { e, p, sid } = req.body || {};
+      if (!EVENT_WHITELIST.has(e)) return;
+      const props = (p && typeof p === 'object' && JSON.stringify(p).length <= 500) ? p : null;
+      const svc = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+      if (!svc || !supabaseUrl) return;
+      const ip_hash = crypto.createHash('sha256').update((req.ip || '') + (process.env.EVENT_SALT || 'aiwm')).digest('hex').slice(0, 16);
+      const r = await fetch(`${SUPABASE_REST}/app_events`, {
+        method: 'POST',
+        headers: { apikey: svc, Authorization: `Bearer ${svc}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ event: e, props, uid: req.user?.id || null, sid: String(sid || '').slice(0, 40) || null, ip_hash })
+      });
+      if (r.status === 404 || r.status === 400) { _eventsTableMissing = true; console.warn('[events] app_events insert failed (', r.status, ') — run the analytics migration SQL'); }
+    } catch { /* never */ }
+  })();
+});
+
 // Keep-alive: an external cron (GitHub Actions / uptime monitor) hits this so the
 // request reaches Supabase and resets its free-tier 7-day inactivity pause timer.
 // Must actually TOUCH Supabase — pinging Railway alone does not keep Supabase awake.
@@ -3633,6 +3701,7 @@ app.get('/api/keepalive', limiter, async (req, res) => {
 
 process.stdin.resume();
 const port = process.env.PORT || 3000;
+console.log('MIGRATION NEEDED (analytics): CREATE TABLE IF NOT EXISTS app_events (id bigint generated always as identity primary key, ts timestamptz DEFAULT now(), event text NOT NULL, props jsonb, uid uuid, sid text, ip_hash text); ALTER TABLE app_events ENABLE ROW LEVEL SECURITY;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS confidence_score integer DEFAULT 0;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome text; ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_outcome_at timestamptz;');
 console.log('MIGRATION NEEDED: ALTER TABLE contacts ADD COLUMN IF NOT EXISTS sim_accuracy_rating integer;');

@@ -735,7 +735,7 @@
   <div class="wrap">
     <div class="hero-inner">
       <h1 class="hero-h1">The conversation<br>before the conversation.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.</p>
+      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation before you have it.<br>No chat export? Describe them from memory — that works too.</p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
       <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
@@ -762,6 +762,52 @@
         <span class="hero-step-arrow">→</span>
         <div class="hero-step"><span class="hero-step-num">3</span>Rehearse</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ⚡ 10-second demo: zero-friction wow. Talk to a ready-made twin (3 messages)
+     before doing any work — then the CTA routes into the real import flow. -->
+<style>
+  .d10 { padding: 40px 0 56px; }
+  .d10-box { max-width: 430px; margin: 0 auto; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 18px; padding: 22px 20px; }
+  .d10-title { text-align: center; font-size: 1.25rem; font-weight: 800; margin: 0 0 4px; }
+  .d10-sub { text-align: center; font-size: .85rem; color: var(--muted); margin: 0 0 16px; }
+  .d10-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .d10-chip { border: 1px solid var(--bord); background: rgba(255,255,255,.05); color: var(--text); border-radius: 999px; padding: 9px 16px; font: inherit; font-size: .87rem; cursor: pointer; transition: border-color .15s; }
+  .d10-chip:hover, .d10-chip.active { border-color: var(--accent); }
+  .d10-chat { margin-top: 14px; }
+  .d10-msgs { min-height: 90px; max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding: 4px 2px; }
+  .d10-b { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: .87rem; line-height: 1.45; }
+  .d10-b.them { background: rgba(255,255,255,.07); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .d10-b.me { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .d10-typing { align-self: flex-start; color: var(--muted); font-size: .8rem; padding: 4px 6px; }
+  .d10-row { display: flex; gap: 8px; margin-top: 10px; }
+  .d10-in { flex: 1; border: 1px solid var(--bord); background: rgba(0,0,0,.25); color: var(--text); border-radius: 12px; padding: 11px 13px; font: inherit; font-size: 16px; }
+  .d10-send { border: none; background: var(--accent); color: #fff; border-radius: 12px; padding: 0 18px; font: inherit; font-weight: 700; cursor: pointer; }
+  .d10-cta { display: none; margin-top: 12px; text-align: center; }
+  .d10-cta a { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; border-radius: 12px; padding: 13px 22px; font-weight: 800; font-size: .95rem; }
+  .d10-cta p { font-size: .78rem; color: var(--muted); margin: 8px 0 0; }
+  .d10-note { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 10px; }
+</style>
+<section class="d10" id="demo10">
+  <div class="wrap">
+    <div class="d10-box">
+      <h2 class="d10-title">⚡ Try it in 10 seconds</h2>
+      <p class="d10-sub">No signup, no upload — talk to a ready-made twin.</p>
+      <div class="d10-chips" id="d10Chips"></div>
+      <div class="d10-chat" id="d10Chat" style="display:none">
+        <div class="d10-msgs" id="d10Msgs"></div>
+        <div class="d10-row">
+          <input class="d10-in" id="d10In" maxlength="300" />
+          <button class="d10-send" id="d10Send">➤</button>
+        </div>
+        <div class="d10-cta" id="d10Cta">
+          <a href="app.html?import=1" id="d10CtaLink">Now bring YOUR person →</a>
+          <p>These are generic characters. The real magic is someone you actually know.</p>
+        </div>
+      </div>
+      <p class="d10-note">🔒 Demo messages aren't stored.</p>
     </div>
   </div>
 </section>
@@ -1598,6 +1644,12 @@ function scrollToBottom() {
 (function () {
   const DICT = {
     "AIWILLMAKE — The conversation before the conversation.":{tr:"AIWILLMAKE — Konuşmadan önceki konuşma.",es:"AIWILLMAKE — La conversación antes de la conversación."},
+    "No chat export? Describe them from memory — that works too.":{tr:"Sohbet dosyan yok mu? Onu hafızandan anlat — o da olur.",es:"¿Sin exportar el chat? Descríbelo de memoria — también funciona."},
+    "⚡ Try it in 10 seconds":{tr:"⚡ 10 saniyede dene",es:"⚡ Pruébalo en 10 segundos"},
+    "No signup, no upload — talk to a ready-made twin.":{tr:"Kayıt yok, yükleme yok — hazır bir ikizle konuş.",es:"Sin registro, sin subir nada — habla con un gemelo listo."},
+    "Now bring YOUR person →":{tr:"Şimdi KENDİ insanını getir →",es:"Ahora trae a TU persona →"},
+    "These are generic characters. The real magic is someone you actually know.":{tr:"Bunlar genel karakterler. Asıl sihir, gerçekten tanıdığın biri.",es:"Estos son personajes genéricos. La magia real es alguien que conoces."},
+    "🔒 Demo messages aren't stored.":{tr:"🔒 Demo mesajları kaydedilmez.",es:"🔒 Los mensajes del demo no se guardan."},
     "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
     "The conversation":{tr:"O konuşma",es:"La conversación"},"before the conversation.":{tr:"olmadan önce, burada.",es:"antes de la conversación."},
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
@@ -1666,6 +1718,97 @@ function scrollToBottom() {
     new MutationObserver(muts => { for (const m of muts) for (const n of m.addedNodes) walk(n); }).observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState !== 'loading') boot(); else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+<script>
+/* ── Minimal event tracking (own endpoint, no third party) + 10-second demo ── */
+(function () {
+  function track(e, p) {
+    try {
+      var sid = sessionStorage.getItem('_sid');
+      if (!sid) { sid = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('_sid', sid); }
+      fetch('/api/e', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ e: e, p: p || null, sid: sid }) }).catch(function () {});
+    } catch (err) {}
+  }
+  track('landing_view');
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest && ev.target.closest('a[href^="app.html"]');
+    if (a) track(a.id === 'd10CtaLink' ? 'demo_cta' : 'cta_app', { id: a.id || null });
+  });
+
+  /* Demo twins: canned instant openers, real AI replies via /api/sandbox-simulate. */
+  var L = function () { var l = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0, 2); return ['tr', 'en', 'es'].indexOf(l) >= 0 ? l : 'en'; };
+  var PERSONAS = {
+    boss: { label: { tr: '👔 Patron', en: '👔 The Boss', es: '👔 El jefe' },
+            opener: { tr: 'Toplantıya giriyorum. Acil olan neydi?', en: "I'm heading into a meeting. What was so urgent?", es: 'Entro a una reunión. ¿Qué era tan urgente?' } },
+    mom:  { label: { tr: '💜 Anne', en: '💜 Mom', es: '💜 Mamá' },
+            opener: { tr: 'Aramıyorsun da... neyse. Ne zaman geliyorsun?', en: "You never call anymore... anyway. When are you visiting?", es: 'Ya nunca llamas... en fin. ¿Cuándo vienes?' } },
+    ex:   { label: { tr: '🖤 Eski sevgili', en: '🖤 The Ex', es: '🖤 Tu ex' },
+            opener: { tr: 'Selam. Sadece bir yoklayayım dedim.', en: 'Hey. Just checking in, I guess.', es: 'Hola. Solo quería saber de ti.' } }
+  };
+  var current = null, history = [], sent = 0, busy = false;
+  var chips = document.getElementById('d10Chips');
+  if (!chips) return;
+  Object.keys(PERSONAS).forEach(function (id) {
+    var b = document.createElement('button');
+    b.className = 'd10-chip';
+    b.textContent = PERSONAS[id].label[L()] || PERSONAS[id].label.en;
+    b.addEventListener('click', function () { start(id, b); });
+    chips.appendChild(b);
+  });
+  function bubble(cls, text) {
+    var d = document.createElement('div');
+    d.className = 'd10-b ' + cls;
+    d.textContent = text;
+    document.getElementById('d10Msgs').appendChild(d);
+    d.scrollIntoView({ block: 'nearest' });
+    return d;
+  }
+  function start(id, btn) {
+    current = id; history = []; sent = 0; busy = false;
+    chips.querySelectorAll('.d10-chip').forEach(function (c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('d10Chat').style.display = 'block';
+    document.getElementById('d10Msgs').innerHTML = '';
+    document.getElementById('d10Cta').style.display = 'none';
+    document.getElementById('d10In').disabled = false;
+    document.getElementById('d10In').value = '';
+    var opener = PERSONAS[id].opener[L()] || PERSONAS[id].opener.en;
+    history.push({ role: 'assistant', content: opener });
+    bubble('them', opener);
+    track('demo_open', { p: id });
+    document.getElementById('d10In').focus();
+  }
+  async function send() {
+    if (busy || !current) return;
+    var inp = document.getElementById('d10In');
+    var text = (inp.value || '').trim();
+    if (!text) return;
+    busy = true; inp.value = '';
+    history.push({ role: 'user', content: text });
+    bubble('me', text);
+    sent++;
+    track('demo_msg', { n: sent });
+    var typing = bubble('d10-typing', '...');
+    typing.className = 'd10-typing';
+    try {
+      var r = await fetch('/api/sandbox-simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character_id: current, history: history, language: L() }) });
+      var d = await r.json();
+      typing.remove();
+      var reply = (d && d.reply) || '…';
+      history.push({ role: 'assistant', content: reply });
+      bubble('them', reply);
+    } catch (e) { typing.remove(); }
+    busy = false;
+    if (sent >= 3) {
+      inp.disabled = true;
+      document.getElementById('d10Cta').style.display = 'block';
+    } else { inp.focus(); }
+  }
+  document.getElementById('d10Send').addEventListener('click', send);
+  document.getElementById('d10In').addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
 })();
 </script>
 </body>

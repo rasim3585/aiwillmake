@@ -35,30 +35,43 @@ node -r dotenv/config e2e_test.js
 
 > ⚠️ `node server.js` değil, `node -r dotenv/config server.js` — sunucunun kendi dotenv yüklemesi yok.
 
-Son çalıştırma: **41 PASS, 0 FAIL, 0 SKIP** ✅
+Son çalıştırma: **TBD** (yeni kapsamlı suite — ilk çalıştırma bekleniyor)
 
 ---
 
-## Test kapsamı
+## Test kapsamı (13 grup, ~53 senaryo)
 
-| # | Test | Strateji |
-|---|---|---|
-| 1 | Auth setup | Admin API createUser + signInWithPassword |
-| 2a | İlk contact POST → 200 | REST API call with token |
-| 2b | İkinci contact POST → 402 | free plan paywall gate |
-| 2c | analyze-conversation için 402 (farklı contact) | defense gate |
-| 3 | Import → WOW ekranı routing | browser + injectSession |
-| 3 | WOW DOM: mirror card, twin, loop, CTA butonları | Playwright evaluate |
-| 3 | Free plan locked row (`🔒 3 more insights locked`) | DOM check |
-| 4a | "Just talk" → upgrade modal | button click |
-| 4b | "I have something to say" → upgrade modal | button click |
-| 4c | "+ New person" → import paywall modal | openNewConversation() |
-| 4d | Feature list (≥5 item) | DOM query |
-| 4e | Modal title değişimi (import vs practice) | showUpgradeModal() |
-| 4f | Goal back button → wow ekranına dönüş | goalBack() |
-| 5 | Telemetri (micro_feedback, passive_signals, prediction_ledger, user_behavior_snapshots) | POST endpoint + service-role DB row count |
-| 6 | Entity mapping: role_names + simulate-reply | RICH_CHAT (28 mesaj) → spouse/daughter/sibling rolleri doğru, AI karakter bilgiyi kullanıyor |
-| 7 | Ölü kod yok (screen-ready, showReadyScreen) | HTML içerik arama |
+| Grup | Alan | Senaryo sayısı | Strateji |
+|---|---|---|---|
+| **A** | Auth state matrix | 5 | Browser + API: new user→import, 1 contact→home, invalid token, no token→401, cross-user access blocked |
+| **B** | Paywall | 5 | free+0→200, free+1→402, analyze foreign→402, paid DB→unlock, paid "Just talk"→no modal |
+| **C** | Twin quality (LLM, 5×) | 6 | Entity isim (Burak), role_names 3'lü, tier=1 gizler, tier=2 paylaşır, hallucination kontrol, kısa veri |
+| **D** | WOW data + DNA bar | 4+1 | mirror_insights, relationship_loop, evidence fields, confidence_areas DB poll + DOM render |
+| **E** | Parallel extraction | 1 | paid user, Promise.all(analyze A, analyze B), BOTH confidence_areas populated |
+| **F** | Telemetri | 4 | micro_feedback, passive_signals, prediction_ledger, user_behavior_snapshots — DB row verify |
+| **G** | Error/boundary | 4 | empty text→400, missing character→400, webhook wrong sig→400, nonexistent contact→404 |
+| **H** | Screen flows | 2 | wow/goal geçişi, goal back→wow (dead screen-ready yok) |
+| **I** | Mirror/Debrief | 4 | debrief Türkçe, mirror non-null, early_apology snapshot, cross_mirror (3 contact seed) |
+| **J** | Conversation CRUD | 7 | POST, add message, GET list (user-scoped), GET single, PATCH outcome, DELETE own+cross, simulations |
+| **K** | User profile | 4 | GET, PATCH+verify, build-user-profile, profile in simulate (Simge vs Burak confusion) |
+| **L** | Sandbox | 2 | GET challenges (6 archetypes), POST simulate boss (5×) |
+| **M** | Other endpoints | 8 | from-text, extract-screenshot→400, subscription→free, create-checkout, likely-responses, next-reply, review-message, goal-context |
+
+### LLM kuralı
+LLM çıktısına bağlı testler 5× çalışır, "N/5 PASS" raporlanır. FAIL = BULGU — assertion gevşetilmez.
+
+### CANNOT_TEST listesi
+- user_profile table yoksa K2–K4 ve C3–C4 → 🚫 CANNOT_TEST (migration eksik)
+- LEMONSQUEEZY_WEBHOOK_SECRET yoksa G3 → 🚫 CANNOT_TEST
+
+### Manuel gerekli (otomatik edilemez)
+- Gerçek Google OAuth UI
+- Dosya yükleme UI
+- Twin öznel kalite
+- Gerçek ödeme (Lemon Squeezy)
+- Voice simulator
+- Mobil/responsive görünüm
+- Görsel/CSS doğruluğu
 
 ---
 
