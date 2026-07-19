@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AIWILLMAKE — Navigate every conversation that matters</title>
-  <meta name="description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <title>AIWILLMAKE — Say the things you never said.</title>
+  <meta name="description" content="Talk with the AI twin of someone in your life — built from your real WhatsApp history or from memory. Rehearse the hard conversation. Finish the unfinished one." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/app.html" />
-  <meta property="og:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
-  <meta property="og:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta property="og:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
   <meta property="og:image:width"  content="1706" />
   <meta property="og:image:height" content="926" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Navigate every conversation that matters" />
-  <meta name="twitter:description" content="AI that helps you navigate your most important conversations — reads replies, remembers what matters, and shows you the next move." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta name="twitter:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/app.html" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -2865,7 +2865,7 @@
   <div id="authGate" class="auth-gate hidden" data-screen-id="auth">
     <div class="auth-card">
       <h2>Sign in to continue</h2>
-      <p>Create an account or sign in to start generating personalized texts with AI.</p>
+      <p>Create an account or sign in to build their twin and keep your conversations.</p>
       <button class="btn-google" onclick="signInWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         Sign in with Google
@@ -2900,13 +2900,13 @@
       </div>
 
       <h1 class="landing-headline">Say the things you never said.</h1>
-      <p class="landing-sub">Upload your real WhatsApp history with someone in your life. Rehearse the hard conversation first — plan what to say, see how they'll react.</p>
+      <p class="landing-sub">Upload your real WhatsApp history — or describe them from memory. Rehearse the hard conversation first — plan what to say, see how they'll react.</p>
       <p class="landing-diff">Not a fictional character — someone you actually know.</p>
 
       <div class="landing-values">
         <div class="landing-value">
           <div class="landing-value-title">Rehearse before it matters</div>
-          <div class="landing-value-desc">Practice difficult conversations before having them for real.</div>
+          <div class="landing-value-desc">Practice the hard conversation before having it for real.</div>
         </div>
         <div class="landing-value">
           <div class="landing-value-title">See different outcomes</div>
@@ -3822,6 +3822,11 @@
         }
 
         const { data: { session } } = await sbClient.auth.getSession();
+        // Real auth state is now known — drop the pre-paint sniff classes so normal
+        // .hidden logic governs. Without this, `html.pre-logged-out #screen-landing
+        // {display:flex !important}` outranks .hidden and the sign-in wall covers
+        // the guest import screen (and the OAuth-return resume) forever.
+        document.documentElement.classList.remove('pre-logged-in', 'pre-logged-out');
         if (session) {
           accessToken = session.access_token;
           const _nu = document.getElementById('navUser'); _nu.textContent = (session.user.email || '?').charAt(0).toUpperCase(); _nu.title = session.user.email || '';
@@ -3839,6 +3844,7 @@
         }
 
         sbClient.auth.onAuthStateChange(async (event, session) => {
+          document.documentElement.classList.remove('pre-logged-in', 'pre-logged-out');
           if (session) {
             accessToken = session.access_token;
             const _nu = document.getElementById('navUser'); _nu.textContent = (session.user.email || '?').charAt(0).toUpperCase(); _nu.title = session.user.email || '';
@@ -3852,13 +3858,19 @@
           } else {
             accessToken = null;
             document.getElementById('authGate').classList.add('hidden');
-            document.getElementById('screen-landing').classList.remove('hidden');
+            // Don't drop the sign-in wall over an active guest import/describe flow —
+            // the INITIAL_SESSION(null) event fires right after initAuth routed the
+            // ?import=1 guest to the import screen.
+            if (App.state.currentScreen !== 'import' && App.state.currentScreen !== 'processing') {
+              document.getElementById('screen-landing').classList.remove('hidden');
+            }
             fetchAndShowCredits();
             loadHomeConvList();
           }
         });
       } catch (e) {
         console.warn('Auth init failed:', e);
+        document.documentElement.classList.remove('pre-logged-in', 'pre-logged-out');
         document.getElementById('authGate').classList.add('hidden');
         document.getElementById('screen-landing').classList.remove('hidden');
       }
@@ -5610,56 +5622,70 @@
       m = s.match(/(20\d\d)/); if (m) return new Date(parseInt(m[1], 10), 5, 15).toISOString();
       return null;
     }
+    // Shared authed core: build the twin from a describe-answers map. Used by the
+    // direct finish (signed-in) and by resumeImportFlow after the OAuth round-trip.
+    async function _describeCreate(name, status, am) {
+      const answers = _DT_QS.filter(q => (am[q.key] || '').trim())
+        .map(q => ({ key: q.key, q: q.tr, a: am[q.key] }));
+      const dr = await fetch('/api/describe-twin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ name, status, answers, language: aiLang() })
+      });
+      const dd = await dr.json();
+      if (!dr.ok || !dd.character_profile) throw new Error(dd.error || 'profile failed');
+      const cr = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ name, relationship_summary: dd.relationship_summary || null, source: 'described', relationship_tier: 2 })
+      });
+      const contact = await cr.json();
+      if (!cr.ok || !contact.id) throw new Error(contact.error || 'contact failed');
+      await fetch(`/api/contacts/${contact.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ character_profile: dd.character_profile })
+      });
+      const lastTs = _dtParseWhen(am.zaman);
+      fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ contact_id: contact.id, situation: `Described from memory — ${name}`, categoryId: 'personal', subcategoryId: null,
+          fields: { contact_status: status, described: true, chat_stats: lastTs ? { ok: false, lastTs } : null } })
+      }).catch(() => {});
+      const openers = (am.laflar || '').split('\n').map(l => l.trim()).filter(l => l.length > 2).slice(0, 3);
+      const ctx = {
+        id: contact.id, name, type: null, relationship_state: null,
+        observed_patterns: null, relationship_summary: dd.relationship_summary || null,
+        character_profile: dd.character_profile, relationship_tier: 2,
+        contact_status: status, opener_samples: openers.length ? openers : null,
+        last_message_ts: lastTs
+      };
+      _dtAnswers = null; _dtIdx = 0;
+      window._track?.('describe_done');
+      loadPersonSection(contact.id);        // background screen for when the modal closes
+      openSimulatorFresh(ctx, null);        // the magic moment: the twin greets you as taught
+    }
+
     async function finishDescribeTwin() {
       const name = (document.getElementById('importName').value || '').trim();
       if (!name) { showToast('Name is required', 'error'); document.getElementById('importName').focus(); return; }
-      if (!accessToken) { showToast('Sign in to use this feature', 'error'); return; }
       const status = document.getElementById('importStatus')?.value || 'active';
       window._importStatus = status;
+      if (!accessToken) {
+        // Guest: route through the same auth-continue modal as the analyze path —
+        // importAuthContinue serializes the describe answers into _pendingImport,
+        // so they survive the OAuth redirect and resume automatically.
+        _importPreAuthName = name;
+        _importPreAuthType = document.getElementById('importType')?.value || null;
+        document.getElementById('importAuthModal').classList.remove('hidden');
+        return;
+      }
       const btn = document.getElementById('dtFinishBtn');
       const old = btn.textContent;
       btn.disabled = true; btn.textContent = '…';
       try {
-        const answers = _DT_QS.filter(q => (_dtAnswers[q.key] || '').trim())
-          .map(q => ({ key: q.key, q: q.tr, a: _dtAnswers[q.key] }));
-        const dr = await fetch('/api/describe-twin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ name, status, answers, language: aiLang() })
-        });
-        const dd = await dr.json();
-        if (!dr.ok || !dd.character_profile) throw new Error(dd.error || 'profile failed');
-        const cr = await fetch('/api/contacts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ name, relationship_summary: dd.relationship_summary || null, source: 'described', relationship_tier: 2 })
-        });
-        const contact = await cr.json();
-        if (!cr.ok || !contact.id) throw new Error(contact.error || 'contact failed');
-        await fetch(`/api/contacts/${contact.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ character_profile: dd.character_profile })
-        });
-        const lastTs = _dtParseWhen(_dtAnswers.zaman);
-        fetch('/api/conversations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-          body: JSON.stringify({ contact_id: contact.id, situation: `Described from memory — ${name}`, categoryId: 'personal', subcategoryId: null,
-            fields: { contact_status: status, described: true, chat_stats: lastTs ? { ok: false, lastTs } : null } })
-        }).catch(() => {});
-        const openers = (_dtAnswers.laflar || '').split('\n').map(l => l.trim()).filter(l => l.length > 2).slice(0, 3);
-        const ctx = {
-          id: contact.id, name, type: null, relationship_state: null,
-          observed_patterns: null, relationship_summary: dd.relationship_summary || null,
-          character_profile: dd.character_profile, relationship_tier: 2,
-          contact_status: status, opener_samples: openers.length ? openers : null,
-          last_message_ts: lastTs
-        };
-        _dtAnswers = null; _dtIdx = 0;
-        window._track?.('describe_done');
-        loadPersonSection(contact.id);        // background screen for when the modal closes
-        openSimulatorFresh(ctx, null);        // the magic moment: the twin greets you as taught
+        await _describeCreate(name, status, _dtAnswers);
       } catch (e) {
         console.error('[describe-twin]', e);
         showToast('Something went wrong. Please try again.', 'error');
@@ -5761,6 +5787,8 @@
           name: _importPreAuthName,
           type: _importPreAuthType,
           importMode: _importMode,
+          status: window._importStatus || 'active',
+          dtAnswers: _importMode === 'text' ? _dtAnswers : undefined,
           rawText: rawText.slice(0, 200000),
           ts: Date.now()
         }));
@@ -5782,6 +5810,26 @@
       startProcessingAnimation(pd.name);
       _suppressLoadingOverlay = true;
       _importMode = pd.importMode || 'whatsapp';
+      // Restore the pre-auth relationship status — the analyze path reads it into
+      // contact_status; without this, "unreachable"/"estranged" chosen before the
+      // OAuth redirect silently degraded to "active".
+      window._importStatus = pd.status || 'active';
+      // Describe-twin resume: the pending payload carries the structured answers —
+      // run the describe pipeline, not the chat-analysis one.
+      if (pd.importMode === 'text' && pd.dtAnswers) {
+        try {
+          await _describeCreate(pd.name, pd.status || 'active', pd.dtAnswers);
+          _suppressLoadingOverlay = false;
+          stopProcessingAnimation();
+        } catch (err) {
+          _suppressLoadingOverlay = false;
+          stopProcessingAnimation();
+          hideLoadingOverlay();
+          showToast(err.message || 'Something went wrong. Please try again.', 'error');
+          App.navigateTo('import');
+        }
+        return;
+      }
       try {
         const cr = await fetch('/api/contacts', {
           method: 'POST',
@@ -6579,7 +6627,9 @@
         // upgrade modal / lock UI fires. Real plan still recorded server-side.
         window._userPlan = data.paywall === false ? 'unlimited' : (data.plan || 'free');
       } catch (e) {
-        window._userPlan = 'free';
+        // Network hiccup must not re-arm lock UI while the paywall is globally off
+        // (initAuth already set 'unlimited' from /api/config in that mode).
+        if (window._userPlan !== 'unlimited') window._userPlan = 'free';
       }
     }
 
@@ -7783,6 +7833,10 @@
           wireContactImportBtn(contactId, contactName);
         }
         showToast(err.message || 'Could not analyze chat. Please try again.', 'error');
+        // Import/resume paths (onComplete set) must see the failure — their catch
+        // navigates the user back to the import screen instead of leaving them
+        // stranded on the processing screen with a full bar and no way out.
+        if (typeof opts.onComplete === 'function') throw err;
       } finally {
         hideLoadingOverlay();
         document.getElementById('contactImgInput').value = '';
