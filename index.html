@@ -228,11 +228,15 @@
       color: var(--sec); line-height: 1.65;
       max-width: 440px; margin: 0 auto 36px;
     }
-    .hero-describe-link {
-      color: inherit; text-decoration: underline dotted;
-      text-underline-offset: 3px; transition: color .15s;
+    .hero-describe-btn {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px;
+      margin: 0 0 14px; padding: 12px 16px;
+      border: 1px dashed var(--bord2); border-radius: 12px;
+      color: var(--sec); text-decoration: none; font-size: .85rem;
+      transition: border-color .2s, color .2s;
     }
-    .hero-describe-link:hover { color: var(--accent); }
+    .hero-describe-btn b { color: var(--text); font-weight: 700; }
+    .hero-describe-btn:hover { border-color: var(--accent); color: var(--text); }
     .hero-import-card {
       display: flex; align-items: center; gap: 16px;
       padding: 18px 20px 18px 22px; margin-bottom: 14px;
@@ -421,7 +425,7 @@
   <div class="wrap">
     <div class="hero-inner">
       <h1 class="hero-h1">Say the things you never said.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation. Finish the unfinished one.<br><a href="app.html?import=1&amp;mode=describe" class="hero-describe-link">No chat export? Describe them from memory — that works too.</a></p>
+      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation. Finish the unfinished one.</p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
       <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
@@ -432,6 +436,9 @@
         </span>
         <span class="hero-import-arrow">Create your twin →</span>
       </a>
+
+      <!-- Secondary door: build the twin from memory (no export needed) -->
+      <a href="app.html?import=1&amp;mode=describe" class="hero-describe-btn">🖊 <span>No chat export?</span> <b>Describe them from memory →</b></a>
 
       <!-- Logged-in: open app button (hidden by default) -->
       <a href="app.html" class="hero-cta" id="heroOpenAppCta" style="display:none">
@@ -684,10 +691,10 @@
   const DICT = {
     "AIWILLMAKE — Say the things you never said.":{tr:"AIWILLMAKE — Söyleyemediklerini söyle.",es:"AIWILLMAKE — Di lo que nunca dijiste."},
     "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
-    "Say the things you never said.":{tr:"Söyleyemediklerini söyle.",es:"Di lo que nunca dijiste."},
+    "Say the things you never said.":{tr:"Söyleyemedik­lerini söyle.",es:"Di lo que nunca dijiste."},
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
     "Rehearse the hard conversation. Finish the unfinished one.":{tr:"Zor konuşmayı prova et. Yarım kalanı tamamla.",es:"Ensaya la conversación difícil. Termina la que quedó a medias."},
-    "No chat export? Describe them from memory — that works too.":{tr:"Sohbet dosyan yok mu? Onu hafızandan anlat — o da olur.",es:"¿Sin exportar el chat? Descríbelo de memoria — también funciona."},
+    "No chat export?":{tr:"Sohbet dosyan yok mu?",es:"¿Sin exportar el chat?"},
     "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · takes 30 seconds":{tr:"WhatsApp .txt veya .zip · 30 saniye sürer",es:"WhatsApp .txt o .zip · tarda 30 segundos"},
     "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Go to your twins →":{tr:"İkizlerine git →",es:"Ir a tus gemelos →"},"Open App →":{tr:"Uygulamayı aç →",es:"Abrir la app →"},
     "🔒 Your chats stay private. Analyzed once, never used to train AI models.":{tr:"🔒 Sohbetlerin gizli kalır. Bir kez analiz edilir, asla yapay zeka eğitiminde kullanılmaz.",es:"🔒 Tus chats permanecen privados. Se analizan una vez y nunca se usan para entrenar IA."},

@@ -35,7 +35,8 @@ node -r dotenv/config e2e_test.js
 
 > ⚠️ `node server.js` değil, `node -r dotenv/config server.js` — sunucunun kendi dotenv yüklemesi yok.
 
-Son çalıştırma (2026-07-18, tüm Temmuz özellikleri sonrası tam tur): **56 PASS · 2 FAIL · 1 CANNOT_TEST**
+Son çalıştırma (2026-07-18, twin-motor v2 + misafir yolculuğu düzeltmeleri sonrası): **58 PASS · 0 FAIL · 1 CANNOT_TEST** ✅ (ilk tamamen temiz tablo)
+Önceki tur (aynı gün, motor öncesi): 56 PASS · 2 FAIL · 1 CANNOT_TEST
 - 2 FAIL = B2/B3: suite paywall'ı açık sanıyordu, gerçekte kapalı (tasarım gereği). Suite artık
   `/api/config.paywall`'ı okuyup moda göre beklenti kuruyor — aynı gözlemle geçer.
 - Paywall AÇIK yolu ayrıca hedefli test edildi: `PAYWALL_ENABLED=1` + taze kullanıcı → 1. kişi 200,

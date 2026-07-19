@@ -3198,8 +3198,13 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     let recentContext = '';
     if (character.contact_id && req.token) {
       try {
+        // Query window: the last few turns, not just the newest message — otherwise
+        // follow-ups like "peki o ne dedi?" carry zero content words and retrieval
+        // goes blind mid-conversation. Newest user message still dominates (its
+        // words appear first and most often in the stem set).
         const lastUserMsg = [...history].reverse().find(m => m.role === 'user')?.content || '';
-        const words = lastUserMsg.split(/\s+/).filter(w => w.length > 3);
+        const recentWindow = history.slice(-4).map(m => m.content || '').join(' ');
+        const words = (lastUserMsg + ' ' + recentWindow).split(/\s+/).filter(w => w.length > 3);
         // Inject known people's names from role index so RAG finds them regardless of language
         const _rn = character.role_names || {};
         Object.values(_rn).forEach(v => { if (typeof v === 'string' && v.trim()) words.push(v.trim()); });
@@ -3252,13 +3257,47 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
                 return [...kept].sort((a, b) => a - b).map(i => lines[i]).filter(l => !isJunkLine(l)).join('\n');
               };
               const scored = allChunks
-                .map(c => { const nt = foldC(c.chunk_text); return { snippet: extractRelevantLines(c.chunk_text), score: wordStems.filter(s => nt.includes(s)).length }; })
+                .map(c => { const nt = foldC(c.chunk_text); return { snippet: extractRelevantLines(c.chunk_text), score: wordStems.filter(s => nt.includes(s)).length, idx: c.chunk_index || 0 }; })
                 .filter(c => c.score > 0 && c.snippet)
-                .sort((a, b) => b.score - a.score)
+                // Recency tie-break: same relevance → prefer newer chunks (current
+                // voice and current life beat three-year-old phrasing).
+                .sort((a, b) => b.score - a.score || b.idx - a.idx)
                 .slice(0, 6);
               if (scored.length > 0) {
                 ragContext = `\nRELEVANT EXCERPTS (tone/context examples, in these "${name}" = you, "${userLabel}" = the person messaging you now):\n${scored.map(c => c.snippet).join('\n---\n')}`;
               }
+              // VOICE SAMPLES: verbatim messages THIS person actually sent — style
+              // DNA (length, punctuation, emoji habits, slang) sampled across the
+              // whole timeline. A prose description tells the model ABOUT the voice;
+              // 8 real lines let it imitate the voice. Facts still come from the
+              // profile — these are style-only by explicit instruction.
+              try {
+                const sentRe = new RegExp('(?:^|-\\s*|\\]\\s*)' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:\\s*(.+)$');
+                const own = [];
+                for (const c of allChunks) {
+                  for (const line of c.chunk_text.split('\n')) {
+                    const m = line.match(sentRe);
+                    if (!m) continue;
+                    const t = m[1].trim();
+                    if (t.length < 15 || t.length > 140 || isJunkLine(t)) continue;
+                    own.push(t);
+                  }
+                }
+                if (own.length >= 4) {
+                  const uniq = [...new Set(own)];
+                  // spread across the timeline: first / middle / recent thirds
+                  const third = Math.max(1, Math.floor(uniq.length / 3));
+                  const pick = (arr, n) => arr.filter((_, i) => i % Math.max(1, Math.floor(arr.length / n)) === 0).slice(0, n);
+                  const samples = [
+                    ...pick(uniq.slice(0, third), 2),
+                    ...pick(uniq.slice(third, 2 * third), 2),
+                    ...pick(uniq.slice(2 * third), 4)
+                  ].slice(0, 8);
+                  if (samples.length >= 4) {
+                    recentContext += `\nHOW YOU ACTUALLY WRITE — verbatim messages YOU have sent before. Imitate this style exactly (message length, punctuation, emoji habits, slang, capitalization). These are YOUR OWN past words — style reference ONLY, never a source of facts about ${userLabel}:\n${samples.map(s => `· ${s}`).join('\n')}`;
+                  }
+                }
+              } catch { /* voice samples are best-effort */ }
             }
           }
         }
@@ -3310,7 +3349,7 @@ RULES:
 - If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
 - PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life. When answering such a question, answer ONLY about THEIR person — do NOT weave your own family members into the same reply, not even as passing small talk (same names across the two families invite confusion; keep the two worlds separate in that reply).
   CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). SECOND-PERSON MIRROR: when they use second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?") they are asking about YOUR OWN family from WHO YOU ARE — answer confidently from your own description; you always remember your own spouse/children. (This mirror rule is about YOUR OWN family only — it NEVER loosens the RELATIONSHIP DISTANCE restriction below about the USER's personal life.) YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
-  EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
+  EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS, RECENT EXCHANGES and HOW YOU ACTUALLY WRITE may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
   Do NOT rely on conversation excerpts for personal facts about the user — excerpts show how they talk, not a fact-checked record of their life. Only say you don't know if the relationship or name is genuinely absent from the profile text.
   BOUNDARY PRECEDENCE: if your WHO YOU ARE description contains a KNOWLEDGE BOUNDARY section, anything listed there is something YOU never got to know — even if the same fact/name appears in WHO YOU'RE TALKING TO or inside the boundary list itself. The boundary WINS ABSOLUTELY: never say, reveal, confirm or guess the fact or NAME — not even as a question ("Elif mi?" is a leak). You genuinely do not know it: ask them to tell you ("kimmiş, adı ne, anlat bakalım") and only use the name AFTER the user has said it in THIS conversation.${tier === 1 ? ' NOTE: For this distant relationship, RELATIONSHIP DISTANCE (below) takes priority over this rule — even if you find a personal fact in the profile, do not reveal it.' : ''}
 ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule in this prompt (PROFILE PRIORITY, SECOND-PERSON MIRROR confidence, excerpts, everything): You only know ${userLabel} at a surface/distant level (work acquaintance, not close). Even if the WHO YOU'RE TALKING TO profile contains personal details about them (family members' names, private matters, intimate history), you would NOT realistically know or bring these up — a distant contact doesn't have that access. If asked about their personal or family life ("eşim", "my wife", their kids' names): do NOT state, guess, or CONFIRM any name or detail from the profile — not even as a question ("Simge değil mi?" is a leak). Respond as someone who genuinely doesn't know that side of them: 'I don't really know much about your family' or 'we've never gotten that personal'. Keep responses surface-level and professional. You do know work/practical topics from your shared chats.` : ''}
