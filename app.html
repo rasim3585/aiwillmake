@@ -3497,6 +3497,16 @@
 
         <div id="import-pane-whatsapp">
           <p class="import-quality">★★★ Best: full simulation + strategy</p>
+          <details class="wa-export-howto" style="margin:0 0 12px;border:1px solid var(--bord);border-radius:12px;padding:10px 14px;font-size:.84rem;line-height:1.6">
+            <summary style="cursor:pointer;font-weight:700">How do I get the chat file? (1 minute)</summary>
+            <ol style="margin:8px 0 4px 18px;padding:0">
+              <li>In WhatsApp, open the chat with this person.</li>
+              <li>iPhone: tap their name at the top. Android: tap ⋮ → More.</li>
+              <li>Choose "Export chat" → "Without media".</li>
+              <li>Save it to Files (or send it to yourself), then pick it here.</li>
+            </ol>
+            <p style="margin:6px 0 0;opacity:.75">Nothing is sent until you press Analyze.</p>
+          </details>
           <div class="import-drop-zone" onclick="document.getElementById('importWaFile').click()">
             <p>📤 Upload WhatsApp chat<br><span style="font-size:.77rem;opacity:.65">.txt or .zip</span></p>
             <input id="importWaFile" type="file" accept=".txt,.zip" style="display:none" onchange="handleImportFileSelect(this)">
@@ -3809,6 +3819,7 @@
           window._forceImport = true;
           // deep link from the landing "describe them from memory" line
           if (urlParams.get('mode') === 'describe') window._forceDescribe = true;
+          if (['active','estranged','unreachable'].includes(urlParams.get('status'))) window._forceStatus = urlParams.get('status');
           window.history.replaceState({}, '', '/app.html');
         }
         if (urlParams.get('payment') === 'success') {
@@ -3839,6 +3850,8 @@
           if (window._forceImport) {
             window._forceImport = false; App.navigateTo('import');
             if (window._forceDescribe) { window._forceDescribe = false; switchImportTab('text'); }
+        if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; window._forceStatus = null; }
+            if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; window._forceStatus = null; }
           }
           else document.getElementById('screen-landing').classList.remove('hidden');
         }
@@ -4805,6 +4818,7 @@
         let target = null;
         for (const cv of convs) {
           if (cv.contact_id !== contactId || cv.id === currentConvId) continue; // skip the active session (too soon)
+          if (cv.category_id === 'simulation') continue; // practice lines were said to the twin, not sent to the person
           const sent = (cv.conversation_messages || []).filter(m => m.role === 'sent' && !m.outcome && m.content);
           if (sent.length) { target = { convId: cv.id, msg: sent[sent.length - 1] }; break; }
         }
@@ -5701,6 +5715,7 @@
       if (!file) return;
       _importFile = file;
       document.getElementById('importFileName').textContent = '📎 ' + file.name;
+      window._track?.('import_file_selected', { mode: _importMode });
     }
 
     async function runImportAnalysis() {
@@ -5789,7 +5804,8 @@
           importMode: _importMode,
           status: window._importStatus || 'active',
           dtAnswers: _importMode === 'text' ? _dtAnswers : undefined,
-          rawText: rawText.slice(0, 200000),
+          // WhatsApp exports are oldest-first: keep the most recent text
+          rawText: rawText.length > 200000 ? rawText.slice(-200000) : rawText,
           ts: Date.now()
         }));
         await signInWithGoogle();
@@ -6159,7 +6175,7 @@
       if (!accessToken) return;
       const typed = prompt('Hesabın ve TÜM verin kalıcı olarak silinecek. Onaylamak için SIL yaz:');
       if (typed == null) return;
-      if (typed.trim().toLocaleUpperCase('tr') !== 'SIL') { showToast('Silme iptal edildi', 'info'); return; }
+      if (!/^s[iıİI]l$/i.test(typed.trim())) { showToast('Silme iptal edildi', 'info'); return; }
       this.disabled = true; this.textContent = 'Siliniyor…';
       try {
         const r = await fetch('/api/account', { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
@@ -6989,7 +7005,7 @@
         fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
           .then(r => r.json()).then(d => { window._userKnowScore = _knowScore(d); }).catch(() => {});
       }
-      document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -7082,6 +7098,14 @@
       _rpTwinOpens();
     }
 
+    // Unreachable contacts are not a rehearsal target: no 'practicing' framing.
+    function _rpTitleFor(c) {
+      const nm = (c && c.name) || '';
+      const L = window.APP_LANG || 'tr';
+      if (c && c.contact_status === 'unreachable') return nm;
+      return ({ tr: nm + ' ile prova', en: 'Practicing with ' + nm, es: 'Practicando con ' + nm })[L] || ('Practicing with ' + nm);
+    }
+
     async function _rpTwinOpens() {
       if (_simHistory.length || !_simCharacter) return;
       const sendBtn = document.getElementById('rp-send');
@@ -7109,6 +7133,7 @@
         if (reply) {
           _simHistory.push({ role: 'assistant', content: reply });
           _rpAppendBubble('other', reply);
+          window._track?.('twin_first_reply', { status: _simCharacter?.contact_status || 'active' });
           _rpSpeak(reply);
         } else {
           const hintMap = { tr: 'Şu an sessiz görünüyor — sen başla, ilk mesajı sen yaz. 💬', en: 'Seems quiet right now — you start, write the first message. 💬', es: 'Parece tranquilo ahora — empieza tú, escribe el primer mensaje. 💬' };
@@ -7216,7 +7241,7 @@
       _simHistory    = [];
       _simTurn       = 0;
 
-      document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -9257,7 +9282,7 @@
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;
 
-      document.getElementById('rp-title').textContent = `Practicing with ${_simCharacter.name}`;
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
       document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -9416,6 +9441,7 @@
         _rpSpeak(data.reply);
         if (inviteNow) { _inviteAsked = true; _rpRenderInviteChips(); }
         _simTurn++;
+        if (_simTurn === 1) window._track?.('practice_first_msg', { status: _simCharacter?.contact_status || 'active' });
         document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
       } catch (e) {

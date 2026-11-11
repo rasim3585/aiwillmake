@@ -188,3 +188,13 @@ Object.assign(window.I18N_C, {
 Object.assign(window.I18N_C, {
   "Terms of Use": { "tr":"Kullanım Koşulları", "en":"Terms of Use", "es":"Términos de uso" }
 });
+
+// Import screen: WhatsApp export how-to
+Object.assign(window.I18N_C, {
+  "How do I get the chat file? (1 minute)": { "tr":"Sohbet dosyasını nasıl alırım? (1 dakika)", "en":"How do I get the chat file? (1 minute)", "es":"¿Cómo consigo el archivo del chat? (1 minuto)" },
+  "In WhatsApp, open the chat with this person.": { "tr":"WhatsApp'ta bu kişiyle olan sohbeti aç.", "en":"In WhatsApp, open the chat with this person.", "es":"En WhatsApp, abre el chat con esta persona." },
+  "iPhone: tap their name at the top. Android: tap ⋮ → More.": { "tr":"iPhone: üstteki ismine dokun. Android: ⋮ → Diğer.", "en":"iPhone: tap their name at the top. Android: tap ⋮ → More.", "es":"iPhone: toca su nombre arriba. Android: toca ⋮ → Más." },
+  "Choose \"Export chat\" → \"Without media\".": { "tr":"\"Sohbeti dışa aktar\" → \"Medya olmadan\" seç.", "en":"Choose \"Export chat\" → \"Without media\".", "es":"Elige \"Exportar chat\" → \"Sin archivos\"." },
+  "Save it to Files (or send it to yourself), then pick it here.": { "tr":"Dosyalar'a kaydet (ya da kendine gönder), sonra buradan seç.", "en":"Save it to Files (or send it to yourself), then pick it here.", "es":"Guárdalo en Archivos (o envíatelo), y luego elígelo aquí." },
+  "Nothing is sent until you press Analyze.": { "tr":"Analiz Et'e basana kadar hiçbir şey gönderilmez.", "en":"Nothing is sent until you press Analyze.", "es":"No se envía nada hasta que pulses Analizar." }
+});

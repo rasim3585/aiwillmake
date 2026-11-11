@@ -1,5 +1,14 @@
 # CLAUDE.md — aiwillmake
 
+> **REALITY CHECK (2026-11-12) — read before trusting anything below.** Production was DOWN ~Aug 11 → Nov 12
+> (Railway deployment stopped; free plan requires the serverless flag). Redeployed via `railway up` on 2026-11-12.
+> The `ANTHROPIC_API_KEY` (prod + local `.env`) returns `invalid x-api-key` — every AI feature is dead until the
+> founder creates a new key and sets it in Railway Variables. Real usage per the DB: **4 accounts, all created June
+> 2026, zero signups since; no evidence any stranger ever paid** (the 4 "active" subscriptions include dev/test
+> grants). Statements below such as "real paying subscribers", "Google OAuth + email/pw" (the UI is Google-only),
+> and "live-verified" were true-as-believed at the time and are NOT current facts. External audit of product
+> value/moat/retention/monetization: 8-analyst report, findings applied in commit after 31c5e29.
+
 > **Audit resolution status (2026-07-15/16):** RESOLVED — C1, C2, C3, C4(code), H1, H2, H3, H4(partial: heavy
 > per-IP limiter + OCR image cap), M1, M2, M3, M4, M5 (CORS scoped), M6, webhook timing-safe compare, and SEO
 > (robots/sitemap → www, /app.html not indexed). **Deliberately left:** dead telemetry (micro_feedback/passive_signals/

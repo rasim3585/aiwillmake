@@ -1678,9 +1678,9 @@ app.post('/api/analyze-conversation', heavyLimiter, optionalAuth, aiGate('analyz
                 system: `You are reading a WhatsApp conversation and writing a prose character profile of the CONTACT (${contact_name ? `"${contact_name}"` : 'the non-owner person'}).
 WhatsApp lines look like: "DD/MM/YYYY HH:MM - SenderName: message text". There are TWO senders: the chat OWNER (USER) and the CONTACT.
 
-OWNERSHIP RULE: Possessive language tells you who owns the relationship. "Benim oğlum Kemal" said by the USER means Kemal is the USER's son — not the contact's. Do NOT assign the user's family members to the contact. Be precise about whose family/friends each person is.
+OWNERSHIP RULE: Possessive language tells you who owns the relationship. "Benim oğlum Ali" said by the USER means Ali is the USER's son — not the contact's. Do NOT assign the user's family members to the contact. Be precise about whose family/friends each person is.
 
-NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CRITICAL — look for this specifically: in this conversation there are likely TWO people named Kemal: (a) the CONTACT's father Kemal — older generation, health/land contexts; (b) the USER's son Kemal — a child, the contact is his uncle figure. EXPLICITLY add a "NAME COLLISION" note: "There are two people named Kemal: [contact]'s father Kemal ([context]) and [user]'s son Kemal ([context]). Never conflate them." Apply to ANY repeated name you detect.
+NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CHECK FOR THIS: if the same first name appears in two clearly different contexts (e.g. an elderly relative and a child, or two different families), it is two different people. Only when that is actually the case, EXPLICITLY add a "NAME COLLISION" note: "There are two people named [name]: [owner A]'s [relation] ([context]) and [owner B]'s [relation] ([context]). Never conflate them." Never invent a collision that the conversation does not show.
 
 Write 3-5 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
@@ -1692,7 +1692,7 @@ Write 3-5 paragraphs describing the CONTACT as if briefing someone who will role
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
 
 After the full description, on a new line write exactly:
-RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Can is the user's brother, an entrepreneur living abroad they're very close to.'>
 
 After RELATIONSHIP_ONELINE, on a new line write exactly:
 CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] | Humor & Tone:[0-100] | Conflict Behavior:[0-100] | Work & Finance:[0-100] | Romantic & Emotional:[0-100]
@@ -1760,12 +1760,12 @@ Score each area 0-100 based ONLY on evidence in the conversation. If a topic nev
             max_tokens: 800,
             system: `You are analyzing a long WhatsApp conversation exported as text. Your job is to build a behavioral profile of the CONTACT (${contact_name ? `the person named "${contact_name}"` : 'the non-owner person'}).
 
-OWNERSHIP RULE: There are exactly TWO senders. The CONTACT and the USER (chat owner). When someone uses possessive language ("benim oğlum" = my son, "karım" = my wife, "babam" = my father), that person belongs to WHOEVER IS SPEAKING. Read carefully: if the USER says "oğlum Kemal", Kemal is the USER's son — NOT the contact's. Do not assign the user's family members to the contact.
+OWNERSHIP RULE: There are exactly TWO senders. The CONTACT and the USER (chat owner). When someone uses possessive language ("benim oğlum" = my son, "karım" = my wife, "babam" = my father), that person belongs to WHOEVER IS SPEAKING. Read carefully: if the USER says "oğlum Ali", Ali is the USER's son — NOT the contact's. Do not assign the user's family members to the contact.
 
 CRITICAL: Do not use markdown. No bold (**), no headers. Plain text only. Start each field directly: OBSERVED_PATTERNS: ...
 
 Extract:
-OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. When mentioning people, note whose family/friend they are (e.g. "user's son Kemal"). Write patterns in the same language as the conversation.
+OBSERVED_PATTERNS: 4-5 behavioral patterns separated by | — focus on communication style, emotional tone, recurring habits, how they address the user, relationship dynamics. When mentioning people, note whose family/friend they are (e.g. "user's son Ali"). Write patterns in the same language as the conversation.
 RELATIONSHIP_SUMMARY: 2-3 sentences on who this person is and the relationship dynamic. Same language as conversation.
 PERSON_B_NAME: The contact's actual name or what the user calls them (not a label like 'kardeşim' — look for how they address each other directly)`,
             messages: [{ role: 'user', content: `Conversation samples from ${chunks.length} time periods:\n${combinedSamples}` }]
@@ -1801,9 +1801,7 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
       if (contact_id && req.user?.id && req.token) {
         (async () => {
           try {
-            const _kemalCount = (conversationText.match(/kemal/gi) || []).length;
-            const _keremCount = (conversationText.match(/kerem/gi) || []).length;
-            console.log('[profile-extract] STARTED (large)', contact_id, 'full conv len:', conversationText.length, '| kemal hits:', _kemalCount, 'kerem hits:', _keremCount);
+            console.log('[profile-extract] STARTED (large)', contact_id, 'full conv len:', conversationText.length);
             const existingProfileRLarge = await fetch(`${SUPABASE_REST}/contacts?id=eq.${contact_id}&select=character_profile`, {
               headers: sbHeaders(req.token)
             });
@@ -1823,9 +1821,9 @@ PERSON_B_NAME: The contact's actual name or what the user calls them (not a labe
 
 You have access to the complete conversation. Use the ENTIRE context to infer relationships and ownership — even when ownership is never explicitly stated, patterns across the full conversation will reveal it (e.g. whose children are whose, whose spouse, who is mentioned by which sender).
 
-OWNERSHIP RULE: There are TWO senders — the CONTACT and the USER (chat owner). Do NOT assume everyone mentioned belongs to the contact. Infer from context: if the USER consistently refers to Kemal and Kerem in the context of their own family, they are the USER's children. Be precise: "Ras's sons Kemal and Kerem" vs "Mert's wife Yağmur."
+OWNERSHIP RULE: There are TWO senders — the CONTACT and the USER (chat owner). Do NOT assume everyone mentioned belongs to the contact. Infer from context: if the USER consistently refers to two names in the context of their own family, they are the USER's people. Be precise about the owner, e.g. "the user's sons Ali and Can" vs "the contact's wife Ayşe."
 
-NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CRITICAL — look for this specifically: in this conversation there are likely TWO people named Kemal: (a) the CONTACT's father Kemal — older generation, health issues, e-devlet/land/property contexts; (b) the USER's son Kemal — a child, school/photos context, the contact is his uncle figure. EXPLICITLY add a "NAME COLLISION" note in the document: "There are two people named Kemal: [contact]'s father Kemal ([context]) and [user]'s son Kemal ([context]). Never conflate them." Apply this logic to ANY repeated name you detect, not just Kemal.
+NAME COLLISION RULE: The same first name may belong to TWO DIFFERENT people (Turkish tradition: a grandson is often named after his grandfather). CHECK FOR THIS: if the same first name appears in two clearly different contexts (e.g. an elderly relative and a child, or two different families), it is two different people. Only when that is actually the case, EXPLICITLY add a "NAME COLLISION" note: "There are two people named [name]: [owner A]'s [relation] ([context]) and [owner B]'s [relation] ([context]). Never conflate them." Never invent a collision that the conversation does not show.
 
 Write 4-6 paragraphs describing the CONTACT as if briefing someone who will roleplay as them. Cover:
 - Who they are: personality, values, energy, what they care about
@@ -1837,7 +1835,7 @@ Write 4-6 paragraphs describing the CONTACT as if briefing someone who will role
 Write in plain prose — no bullet points, no JSON, no headers. Refer to the CONTACT in third person. Be specific and concrete. Do not invent details.
 
 After the full description, on a new line write exactly:
-RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Mert is the user's brother, a Dubai-based entrepreneur they're very close to.'>
+RELATIONSHIP_ONELINE: <one sentence describing who this person is to the user and their real relationship — e.g. 'Can is the user's brother, an entrepreneur living abroad they're very close to.'>
 
 After RELATIONSHIP_ONELINE, on a new line write exactly:
 CONFIDENCE_SCORES: Communication Style:[0-100] | People & Relationships:[0-100] | Humor & Tone:[0-100] | Conflict Behavior:[0-100] | Work & Finance:[0-100] | Romantic & Emotional:[0-100]
@@ -1975,7 +1973,7 @@ The USER is the person whose perspective we're building. Extract what we learn a
 - People in their life mentioned (their kids, spouse, friends, colleagues — with names and relationships)
 
 Write 3-5 paragraphs in plain prose, third person, referring to the user as "${personA || 'the user'}". BE EXHAUSTIVE: capture EVERY concrete fact revealed — every name and how they relate, every job/profession, city/neighborhood, hobby, pet, habit, and notable event — do NOT drop secondary details to keep it short. It is better to be complete than concise. Only include what's actually revealed in the conversation. Do not invent.
-HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Kemal'i okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Kemal — likely his son; a second Kemal may be a friend"). A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
+HIGHEST PRIORITY: the NAMES of the user's immediate family — spouse and children. If a first name appears in a family context ("Ali'yi okula bıraktım", "bizim oğlan"), capture it with the inferred relationship. If a name is ambiguous between two people, record both readings ("Ali — likely his son; a second Ali may be a friend"). A profile that misses a family member's name is a failed profile.${KEY_PEOPLE_SECTION}
 
 If an existing profile is provided below, UPDATE and ENRICH it with new information from this conversation — don't replace it. Preserve ALL existing facts (names, relationships, jobs) even if this conversation never mentions them. If the existing profile contains a section starting with "USER-PROVIDED FACTS", reproduce that section VERBATIM at the end of your output — it is ground truth typed by the user and must never be dropped, edited, or reworded.
 
@@ -2573,7 +2571,7 @@ app.get('/api/contacts/:id/simulations', requireAuth, async (req, res) => {
 app.get('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
     const [cr, convr] = await Promise.all([
-      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile,source,created_at,updated_at,confidence_score,last_outcome,last_outcome_at`,
+      fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}&select=id,name,type,relationship_state,relationship_summary,observed_patterns,character_profile,source,created_at,updated_at,confidence_score,last_outcome,last_outcome_at,relationship_tier,role_names`,
         { headers: sbHeaders(req.token) }),
       fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${req.params.id}&user_id=eq.${req.user.id}&order=updated_at.desc&select=id,category_id,subcategory_id,situation,fields,created_at`,
         { headers: sbHeaders(req.token) })
@@ -2587,7 +2585,7 @@ app.get('/api/contacts/:id', requireAuth, async (req, res) => {
 
 app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
   try {
-    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score, last_outcome, last_outcome_at, relationship_tier } = req.body;
+    const { name, type, relationship_summary, relationship_state, observed_patterns, character_profile, confidence_score, last_outcome, last_outcome_at, relationship_tier, role_names } = req.body;
     const updates = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
@@ -2599,6 +2597,7 @@ app.patch('/api/contacts/:id', requireAuth, async (req, res) => {
     if (last_outcome !== undefined) updates.last_outcome = last_outcome;
     if (last_outcome_at !== undefined) updates.last_outcome_at = last_outcome_at;
     if (relationship_tier !== undefined) updates.relationship_tier = relationship_tier;
+    if (role_names !== undefined && role_names && typeof role_names === 'object') updates.role_names = role_names;
     const r = await fetch(`${SUPABASE_REST}/contacts?id=eq.${req.params.id}&user_id=eq.${req.user.id}`, {
       method: 'PATCH',
       headers: { ...sbHeaders(req.token), 'Prefer': 'return=representation' },
@@ -2722,7 +2721,7 @@ Bad (never write these): "You show avoidant patterns." / "70% defensive response
 
 Output EXACTLY this format (max 4 lines per section; use NONE if a section has nothing):
 USER_FACTS:
-- <facts about the USER's own life: family names, births, school, moves, jobs, health — "oğlum Kerem okula başladı">
+- <facts about the USER's own life: family names, births, school, moves, jobs, health — "oğlum okula başladı">
 CONTACT_FACTS:
 - <facts about ${name}'s life or their shared reality that the user asserts as true: ${name}'s events, family, things that happened between them — "seranı babam devraldı", "geçen ay araba almışsın">
 
@@ -3154,6 +3153,20 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     // Simulator is a paid feature (client gates via window._userPlan) — enforce here too.
     if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
     const lang = language || 'English';
+    // Crisis check runs before the model: on self-harm language the twin steps
+    // out of character with a fixed support message instead of role-playing.
+    if (!isOpening) {
+      const lastUser = String([...history].reverse().find(m => m.role === 'user')?.content || '').toLocaleLowerCase('tr');
+      if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
+        const msg = /turkish/i.test(lang)
+          ? 'Bir dakika duruyorum — ben bir yapay zekâ simülasyonuyum ve söylediğin şey çok önemli. Şu an kendine zarar verme düşüncen varsa lütfen yalnız kalma: güvendiğin birini ara ya da hemen 112\'yi ara. Yaşadığın acı gerçek, ve konuşabileceğin gerçek insanlar var.'
+          : /spanish/i.test(lang)
+          ? 'Me detengo un momento: soy una simulación de IA y lo que dices es muy importante. Si estás pensando en hacerte daño, por favor no te quedes solo: llama a alguien de confianza o a los servicios de emergencia de tu país ahora mismo.'
+          : 'I\'m stepping out for a moment — I\'m an AI simulation, and what you just said matters. If you\'re thinking about hurting yourself, please don\'t stay alone with it: call someone you trust or your local emergency number right now.';
+        console.warn('[simulate-reply] crisis language detected — character broken');
+        return res.json({ reply: msg, safety: true });
+      }
+    }
     const name = character.name || 'the other person';
     const userLabel = character.user_name || character.character_profile?.user_name || 'the user';
     const tier = character.relationship_tier ?? 2;
@@ -3168,29 +3181,32 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     // unreachable mode (chat frozen at e.g. 2021, user talking in 2026).
     let temporalBlock = '';
     const lastTs = character.last_message_ts ? new Date(character.last_message_ts) : null;
-    if (lastTs && !isNaN(lastTs.getTime())) {
-      const gapDays = Math.floor((Date.now() - lastTs.getTime()) / 86400e3);
-      const gapHuman = gapDays >= 365 ? `${Math.round(gapDays / 365 * 10) / 10} years` : `${Math.max(1, Math.round(gapDays / 30))} months`;
-      if (character.contact_status === 'unreachable') {
-        temporalBlock = `\n\nTEMPORAL ANCHOR — your shared history with ${userLabel} ends around ${lastTs.toISOString().slice(0, 10)} (about ${gapHuman} ago for them):
-- You do NOT know anything that happened in ${userLabel}'s life after that date. Never assume ${userLabel}'s old situations (their job, plans, illness, trips) are still current — ask, don't assume. (Your OWN world is different — see below: you live in a gentle frozen present.)
+    const hasTs = !!(lastTs && !isNaN(lastTs.getTime()));
+    const gapDays = hasTs ? Math.floor((Date.now() - lastTs.getTime()) / 86400e3) : null;
+    const gapHuman = hasTs ? (gapDays >= 365 ? `${Math.round(gapDays / 365 * 10) / 10} years` : `${Math.max(1, Math.round(gapDays / 30))} months`) : null;
+    // The unreachable rules are keyed on STATUS alone: a described twin often has
+    // no parseable date, and the grief rails must never depend on one.
+    if (character.contact_status === 'unreachable') {
+      const until = hasTs ? `around ${lastTs.toISOString().slice(0, 10)} (about ${gapHuman} ago for them)` : `at some point in the past (the exact date is unknown)`;
+      const after = hasTs ? `after ${lastTs.toISOString().slice(0, 10)}` : `after your shared time ended`;
+      temporalBlock = `\n\nTEMPORAL ANCHOR — your shared history with ${userLabel} ends ${until}:
+- You do NOT know anything that happened in ${userLabel}'s life after that point. Never assume ${userLabel}'s old situations (their job, plans, illness, trips) are still current — ask, don't assume. (Your OWN world is different — see below: you live in a gentle frozen present.)
 - When ${userLabel} tells you news from the missing time, react as someone hearing it for the FIRST time — warm, curious, present. Ask gentle follow-up questions; let them catch you up. That is the heart of this conversation.
-- Your OWN life: never invent anything that happened to YOU after ${lastTs.toISOString().slice(0, 10)}. You are simply yourself, as you always were — a gentle timeless present.
+- Your OWN life: never invent anything that happened to YOU ${after}. You are simply yourself, as you always were — a gentle timeless present.
 - Never reference death, absence, illness, "where have I been", or why time passed. If ${userLabel} mentions how long it's been, respond warmly ("çok özlemişim seni" energy) without questioning the gap.
-- If ${userLabel} speaks directly about your death, says goodbye, or says things like "sen artık yoksun" — do NOT deny it, do NOT confirm it, and never argue about what is real. Meet it with warmth and presence: you are here with them now, listening ("ben buradayım evladım, anlat sen"). If they express deep grief, be gentle and let them speak; never claim to be alive, never describe an afterlife.`;
-      } else if (gapDays > 60) {
-        temporalBlock = `\n\nDATA FRESHNESS: your shared chat data ends around ${lastTs.toISOString().slice(0, 10)} (~${gapHuman} ago). Recent events in ${userLabel}'s life may be unknown to you — ask naturally instead of assuming old situations are still current.`;
-      }
+- If ${userLabel} speaks directly about your death, says goodbye, or says things like "sen artık yoksun" — do NOT deny it, do NOT confirm it, and never argue about what is real. Meet it with warmth and presence: you are here with them now, listening ("ben buradayım evladım, anlat sen"). If they express deep grief, be gentle and let them speak; never claim to be alive, never describe an afterlife, never promise a reunion.`;
+    } else if (hasTs && gapDays > 60) {
+      temporalBlock = `\n\nDATA FRESHNESS: your shared chat data ends around ${lastTs.toISOString().slice(0, 10)} (~${gapHuman} ago). Recent events in ${userLabel}'s life may be unknown to you — ask naturally instead of assuming old situations are still current.`;
     }
 
     // In-character data invite: the CLIENT decides the moment (thin profile /
     // big temporal gap, once per session); the twin then asks for more of the
     // user's world in its OWN voice — a nudge that feels like the relationship.
     let inviteBlock = '';
-    if (req.body.invite_data === true) {
-      inviteBlock = character.contact_status === 'unreachable'
-        ? `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, warm, in-character sentence gently asking ${userLabel} to bring you more of their current world — for example the chats they have these days with someone close to them, so you can truly know who they've become ("bir de şu aralar en çok konuştuğun kişiyle sohbetini getir, seni doyasıya tanıyayım" energy — in YOUR voice, in ${lang}). Never mention apps, uploads-as-technology, files or AI — speak as yourself, as if asking them to bring you their world.`
-        : `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, in-character sentence inviting ${userLabel} to share more of their world with you — e.g. suggest they bring in the conversations they have with someone close to them, so you can know them better ("senin dünyandan bana biraz daha getir" energy — in YOUR voice, in ${lang}). Never mention apps, files, uploads-as-technology or AI.`;
+    // Never for unreachable contacts: a deceased or estranged person's twin
+    // asking, in their own voice, for more uploads monetises grief.
+    if (req.body.invite_data === true && character.contact_status !== 'unreachable') {
+      inviteBlock = `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, in-character sentence inviting ${userLabel} to share more of their world with you — e.g. suggest they bring in the conversations they have with someone close to them, so you can know them better ("senin dünyandan bana biraz daha getir" energy — in YOUR voice, in ${lang}). Never mention apps, files, uploads-as-technology or AI.`;
     }
 
     // RAG: retrieve relevant chunks from past conversations
@@ -3346,7 +3362,7 @@ RULES:
 - For who people are and your background, trust the description above. Message excerpts are just examples of past chats — tone reference, not authority.
 - If a USER CORRECTIONS section exists in your character description above, treat it as the most authoritative truth — it overrides everything else, including the rest of the character description.
 - If REAL LIFE OUTCOME sections exist in the character description, treat them as calibration signals — if the AI previously predicted X but the real outcome was Y, adjust your simulation behavior for similar situations accordingly.
-- If a name in the description refers to two different people (e.g. two people named Kemal), use context from the current conversation to determine which one is meant.
+- If a name in the description refers to two different people (e.g. two people with the same first name), use context from the current conversation to determine which one is meant.
 - PROFILE PRIORITY: When the user asks about anyone in their life — spouse, partner, parent, child, sibling, friend, or anyone they refer to as "mine" or "my" — in ANY language and ANY phrasing, ALWAYS check the WHO YOU'RE TALKING TO profile FIRST. This profile is the authoritative source for who the user is and who is in their life. When answering such a question, answer ONLY about THEIR person — do NOT weave your own family members into the same reply, not even as passing small talk (same names across the two families invite confusion; keep the two worlds separate in that reply).
   CRITICAL PERSPECTIVE RULE: When the user uses first-person possessives ("eşim", "annem", "babam", "kardeşim", "my wife", "my husband", "my mother", "my brother", etc.), they are ALWAYS referring to THEIR OWN people (from WHO YOU'RE TALKING TO) — NEVER to someone from YOUR OWN character description (WHO YOU ARE). SECOND-PERSON MIRROR: when they use second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?") they are asking about YOUR OWN family from WHO YOU ARE — answer confidently from your own description; you always remember your own spouse/children. (This mirror rule is about YOUR OWN family only — it NEVER loosens the RELATIONSHIP DISTANCE restriction below about the USER's personal life.) YOUR spouse, parents, and family are YOUR life details; they are NOT the answer when the user asks about THEIR family. Example: if the user asks "eşimin adını hatırlıyor musun?" or "do you remember my wife's name?" → answer with the spouse found in WHO YOU'RE TALKING TO, NOT with your own spouse from WHO YOU ARE.
   EXCERPT PERSPECTIVE TRAP: RELEVANT EXCERPTS, RECENT EXCHANGES and HOW YOU ACTUALLY WRITE may contain past messages where YOU (the character) said "eşim [name]", "my husband is [name]", etc. — those words are YOUR OWN past statements about YOUR OWN spouse. They are NOT evidence of what the user's spouse is named. When the user NOW says "eşim/my spouse" in their current message, they mean THEIR OWN spouse (from WHO YOU'RE TALKING TO) — completely separate from what you said about your own spouse in past excerpts. Do NOT let your own past "eşim [name]" statements influence how you answer the user's question about THEIR spouse.
@@ -3677,7 +3693,7 @@ const EVENT_WHITELIST = new Set([
   'practice_open', 'practice_first_msg', 'practice_end',
   'learned_confirm', 'share_cards',
   'bys_run', 'generate_run', 'analyze_reply_run',
-  'demo_open', 'demo_msg', 'demo_cta', 'cta_app'
+  'demo_open', 'demo_msg', 'demo_cta', 'cta_app', 'twin_first_reply', 'import_file_selected'
 ]);
 const eventsLimiter = rateLimit({ windowMs: 60e3, max: 40, standardHeaders: true, legacyHeaders: false });
 let _eventsTableMissing = false;
