@@ -2626,6 +2626,27 @@
     @media (hover: none) {
       .tl-del-btn, .tl-replay-btn, .home-conv-del { opacity: 1 !important; }
     }
+    /* ── Quick describe form ── */
+    .qd-form { display:flex; flex-direction:column; gap:8px; }
+    .qd-label { font-size:.86rem; font-weight:700; color:var(--text); margin-top:10px; }
+    .qd-form input, .qd-form textarea { width:100%; font:inherit; font-size:16px; padding:11px 13px; border-radius:12px; border:1px solid var(--bord); background:rgba(0,0,0,.18); color:var(--text); box-sizing:border-box; }
+    .qd-row { display:flex; gap:8px; }
+    .qd-row input { flex:1; min-width:0; }
+    .qd-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .qd-chip { border:1px solid var(--bord); background:rgba(255,255,255,.04); color:var(--sec); border-radius:999px; padding:8px 13px; font:inherit; font-size:.82rem; cursor:pointer; min-height:36px; }
+    .qd-chip.active { border-color:var(--accent); color:var(--text); background:rgba(212,113,90,.12); }
+    .qd-more { margin-top:6px; font-size:.84rem; color:var(--sec); }
+    .qd-more summary { cursor:pointer; padding:6px 0; }
+    .qd-more textarea { margin-top:6px; }
+    .qd-hint { font-size:.8rem; color:var(--muted); margin:10px 0 2px; }
+    .qd-privacy { font-size:.76rem; color:var(--muted); text-align:center; margin-top:6px; }
+    /* ── Twin feedback + guest save (inside the chat) ── */
+    .rp-fb { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 10px; font-size:.8rem; color:var(--sec); }
+    .rp-fb-q { margin-right:2px; }
+    .rp-fb-btn { border:1px solid var(--bord); background:transparent; color:var(--text); border-radius:999px; padding:6px 11px; font:inherit; font-size:.8rem; cursor:pointer; }
+    .rp-fb-input { flex:1; min-width:180px; font:inherit; font-size:16px; padding:8px 11px; border-radius:10px; border:1px solid var(--bord); background:rgba(0,0,0,.2); color:var(--text); }
+    .rp-guest-save { margin:10px 0; padding:12px 14px; border:1px solid rgba(212,113,90,.35); border-radius:12px; background:rgba(212,113,90,.07); font-size:.84rem; line-height:1.5; color:var(--text); display:flex; flex-direction:column; gap:8px; }
+    .rp-guest-save-btn { align-self:flex-start; border:none; background:var(--accent); color:#fff; border-radius:10px; padding:9px 14px; font:inherit; font-weight:700; font-size:.84rem; cursor:pointer; }
   </style>
   <script>
     /* Sync session sniff — same logic as index.html, adapted for app.html.
@@ -3486,16 +3507,16 @@
     <!-- Import Screen -->
     <section id="screen-import" class="hidden" data-screen-id="import">
       <div class="import-inner">
-        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who do you want to add?</h2>
-        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Upload conversation data to build their digital twin.</p>
+        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who do you want to talk to?</h2>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Tell us about them in three answers — or upload your chats for a more lifelike twin.</p>
 
         <div class="import-tabs">
-          <button class="import-tab active" id="importTab-whatsapp" onclick="switchImportTab('whatsapp',this)">WhatsApp</button>
+          <button class="import-tab active" id="importTab-text" onclick="switchImportTab('text',this)">Describe them</button>
+          <button class="import-tab" id="importTab-whatsapp" onclick="switchImportTab('whatsapp',this)">WhatsApp chat</button>
           <button class="import-tab" id="importTab-screenshot" onclick="switchImportTab('screenshot',this)">Screenshot</button>
-          <button class="import-tab" id="importTab-text" onclick="switchImportTab('text',this)">Describe them</button>
         </div>
 
-        <div id="import-pane-whatsapp">
+        <div id="import-pane-whatsapp" class="hidden">
           <p class="import-quality">★★★ Best: full simulation + strategy</p>
           <details class="wa-export-howto" style="margin:0 0 12px;border:1px solid var(--bord);border-radius:12px;padding:10px 14px;font-size:.84rem;line-height:1.6">
             <summary style="cursor:pointer;font-weight:700">How do I get the chat file? (1 minute)</summary>
@@ -3522,34 +3543,52 @@
         </div>
 
         <div id="import-pane-text" class="hidden">
-          <!-- Guided describe-twin builder: for people who can't or won't export a
-               chat. Answers → /api/describe-twin → character_profile → practice. -->
-          <p class="import-quality">★★☆ Anlattıkça güçlenir — sohbet yüklemeden, hafızandan kuralım</p>
-          <div class="dt-builder" id="dtBuilder">
-            <div class="up-meter" style="margin-bottom:10px">
-              <div class="up-meter-row">
-                <span class="up-meter-label" id="dtMeterLabel">🎭 Twin hazırlığı</span>
-                <span class="up-meter-pct" id="dtMeterPct">%0</span>
-              </div>
-              <div class="up-meter-bar"><i id="dtMeterFill" style="width:3%"></i></div>
-              <div class="up-meter-hint" id="dtMeterHint"></div>
+          <!-- Quick describe: three high-signal questions → the twin's first line, no
+               sign-in. Sparse by design: the twin asks for the rest in character. -->
+          <div class="qd-form" id="qdForm">
+            <label class="qd-label">1 · <span>Who are they to you?</span></label>
+            <div class="qd-chips" id="qdRel">
+              <button type="button" class="qd-chip" data-v="annem">Mom</button>
+              <button type="button" class="qd-chip" data-v="babam">Dad</button>
+              <button type="button" class="qd-chip" data-v="dedem/nenem">Grandparent</button>
+              <button type="button" class="qd-chip" data-v="eşim/sevgilim">Partner</button>
+              <button type="button" class="qd-chip" data-v="eski sevgilim">Ex</button>
+              <button type="button" class="qd-chip" data-v="arkadaşım">Friend</button>
+              <button type="button" class="qd-chip" data-v="kardeşim">Sibling</button>
+              <button type="button" class="qd-chip" data-v="patronum">Boss</button>
             </div>
-            <div class="up-interview-body" id="dtBody">
-              <div class="up-interview-q" id="dtQ"></div>
-              <textarea id="dtA" rows="3" class="up-interview-input"></textarea>
-              <div class="up-interview-actions">
-                <button type="button" id="dtNext" class="up-interview-next">Kaydet ve devam →</button>
-                <button type="button" id="dtSkip" class="up-interview-skip">Atla</button>
-              </div>
-              <div class="up-interview-progress" id="dtProgress"></div>
+            <div class="qd-row">
+              <input id="qdName" type="text" maxlength="40" placeholder="Their name" autocomplete="off" />
+              <input id="qdMe" type="text" maxlength="40" placeholder="Your name (optional)" autocomplete="off" />
             </div>
-            <button type="button" class="btn-analyze hidden" id="dtFinishBtn" style="margin-top:10px">🎭 Twin'i kur ve konuşmaya başla →</button>
+
+            <label class="qd-label">2 · <span>What did they call you?</span></label>
+            <input id="qdHitap" type="text" maxlength="80" placeholder="e.g. evladım, kızım, canım, kanka…" autocomplete="off" />
+
+            <label class="qd-label">3 · <span>Write 1–2 things they would typically say — in their words</span></label>
+            <textarea id="qdLaf" rows="3" maxlength="600" placeholder="e.g. &quot;Yemek yedin mi sen?&quot;&#10;&quot;Aman be evladım, takma kafana.&quot;"></textarea>
+
+            <details class="qd-more">
+              <summary>Optional: how did they see you? (makes the twin know you)</summary>
+              <textarea id="qdGoz" rows="2" maxlength="600" placeholder="e.g. Saw me as stubborn but hard-working, always worried I worked too much"></textarea>
+            </details>
+
+            <label class="qd-label"><span>Can you still talk to them?</span></label>
+            <div class="qd-chips" id="qdStatus">
+              <button type="button" class="qd-chip active" data-v="active">We talk</button>
+              <button type="button" class="qd-chip" data-v="estranged">We're on bad terms</button>
+              <button type="button" class="qd-chip" data-v="unreachable">I can't reach them anymore</button>
+            </div>
+
+            <p class="qd-hint" id="qdHint">Its first version — the more you tell it, the more it sounds like them.</p>
+            <button type="button" class="btn-analyze" id="qdGo">Hear their first message →</button>
+            <p class="qd-privacy">🔒 No sign-up needed to try. Nothing is saved unless you choose to keep it.</p>
           </div>
         </div>
 
         <p class="import-file-note" id="importFileName"></p>
 
-        <div class="import-meta">
+        <div class="import-meta" id="importMetaMain" style="display:none">
           <input id="importName" type="text" placeholder="Name (e.g. Alex)" />
           <select id="importType">
             <option value="">Relationship type…</option>
@@ -3566,7 +3605,7 @@
         <!-- Relationship status drives the twin's opening tone + which actions make
              sense (e.g. "before you send" is meaningless for someone unreachable).
              Umbrella framing: "yarım kalan konuşmalar" — never leads with death. -->
-        <div class="import-meta" style="margin-top:8px">
+        <div class="import-meta" id="importMetaStatus" style="margin-top:8px;display:none">
           <select id="importStatus" style="width:100%">
             <option value="active">Bu kişiyle aran nasıl? — Konuşuyoruz</option>
             <option value="estranged">Aramız bozuk / küsüz</option>
@@ -3574,7 +3613,7 @@
           </select>
         </div>
 
-        <button class="btn-analyze" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analyze →</button>
+        <button class="btn-analyze hidden" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analyze →</button>
       </div>
     </section>
 
@@ -3818,7 +3857,8 @@
           // handled after auth check below — flag for checkFirstRunAndRoute
           window._forceImport = true;
           // deep link from the landing "describe them from memory" line
-          if (urlParams.get('mode') === 'describe') window._forceDescribe = true;
+          window._forceDescribe = urlParams.get('mode') !== 'whatsapp' && urlParams.get('mode') !== 'screenshot';
+          if (urlParams.get('mode') === 'whatsapp') window._forceTab = 'whatsapp';
           if (['active','estranged','unreachable'].includes(urlParams.get('status'))) window._forceStatus = urlParams.get('status');
           window.history.replaceState({}, '', '/app.html');
         }
@@ -3849,9 +3889,9 @@
           document.getElementById('authGate').classList.add('hidden');
           if (window._forceImport) {
             window._forceImport = false; App.navigateTo('import');
-            if (window._forceDescribe) { window._forceDescribe = false; switchImportTab('text'); }
-        if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; window._forceStatus = null; }
-            if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; window._forceStatus = null; }
+            if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; } else { window._forceDescribe = false; switchImportTab('text'); }
+        if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
+            if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
           }
           else document.getElementById('screen-landing').classList.remove('hidden');
         }
@@ -3893,8 +3933,16 @@
       if (App.state.currentScreen !== null) return;
       if (window._forceImport) {
         window._forceImport = false; App.navigateTo('import');
-        if (window._forceDescribe) { window._forceDescribe = false; switchImportTab('text'); }
+        if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; } else { window._forceDescribe = false; switchImportTab('text'); }
         return;
+      }
+      const pendingGuest = sessionStorage.getItem('_pendingGuestTwin');
+      if (pendingGuest) {
+        sessionStorage.removeItem('_pendingGuestTwin');
+        try {
+          const pg = JSON.parse(pendingGuest);
+          if (pg && pg.profile && Date.now() - pg.ts < 30 * 60 * 1000) { await resumeGuestTwin(pg); return; }
+        } catch (e) { /* ignore malformed pending state */ }
       }
       const pendingRaw = sessionStorage.getItem('_pendingImport');
       if (pendingRaw) {
@@ -3986,7 +4034,7 @@
     let _recentMessages   = [];
     let _pendingContactAnalysis = null;
     let _suppressLoadingOverlay = false;
-    let _importMode = 'whatsapp';
+    let _importMode = 'text';
     let _importFile = null;
     let _processingTimer = null;
     let _wowContactId = null;
@@ -5549,7 +5597,10 @@
       // The describe-twin builder has its own finish button; the shared Analyze
       // button only applies to chat/screenshot imports.
       document.getElementById('importAnalyzeBtn')?.classList.toggle('hidden', tab === 'text');
-      if (tab === 'text') _dtStart();
+      // The quick describe form carries its own name/status fields.
+      const _isText = tab === 'text';
+      ['importMetaMain', 'importMetaStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isText ? 'none' : ''; });
+      if (_isText) _qdInit();
     }
 
     // ── Describe-twin builder (no-import path) ────────────────────────────────
@@ -5673,7 +5724,7 @@
         observed_patterns: null, relationship_summary: dd.relationship_summary || null,
         character_profile: dd.character_profile, relationship_tier: 2,
         contact_status: status, opener_samples: openers.length ? openers : null,
-        last_message_ts: lastTs, source: 'described'
+        last_message_ts: lastTs, source: 'described', person_a: am._me || null
       };
       _dtAnswers = null; _dtIdx = 0;
       window._track?.('describe_done');
@@ -5709,6 +5760,165 @@
     document.getElementById('dtNext')?.addEventListener('click', () => _dtAdvance(true));
     document.getElementById('dtSkip')?.addEventListener('click', () => _dtAdvance(false));
     document.getElementById('dtFinishBtn')?.addEventListener('click', finishDescribeTwin);
+
+    // ── Quick describe: three answers → the twin's first line, no sign-in ─────
+    // Sparse on purpose. Quality comes from the two highest-signal answers (how
+    // they addressed you + their own words), from the server's no-invention rule,
+    // and from the "did that sound like them?" fix loop after the first reply.
+    let _qdRel = '', _qdStatus = 'active', _qdInited = false;
+    const _QD_T = {
+      needName: { tr: 'Onun adını yaz', en: 'Write their name', es: 'Escribe su nombre' },
+      needVoice: { tr: 'Sana nasıl hitap ettiğini ya da onun bir cümlesini yaz — ikiz bunlarla konuşur', en: 'Add what they called you or one of their sentences — the twin speaks from these', es: 'Añade cómo te llamaba o una frase suya — el gemelo habla con eso' },
+      building: { tr: 'İkiz hazırlanıyor… (~20 sn)', en: 'Building the twin… (~20 s)', es: 'Creando el gemelo… (~20 s)' },
+      aiDown: { tr: 'AI hizmeti şu an kullanılamıyor — birazdan tekrar dene.', en: 'The AI service is unavailable right now — try again shortly.', es: 'El servicio de IA no está disponible ahora — inténtalo en un momento.' },
+      failed: { tr: 'Bir şeyler ters gitti — tekrar dene.', en: 'Something went wrong — try again.', es: 'Algo salió mal — inténtalo de nuevo.' },
+      limit: { tr: 'Bugünlük deneme sınırına ulaştın — kaydedip devam edebilirsin.', en: 'You reached today\'s try limit — save to continue.', es: 'Llegaste al límite de hoy — guarda para continuar.' }
+    };
+    const _qdTx = k => (_QD_T[k][window.APP_LANG || 'tr'] || _QD_T[k].tr);
+    function _qdSetStatus(v) {
+      if (!['active', 'estranged', 'unreachable'].includes(v)) return;
+      _qdStatus = v;
+      document.querySelectorAll('#qdStatus .qd-chip').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+      const s = document.getElementById('importStatus'); if (s) s.value = v;
+    }
+    function _qdInit() {
+      if (_qdInited) return;
+      _qdInited = true;
+      window._track?.('describe_start');
+      document.querySelectorAll('#qdRel .qd-chip').forEach(b => b.addEventListener('click', () => {
+        _qdRel = _qdRel === b.dataset.v ? '' : b.dataset.v;
+        document.querySelectorAll('#qdRel .qd-chip').forEach(x => x.classList.toggle('active', x.dataset.v === _qdRel));
+      }));
+      document.querySelectorAll('#qdStatus .qd-chip').forEach(b => b.addEventListener('click', () => _qdSetStatus(b.dataset.v)));
+      document.getElementById('qdGo')?.addEventListener('click', finishQuickDescribe);
+    }
+    function _qdCollect() {
+      const v = id => (document.getElementById(id)?.value || '').trim();
+      const name = v('qdName'), me = v('qdMe'), hitap = v('qdHitap'), laf = v('qdLaf'), goz = v('qdGoz');
+      const am = {
+        who: [_qdRel ? (_qdRel + ' ' + name) : name, me ? ('ben ' + me) : ''].filter(Boolean).join(', '),
+        hitap, laflar: laf, gozunden: goz, _me: me
+      };
+      return { name, me, hitap, laf, am };
+    }
+    async function finishQuickDescribe() {
+      const { name, me, hitap, laf, am } = _qdCollect();
+      if (!name) { showToast(_qdTx('needName'), 'error'); document.getElementById('qdName')?.focus(); return; }
+      if (!hitap && !laf) { showToast(_qdTx('needVoice'), 'error'); document.getElementById('qdHitap')?.focus(); return; }
+      const btn = document.getElementById('qdGo');
+      const old = btn.textContent;
+      btn.disabled = true; btn.textContent = _qdTx('building');
+      window._importStatus = _qdStatus;
+      try {
+        if (accessToken) {
+          await _describeCreate(name, _qdStatus, am);
+          return;
+        }
+        // Guest: build the twin in memory only. Saving (and memory) needs sign-in.
+        const answers = _DT_QS.filter(q => (am[q.key] || '').trim()).map(q => ({ key: q.key, q: q.tr, a: am[q.key] }));
+        const dr = await fetch('/api/describe-twin', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, status: _qdStatus, answers, language: aiLang() })
+        });
+        const dd = await dr.json().catch(() => ({}));
+        if (dr.status === 429) throw new Error('limit');
+        if (!dr.ok || !dd.character_profile) throw new Error(dd.error === 'ai_unavailable' ? 'ai_unavailable' : 'failed');
+        const openers = (laf || '').split('\n').map(l => l.trim()).filter(l => l.length > 2).slice(0, 3);
+        window._guestTwin = { name, status: _qdStatus, am, me, profile: dd.character_profile, rel: dd.relationship_summary || null };
+        window._track?.('describe_done', { guest: true });
+        openSimulatorFresh({
+          id: null, name, type: _qdRel || null, relationship_state: null, observed_patterns: null,
+          relationship_summary: dd.relationship_summary || null, character_profile: dd.character_profile,
+          relationship_tier: 2, contact_status: _qdStatus, opener_samples: openers.length ? openers : null,
+          last_message_ts: null, source: 'described', person_a: me || null
+        }, null);
+      } catch (e) {
+        console.error('[quick-describe]', e);
+        showToast(_qdTx(e && e.message === 'ai_unavailable' ? 'aiDown' : e && e.message === 'limit' ? 'limit' : 'failed'), 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = old;
+      }
+    }
+
+    // ── Guest twin → keep it: sign in, then the twin and the chat are saved ──
+    let _guestSaveShown = false;
+    function _rpGuestSaveBar(reason) {
+      if (accessToken || !window._guestTwin || !_simCharacter || _simCharacter.contact_id) return;
+      if (_guestSaveShown && reason !== 'cap') return;
+      _guestSaveShown = true;
+      const L = window.APP_LANG || 'tr';
+      const nm = _simCharacter.name || '';
+      const T = {
+        soft: { tr: nm + ' ile konuşmanı ve ikizini kaydetmek ister misin? Bir dahakine kaldığınız yerden hatırlar.', en: 'Keep ' + nm + '\'s twin and this conversation? Next time it remembers where you left off.', es: '¿Guardar el gemelo de ' + nm + ' y esta conversación? La próxima vez recordará dónde lo dejaron.' },
+        cap: { tr: 'Devam etmek için kaydet — konuşman ve ' + nm + ' kaybolmasın.', en: 'Save to keep going — so you don\'t lose this conversation and ' + nm + '.', es: 'Guarda para continuar — para no perder esta conversación y a ' + nm + '.' },
+        btn: { tr: 'Google ile kaydet', en: 'Save with Google', es: 'Guardar con Google' }
+      };
+      document.getElementById('rp-guest-save')?.remove();
+      const bar = document.createElement('div');
+      bar.id = 'rp-guest-save';
+      bar.className = 'rp-guest-save';
+      const p = document.createElement('div');
+      p.textContent = (reason === 'cap' ? T.cap : T.soft)[L] || (reason === 'cap' ? T.cap.tr : T.soft.tr);
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'rp-guest-save-btn';
+      b.textContent = T.btn[L] || T.btn.tr;
+      b.addEventListener('click', _guestTwinSave);
+      bar.appendChild(p); bar.appendChild(b);
+      const msgs = document.getElementById('rp-messages');
+      msgs.appendChild(bar);
+      msgs.scrollTop = msgs.scrollHeight;
+      window._track?.('guest_save_shown', { reason });
+    }
+    async function _guestTwinSave() {
+      const g = window._guestTwin;
+      if (!g) return;
+      try {
+        sessionStorage.setItem('_pendingGuestTwin', JSON.stringify({ ...g, history: _simHistory.slice(-30), ts: Date.now() }));
+      } catch (_) {}
+      window._track?.('guest_save_click');
+      await signInWithGoogle();
+    }
+    async function resumeGuestTwin(pg) {
+      const H = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` };
+      try {
+        const cr = await fetch('/api/contacts', { method: 'POST', headers: H,
+          body: JSON.stringify({ name: pg.name, relationship_summary: pg.rel || null, source: 'described', relationship_tier: 2 }) });
+        const contact = await cr.json();
+        if (cr.status === 402) { showUpgradeModal('import'); App.navigateTo('home'); return; }
+        if (!cr.ok || !contact.id) throw new Error('contact failed');
+        await fetch(`/api/contacts/${contact.id}`, { method: 'PATCH', headers: H, body: JSON.stringify({ character_profile: pg.profile }) });
+        await fetch('/api/conversations', { method: 'POST', headers: H,
+          body: JSON.stringify({ contact_id: contact.id, situation: `Described from memory — ${pg.name}`, categoryId: 'personal', subcategoryId: null,
+            fields: { contact_status: pg.status || 'active', described: true, chat_stats: null } }) });
+        const hist = Array.isArray(pg.history) ? pg.history.filter(m => m && m.content) : [];
+        if (hist.some(m => m.role === 'user')) {
+          const sr = await fetch('/api/conversations', { method: 'POST', headers: H,
+            body: JSON.stringify({ contact_id: contact.id, categoryId: 'simulation', situation: `Practice session with ${pg.name}`,
+              fields: { session_type: 'simulation', contact_status: pg.status || 'active', from_guest: true } }) });
+          if (sr.ok) {
+            const conv = await sr.json();
+            for (const m of hist) {
+              await fetch(`/api/conversations/${conv.id}/messages`, { method: 'POST', headers: H,
+                body: JSON.stringify({ role: m.role === 'user' ? 'sent' : 'received', content: m.content, strategy: m.role === 'assistant' ? `AI ${pg.name}` : 'user' }) });
+            }
+          }
+        }
+        window._guestTwin = null;
+        window._track?.('guest_twin_saved');
+        const openers = (pg.am?.laflar || '').split('\n').map(l => l.trim()).filter(l => l.length > 2).slice(0, 3);
+        loadPersonSection(contact.id);
+        openSimulatorFresh({
+          id: contact.id, name: pg.name, type: null, relationship_state: null, observed_patterns: null,
+          relationship_summary: pg.rel || null, character_profile: pg.profile, relationship_tier: 2,
+          contact_status: pg.status || 'active', opener_samples: openers.length ? openers : null,
+          last_message_ts: null, source: 'described', person_a: pg.me || null
+        }, null);
+      } catch (e) {
+        console.error('[resume-guest-twin]', e);
+        showToast(_qdTx('failed'), 'error');
+        App.navigateTo('import');
+      }
+    }
 
     function handleImportFileSelect(input) {
       const file = input.files[0];
@@ -6998,6 +7208,7 @@
       _simHistory = [];
       _simTurn = 0;
       _inviteAsked = false;
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false;
       window._track?.('practice_open', { status: (contactCtx && contactCtx.contact_status) || 'active' });
       // Knowledge score powers the in-chat data invite (thin profile → the twin
       // itself asks for more of the user's world at a natural moment).
@@ -7134,6 +7345,7 @@
           _simHistory.push({ role: 'assistant', content: reply });
           _rpAppendBubble('other', reply);
           window._track?.('twin_first_reply', { status: _simCharacter?.contact_status || 'active' });
+          _rpFeedbackChips();
           _rpSpeak(reply);
         } else {
           const hintMap = { tr: 'Şu an sessiz görünüyor — sen başla, ilk mesajı sen yaz. 💬', en: 'Seems quiet right now — you start, write the first message. 💬', es: 'Parece tranquilo ahora — empieza tú, escribe el primer mensaje. 💬' };
@@ -7313,11 +7525,8 @@
       if (els.type) els.type.value = '';
       if (els.text) els.text.value = '';
       if (els.btn)  els.btn.disabled = false;
-      ['whatsapp','screenshot','text'].forEach(t => {
-        document.getElementById('import-pane-' + t)?.classList.toggle('hidden', t !== 'whatsapp');
-        document.getElementById('importTab-' + t)?.classList.toggle('active', t === 'whatsapp');
-      });
       App.navigateTo('import');
+      switchImportTab('text');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -9227,6 +9436,90 @@
     let _simTurn       = 1;
     let _simInitialMsg = '';
     let _inviteAsked   = false; // in-chat data invite fires at most once per session
+    // Autosave: every turn is persisted as it happens (signed-in, saved contacts),
+    // so closing with ✕ never loses the conversation and the next session's twin
+    // can remember it. One conversation row per session; a per-session object
+    // keeps late writes from an old session out of a new one.
+    let _simSess = { convId: null, saved: 0 };
+    let _simSaveQ = Promise.resolve();
+    let _rpFeedbackShown = false;
+    function _simAutosave() {
+      if (!accessToken || !_simCharacter || !_simCharacter.contact_id) return;
+      const snap = _simHistory.slice();
+      if (!snap.some(m => m.role === 'user')) return;
+      const sess = _simSess;
+      const ch = { id: _simCharacter.contact_id, name: _simCharacter.name, status: _simCharacter.contact_status || 'active', goal: _simCharacter.intent_goal || null };
+      const H = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` };
+      _simSaveQ = _simSaveQ.then(async () => {
+        if (!sess.convId) {
+          const r = await fetch('/api/conversations', { method: 'POST', headers: H,
+            body: JSON.stringify({ contact_id: ch.id, categoryId: 'simulation', situation: `Practice session with ${ch.name}`,
+              fields: { session_type: 'simulation', contact_status: ch.status, intent_goal: ch.goal } }) });
+          if (!r.ok) return;
+          sess.convId = (await r.json()).id;
+        }
+        while (sess.saved < snap.length) {
+          const m = snap[sess.saved];
+          const r = await fetch(`/api/conversations/${sess.convId}/messages`, { method: 'POST', headers: H,
+            body: JSON.stringify({ role: m.role === 'user' ? 'sent' : 'received', content: m.content, strategy: m.role === 'assistant' ? `AI ${ch.name}` : 'user' }) });
+          if (!r.ok) return;
+          sess.saved++;
+        }
+      }).catch(() => {});
+    }
+    // "Did that sound like them?" — right after the twin's first line. A miss
+    // becomes a correction the very next reply uses, instead of a reason to leave.
+    function _rpFeedbackChips() {
+      if (_rpFeedbackShown || !_simCharacter) return;
+      _rpFeedbackShown = true;
+      const L = window.APP_LANG || 'tr';
+      const nm = _simCharacter.name || '';
+      const T = {
+        q: { tr: 'Ona benzedi mi?', en: 'Did that sound like them?', es: '¿Sonó como esa persona?' },
+        up: { tr: '👍 Tam onun gibi', en: '👍 Just like them', es: '👍 Igual que esa persona' },
+        fix: { tr: '✏️ O böyle demezdi', en: '✏️ They wouldn\'t say it like that', es: '✏️ No lo diría así' },
+        ph: { tr: nm + ' nasıl derdi? (örn. "Hiç merhaba demez, direkt \'naber lan\' yazardı")', en: 'How would ' + nm + ' say it?', es: '¿Cómo lo diría ' + nm + '?' },
+        save: { tr: 'Düzelt', en: 'Fix it', es: 'Corregir' },
+        thanks: { tr: 'Güzel — konuşmaya devam et.', en: 'Great — keep talking.', es: 'Genial — sigue hablando.' },
+        fixed: { tr: '✓ Not ettim — bundan sonra öyle konuşacak.', en: '✓ Noted — it will talk that way from now on.', es: '✓ Anotado — hablará así desde ahora.' }
+      };
+      const tx = k => T[k][L] || T[k].tr;
+      const box = document.createElement('div');
+      box.className = 'rp-fb';
+      const q = document.createElement('span'); q.className = 'rp-fb-q'; q.textContent = tx('q');
+      const up = document.createElement('button'); up.type = 'button'; up.className = 'rp-fb-btn'; up.textContent = tx('up');
+      const fx = document.createElement('button'); fx.type = 'button'; fx.className = 'rp-fb-btn'; fx.textContent = tx('fix');
+      up.addEventListener('click', () => { window._track?.('twin_feedback', { v: 'up' }); box.textContent = tx('thanks'); setTimeout(() => box.remove(), 2500); });
+      fx.addEventListener('click', () => {
+        box.innerHTML = '';
+        const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 300; inp.className = 'rp-fb-input'; inp.placeholder = tx('ph');
+        const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'rp-fb-btn'; ok.textContent = tx('save');
+        const apply = async () => {
+          const v = inp.value.trim();
+          if (!v || !_simCharacter) return;
+          const add = '\n\nUSER CORRECTIONS (authoritative — the owner says this is how you really talk):\n- ' + v;
+          _simCharacter.character_profile = String(_simCharacter.character_profile || '') + add;
+          if (window._guestTwin) window._guestTwin.profile = _simCharacter.character_profile;
+          if (_simCharacter.contact_id && accessToken) {
+            fetch(`/api/contacts/${_simCharacter.contact_id}`, { method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+              body: JSON.stringify({ character_profile: _simCharacter.character_profile }) }).catch(() => {});
+          }
+          window._track?.('twin_feedback', { v: 'fix' });
+          box.textContent = tx('fixed');
+          setTimeout(() => box.remove(), 3500);
+          document.getElementById('rp-input')?.focus();
+        };
+        ok.addEventListener('click', apply);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+        box.appendChild(inp); box.appendChild(ok);
+        inp.focus();
+      });
+      box.appendChild(q); box.appendChild(up); box.appendChild(fx);
+      const msgs = document.getElementById('rp-messages');
+      msgs.appendChild(box);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
     let _userPrediction = null; // { key: 'positive'|'resistant'|'deflect', label: string }
     let _predictionId = null;
 
@@ -9430,18 +9723,21 @@
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
-          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: inviteNow || undefined })
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: inviteNow || undefined, conversation_id: _simSess.convId || undefined })
         });
         const data = await resp.json();
         typingEl.remove();
         if (resp.status === 402) { showUpgradeModal(); return; }
+        if (resp.status === 401 && data.error === 'signin_required') { _rpGuestSaveBar('cap'); return; }
         if (!resp.ok) throw new Error(data.error || 'Failed');
         _simHistory.push({ role: 'assistant', content: data.reply });
         _rpAppendBubble('other', data.reply);
+        _simAutosave();
         _rpSpeak(data.reply);
         if (inviteNow) { _inviteAsked = true; _rpRenderInviteChips(); }
         _simTurn++;
         if (_simTurn === 1) window._track?.('practice_first_msg', { status: _simCharacter?.contact_status || 'active' });
+        if (!accessToken && _simTurn >= 3) _rpGuestSaveBar('soft');
         document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
       } catch (e) {
@@ -9485,6 +9781,7 @@
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false;
       if (_isListening && _recognition) _recognition.stop();
       window.speechSynthesis.cancel();
       _ttsEnabled = false;
@@ -9494,6 +9791,7 @@
 
     async function endSimulation() {
       window._track?.('practice_end', { turns: _simTurn });
+      _simAutosave();
       document.getElementById('rp-suggest').classList.add('hidden');
       document.getElementById('rp-footer').classList.add('hidden');
 
@@ -9629,7 +9927,7 @@
         // ────────────────────────────────────────────────────────────
 
         // ── Fire-and-forget: save session to Supabase ────────────────
-        if (accessToken && _simHistory.length > 0) {
+        if (accessToken && _simHistory.length > 0 && !_simCharacter?.contact_id) {
           (async () => {
             try {
               const convResp = await fetch('/api/conversations', {
@@ -10155,6 +10453,8 @@
       _simHistory.push({ role: 'user', content: text });
       _rpAppendBubble('user', text);
       _rpInput.value = '';
+      document.querySelector('#rp-messages .rp-fb')?.remove();
+      _simAutosave();
       _rpCallSimulate();
     });
     // ─────────────────────────────────────────────────────────────────────────

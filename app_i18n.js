@@ -198,3 +198,40 @@ Object.assign(window.I18N_C, {
   "Save it to Files (or send it to yourself), then pick it here.": { "tr":"Dosyalar'a kaydet (ya da kendine gönder), sonra buradan seç.", "en":"Save it to Files (or send it to yourself), then pick it here.", "es":"Guárdalo en Archivos (o envíatelo), y luego elígelo aquí." },
   "Nothing is sent until you press Analyze.": { "tr":"Analiz Et'e basana kadar hiçbir şey gönderilmez.", "en":"Nothing is sent until you press Analyze.", "es":"No se envía nada hasta que pulses Analizar." }
 });
+
+// Quick describe (guest-first) + import screen header
+Object.assign(window.I18N_C, {
+  "Who do you want to talk to?": { "tr":"Kiminle konuşmak istersin?", "en":"Who do you want to talk to?", "es":"¿Con quién quieres hablar?" },
+  "Tell us about them in three answers — or upload your chats for a more lifelike twin.": { "tr":"Onu üç cevapla anlat — ya da daha gerçekçi bir ikiz için sohbetlerini yükle.", "en":"Tell us about them in three answers — or upload your chats for a more lifelike twin.", "es":"Descríbelo en tres respuestas — o sube tus chats para un gemelo más real." },
+  "Describe them": { "tr":"Onu anlat", "en":"Describe them", "es":"Descríbelo" },
+  "WhatsApp chat": { "tr":"WhatsApp sohbeti", "en":"WhatsApp chat", "es":"Chat de WhatsApp" },
+  "Screenshot": { "tr":"Ekran görüntüsü", "en":"Screenshot", "es":"Captura" },
+  "Who are they to you?": { "tr":"O senin neyin?", "en":"Who are they to you?", "es":"¿Quién es para ti?" },
+  "Mom": { "tr":"Annem", "en":"Mom", "es":"Mamá" },
+  "Dad": { "tr":"Babam", "en":"Dad", "es":"Papá" },
+  "Grandparent": { "tr":"Dedem / Nenem", "en":"Grandparent", "es":"Abuelo/a" },
+  "Partner": { "tr":"Eşim / Sevgilim", "en":"Partner", "es":"Pareja" },
+  "Ex": { "tr":"Eski sevgilim", "en":"Ex", "es":"Ex" },
+  "Friend": { "tr":"Arkadaşım", "en":"Friend", "es":"Amigo/a" },
+  "Sibling": { "tr":"Kardeşim", "en":"Sibling", "es":"Hermano/a" },
+  "Boss": { "tr":"Patronum", "en":"Boss", "es":"Jefe/a" },
+  "What did they call you?": { "tr":"Sana nasıl hitap ederdi?", "en":"What did they call you?", "es":"¿Cómo te llamaba?" },
+  "Write 1–2 things they would typically say — in their words": { "tr":"Onun ağzından 1-2 tipik cümle yaz — tam onun diyeceği gibi", "en":"Write 1–2 things they would typically say — in their words", "es":"Escribe 1–2 frases típicas suyas — con sus palabras" },
+  "Optional: how did they see you? (makes the twin know you)": { "tr":"İsteğe bağlı: o seni nasıl görürdü? (ikiz seni tanısın)", "en":"Optional: how did they see you? (makes the twin know you)", "es":"Opcional: ¿cómo te veía? (para que el gemelo te conozca)" },
+  "Can you still talk to them?": { "tr":"Onunla hâlâ konuşabiliyor musun?", "en":"Can you still talk to them?", "es":"¿Todavía puedes hablar con esa persona?" },
+  "We talk": { "tr":"Konuşuyoruz", "en":"We talk", "es":"Hablamos" },
+  "We're on bad terms": { "tr":"Aramız bozuk", "en":"We're on bad terms", "es":"Estamos distanciados" },
+  "I can't reach them anymore": { "tr":"Artık ulaşamıyorum", "en":"I can't reach them anymore", "es":"Ya no puedo contactarle" },
+  "Its first version — the more you tell it, the more it sounds like them.": { "tr":"Bu ilk hali — anlattıkça ona daha çok benzer.", "en":"Its first version — the more you tell it, the more it sounds like them.", "es":"Es su primera versión — cuanto más cuentes, más se parecerá." },
+  "Hear their first message →": { "tr":"İlk mesajını duy →", "en":"Hear their first message →", "es":"Escucha su primer mensaje →" },
+  "🔒 No sign-up needed to try. Nothing is saved unless you choose to keep it.": { "tr":"🔒 Denemek için kayıt gerekmez. Sen saklamayı seçmedikçe hiçbir şey kaydedilmez.", "en":"🔒 No sign-up needed to try. Nothing is saved unless you choose to keep it.", "es":"🔒 No hace falta registrarse para probar. No se guarda nada salvo que lo elijas." }
+});
+
+// Quick describe placeholders
+Object.assign(window.I18N_C, {
+  "Their name": { "tr":"Onun adı", "en":"Their name", "es":"Su nombre" },
+  "Your name (optional)": { "tr":"Senin adın (isteğe bağlı)", "en":"Your name (optional)", "es":"Tu nombre (opcional)" },
+  "e.g. evladım, kızım, canım, kanka…": { "tr":"örn. evladım, kızım, canım, kanka, adın…", "en":"e.g. sweetie, buddy, kiddo, your name…", "es":"ej. cariño, mijo, colega, tu nombre…" },
+  "e.g. \"Yemek yedin mi sen?\"\n\"Aman be evladım, takma kafana.\"": { "tr":"örn. \"Yemek yedin mi sen?\"\n\"Aman be evladım, takma kafana.\"", "en":"e.g. \"Did you eat yet?\"\n\"Oh don't worry about it, kiddo.\"", "es":"ej. \"¿Ya comiste?\"\n\"Ay, no te preocupes, mijo.\"" },
+  "e.g. Saw me as stubborn but hard-working, always worried I worked too much": { "tr":"örn. Beni inatçı ama çalışkan bulurdu, hep çok çalıştığımdan endişelenirdi", "en":"e.g. Saw me as stubborn but hard-working, always worried I worked too much", "es":"ej. Me veía terco pero trabajador, siempre preocupado porque trabajaba demasiado" }
+});

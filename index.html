@@ -425,20 +425,20 @@
   <div class="wrap">
     <div class="hero-inner">
       <h1 class="hero-h1">Say the things you never said.</h1>
-      <p class="hero-tagline">Import a WhatsApp chat — we build their AI twin.<br>Rehearse the hard conversation. Finish the unfinished one.</p>
+      <p class="hero-tagline">Describe someone in your life in three answers — their AI twin talks to you the way they do.<br>Rehearse the hard conversation. Finish the unfinished one.</p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
-      <a href="app.html?import=1" class="hero-import-card" id="heroImportCta">
-        <span class="hero-import-icon">📤</span>
+      <a href="app.html?import=1&amp;mode=describe" class="hero-import-card" id="heroImportCta">
+        <span class="hero-import-icon">🖊</span>
         <span class="hero-import-info">
-          <span class="hero-import-label">Import your chat</span>
-          <span class="hero-import-hint">WhatsApp .txt or .zip · ready in about 2 minutes</span>
+          <span class="hero-import-label">Describe them in 3 answers</span>
+          <span class="hero-import-hint">No sign-up · their first message in about 20 seconds</span>
         </span>
-        <span class="hero-import-arrow">Create your twin →</span>
+        <span class="hero-import-arrow">Hear them →</span>
       </a>
 
       <!-- Secondary door: build the twin from memory (no export needed) -->
-      <a href="app.html?import=1&amp;mode=describe" class="hero-describe-btn">🖊 <span>No chat export?</span> <b>Describe them from memory →</b></a>
+      <a href="app.html?import=1&amp;mode=whatsapp" class="hero-describe-btn">📤 <span>Have your WhatsApp chats?</span> <b>Upload them for a more lifelike twin →</b></a>
 
       <!-- Logged-in: open app button (hidden by default) -->
       <a href="app.html" class="hero-cta" id="heroOpenAppCta" style="display:none">
@@ -449,11 +449,11 @@
       <p class="hero-trust">🔒 Stored privately in your account so the twin can remember. Never used to train AI. Delete everything anytime.</p>
 
       <div class="hero-steps">
-        <div class="hero-step"><span class="hero-step-num">1</span>Import chat</div>
+        <div class="hero-step"><span class="hero-step-num">1</span>Describe them</div>
         <span class="hero-step-arrow">→</span>
-        <div class="hero-step"><span class="hero-step-num">2</span>Build the twin</div>
+        <div class="hero-step"><span class="hero-step-num">2</span>Hear their first message</div>
         <span class="hero-step-arrow">→</span>
-        <div class="hero-step"><span class="hero-step-num">3</span>Rehearse</div>
+        <div class="hero-step"><span class="hero-step-num">3</span>Say what you never said</div>
       </div>
     </div>
   </div>
@@ -695,6 +695,15 @@
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
     "Rehearse the hard conversation. Finish the unfinished one.":{tr:"Zor konuşmayı prova et. Yarım kalanı tamamla.",es:"Ensaya la conversación difícil. Termina la que quedó a medias."},
     "No chat export?":{tr:"Sohbet dosyan yok mu?",es:"¿Sin exportar el chat?"},
+    "Describe someone in your life in three answers — their AI twin talks to you the way they do.":{tr:"Hayatındaki birini üç cevapla anlat — yapay zekâ ikizi seninle tam onun gibi konuşsun.",es:"Describe a alguien de tu vida en tres respuestas — su gemelo de IA te habla como esa persona."},
+    "Describe them in 3 answers":{tr:"Onu 3 cevapla anlat",es:"Descríbelo en 3 respuestas"},
+    "No sign-up · their first message in about 20 seconds":{tr:"Kayıt yok · ilk mesajı yaklaşık 20 saniyede",es:"Sin registro · su primer mensaje en unos 20 segundos"},
+    "Hear them →":{tr:"Onu duy →",es:"Escúchalo →"},
+    "Have your WhatsApp chats?":{tr:"WhatsApp sohbetlerin var mı?",es:"¿Tienes tus chats de WhatsApp?"},
+    "Upload them for a more lifelike twin →":{tr:"Daha gerçekçi bir ikiz için yükle →",es:"Súbelos para un gemelo más real →"},
+    "Describe them":{tr:"Onu anlat",es:"Descríbelo"},
+    "Hear their first message":{tr:"İlk mesajını duy",es:"Escucha su primer mensaje"},
+    "Say what you never said":{tr:"Söyleyemediğini söyle",es:"Di lo que nunca dijiste"},
     "Import your chat":{tr:"Sohbetini yükle",es:"Importa tu chat"},"WhatsApp .txt or .zip · ready in about 2 minutes":{tr:"WhatsApp .txt veya .zip · yaklaşık 2 dakikada hazır",es:"WhatsApp .txt o .zip · listo en unos 2 minutos"},
     "Create your twin →":{tr:"İkizini oluştur →",es:"Crea tu gemelo →"},"Go to your twins →":{tr:"İkizlerine git →",es:"Ir a tus gemelos →"},"Open App →":{tr:"Uygulamayı aç →",es:"Abrir la app →"},
     "🔒 Stored privately in your account so the twin can remember. Never used to train AI. Delete everything anytime.":{tr:"🔒 İkiz hatırlayabilsin diye hesabında gizli saklanır. Yapay zeka eğitiminde asla kullanılmaz. İstediğin an hepsini silebilirsin.",es:"🔒 Se guarda en privado en tu cuenta para que el gemelo recuerde. Nunca se usa para entrenar IA. Bórralo todo cuando quieras."},
@@ -846,10 +855,10 @@
       bubble('them', reply);
     } catch (e) { typing.remove(); }
     busy = false;
-    if (sent >= 3) {
-      inp.disabled = true;
-      document.getElementById('d10Cta').style.display = 'block';
-    } else { inp.focus(); }
+    // The way out to "your person" shows after the first reply; the demo itself
+    // still stops at three messages.
+    document.getElementById('d10Cta').style.display = 'block';
+    if (sent >= 3) { inp.disabled = true; } else { inp.focus(); }
   }
   document.getElementById('d10Send').addEventListener('click', send);
   document.getElementById('d10In').addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });

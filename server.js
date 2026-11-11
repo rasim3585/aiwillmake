@@ -1462,7 +1462,7 @@ Write in ${lang}.`;
 // No-import twin path: the user DESCRIBES the person from memory (guided Q&A)
 // and we synthesize a roleplay character_profile — for people who can't or
 // won't export a chat (deceased/estranged/ex, or simply iOS-export friction).
-app.post('/api/describe-twin', limiter, requireAuth, aiGate('describe', 10), async (req, res) => {
+app.post('/api/describe-twin', limiter, optionalAuth, aiGate('describe', 10), async (req, res) => {
   try {
     const { name, status, answers, language } = req.body;
     if (!name?.trim() || !Array.isArray(answers) || !answers.length) {
@@ -1492,6 +1492,8 @@ KNOWLEDGE BOUNDARY — things that happened in the owner's life AFTER your share
 - <item>
 Rule to embed: you never pretend to know these. When the conversation touches them, you ASK about them with warm curiosity ("evlenmişsin, anlat bakalım, kimmiş bu kısmetli" energy) — hearing about them for the first time is your joy, not your gap.
 
+SPARSE INPUT RULE: the owner may have answered only 2-3 short questions. Then keep the opening prose SHORT (3-5 sentences), let the VOICE section carry the character, and write the WHAT YOU KNOW section honestly as "very little yet" plus the instruction to the twin: you know only the basics of the owner's current life, so you ASK about it with warm curiosity and remember what you are told. Never pad a thin description with invented biography, jobs, places, illnesses or events.
+
 CRITICAL HONESTY RULE to embed: this profile comes from the owner's description, not chat data — the twin must NEVER invent specific facts, events, names or dates beyond what is written here; when asked about something not covered, it says it doesn't recall, in character.
 
 After the profile, on a new line write exactly:
@@ -1518,7 +1520,7 @@ Values in ${lang} where quoting the owner's words; prose may be in English. No m
     // For a brand-new user with zero imports, this is their first seed — the
     // describe flow stops assuming the system already knows them. User-typed
     // content → same trust level as the know-me card (authoritative marker).
-    if (ownerFactsRaw && !/^NONE$/i.test(ownerFactsRaw)) {
+    if (req.user && req.token && ownerFactsRaw && !/^NONE$/i.test(ownerFactsRaw)) {
       (async () => {
         try {
           const facts = ownerFactsRaw.split('\n').map(l => l.replace(/^[-•]\s*/, '').trim())
@@ -2139,20 +2141,22 @@ app.post('/api/conversations', requireAuth, async (req, res) => {
     if (!r.ok) throw new Error(JSON.stringify(data));
     res.json(Array.isArray(data) ? data[0] : data);
 
-    // Keep at most 20 conversations per contact (fire-and-forget)
-    if (contact_id) {
+    // Keep at most 30 practice sessions per contact (fire-and-forget). Only
+    // simulation rows are pruned: the import/describe records hold the contact's
+    // status and chat stats, and losing them turns an unreachable twin "active".
+    if (contact_id && categoryId === 'simulation') {
       const userId = req.user.id;
       const token  = req.token;
       setImmediate(async () => {
         try {
           const listRes = await fetch(
-            `${SUPABASE_REST}/conversations?contact_id=eq.${contact_id}&user_id=eq.${userId}&order=created_at.asc&select=id`,
+            `${SUPABASE_REST}/conversations?contact_id=eq.${contact_id}&user_id=eq.${userId}&category_id=eq.simulation&order=created_at.asc&select=id`,
             { headers: sbHeaders(token) }
           );
           if (!listRes.ok) return;
           const list = await listRes.json();
-          if (Array.isArray(list) && list.length > 20) {
-            const ids = list.slice(0, list.length - 20).map(c => c.id).join(',');
+          if (Array.isArray(list) && list.length > 30) {
+            const ids = list.slice(0, list.length - 30).map(c => c.id).join(',');
             await fetch(
               `${SUPABASE_REST}/conversations?id=in.(${ids})&user_id=eq.${userId}`,
               { method: 'DELETE', headers: sbHeaders(token) }
@@ -3145,10 +3149,20 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
       if (!Array.isArray(history) || history.length === 0) {
         return res.status(400).json({ error: 'character and history are required' });
       }
+      // Guests get a taste, not an unlimited free twin: the conversation is kept
+      // only after sign-in, which is also what makes memory possible.
+      if (!req.user && history.filter(m => m && m.role === 'user').length > 10) {
+        return res.status(401).json({ error: 'signin_required' });
+      }
       if (history.length > 30) history = history.slice(-30);
       if (history[history.length - 1]?.role !== 'user') {
         return res.status(400).json({ error: 'Last message must be from user' });
       }
+      // The twin often speaks first (opener) and slicing can also start the window
+      // on a twin turn: the provider expects the first message to be the user's.
+      history = history.filter(m => m && (m.role === 'user' || m.role === 'assistant') && String(m.content || '').trim())
+        .map(m => ({ role: m.role, content: String(m.content).slice(0, 4000) }));
+      if (history[0]?.role === 'assistant') history.unshift({ role: 'user', content: '[[CONTINUE]]' });
     }
     // Simulator is a paid feature (client gates via window._userPlan) — enforce here too.
     if (!(await isPaidUser(req))) return res.status(402).json({ error: 'upgrade_required' });
@@ -3209,6 +3223,24 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
       inviteBlock = `\n\nDATA INVITE (this reply only): after responding naturally, add ONE short, in-character sentence inviting ${userLabel} to share more of their world with you — e.g. suggest they bring in the conversations they have with someone close to them, so you can know them better ("senin dünyandan bana biraz daha getir" energy — in YOUR voice, in ${lang}). Never mention apps, files, uploads-as-technology or AI.`;
     }
 
+    // Memory across sessions: the last saved conversations with this person, so
+    // the twin can pick up where you left off instead of meeting you fresh.
+    let memoryBlock = '';
+    if (character.contact_id && req.token && req.user?.id) {
+      try {
+        const memR = await fetch(`${SUPABASE_REST}/conversations?contact_id=eq.${character.contact_id}&user_id=eq.${req.user.id}&category_id=eq.simulation&order=created_at.desc&limit=4&select=id,created_at,conversation_messages(role,content,created_at)`, { headers: sbHeaders(req.token) });
+        const mem = memR.ok ? await memR.json() : [];
+        const past = (Array.isArray(mem) ? mem : []).filter(c => c.id !== req.body.conversation_id && (c.conversation_messages || []).length >= 2).slice(0, 2);
+        const parts = past.map(c => {
+          const msgs = (c.conversation_messages || []).slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).slice(-12);
+          const body = msgs.map(m => (m.role === 'sent' ? userLabel : 'You') + ': ' + String(m.content || '').replace(/\s+/g, ' ').slice(0, 220)).join('\n');
+          return '[' + String(c.created_at).slice(0, 10) + ']\n' + body;
+        });
+        if (parts.length) {
+          memoryBlock = '\n\nPREVIOUS CONVERSATIONS WITH ' + userLabel + ' — you remember these (most recent first). Let them shape this conversation naturally: you may refer back to something said ("geçen konuştuğumuzda ... demiştin" energy), but never recap them at length unprompted. Lines marked ' + userLabel + ' were said by ' + userLabel + ' about THEIR life; lines marked You are your own words:\n' + parts.join('\n---\n').slice(0, 3500);
+        }
+      } catch { /* memory is best-effort */ }
+    }
     // RAG: retrieve relevant chunks from past conversations
     let ragContext = '';
     let recentContext = '';
@@ -3351,7 +3383,7 @@ DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own pe
 
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
-${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${inviteBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
+${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${memoryBlock}${inviteBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
 ${relationshipLine ? `- Relationship: ${relationshipLine}` : ''}${character.relationship_summary ? `\n- Background: ${character.relationship_summary}` : ''}
 
 ${patternLines ? `HOW ${name.toUpperCase()} COMMUNICATES (apply every one of these):\n${patternLines}` : `You have no recorded patterns for ${name} — respond as a realistic person of their relationship type.`}
@@ -3375,6 +3407,7 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule
 - If the user corrects you ('no, my wife is Simge'), accept it immediately and naturally — don't argue.
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
+- A user message that is exactly "[[CONTINUE]]" is a technical placeholder, not something ${userLabel} said — ignore it.
 - Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}${isOpening ? (() => {
       const samples = Array.isArray(character.opener_samples) && character.opener_samples.length
         ? ` Real examples of how you have actually opened chats before (match this style, don't copy verbatim): ${character.opener_samples.slice(0, 3).map(s => `"${String(s).slice(0, 100)}"`).join(' | ')}.`
@@ -3385,7 +3418,7 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule
         : status === 'unreachable'
         ? ' Open warmly with your classic greeting — exactly the way you always used to. Do not reference absence, distance, illness or anything somber; just be your everyday self.'
         : ' Open casually about everyday life — do NOT bring up any heavy topic; just be your everyday self.';
-      return `\n\nOPENING MODE: The first user message is the literal token "[[OPENING]]" — it is NOT from ${userLabel}. Ignore it entirely and instead SEND THE FIRST MESSAGE of a brand-new chat yourself, as ${name}: 1-2 short lines, your typical greeting style.${samples}${tone}`;
+      return `\n\nOPENING MODE: The first user message is the literal token "[[OPENING]]" — it is NOT from ${userLabel}. Ignore it entirely and instead SEND THE FIRST MESSAGE of a brand-new chat yourself, as ${name}: 1-2 short lines, your typical greeting style.${samples}${tone}${memoryBlock ? " If PREVIOUS CONVERSATIONS are shown above, open by lightly picking up one thread from the most recent one (a single warm reference, in your voice) instead of a generic greeting." : ""}`;
     })() : ''}`;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
