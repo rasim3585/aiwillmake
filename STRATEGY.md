@@ -53,6 +53,11 @@ competitors are mostly third-party estimates; treat them as directional.
   sohbet dışa aktarma, ChatGPT ile sohbet analizi, zam isteme konuşması, babana zor bir şey söylemek,
   kaybettiğin birine mektup, eski sevgiliye mesaj. Each CTA deep-links into the quick form with the
   relationship preselected (`?rel=`) and a `?ref=rehber-*` tag. Add guides by appending to guides.js.
+- **Graceful AI-down mode:** server probes the key every 15 min; while down, the landing/app route visitors
+  to the free stats tool with an honest maintenance note instead of failing. Self-heals when the key works.
+- **Stats → WhatsApp send-back** ("💬 Sohbete gönder", ?ref=wa) to pull the other person in.
+- **Ops:** `node smoke_test.js [url]` (22 no-AI checks, run after every deploy) and
+  `node -r dotenv/config funnel_report.js [days]` (funnel + first-touch source, unique by device id).
 - **Mobile back gesture:** History API per screen + chat modal (back closes the chat instead of leaving).
 
 ## Pricing — recommendation (paywall stays OFF until ~30–50 strangers reach a twin reply)
