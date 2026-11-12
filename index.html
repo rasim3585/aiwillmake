@@ -238,6 +238,10 @@
     }
     .hero-free-tool { display:inline-flex; flex-wrap:wrap; justify-content:center; gap:4px 6px; margin-top:22px; font-size:.84rem; color:var(--sec); text-decoration:none; border-bottom:1px dotted var(--bord2); padding-bottom:2px; }
     .hero-free-tool b { color:var(--text); }
+    .ai-down-box { display:none; }
+    html.ai-down .ai-down-box { display:block; }
+    html.ai-down #heroImportCta, html.ai-down .hero-describe-btn, html.ai-down #demo10, html.ai-down .hero-free-tool { display:none !important; }
+    .ai-down-note { font-size:.86rem; color:var(--sec); margin:0 0 12px; }
     .hero-describe-btn b { color: var(--text); font-weight: 700; }
     .hero-describe-btn:hover { border-color: var(--accent); color: var(--text); }
     .hero-import-card {
@@ -431,6 +435,18 @@
       <p class="hero-tagline">Describe someone in your life in three answers — their AI twin talks to you the way they do.<br>Rehearse the hard conversation. Finish the unfinished one.</p>
 
       <!-- Logged-out: import card (shown by default, hidden if logged in) -->
+      <!-- Shown instead of the twin doors while the AI is unavailable (cfg.ai === false) -->
+      <div class="ai-down-box" id="aiDownBox">
+        <p class="ai-down-note">The twin is in short maintenance right now. Meanwhile, see the numbers of your chat — free, no sign-up, nothing leaves your phone.</p>
+        <a href="/whatsapp-sohbet-analizi?ref=aidown" class="hero-import-card ai-down-card">
+          <span class="hero-import-icon">📊</span>
+          <span class="hero-import-info">
+            <span class="hero-import-label">Who texts more in your chat?</span>
+            <span class="hero-import-hint">Free WhatsApp chat analysis · 30 seconds</span>
+          </span>
+          <span class="hero-import-arrow">Analyze →</span>
+        </a>
+      </div>
       <a href="app.html?import=1&amp;mode=describe" class="hero-import-card" id="heroImportCta">
         <span class="hero-import-icon">🖊</span>
         <span class="hero-import-info">
@@ -646,6 +662,7 @@
   async function initAuth() {
     try {
       const cfg = await fetch('/api/config').then(r => r.json());
+      if (cfg.ai === false) document.documentElement.classList.add('ai-down');
       if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
       sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
       const { data: { session } } = await sb.auth.getSession();
@@ -703,6 +720,10 @@
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
     "Rehearse the hard conversation. Finish the unfinished one.":{tr:"Zor konuşmayı prova et. Yarım kalanı tamamla.",es:"Ensaya la conversación difícil. Termina la que quedó a medias."},
     "No chat export?":{tr:"Sohbet dosyan yok mu?",es:"¿Sin exportar el chat?"},
+    "The twin is in short maintenance right now. Meanwhile, see the numbers of your chat — free, no sign-up, nothing leaves your phone.":{tr:"İkiz şu an kısa bir bakımda. Bu arada sohbetinin sayılarına bak — ücretsiz, kayıt yok, telefonundan hiçbir şey çıkmaz.",es:"El gemelo está en un breve mantenimiento. Mientras tanto, mira los números de tu chat — gratis, sin registro, nada sale de tu teléfono."},
+    "Who texts more in your chat?":{tr:"Sohbetinizde kim daha çok yazıyor?",es:"¿Quién escribe más en tu chat?"},
+    "Free WhatsApp chat analysis · 30 seconds":{tr:"Ücretsiz WhatsApp sohbet analizi · 30 saniye",es:"Análisis gratis de chat de WhatsApp · 30 segundos"},
+    "Analyze →":{tr:"Analiz et →",es:"Analizar →"},
     "Free · no sign-up:":{tr:"Ücretsiz · kayıt yok:",es:"Gratis · sin registro:"},
     "Who texts more in your WhatsApp chat? →":{tr:"WhatsApp sohbetinde kim daha çok yazıyor? →",es:"¿Quién escribe más en tu chat de WhatsApp? →"},
     "WhatsApp chat analysis":{tr:"WhatsApp sohbet analizi",es:"Análisis de chat de WhatsApp"},

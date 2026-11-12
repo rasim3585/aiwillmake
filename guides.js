@@ -111,4 +111,128 @@ module.exports = [
       { q: 'Eski sevgiliye ilk mesaj nasıl olmalı?', a: 'Kısa, baskısız ve cevap vermeyi zorunlu kılmayan bir mesaj genelde en iyi sonucu verir.' },
     ],
   },
+  {
+    "slug": "babama-sevgilim-oldugunu-nasil-soylerim",
+    "title": "Babama Sevgilim Olduğunu Nasıl Söylerim? (Adım Adım, Örnek Cümlelerle)",
+    "description": "Babana sevgilin olduğunu söylemeden önce bilmen gerekenler: doğru an, ilk cümle, olası tepkiler ve konuşmayı önceden deneme.",
+    "h1": "Babama sevgilim olduğunu nasıl söylerim?",
+    "intro": "Bu, Türkiye'de en çok ertelenen konuşmalardan biri. Çoğu kişi aylarca \"doğru anı\" bekler; oysa doğru an çoğu zaman, söyleyeceğin şeyi önceden netleştirdiğin andır. Aşağıdaki adımlar konuşmayı daha sakin ve daha kısa hale getirmeye yardım eder.",
+    "sections": [
+      {
+        "h": "Önce kendine üç soru sor",
+        "body": "<ol><li><b>Neden şimdi?</b> İlişki ciddileşti mi, saklamak seni yoruyor mu, yoksa biri başkasından duyabilir mi?</li><li><b>Babamdan ne bekliyorum?</b> Onay mı, sadece bilmesi mi, tanışma mı?</li><li><b>En çok neyden çekiniyorum?</b> Öfke, hayal kırıklığı, sorular? Korktuğun tepkiyi önceden düşünmek, onu duyduğunda sakin kalmanı kolaylaştırır.</li></ol>"
+      },
+      {
+        "h": "Doğru an ve yer",
+        "body": "<p>Kalabalık bir sofra, bayram ziyareti ya da onun yorgun olduğu bir akşam iyi değildir. Baş başa, aceleniz olmayan bir an seç: bir yürüyüş, arabada kısa bir yol ya da sakin bir kahvaltı. Yüz yüze olamıyorsa önce haber ver: \"Baba, sana anlatmak istediğim bir şey var, müsait olduğunda arayabilir miyim?\"</p>"
+      },
+      {
+        "h": "İlk cümle (seçebileceğin örnekler)",
+        "body": "<ul><li>\"Baba, bir süredir biriyle görüşüyorum ve bunu senden saklamak istemedim.\"</li><li>\"Hayatımda önemli biri var, ilk senin bilmeni istedim.\"</li><li>\"Biriyle ciddi düşünüyoruz; seninle konuşmadan bir adım atmak istemedim.\"</li></ul><p>İlk cümleden sonra durmak ve onun tepkisini beklemek, uzun bir açıklamaya girmekten daha iyi sonuç verir.</p>"
+      },
+      {
+        "h": "Olası tepkiler ve cevaplar",
+        "body": "<ul><li><b>\"Kim bu, ailesi ne iş yapar?\"</b> → Kısa ve dürüst bilgi ver; bilmediğin bir şeyi uydurma.</li><li><b>\"Daha erken değil mi?\"</b> → \"Acele etmiyoruz, sadece senden saklamak istemedim.\"</li><li><b>Sessizlik ya da öfke</b> → \"Bunu düşünmek için zaman isteyebilirsin. Konuşmaya hazır olduğunda buradayım.\"</li></ul>"
+      },
+      {
+        "h": "Önce dene",
+        "body": "<p>Babanın nasıl konuştuğunu, nasıl tepki verdiğini en iyi sen bilirsin. Onu üç cevapla anlatıp yapay zekâ ikiziyle bu konuşmayı önceden yapabilir, istersen \"Zorlaştır\" ile en zor tepkiyi de görebilirsin. İlk cümleyi bir kez söylemiş olmak, gerçek anda en büyük farkı yaratır.</p>"
+      }
+    ],
+    "cta": {
+      "text": "Bu konuşmayı babanla önce dene →",
+      "href": "/app.html?import=1&mode=describe&rel=babam&ref=rehber-baba-sevgili",
+      "note": "Kayıt gerekmez. Bir yapay zekâ simülasyonudur, baban değil."
+    },
+    "faq": [
+      {
+        "q": "Babama sevgilim olduğunu söylemeden önce anneme mi söylemeliyim?",
+        "a": "Annen arabulucu olabilecekse önce onunla konuşmak işe yarayabilir. Ama babanın bunu başkasından duyması güveni zedeleyebilir; bu yüzden aradaki süreyi kısa tut."
+      },
+      {
+        "q": "Babam çok kızarsa ne yapmalıyım?",
+        "a": "Tartışmayı o anda kazanmaya çalışma. Sakin kal, düşünmesi için zaman tanı ve konuşmayı daha sonra devam ettirmeyi öner."
+      }
+    ]
+  },
+  {
+    "slug": "kus-oldugun-biriyle-barismak",
+    "title": "Küs Olduğun Biriyle Nasıl Barışılır? (Aile, Arkadaş, Akraba)",
+    "description": "Küs olduğun bir aile üyesi, arkadaş ya da akrabayla barışmak için ilk mesaj nasıl atılır? Özür, ilk adım ve cevap gelmezse ne yapmalı.",
+    "h1": "Küs olduğun biriyle nasıl barışılır?",
+    "intro": "Küslük çoğu zaman tek bir tartışmayla başlar ama yıllarca sürebilir; çünkü ilk adımı atmak, yaşanan şeyden daha zor gelmeye başlar. Bayramlar, doğum günleri ve kayıplar bu ilk adımı atmak için en sık seçilen anlardır.",
+    "sections": [
+      {
+        "h": "İlk adımı atmak \"haklı olmamak\" demek değil",
+        "body": "<p>İlk mesajı atan kişi kaybeden değildir; sadece ilişkiyi tartışmadan daha önemli bulan kişidir. Barışmak, kimin haklı olduğunu kabul etmek anlamına gelmez.</p>"
+      },
+      {
+        "h": "İlk mesaj: kısa, baskısız, geçmişi yeniden yargılamadan",
+        "body": "<ul><li>\"Uzun zaman oldu. Seni özlediğimi söylemek istedim.\"</li><li>\"Bayramın mübarek olsun. Aramızdaki şey için üzgünüm; konuşmak istersen buradayım.\"</li><li>\"O gün söylediklerim için özür dilerim. Cevap vermek zorunda değilsin.\"</li></ul><p>İlk mesajda \"ama sen de…\" ile başlayan açıklamalardan kaçın; o konuşmanın yeri sonrasıdır.</p>"
+      },
+      {
+        "h": "Cevap gelmezse",
+        "body": "<p>Sessizlik her zaman ret değildir; bazı insanlar cevap vermek için zaman ister. Bir süre bekle, ısrarlı mesajlardan kaçın. Kapıyı açık bırakmış olmak, çoğu zaman beklediğinden fazla şey değiştirir.</p>"
+      },
+      {
+        "h": "Ne söyleyeceğini önce dene",
+        "body": "<p>Onu tanıyorsun: nasıl konuştuğunu, neye nasıl tepki verdiğini. Üç cevapla anlatıp ikiziyle barışma konuşmasını önceden yapabilirsin. Onun ağzından gelebilecek o ilk sert cümleyi önceden duymak, gerçek anda sakin kalmanı kolaylaştırır.</p>"
+      }
+    ],
+    "cta": {
+      "text": "Barışma konuşmasını önce dene →",
+      "href": "/app.html?import=1&mode=describe&status=estranged&ref=rehber-kus",
+      "note": "Kayıt gerekmez. Bir yapay zekâ simülasyonudur; gerçek tepkisi farklı olabilir."
+    },
+    "faq": [
+      {
+        "q": "Küs olduğum biriyle barışmak için ne yazmalıyım?",
+        "a": "Kısa, suçlamasız ve cevap vermeyi zorunlu kılmayan bir mesaj genelde en iyi başlangıçtır."
+      },
+      {
+        "q": "Bayramda küs biriyle barışmak doğru mu?",
+        "a": "Bayramlar birçok aile için doğal bir barışma anıdır; ama mesajın samimi olması zamanlamasından daha önemlidir."
+      }
+    ]
+  },
+  {
+    "slug": "whatsapp-kim-once-yaziyor",
+    "title": "WhatsApp'ta Kim Önce Yazıyor? Sohbetini Analiz Ederek Öğren",
+    "description": "Bir sohbette kimin önce yazdığı ne anlatır, nasıl ölçülür? WhatsApp sohbetini yükleyip kim önce yazıyor, kim daha çok yazıyor, kim bekletiyor öğren.",
+    "h1": "WhatsApp'ta kim önce yazıyor?",
+    "intro": "\"Hep ben mi yazıyorum?\" sorusu neredeyse herkesin aklından geçer. İyi haber: bunu tahmin etmek zorunda değilsin. Sohbet geçmişin bu sorunun cevabını sayılarla taşır.",
+    "sections": [
+      {
+        "h": "\"Önce yazmak\" nasıl ölçülür?",
+        "body": "<p>Bir sohbette iki mesaj arasında uzun bir sessizlik (örneğin 6 saat ya da daha fazla) varsa, ondan sonra ilk yazan kişi sohbeti \"başlatmış\" sayılır. Bütün sohbet boyunca bu başlangıçları saymak, kimin daha sık ilk adımı attığını gösterir.</p>"
+      },
+      {
+        "h": "Ne anlatır, ne anlatmaz?",
+        "body": "<p>Sohbeti sık başlatan kişi genelde iletişimi sürdürmeye daha istekli olandır; ama bu tek başına \"daha çok seviyor\" demek değildir. Bazı insanlar yazmayı sever, bazıları aramayı; bazılarının iş saatleri farklıdır. Sayıları bir fikir olarak gör, bir hüküm olarak değil.</p>"
+      },
+      {
+        "h": "Birlikte bakılması gerekenler",
+        "body": "<ul><li><b>Mesaj payı:</b> Kim daha çok yazıyor?</li><li><b>Cevap süresi:</b> Kim daha hızlı cevap veriyor?</li><li><b>En uzun sessizlik:</b> Sessizliği kim bozdu?</li><li><b>Gece mesajları:</b> Hangi saatlerde konuşuyorsunuz?</li></ul>"
+      },
+      {
+        "h": "Kendi sohbetine bak",
+        "body": "<p>Sohbetini <a href=\"/rehber/whatsapp-sohbeti-disa-aktarma\">WhatsApp'tan dışa aktarıp</a> ücretsiz analiz aracına yükleyebilirsin. Dosya cihazından çıkmaz; kimin önce yazdığını, kimin daha çok yazdığını ve kimin daha hızlı cevap verdiğini saniyeler içinde paylaşılabilir kartlar olarak görürsün.</p>"
+      }
+    ],
+    "cta": {
+      "text": "Kim önce yazıyor, öğren →",
+      "href": "/whatsapp-sohbet-analizi?ref=rehber-kim-once",
+      "note": "Ücretsiz, kayıt yok. Sohbetin telefonundan çıkmaz."
+    },
+    "faq": [
+      {
+        "q": "WhatsApp'ta kim önce yazıyor nasıl anlaşılır?",
+        "a": "Sohbeti dışa aktarıp, uzun sessizliklerden sonra ilk mesajı kimin attığını sayan bir analiz aracı kullanarak."
+      },
+      {
+        "q": "Hep ben önce yazıyorsam bu ne demek?",
+        "a": "İletişimi sürdürmeye daha istekli olduğunu gösterebilir; ama karşı tarafın iletişim tarzı, iş saatleri ve tercihleri de bu sayıyı etkiler."
+      }
+    ]
+  },
 ];

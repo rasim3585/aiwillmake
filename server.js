@@ -179,6 +179,7 @@ app.use((req, res, next) => {
     if (res.statusCode >= 500 && body && typeof body.error === 'string' &&
         /credit balance|billing|api key|x-api-key|anthropic|overloaded|rate.?limit/i.test(body.error)) {
       console.error('[sanitized-error]', req.path, body.error);
+      if (/credit balance|billing|api key|x-api-key/i.test(body.error)) Object.assign(_aiHealth, { ok: false, checkedAt: Date.now(), reason: 'runtime' });
       body = { error: 'ai_unavailable' };
     }
     return origJson(body);
@@ -272,11 +273,36 @@ app.get('/rehber/:slug', (req, res) => {
   res.type('html').send(renderGuide(g));
 });
 
+// ── AI availability (cached) ─────────────────────────────────────────────────
+// A dead key or exhausted credits must not look like a broken product: the
+// client reads cfg.ai and routes visitors to the no-AI tools with an honest note.
+const _aiHealth = { ok: null, checkedAt: 0, reason: null };
+async function probeAiHealth() {
+  if (!process.env.ANTHROPIC_API_KEY) { Object.assign(_aiHealth, { ok: false, checkedAt: Date.now(), reason: 'no_key' }); return; }
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'ok' }] })
+    });
+    if (r.ok) Object.assign(_aiHealth, { ok: true, checkedAt: Date.now(), reason: null });
+    else {
+      const msg = (await r.json().catch(() => ({})))?.error?.message || '';
+      // overloaded / rate limits are transient — don't take the product offline for them
+      if (r.status === 529 || r.status === 429) return;
+      Object.assign(_aiHealth, { ok: false, checkedAt: Date.now(), reason: /credit balance/i.test(msg) ? 'credit_low' : 'err_' + r.status });
+    }
+  } catch (_) { /* network blip: keep the last known state */ }
+}
+setTimeout(probeAiHealth, 3000);
+setInterval(probeAiHealth, 15 * 60 * 1000).unref?.();
+
 app.get('/api/config', (req, res) => {
   res.json({
     supabaseUrl,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
-    paywall: PAYWALL_ENABLED
+    paywall: PAYWALL_ENABLED,
+    ai: _aiHealth.ok !== false
   });
 });
 

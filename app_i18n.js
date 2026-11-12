@@ -241,3 +241,9 @@ Object.assign(window.I18N_C, {
   "I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad).": { "tr":"18 yaşından büyüğüm, bu bilgileri paylaşma hakkım var ve yapay zekâ ile işlenmesine (yurt dışındaki hizmet sağlayıcılar dahil) onay veriyorum.", "en":"I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad).", "es":"Tengo 18 años o más, tengo derecho a compartir esto y acepto que lo procese la IA (incluidos proveedores en el extranjero)." },
   "Privacy notice": { "tr":"Aydınlatma metni", "en":"Privacy notice", "es":"Aviso de privacidad" }
 });
+
+// AI maintenance banner
+Object.assign(window.I18N_C, {
+  "The twin is in short maintenance right now — building twins will be back soon.": { "tr":"İkiz şu an kısa bir bakımda — ikiz kurma birazdan geri gelecek.", "en":"The twin is in short maintenance right now — building twins will be back soon.", "es":"El gemelo está en un breve mantenimiento — crear gemelos volverá pronto." },
+  "Meanwhile, see your chat's numbers for free →": { "tr":"Bu arada sohbetinin sayılarını ücretsiz gör →", "en":"Meanwhile, see your chat's numbers for free →", "es":"Mientras tanto, mira gratis los números de tu chat →" }
+});

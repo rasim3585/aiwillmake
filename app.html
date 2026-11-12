@@ -2651,6 +2651,8 @@
     .aiw-consent-row input { margin-top:2px; width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); }
     .aiw-consent-row a { color:var(--sec); }
     .aiw-consent-row.need { color:#ff8a7a; }
+    .ai-down-banner { border:1px solid rgba(232,149,110,.4); background:rgba(212,113,90,.08); border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:.86rem; line-height:1.5; display:flex; flex-direction:column; gap:6px; }
+    .ai-down-banner a { color:var(--accent); font-weight:700; }
     .rp-modes { display:flex; gap:6px; padding:6px 14px 0; flex-wrap:wrap; }
     .rp-mode-chip { border:1px solid var(--bord); background:transparent; color:var(--sec); border-radius:999px; padding:6px 12px; font:inherit; font-size:.78rem; cursor:pointer; }
     .rp-mode-chip.on { border-color:var(--accent); color:var(--text); background:rgba(212,113,90,.12); }
@@ -3542,6 +3544,10 @@
     <!-- Import Screen -->
     <section id="screen-import" class="hidden" data-screen-id="import">
       <div class="import-inner">
+        <div id="aiDownBanner" class="ai-down-banner hidden">
+          <span>The twin is in short maintenance right now — building twins will be back soon.</span>
+          <a href="/whatsapp-sohbet-analizi?ref=aidown-app">Meanwhile, see your chat's numbers for free →</a>
+        </div>
         <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who do you want to talk to?</h2>
         <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Tell us about them in three answers — or upload your chats for a more lifelike twin.</p>
 
@@ -3878,6 +3884,8 @@
     async function initAuth() {
       try {
         const cfg = await fetch('/api/config').then(r => r.json());
+        window._aiDown = cfg.ai === false;
+        if (window._aiDown) document.getElementById('aiDownBanner')?.classList.remove('hidden');
         // Paywall off (server flag): guests get the full experience too — no lock
         // UI, no guest ceiling. checkSubscriptionAndShowReady refines this for
         // signed-in users from /api/subscription.
@@ -5819,6 +5827,12 @@
     document.getElementById('dtFinishBtn')?.addEventListener('click', finishDescribeTwin);
 
     // ── Consent (18+, right to share, AI processing incl. abroad) — one tap, remembered ──
+    function _aiDownToast() {
+      const L = window.APP_LANG || 'tr';
+      showToast(({ tr: 'İkiz şu an kısa bir bakımda — birazdan tekrar dene. Bu arada sohbet analizine bakabilirsin.', en: 'The twin is in short maintenance — try again soon. Meanwhile, try the chat analysis.', es: 'El gemelo está en mantenimiento — inténtalo pronto. Mientras tanto, prueba el análisis del chat.' })[L] || '', 'info');
+      document.getElementById('aiDownBanner')?.classList.remove('hidden');
+      document.getElementById('aiDownBanner')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     function _consentOk() {
       try { if (localStorage.getItem('aiw_consent') === '1') return true; } catch (_) {}
       return [...document.querySelectorAll('.aiw-consent')].some(c => c.checked);
@@ -5884,6 +5898,7 @@
       if (!name) { showToast(_qdTx('needName'), 'error'); document.getElementById('qdName')?.focus(); return; }
       if (!hitap && !laf) { showToast(_qdTx('needVoice'), 'error'); document.getElementById('qdHitap')?.focus(); return; }
       if (!_consentOk()) { _consentNeed(); return; }
+      if (window._aiDown) { _aiDownToast(); return; }
       const btn = document.getElementById('qdGo');
       const old = btn.textContent;
       btn.disabled = true; btn.textContent = _qdTx('building');
@@ -6046,6 +6061,7 @@
       } else {
         if (!_importFile) { showToast('Select a file first', 'error'); return; }
         if (!_consentOk()) { _consentNeed(); return; }
+        if (window._aiDown) { _aiDownToast(); return; }
         dataSource = _importFile;
       }
 
@@ -7455,7 +7471,9 @@
           _rpFeedbackChips();
           _rpSpeak(reply);
         } else {
-          const hintMap = { tr: 'Şu an sessiz görünüyor — sen başla, ilk mesajı sen yaz. 💬', en: 'Seems quiet right now — you start, write the first message. 💬', es: 'Parece tranquilo ahora — empieza tú, escribe el primer mensaje. 💬' };
+          const hintMap = window._aiDown
+            ? { tr: 'İkiz şu an kısa bir bakımda ve cevap veremiyor — birazdan tekrar dene. 🛠', en: 'The twin is in short maintenance and can\'t reply right now — try again soon. 🛠', es: 'El gemelo está en mantenimiento y no puede responder ahora — inténtalo pronto. 🛠' }
+            : { tr: 'Şu an sessiz görünüyor — sen başla, ilk mesajı sen yaz. 💬', en: 'Seems quiet right now — you start, write the first message. 💬', es: 'Parece tranquilo ahora — empieza tú, escribe el primer mensaje. 💬' };
           const hint = document.createElement('div');
           hint.style.cssText = 'font-size:.78rem;color:var(--sec);text-align:center;padding:10px 14px;opacity:.75;';
           hint.textContent = hintMap[window.APP_LANG] || hintMap.tr;

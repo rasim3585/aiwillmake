@@ -60,4 +60,19 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/babama-sevgilim-oldugunu-nasil-soylerim</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/kus-oldugun-biriyle-barismak</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/whatsapp-kim-once-yaziyor</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

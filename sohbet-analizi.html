@@ -139,6 +139,7 @@
       <div class="toolbar">
         <button class="chip" id="initials">İsimleri gizle</button>
         <button class="chip" id="dlAll">⬇ Hepsini indir</button>
+        <button class="chip on" id="waShare">💬 Sohbete gönder</button>
       </div>
       <div class="cards" id="cards"></div>
 
@@ -410,6 +411,29 @@
       boxes.forEach(function (c, i) { setTimeout(function () { exportCard(c, 'kart' + (i + 1), false); }, i * 700); });
     });
     $('bridgeBtn').addEventListener('click', bridge);
+    function pctAcc(num) {
+      var ones = ['ını', 'ini', 'sini', 'ünü', 'ünü', 'ini', 'sını', 'sini', 'ini', 'unu']; // sıfır,bir,iki,üç,dört,beş,altı,yedi,sekiz,dokuz
+      var tens = { 10: 'unu', 20: 'sini', 30: 'unu', 40: 'ını', 50: 'sini', 60: 'ını', 70: 'ini', 80: 'ini', 90: 'ını', 100: 'ünü' };
+      num = Math.round(num);
+      if (num === 100) return tens[100];
+      if (num % 10 === 0 && num > 0) return tens[num];
+      return ones[num % 10];
+    }
+    $('waShare').addEventListener('click', function () {
+      if (!st) return;
+      var A = st.senders[0], B = st.senders[1], P = st.perSender;
+      var top = P[A].share >= P[B].share ? A : B;
+      var starter = P[A].initiationShare >= P[B].initiationShare ? A : B;
+      var who = function (x, mine, theirs) { return x === me ? mine : (me ? theirs : x + ' ' + theirs); };
+      var pc = '%' + P[top].share + '\'' + pctAcc(P[top].share);
+      var line1 = me ? (top === me ? 'Sohbetimizin ' + pc + ' ben yazmışım 😅' : 'Sohbetimizin ' + pc + ' sen yazmışsın 👀')
+                     : top + ' sohbetin ' + pc + ' yazmış 👀';
+      var line2 = me ? (starter === me ? 'İlk yazan da genelde benmişim.' : 'İlk yazan da genelde senmişsin.') : 'Genelde ilk yazan: ' + starter + '.';
+      var url = 'https://www.aiwillmake.com/whatsapp-sohbet-analizi?ref=wa';
+      var text = line1 + ' ' + line2 + ' ' + st.totalMessages.toLocaleString('tr-TR') + ' mesaj, ' + st.spanDays.toLocaleString('tr-TR') + ' gün. Sen de bak: ' + url;
+      track('wrapped_share', { card: 'wa_text', me: !!me });
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+    });
   })();
   </script>
 </body>
