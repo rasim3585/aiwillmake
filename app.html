@@ -3898,6 +3898,7 @@
           if (urlParams.get('mode') === 'whatsapp') window._forceTab = 'whatsapp';
           if (urlParams.get('mode') === 'fromstats') { window._forceTab = 'whatsapp'; window._fromStats = true; window._forceDescribe = false; }
           if (['active','estranged','unreachable'].includes(urlParams.get('status'))) window._forceStatus = urlParams.get('status');
+          if (urlParams.get('rel')) window._forceRel = String(urlParams.get('rel')).slice(0, 40);
           window.history.replaceState({}, '', '/app.html');
         }
         if (urlParams.get('payment') === 'success') {
@@ -3929,7 +3930,9 @@
             window._forceImport = false; App.navigateTo('import');
             if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; if (window._fromStats) { window._fromStats = false; _loadFromStats(); } } else { window._forceDescribe = false; switchImportTab('text'); }
         if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
+            if (window._forceRel) { _qdRel = window._forceRel; document.querySelectorAll('#qdRel .qd-chip').forEach(x => x.classList.toggle('active', x.dataset.v === _qdRel)); window._forceRel = null; }
             if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
+            if (window._forceRel) { _qdRel = window._forceRel; document.querySelectorAll('#qdRel .qd-chip').forEach(x => x.classList.toggle('active', x.dataset.v === _qdRel)); window._forceRel = null; }
           }
           else document.getElementById('screen-landing').classList.remove('hidden');
         }
@@ -4090,14 +4093,30 @@
         intentMode: null,
         activeSessionId: null,
       },
-      navigateTo(screenId) {
+      navigateTo(screenId, opts) {
         _ALL_SECTIONS.forEach(id => document.getElementById(id)?.classList.add('hidden'));
         const target = document.querySelector(`[data-screen-id="${screenId}"]`);
         if (target) target.classList.remove('hidden');
-        if (this.state.currentScreen !== screenId) window._track?.('screen', { s: screenId });
+        const prev = this.state.currentScreen;
+        if (prev !== screenId) window._track?.('screen', { s: screenId });
         this.state.currentScreen = screenId;
+        // Browser history per screen: the phone's back gesture moves between
+        // screens instead of leaving the app (and losing what was typed).
+        if (!(opts && opts.fromPop) && prev !== screenId) {
+          try { if (prev == null) history.replaceState({ s: screenId }, ''); else history.pushState({ s: screenId }, ''); } catch (_) {}
+        }
       },
     };
+
+    window.addEventListener('popstate', (e) => {
+      const st = e.state || {};
+      const modal = document.getElementById('simulationModal');
+      if (modal && !modal.classList.contains('hidden')) { try { _rpClose(); } catch (_) {} }
+      let s = st.s;
+      if (!s) return;
+      if (s === 'processing') s = 'import';
+      App.navigateTo(s, { fromPop: true });
+    });
 
     async function init() {
       try {
@@ -7363,6 +7382,7 @@
       }
 
       document.getElementById('simulationModal').classList.remove('hidden');
+      try { history.pushState({ s: App.state.currentScreen, modal: 'sim' }, ''); } catch (_) {}
       if (intentGoal) {
         const noteEl = document.createElement('div');
         noteEl.style.cssText = 'font-size:.77rem;color:var(--acc2);text-align:center;padding:10px 0 4px;opacity:.85;';
@@ -7563,6 +7583,7 @@
       document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
+      try { history.pushState({ s: App.state.currentScreen, modal: 'sim' }, ''); } catch (_) {}
 
       _rpAppendBubble('system', `↩ Replay mode: "${keyMoment || 'past conversation'}"\nGoal: ${intentGoal}`);
     }
@@ -9717,6 +9738,7 @@
       document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       document.getElementById('rp-footer').classList.remove('hidden');
       document.getElementById('simulationModal').classList.remove('hidden');
+      try { history.pushState({ s: App.state.currentScreen, modal: 'sim' }, ''); } catch (_) {}
 
       if (!_simCharacter.character_profile && _simCharacter.contact_id) {
         const noteEl = document.createElement('div');
@@ -9885,6 +9907,8 @@
     }
 
     function _rpClose() {
+      // Closed with ✕ (not the back gesture): drop the chat's history entry too.
+      if (history.state && history.state.modal === 'sim') { try { history.back(); } catch (_) {} }
       const _debriefVisible = !document.getElementById('rp-debrief').classList.contains('hidden');
       const _otherCount = _simHistory.filter(m => m.role === 'assistant').length;
       if (!_debriefVisible && _otherCount > 0) {

@@ -201,12 +201,75 @@ const PUBLIC_FILES = new Set([
 const staticHandler = express.static(__dirname, { dotfiles: 'deny' });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path === '/health') return next();
+  if (req.path === '/rehber' || req.path.startsWith('/rehber/')) return next();
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   // Clean SEO paths for the static pages
   const ALIAS = { '/whatsapp-sohbet-analizi': '/sohbet-analizi.html', '/aydinlatma-metni': '/kvkk.html' };
   if (ALIAS[req.path]) { req.url = ALIAS[req.path]; return staticHandler(req, res, next); }
   if (PUBLIC_FILES.has(req.path)) return staticHandler(req, res, next);
   return res.status(404).send('Not found');
+});
+
+
+// ── Turkish guides (/rehber, /rehber/:slug) — server-rendered from guides.js ──
+const GUIDES = require('./guides.js');
+const GUIDE_CSS = ':root{--bg:#1a1918;--text:#f2ede8;--sec:#a8a09a;--muted:#8a8078;--accent:#d4715a;--acc2:#e8956e;--bord:rgba(255,255,255,.09)}'
+  + '*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}'
+  + '.w{max-width:720px;margin:0 auto;padding:0 18px}header{padding:18px 0}header .w{display:flex;justify-content:space-between;align-items:center}'
+  + '.logo{font-weight:800;letter-spacing:.18em;font-size:.85rem;text-decoration:none;color:var(--text)}.logo span{color:var(--accent)}header a.s{font-size:.82rem;color:var(--sec);text-decoration:none}'
+  + 'h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.15;letter-spacing:-.02em;margin:26px 0 14px}.intro{color:var(--sec);font-size:1.05rem}'
+  + 'h2{font-size:1.25rem;margin:30px 0 10px}p,li{color:#d9d2cb;font-size:1rem}p+p{margin-top:10px}ul,ol{margin:8px 0 0 22px}li{margin:6px 0}'
+  + 'blockquote{border-left:3px solid var(--accent);padding:8px 14px;margin:10px 0;color:var(--text);background:rgba(212,113,90,.06);border-radius:0 10px 10px 0}'
+  + 'a{color:var(--acc2)}.cta{margin:34px 0 10px;text-align:center;border:1px solid rgba(212,113,90,.4);background:rgba(212,113,90,.07);border-radius:18px;padding:22px 16px}'
+  + '.cta a.b{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:13px 20px}.cta p{color:var(--muted);font-size:.82rem;margin-top:10px}'
+  + '.faq{margin-top:30px;border-top:1px solid var(--bord);padding-top:14px}.faq h3{font-size:1rem;margin:16px 0 4px}.more{margin-top:30px;border-top:1px solid var(--bord);padding-top:14px}'
+  + '.more a{display:block;margin:8px 0;text-decoration:none}.list a{display:block;padding:16px 0;border-bottom:1px solid var(--bord);text-decoration:none}.list a b{display:block;color:var(--text);font-size:1.05rem}.list a span{color:var(--sec);font-size:.92rem}'
+  + 'footer{border-top:1px solid var(--bord);margin-top:34px;padding:20px 0 40px;font-size:.8rem;color:var(--muted)}footer a{color:var(--muted);text-decoration:none}';
+const _esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function guidePage({ title, description, canonical, body, jsonld }) {
+  return '<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>' + _esc(title) + '</title><meta name="description" content="' + _esc(description) + '"><link rel="canonical" href="' + canonical + '">'
+    + '<meta property="og:type" content="article"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="' + _esc(title) + '"><meta property="og:description" content="' + _esc(description) + '">'
+    + '<meta property="og:url" content="' + canonical + '"><meta property="og:image" content="https://www.aiwillmake.com/og-image.png"><meta name="twitter:card" content="summary_large_image">'
+    + '<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23d4715a%27/></svg>">'
+    + '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">'
+    + (jsonld ? '<script type="application/ld+json">' + JSON.stringify(jsonld).replace(/</g, '\\u003c') + '</script>' : '')
+    + '<style>' + GUIDE_CSS + '</style></head><body>'
+    + '<header><div class="w"><a class="logo" href="/" lang="en">AIWILL<span>MAKE</span></a><a class="s" href="/rehber">Rehberler</a></div></header>'
+    + '<main class="w">' + body + '</main>'
+    + '<footer class="w"><a href="/">Ana sayfa</a> · <a href="/whatsapp-sohbet-analizi">WhatsApp sohbet analizi</a> · <a href="/rehber">Rehberler</a> · <a href="/kvkk.html">KVKK</a> · <a href="/privacy.html">Gizlilik</a></footer>'
+    + '<script>try{var q=new URLSearchParams(location.search),a=q.get("ref")?"ref:"+q.get("ref"):(document.referrer&&new URL(document.referrer).hostname.replace(/^www\\./,"")!==location.hostname.replace(/^www\\./,"")?"r:"+new URL(document.referrer).hostname.replace(/^www\\./,""):null);'
+    + 'if(a&&!localStorage.getItem("_attr"))localStorage.setItem("_attr",a.slice(0,60));if(!localStorage.getItem("_attr"))localStorage.setItem("_attr","direct");'
+    + 'if(!localStorage.getItem("_did"))localStorage.setItem("_did",Math.random().toString(36).slice(2,12));if(!localStorage.getItem("app_lang"))localStorage.setItem("app_lang","tr");'
+    + 'var sid=sessionStorage.getItem("_sid");if(!sid){sid=Math.random().toString(36).slice(2,12);sessionStorage.setItem("_sid",sid)}'
+    + 'fetch("/api/e",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({e:"guide_view",p:{g:location.pathname.split("/").pop()||"index",src:localStorage.getItem("_attr"),did:localStorage.getItem("_did")},sid:sid})}).catch(function(){})}catch(e){}</script>'
+    + '</body></html>';
+}
+function renderGuide(g) {
+  const url = 'https://www.aiwillmake.com/rehber/' + g.slug;
+  const others = GUIDES.filter(x => x.slug !== g.slug).slice(0, 4);
+  const body = '<article><h1>' + _esc(g.h1) + '</h1><p class="intro">' + _esc(g.intro) + '</p>'
+    + g.sections.map(sec => '<h2>' + _esc(sec.h) + '</h2>' + sec.body).join('')
+    + '<div class="cta"><a class="b" href="' + _esc(g.cta.href) + '">' + _esc(g.cta.text) + '</a><p>' + _esc(g.cta.note) + '</p></div>'
+    + (g.faq && g.faq.length ? '<div class="faq"><h2>Sık sorulanlar</h2>' + g.faq.map(x => '<h3>' + _esc(x.q) + '</h3><p>' + _esc(x.a) + '</p>').join('') + '</div>' : '')
+    + '<div class="more"><h2>Diğer rehberler</h2>' + others.map(o => '<a href="/rehber/' + o.slug + '">' + _esc(o.h1) + ' →</a>').join('') + '</div></article>';
+  const jsonld = [
+    { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, inLanguage: 'tr', mainEntityOfPage: url,
+      publisher: { '@type': 'Organization', name: 'aiwillmake', url: 'https://www.aiwillmake.com' } },
+    ...(g.faq && g.faq.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: g.faq.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) }] : []),
+  ];
+  return guidePage({ title: g.title, description: g.description, canonical: url, body, jsonld });
+}
+app.get('/rehber', (req, res) => {
+  const body = '<h1>Rehberler</h1><p class="intro">Zor konuşmalara hazırlanmak, söyleyemediklerini söylemek ve WhatsApp sohbetlerini anlamak için kısa, işe yarar rehberler.</p>'
+    + '<div class="list">' + GUIDES.map(g => '<a href="/rehber/' + g.slug + '"><b>' + _esc(g.h1) + '</b><span>' + _esc(g.description) + '</span></a>').join('') + '</div>';
+  res.type('html').send(guidePage({ title: 'Rehberler — aiwillmake', description: 'Zor konuşmalar, söyleyemediklerin ve WhatsApp sohbet analizi üzerine rehberler.', canonical: 'https://www.aiwillmake.com/rehber', body }));
+});
+app.get('/rehber/:slug', (req, res) => {
+  const g = GUIDES.find(x => x.slug === req.params.slug);
+  if (!g) return res.status(404).send('Not found');
+  res.type('html').send(renderGuide(g));
 });
 
 app.get('/api/config', (req, res) => {
@@ -3742,7 +3805,7 @@ const EVENT_WHITELIST = new Set([
   'demo_open', 'demo_msg', 'demo_cta', 'cta_app', 'twin_first_reply', 'import_file_selected',
   'guest_save_shown', 'guest_save_click', 'guest_twin_saved', 'twin_feedback',
   'wrapped_view', 'wrapped_file', 'wrapped_done', 'wrapped_fail', 'wrapped_share', 'wrapped_download', 'wrapped_bridge', 'wrapped_import',
-  'letter_open', 'letter_sent', 'difficulty_on'
+  'letter_open', 'letter_sent', 'difficulty_on', 'guide_view'
 ]);
 const eventsLimiter = rateLimit({ windowMs: 60e3, max: 40, standardHeaders: true, legacyHeaders: false });
 let _eventsTableMissing = false;

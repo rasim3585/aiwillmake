@@ -49,6 +49,11 @@ competitors are mostly third-party estimates; treat them as directional.
 - **Measurement:** first-touch attribution (`ref` / `utm` / referrer) + persistent device id on
   every event; `?ref=` links on every share card.
 - **Turkish link preview:** new 1200×630 OG image and Turkish og/twitter tags.
+- **6 Turkish guides** at `/rehber/:slug` (server-rendered from guides.js, Article + FAQPage schema, in sitemap):
+  sohbet dışa aktarma, ChatGPT ile sohbet analizi, zam isteme konuşması, babana zor bir şey söylemek,
+  kaybettiğin birine mektup, eski sevgiliye mesaj. Each CTA deep-links into the quick form with the
+  relationship preselected (`?rel=`) and a `?ref=rehber-*` tag. Add guides by appending to guides.js.
+- **Mobile back gesture:** History API per screen + chat modal (back closes the chat instead of leaving).
 
 ## Pricing — recommendation (paywall stays OFF until ~30–50 strangers reach a twin reply)
 - Free: the stats tool, one twin, the first full conversation.
