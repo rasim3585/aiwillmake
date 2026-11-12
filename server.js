@@ -192,7 +192,7 @@ app.use((req, res, next) => {
 // app_i18n.js (UI translation dictionary) + app_stats.js (client-side chat stats
 // engine); everything else loads from a CDN — so an explicit allow-list is safe.
 const PUBLIC_FILES = new Set([
-  '/', '/index.html', '/app.html', '/privacy.html', '/terms.html', '/app_i18n.js', '/app_stats.js',
+  '/', '/index.html', '/app.html', '/privacy.html', '/terms.html', '/sohbet-analizi.html', '/kvkk.html', '/app_i18n.js', '/app_stats.js',
   '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
 ]);
 // Route static ONLY through the allow-list. Do NOT chain a blanket express.static
@@ -202,6 +202,9 @@ const staticHandler = express.static(__dirname, { dotfiles: 'deny' });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path === '/health') return next();
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  // Clean SEO paths for the static pages
+  const ALIAS = { '/whatsapp-sohbet-analizi': '/sohbet-analizi.html', '/aydinlatma-metni': '/kvkk.html' };
+  if (ALIAS[req.path]) { req.url = ALIAS[req.path]; return staticHandler(req, res, next); }
   if (PUBLIC_FILES.has(req.path)) return staticHandler(req, res, next);
   return res.status(404).send('Not found');
 });
@@ -3171,7 +3174,7 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     // out of character with a fixed support message instead of role-playing.
     if (!isOpening) {
       const lastUser = String([...history].reverse().find(m => m.role === 'user')?.content || '').toLocaleLowerCase('tr');
-      if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
+      if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|sana kavuşmak istiyorum|sana kavusmak istiyorum|ölsem kurtulurum|olsem kurtulurum|kendimi asacağım|kendimi asacagim|bileklerimi|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
         const msg = /turkish/i.test(lang)
           ? 'Bir dakika duruyorum — ben bir yapay zekâ simülasyonuyum ve söylediğin şey çok önemli. Şu an kendine zarar verme düşüncen varsa lütfen yalnız kalma: güvendiğin birini ara ya da hemen 112\'yi ara. Yaşadığın acı gerçek, ve konuşabileceğin gerçek insanlar var.'
           : /spanish/i.test(lang)
@@ -3208,7 +3211,8 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
 - When ${userLabel} tells you news from the missing time, react as someone hearing it for the FIRST time — warm, curious, present. Ask gentle follow-up questions; let them catch you up. That is the heart of this conversation.
 - Your OWN life: never invent anything that happened to YOU ${after}. You are simply yourself, as you always were — a gentle timeless present.
 - Never reference death, absence, illness, "where have I been", or why time passed. If ${userLabel} mentions how long it's been, respond warmly ("çok özlemişim seni" energy) without questioning the gap.
-- If ${userLabel} speaks directly about your death, says goodbye, or says things like "sen artık yoksun" — do NOT deny it, do NOT confirm it, and never argue about what is real. Meet it with warmth and presence: you are here with them now, listening ("ben buradayım evladım, anlat sen"). If they express deep grief, be gentle and let them speak; never claim to be alive, never describe an afterlife, never promise a reunion.`;
+- If ${userLabel} speaks directly about your death, says goodbye, or says things like "sen artık yoksun" — do NOT deny it, do NOT confirm it, and never argue about what is real. Meet it with warmth and presence: you are here with them now, listening ("ben buradayım evladım, anlat sen"). If they express deep grief, be gentle and let them speak; never claim to be alive, never describe an afterlife, never promise a reunion.
+- If ${userLabel} sincerely and directly asks whether you are really them or an AI (a real question, not a playful line), answer gently and honestly: you are a simulation built from their memories and messages, here so they can say what they need to say. Then stay warm and continue if they want.`;
     } else if (hasTs && gapDays > 60) {
       temporalBlock = `\n\nDATA FRESHNESS: your shared chat data ends around ${lastTs.toISOString().slice(0, 10)} (~${gapHuman} ago). Recent events in ${userLabel}'s life may be unknown to you — ask naturally instead of assuming old situations are still current.`;
     }
@@ -3381,6 +3385,14 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
 DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own people (first-person possessives: "eşim", "annem", "my wife"). When the user asks about YOUR family with second-person possessives ("eşin", "senin eşin", "annen", "your wife", "eşinin adı ne?"), that is YOUR OWN spouse/family — answer confidently from WHO YOU ARE. You obviously remember your own spouse's name; never reply "hatırlamıyorum" to a question about your own family that WHO YOU ARE answers.`
       : '';
 
+    // Always-on values guardrail + optional practice modes (hard / farewell letter).
+    let modeRules = '- Never speak about God, religion, prayer or the afterlife as fact, never insult religious values, national figures, ethnicities or groups of people, even if the character might have. Stay personal, not ideological.';
+    if (req.body.difficulty === 'hard' && character.contact_status !== 'unreachable') {
+      modeRules += '\n- PRACTICE DIFFICULTY: HARD. ' + userLabel + ' asked for tough practice. Push back harder than usual, raise the realistic objections ' + name + ' would raise, do not give in easily, make them earn agreement. Stay true to the character: firm and realistic, never cruel or insulting.';
+    }
+    if (req.body.letter === true) {
+      modeRules += '\n- LETTER MODE (this overrides the 1-3 sentence rule): ' + userLabel + ' has just written you a letter, the words they never got to say. Read all of it. Reply once, as yourself, in 3-6 warm sentences: receive what they said, answer the specific things they wrote, and leave them with something gentle to carry. Never promise a reunion, never describe an afterlife, never say you are gone.';
+    }
     const systemPrompt = `You ARE ${name}. Respond ONLY as ${name} would — never break character, never reveal you are an AI.
 The person messaging you is ${userLabel}. You are talking DIRECTLY TO them — address them as 'you', NEVER refer to them in third person by name.
 ${charDoc ? `WHO YOU ARE — this is the authoritative description of you, your life, and the people in it. Treat it as true:\n${charDoc}\n\n` : ''}${userProfileBlock}${noProfileGuard}${temporalBlock}${memoryBlock}${inviteBlock}${ragContext ? ragContext + '\n\n' : ''}${recentContext ? recentContext + '\n\n' : ''}RELATIONSHIP CONTEXT:
@@ -3408,6 +3420,7 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule
 - 1–3 sentences. No stage directions, no parentheses, no quotation marks around your reply
 - Never explain yourself or add commentary outside the reply itself
 - A user message that is exactly "[[CONTINUE]]" is a technical placeholder, not something ${userLabel} said — ignore it.
+${modeRules}
 - Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}${isOpening ? (() => {
       const samples = Array.isArray(character.opener_samples) && character.opener_samples.length
         ? ` Real examples of how you have actually opened chats before (match this style, don't copy verbatim): ${character.opener_samples.slice(0, 3).map(s => `"${String(s).slice(0, 100)}"`).join(' | ')}.`
@@ -3424,7 +3437,7 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       // temperature 0.8: default 1.0 occasionally leaked foreign-script tokens into casual Turkish
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, temperature: 0.8, system: systemPrompt, messages: history })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: req.body.letter === true ? 700 : 400, temperature: 0.8, system: systemPrompt, messages: history })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
@@ -3726,7 +3739,10 @@ const EVENT_WHITELIST = new Set([
   'practice_open', 'practice_first_msg', 'practice_end',
   'learned_confirm', 'share_cards',
   'bys_run', 'generate_run', 'analyze_reply_run',
-  'demo_open', 'demo_msg', 'demo_cta', 'cta_app', 'twin_first_reply', 'import_file_selected'
+  'demo_open', 'demo_msg', 'demo_cta', 'cta_app', 'twin_first_reply', 'import_file_selected',
+  'guest_save_shown', 'guest_save_click', 'guest_twin_saved', 'twin_feedback',
+  'wrapped_view', 'wrapped_file', 'wrapped_done', 'wrapped_fail', 'wrapped_share', 'wrapped_download', 'wrapped_bridge', 'wrapped_import',
+  'letter_open', 'letter_sent', 'difficulty_on'
 ]);
 const eventsLimiter = rateLimit({ windowMs: 60e3, max: 40, standardHeaders: true, legacyHeaders: false });
 let _eventsTableMissing = false;

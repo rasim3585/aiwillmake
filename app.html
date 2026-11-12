@@ -9,15 +9,16 @@
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/app.html" />
-  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
-  <meta property="og:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
+  <meta property="og:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
+  <meta property="og:locale"      content="tr_TR" />
+  <meta property="og:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
-  <meta property="og:image:width"  content="1706" />
-  <meta property="og:image:height" content="926" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
-  <meta name="twitter:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
+  <meta name="twitter:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/app.html" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -2646,6 +2647,14 @@
     .rp-fb-btn { border:1px solid var(--bord); background:transparent; color:var(--text); border-radius:999px; padding:6px 11px; font:inherit; font-size:.8rem; cursor:pointer; }
     .rp-fb-input { flex:1; min-width:180px; font:inherit; font-size:16px; padding:8px 11px; border-radius:10px; border:1px solid var(--bord); background:rgba(0,0,0,.2); color:var(--text); }
     .rp-guest-save { margin:10px 0; padding:12px 14px; border:1px solid rgba(212,113,90,.35); border-radius:12px; background:rgba(212,113,90,.07); font-size:.84rem; line-height:1.5; color:var(--text); display:flex; flex-direction:column; gap:8px; }
+    .aiw-consent-row { display:flex; gap:8px; align-items:flex-start; font-size:.76rem; line-height:1.45; color:var(--sec); margin:10px 0 6px; cursor:pointer; text-align:left; }
+    .aiw-consent-row input { margin-top:2px; width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); }
+    .aiw-consent-row a { color:var(--sec); }
+    .aiw-consent-row.need { color:#ff8a7a; }
+    .rp-modes { display:flex; gap:6px; padding:6px 14px 0; flex-wrap:wrap; }
+    .rp-mode-chip { border:1px solid var(--bord); background:transparent; color:var(--sec); border-radius:999px; padding:6px 12px; font:inherit; font-size:.78rem; cursor:pointer; }
+    .rp-mode-chip.on { border-color:var(--accent); color:var(--text); background:rgba(212,113,90,.12); }
+    textarea.roleplay-input.letter { min-height:140px; }
     .rp-guest-save-btn { align-self:flex-start; border:none; background:var(--accent); color:#fff; border-radius:10px; padding:9px 14px; font:inherit; font-weight:700; font-size:.84rem; cursor:pointer; }
   </style>
   <script>
@@ -2873,6 +2882,7 @@
           <button id="rp-done-btn">Close</button>
         </div>
       </div>
+      <div class="rp-modes" id="rp-modes"></div>
       <div class="roleplay-footer" id="rp-footer">
         <button class="rp-mic-btn" id="rp-mic-btn" title="Hold to speak">🎤</button>
         <textarea class="roleplay-input" id="rp-input" placeholder="Type or speak your message…" rows="1"></textarea>
@@ -2967,8 +2977,33 @@
     <script src="/app_stats.js"></script>
     <script>
       /* Minimal event tracking — own endpoint, no third party, never throws. */
+
+      // First-touch attribution + a persistent device id, shared by both pages via
+      // localStorage: every channel test (TikTok, a WhatsApp group, Google) becomes
+      // readable, and returning visitors become countable.
+      function _attrInit() {
+        try {
+          var q = new URLSearchParams(location.search), a = null;
+          var ref = q.get('ref'), us = q.get('utm_source'), um = q.get('utm_medium'), uc = q.get('utm_campaign');
+          if (ref) a = 'ref:' + ref;
+          else if (us) a = 'utm:' + us + (um ? '/' + um : '') + (uc ? '/' + uc : '');
+          else if (document.referrer) { var h = new URL(document.referrer).hostname.replace(/^www\./, ''); if (h && h !== location.hostname.replace(/^www\./, '')) a = 'r:' + h; }
+          if (a && !localStorage.getItem('_attr')) localStorage.setItem('_attr', a.slice(0, 60));
+          if (!localStorage.getItem('_attr')) localStorage.setItem('_attr', 'direct');
+          if (!localStorage.getItem('_did')) localStorage.setItem('_did', Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4));
+          var last = parseInt(localStorage.getItem('_lastSeen') || '0', 10), now = Date.now();
+          window._daysSinceLast = last ? Math.floor((now - last) / 86400000) : -1;
+          localStorage.setItem('_lastSeen', String(now));
+        } catch (e) {}
+      }
+      _attrInit();
+      function _attrProps(p) {
+        var o = {}; try { for (var k in (p || {})) o[k] = p[k]; o.src = localStorage.getItem('_attr') || 'direct'; o.did = localStorage.getItem('_did') || null; } catch (e) {}
+        return o;
+      }
       window._track = function (e, p) {
         try {
+          p = _attrProps(p);
           let sid = sessionStorage.getItem('_sid');
           if (!sid) { sid = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('_sid', sid); }
           var tok = null; try { tok = accessToken; } catch (err2) {}
@@ -2979,7 +3014,7 @@
           }).catch(function () {});
         } catch (err) {}
       };
-      document.addEventListener('DOMContentLoaded', function () { window._track('app_view'); });
+      document.addEventListener('DOMContentLoaded', function () { window._track('app_view', { back: window._daysSinceLast }); });
     </script>
     <script>
       /* ═══ i18n: site language (TR default) drives UI strings + AI output language ═══ */
@@ -3581,6 +3616,7 @@
             </div>
 
             <p class="qd-hint" id="qdHint">Its first version — the more you tell it, the more it sounds like them.</p>
+            <label class="aiw-consent-row"><input type="checkbox" class="aiw-consent"> <span>I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad). <a href="kvkk.html" target="_blank" rel="noopener">Privacy notice</a></span></label>
             <button type="button" class="btn-analyze" id="qdGo">Hear their first message →</button>
             <p class="qd-privacy">🔒 No sign-up needed to try. Nothing is saved unless you choose to keep it.</p>
           </div>
@@ -3613,6 +3649,7 @@
           </select>
         </div>
 
+        <div id="importConsentWrap" style="display:none"><label class="aiw-consent-row"><input type="checkbox" class="aiw-consent"> <span>I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad). <a href="kvkk.html" target="_blank" rel="noopener">Privacy notice</a></span></label></div>
         <button class="btn-analyze hidden" id="importAnalyzeBtn" onclick="runImportAnalysis()">Analyze →</button>
       </div>
     </section>
@@ -3859,6 +3896,7 @@
           // deep link from the landing "describe them from memory" line
           window._forceDescribe = urlParams.get('mode') !== 'whatsapp' && urlParams.get('mode') !== 'screenshot';
           if (urlParams.get('mode') === 'whatsapp') window._forceTab = 'whatsapp';
+          if (urlParams.get('mode') === 'fromstats') { window._forceTab = 'whatsapp'; window._fromStats = true; window._forceDescribe = false; }
           if (['active','estranged','unreachable'].includes(urlParams.get('status'))) window._forceStatus = urlParams.get('status');
           window.history.replaceState({}, '', '/app.html');
         }
@@ -3889,7 +3927,7 @@
           document.getElementById('authGate').classList.add('hidden');
           if (window._forceImport) {
             window._forceImport = false; App.navigateTo('import');
-            if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; } else { window._forceDescribe = false; switchImportTab('text'); }
+            if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; if (window._fromStats) { window._fromStats = false; _loadFromStats(); } } else { window._forceDescribe = false; switchImportTab('text'); }
         if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
             if (window._forceStatus) { const _st = document.getElementById('importStatus'); if (_st) _st.value = window._forceStatus; _qdSetStatus(window._forceStatus); window._forceStatus = null; }
           }
@@ -3933,7 +3971,7 @@
       if (App.state.currentScreen !== null) return;
       if (window._forceImport) {
         window._forceImport = false; App.navigateTo('import');
-        if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; } else { window._forceDescribe = false; switchImportTab('text'); }
+        if (window._forceTab) { switchImportTab(window._forceTab); window._forceTab = null; window._forceDescribe = false; if (window._fromStats) { window._fromStats = false; _loadFromStats(); } } else { window._forceDescribe = false; switchImportTab('text'); }
         return;
       }
       const pendingGuest = sessionStorage.getItem('_pendingGuestTwin');
@@ -5599,7 +5637,7 @@
       document.getElementById('importAnalyzeBtn')?.classList.toggle('hidden', tab === 'text');
       // The quick describe form carries its own name/status fields.
       const _isText = tab === 'text';
-      ['importMetaMain', 'importMetaStatus'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isText ? 'none' : ''; });
+      ['importMetaMain', 'importMetaStatus', 'importConsentWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isText ? 'none' : ''; });
       if (_isText) _qdInit();
     }
 
@@ -5761,6 +5799,27 @@
     document.getElementById('dtSkip')?.addEventListener('click', () => _dtAdvance(false));
     document.getElementById('dtFinishBtn')?.addEventListener('click', finishDescribeTwin);
 
+    // ── Consent (18+, right to share, AI processing incl. abroad) — one tap, remembered ──
+    function _consentOk() {
+      try { if (localStorage.getItem('aiw_consent') === '1') return true; } catch (_) {}
+      return [...document.querySelectorAll('.aiw-consent')].some(c => c.checked);
+    }
+    function _consentNeed() {
+      document.querySelectorAll('.aiw-consent-row').forEach(r => r.classList.add('need'));
+      const L = window.APP_LANG || 'tr';
+      showToast(({ tr: 'Devam etmek için onay kutusunu işaretle', en: 'Tick the consent box to continue', es: 'Marca la casilla de consentimiento para continuar' })[L] || 'Devam etmek için onay kutusunu işaretle', 'error');
+    }
+    document.addEventListener('change', e => {
+      if (!e.target.classList || !e.target.classList.contains('aiw-consent')) return;
+      const v = e.target.checked;
+      document.querySelectorAll('.aiw-consent').forEach(c => { c.checked = v; });
+      document.querySelectorAll('.aiw-consent-row').forEach(r => r.classList.remove('need'));
+      try { localStorage.setItem('aiw_consent', v ? '1' : '0'); } catch (_) {}
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      try { if (localStorage.getItem('aiw_consent') === '1') document.querySelectorAll('.aiw-consent').forEach(c => { c.checked = true; }); } catch (_) {}
+    });
+
     // ── Quick describe: three answers → the twin's first line, no sign-in ─────
     // Sparse on purpose. Quality comes from the two highest-signal answers (how
     // they addressed you + their own words), from the server's no-invention rule,
@@ -5805,6 +5864,7 @@
       const { name, me, hitap, laf, am } = _qdCollect();
       if (!name) { showToast(_qdTx('needName'), 'error'); document.getElementById('qdName')?.focus(); return; }
       if (!hitap && !laf) { showToast(_qdTx('needVoice'), 'error'); document.getElementById('qdHitap')?.focus(); return; }
+      if (!_consentOk()) { _consentNeed(); return; }
       const btn = document.getElementById('qdGo');
       const old = btn.textContent;
       btn.disabled = true; btn.textContent = _qdTx('building');
@@ -5920,6 +5980,32 @@
       }
     }
 
+    // Chat handed over from the free /whatsapp-sohbet-analizi page (stored in
+    // IndexedDB on this device) — no second file pick.
+    function _loadFromStats() {
+      try {
+        const r = indexedDB.open('aiw', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => {
+          const db = r.result;
+          const tx = db.transaction('kv', 'readwrite');
+          const store = tx.objectStore('kv');
+          const g = store.get('pendingChat');
+          g.onsuccess = () => {
+            const v = g.result;
+            if (!v || !v.text || Date.now() - (v.ts || 0) > 3600e3) return;
+            store.delete('pendingChat');
+            _importFile = new File([v.text], 'whatsapp-chat.txt', { type: 'text/plain' });
+            const L = window.APP_LANG || 'tr';
+            document.getElementById('importFileName').textContent = ({ tr: '📎 Analiz ettiğin sohbet hazır', en: '📎 The chat you analyzed is ready', es: '📎 El chat que analizaste está listo' })[L] || '📎 Analiz ettiğin sohbet hazır';
+            const nm = document.getElementById('importName');
+            if (nm && v.name && !nm.value) nm.value = v.name;
+            window._track?.('wrapped_import', { named: !!v.name });
+          };
+        };
+      } catch (_) {}
+    }
+
     function handleImportFileSelect(input) {
       const file = input.files[0];
       if (!file) return;
@@ -5940,6 +6026,7 @@
         return;
       } else {
         if (!_importFile) { showToast('Select a file first', 'error'); return; }
+        if (!_consentOk()) { _consentNeed(); return; }
         dataSource = _importFile;
       }
 
@@ -6281,7 +6368,7 @@
         const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
         const file = new File([blob], 'iletisim-kisiligim.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'İletişim Kişiliğim', text: 'aiwillmake.com ile iletişim kişiliğimi buldum 👇' });
+          await navigator.share({ files: [file], title: 'İletişim Kişiliğim', text: 'İletişim kişiliğimi buldum 👇 Sen de bak: https://www.aiwillmake.com/?ref=archetype', url: 'https://www.aiwillmake.com/?ref=archetype' });
         } else {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a'); link.href = url; link.download = 'iletisim-kisiligim.png'; link.click();
@@ -6781,7 +6868,7 @@
         const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
         const file = new File([blob], 'sayilarla-iliskimiz.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], text: 'aiwillmake.com' });
+          await navigator.share({ files: [file], text: 'Sohbetimizin sayıları 👀 https://www.aiwillmake.com/?ref=statcard', url: 'https://www.aiwillmake.com/?ref=statcard' });
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'sayilarla-iliskimiz.png'; a.click();
@@ -7208,7 +7295,7 @@
       _simHistory = [];
       _simTurn = 0;
       _inviteAsked = false;
-      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false;
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false;
       window._track?.('practice_open', { status: (contactCtx && contactCtx.contact_status) || 'active' });
       // Knowledge score powers the in-chat data invite (thin profile → the twin
       // itself asks for more of the user's world at a natural moment).
@@ -7216,7 +7303,7 @@
         fetch('/api/user-profile', { headers: { 'Authorization': `Bearer ${accessToken}` } })
           .then(r => r.json()).then(d => { window._userKnowScore = _knowScore(d); }).catch(() => {});
       }
-      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter); _rpRenderModes();
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -7453,7 +7540,7 @@
       _simHistory    = [];
       _simTurn       = 0;
 
-      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter); _rpRenderModes();
       document.getElementById('rp-turn').textContent = '';
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -9443,6 +9530,42 @@
     let _simSess = { convId: null, saved: 0 };
     let _simSaveQ = Promise.resolve();
     let _rpFeedbackShown = false;
+    let _simDifficulty = null, _letterMode = false, _letterOnce = false;
+    function _rpRenderModes() {
+      const bar = document.getElementById('rp-modes');
+      if (!bar) return;
+      bar.innerHTML = '';
+      if (!_simCharacter) return;
+      const L = window.APP_LANG || 'tr';
+      const input = document.getElementById('rp-input');
+      const T = {
+        hard: { tr: '🎚 Zorlaştır', en: '🎚 Make it harder', es: '🎚 Hazlo más difícil' },
+        hardOn: { tr: '🎚 Zor mod açık', en: '🎚 Hard mode on', es: '🎚 Modo difícil' },
+        letter: { tr: '💌 Ona mektup yaz', en: '💌 Write them a letter', es: '💌 Escríbele una carta' },
+        letterOn: { tr: '💌 Mektup modu — yazmayı bitirince gönder', en: '💌 Letter mode — send when you are done', es: '💌 Modo carta — envía al terminar' },
+        letterPh: { tr: 'Ona söyleyemediklerini yaz. Acele etme…', en: 'Write what you never got to say. Take your time…', es: 'Escribe lo que nunca pudiste decir. Sin prisa…' },
+        ph: { tr: 'Mesajını yaz…', en: 'Type or speak your message…', es: 'Escribe tu mensaje…' }
+      };
+      const tx = k => T[k][L] || T[k].tr;
+      const chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'rp-mode-chip';
+      if (_simCharacter.contact_status === 'unreachable') {
+        const paint = () => {
+          chip.textContent = _letterMode ? tx('letterOn') : tx('letter');
+          chip.classList.toggle('on', _letterMode);
+          input.classList.toggle('letter', _letterMode);
+          input.placeholder = _letterMode ? tx('letterPh') : tx('ph');
+          input.rows = _letterMode ? 6 : 1;
+        };
+        chip.addEventListener('click', () => { _letterMode = !_letterMode; if (_letterMode) window._track?.('letter_open'); paint(); input.focus(); });
+        paint();
+      } else {
+        const paint = () => { chip.textContent = _simDifficulty === 'hard' ? tx('hardOn') : tx('hard'); chip.classList.toggle('on', _simDifficulty === 'hard'); };
+        chip.addEventListener('click', () => { _simDifficulty = _simDifficulty === 'hard' ? null : 'hard'; if (_simDifficulty) window._track?.('difficulty_on'); paint(); });
+        paint();
+      }
+      bar.appendChild(chip);
+    }
     function _simAutosave() {
       if (!accessToken || !_simCharacter || !_simCharacter.contact_id) return;
       const snap = _simHistory.slice();
@@ -9575,7 +9698,7 @@
       _simHistory = [{ role: 'user', content: msgText }];
       _simTurn = 1;
 
-      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter);
+      document.getElementById('rp-title').textContent = _rpTitleFor(_simCharacter); _rpRenderModes();
       document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
       document.getElementById('rp-messages').innerHTML = '';
       document.getElementById('rp-input').value = '';
@@ -9723,8 +9846,9 @@
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
-          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: inviteNow || undefined, conversation_id: _simSess.convId || undefined })
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: (inviteNow && !_letterOnce) || undefined, conversation_id: _simSess.convId || undefined, difficulty: _simDifficulty || undefined, letter: _letterOnce || undefined })
         });
+        _letterOnce = false;
         const data = await resp.json();
         typingEl.remove();
         if (resp.status === 402) { showUpgradeModal(); return; }
@@ -9781,7 +9905,7 @@
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
-      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false;
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false;
       if (_isListening && _recognition) _recognition.stop();
       window.speechSynthesis.cancel();
       _ttsEnabled = false;
@@ -10043,7 +10167,7 @@
           const file = new File([blob], 'simulation.png', { type: 'image/png' });
           if (navigator.share && navigator.canShare?.({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: 'My AI simulation', text: 'Tried this on aiwillmake.com' });
+              await navigator.share({ files: [file], title: 'Yapay zekâ ikizi', text: 'Bunu bir yapay zekâ ikiziyle denedim: https://www.aiwillmake.com/?ref=simcard', url: 'https://www.aiwillmake.com/?ref=simcard' });
               document.getElementById('sharePreviewModal').classList.add('hidden');
             } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
           } else {
@@ -10129,7 +10253,7 @@
           const file = new File([blob], 'relationship-profile.png', { type: 'image/png' });
           if (navigator.share && navigator.canShare?.({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: 'Relationship Profile', text: 'Generated on aiwillmake.com' });
+              await navigator.share({ files: [file], title: 'İlişki profili', text: 'https://www.aiwillmake.com/?ref=profilecard', url: 'https://www.aiwillmake.com/?ref=profilecard' });
             } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
           } else {
             const url = URL.createObjectURL(blob);
@@ -10231,7 +10355,7 @@
           const file = new File([blob], 'strategy-card.png', { type: 'image/png' });
           if (navigator.share && navigator.canShare?.({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: 'Strategy Card', text: 'Practice debrief from aiwillmake.com' });
+              await navigator.share({ files: [file], title: 'Prova kartı', text: 'https://www.aiwillmake.com/?ref=strategycard', url: 'https://www.aiwillmake.com/?ref=strategycard' });
             } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
           } else {
             const url = URL.createObjectURL(blob);
@@ -10454,6 +10578,7 @@
       _rpAppendBubble('user', text);
       _rpInput.value = '';
       document.querySelector('#rp-messages .rp-fb')?.remove();
+      if (_letterMode) { _letterOnce = true; _letterMode = false; window._track?.('letter_sent', { len: text.length }); _rpRenderModes(); }
       _simAutosave();
       _rpCallSimulate();
     });

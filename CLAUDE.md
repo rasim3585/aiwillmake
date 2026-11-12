@@ -8,6 +8,8 @@
 > grants). Statements below such as "real paying subscribers", "Google OAuth + email/pw" (the UI is Google-only),
 > and "live-verified" were true-as-believed at the time and are NOT current facts. External audit of product
 > value/moat/retention/monetization: 8-analyst report, findings applied in commit after 31c5e29.
+> **Strategy + market research (Nov 2026): see STRATEGY.md** — competitors, Turkish market, pricing, distribution,
+> and the decisions behind the free /whatsapp-sohbet-analizi tool, letter/hard modes, KVKK consent.
 
 > **Audit resolution status (2026-07-15/16):** RESOLVED — C1, C2, C3, C4(code), H1, H2, H3, H4(partial: heavy
 > per-IP limiter + OCR image cap), M1, M2, M3, M4, M5 (CORS scoped), M6, webhook timing-safe compare, and SEO

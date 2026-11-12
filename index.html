@@ -9,15 +9,16 @@
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/" />
-  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
-  <meta property="og:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
+  <meta property="og:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
+  <meta property="og:locale"      content="tr_TR" />
+  <meta property="og:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
-  <meta property="og:image:width"  content="1706" />
-  <meta property="og:image:height" content="926" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
-  <meta name="twitter:description" content="Talk with their AI twin — rehearse the hard conversation, finish the unfinished one." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
+  <meta name="twitter:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -235,6 +236,8 @@
       color: var(--sec); text-decoration: none; font-size: .85rem;
       transition: border-color .2s, color .2s;
     }
+    .hero-free-tool { display:inline-flex; flex-wrap:wrap; justify-content:center; gap:4px 6px; margin-top:22px; font-size:.84rem; color:var(--sec); text-decoration:none; border-bottom:1px dotted var(--bord2); padding-bottom:2px; }
+    .hero-free-tool b { color:var(--text); }
     .hero-describe-btn b { color: var(--text); font-weight: 700; }
     .hero-describe-btn:hover { border-color: var(--accent); color: var(--text); }
     .hero-import-card {
@@ -455,6 +458,8 @@
         <span class="hero-step-arrow">→</span>
         <div class="hero-step"><span class="hero-step-num">3</span>Say what you never said</div>
       </div>
+
+      <a href="/whatsapp-sohbet-analizi" class="hero-free-tool">📊 <span>Free · no sign-up:</span> <b>Who texts more in your WhatsApp chat? →</b></a>
     </div>
   </div>
 </section>
@@ -619,6 +624,8 @@
       <a href="app.html" class="ft-link">App</a>
       <a href="privacy.html" class="ft-link">Privacy Policy</a>
       <a href="terms.html" class="ft-link">Terms of Use</a>
+      <a href="kvkk.html" class="ft-link">KVKK</a>
+      <a href="/whatsapp-sohbet-analizi" class="ft-link">WhatsApp chat analysis</a>
     </nav>
   </div>
   <div class="ft-bottom">
@@ -695,6 +702,9 @@
     "Import a WhatsApp chat — we build their AI twin.":{tr:"Bir WhatsApp sohbeti yükle — onun yapay zeka ikizini kuralım.",es:"Importa un chat de WhatsApp: creamos su gemelo con IA."},
     "Rehearse the hard conversation. Finish the unfinished one.":{tr:"Zor konuşmayı prova et. Yarım kalanı tamamla.",es:"Ensaya la conversación difícil. Termina la que quedó a medias."},
     "No chat export?":{tr:"Sohbet dosyan yok mu?",es:"¿Sin exportar el chat?"},
+    "Free · no sign-up:":{tr:"Ücretsiz · kayıt yok:",es:"Gratis · sin registro:"},
+    "Who texts more in your WhatsApp chat? →":{tr:"WhatsApp sohbetinde kim daha çok yazıyor? →",es:"¿Quién escribe más en tu chat de WhatsApp? →"},
+    "WhatsApp chat analysis":{tr:"WhatsApp sohbet analizi",es:"Análisis de chat de WhatsApp"},
     "Describe someone in your life in three answers — their AI twin talks to you the way they do.":{tr:"Hayatındaki birini üç cevapla anlat — yapay zekâ ikizi seninle tam onun gibi konuşsun.",es:"Describe a alguien de tu vida en tres respuestas — su gemelo de IA te habla como esa persona."},
     "Describe them in 3 answers":{tr:"Onu 3 cevapla anlat",es:"Descríbelo en 3 respuestas"},
     "No sign-up · their first message in about 20 seconds":{tr:"Kayıt yok · ilk mesajı yaklaşık 20 saniyede",es:"Sin registro · su primer mensaje en unos 20 segundos"},
@@ -775,15 +785,40 @@
 <script>
 /* ── Minimal event tracking (own endpoint, no third party) + 10-second demo ── */
 (function () {
+
+  // First-touch attribution + a persistent device id, shared by both pages via
+  // localStorage: every channel test (TikTok, a WhatsApp group, Google) becomes
+  // readable, and returning visitors become countable.
+  function _attrInit() {
+    try {
+      var q = new URLSearchParams(location.search), a = null;
+      var ref = q.get('ref'), us = q.get('utm_source'), um = q.get('utm_medium'), uc = q.get('utm_campaign');
+      if (ref) a = 'ref:' + ref;
+      else if (us) a = 'utm:' + us + (um ? '/' + um : '') + (uc ? '/' + uc : '');
+      else if (document.referrer) { var h = new URL(document.referrer).hostname.replace(/^www\./, ''); if (h && h !== location.hostname.replace(/^www\./, '')) a = 'r:' + h; }
+      if (a && !localStorage.getItem('_attr')) localStorage.setItem('_attr', a.slice(0, 60));
+      if (!localStorage.getItem('_attr')) localStorage.setItem('_attr', 'direct');
+      if (!localStorage.getItem('_did')) localStorage.setItem('_did', Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4));
+      var last = parseInt(localStorage.getItem('_lastSeen') || '0', 10), now = Date.now();
+      window._daysSinceLast = last ? Math.floor((now - last) / 86400000) : -1;
+      localStorage.setItem('_lastSeen', String(now));
+    } catch (e) {}
+  }
+  _attrInit();
+  function _attrProps(p) {
+    var o = {}; try { for (var k in (p || {})) o[k] = p[k]; o.src = localStorage.getItem('_attr') || 'direct'; o.did = localStorage.getItem('_did') || null; } catch (e) {}
+    return o;
+  }
   function track(e, p) {
     try {
+      p = _attrProps(p);
       var sid = sessionStorage.getItem('_sid');
       if (!sid) { sid = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('_sid', sid); }
       fetch('/api/e', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ e: e, p: p || null, sid: sid }) }).catch(function () {});
     } catch (err) {}
   }
-  track('landing_view');
+  track('landing_view', { back: window._daysSinceLast });
   document.addEventListener('click', function (ev) {
     var a = ev.target.closest && ev.target.closest('a[href^="app.html"]');
     if (a) track(a.id === 'd10CtaLink' ? 'demo_cta' : 'cta_app', { id: a.id || null });

@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WhatsApp Sohbet Analizi — Kim Daha Çok Yazıyor? | Ücretsiz, Kayıt Yok</title>
+  <meta name="description" content="WhatsApp sohbetini yükle, 30 saniyede öğren: kim daha çok yazıyor, kim önce yazıyor, kim daha hızlı cevap veriyor. Ücretsiz, kayıt yok — sohbetin telefonundan çıkmaz." />
+  <link rel="canonical" href="https://www.aiwillmake.com/whatsapp-sohbet-analizi" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="tr_TR" />
+  <meta property="og:site_name" content="AIWILLMAKE" />
+  <meta property="og:url" content="https://www.aiwillmake.com/whatsapp-sohbet-analizi" />
+  <meta property="og:title" content="WhatsApp Sohbet Analizi — Kim daha çok yazıyor?" />
+  <meta property="og:description" content="Ücretsiz, kayıt yok, sohbetin telefonundan çıkmaz. Kim önce yazıyor, kim bekletiyor — 30 saniyede öğren." />
+  <meta property="og:image" content="https://www.aiwillmake.com/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"WhatsApp sohbet analizi güvenli mi?","acceptedAnswer":{"@type":"Answer","text":"Evet. Sohbet dosyan tarayıcında, kendi cihazında işlenir; hiçbir sunucuya yüklenmez. Kartlar mesajlarını değil, yalnızca sayıları ve isimleri gösterir."}},
+    {"@type":"Question","name":"WhatsApp sohbeti nasıl dışa aktarılır?","acceptedAnswer":{"@type":"Answer","text":"WhatsApp'ta sohbeti aç, iPhone'da kişinin adına dokun (Android'de ⋮ → Diğer), 'Sohbeti dışa aktar' → 'Medya olmadan' seç ve dosyayı kaydet. Sonra bu sayfada seç."}},
+    {"@type":"Question","name":"Kim daha çok yazıyor nasıl hesaplanıyor?","acceptedAnswer":{"@type":"Answer","text":"Dışa aktarılan dosyadaki her mesaj gönderen kişiye göre sayılır. Sohbeti kimin başlattığı, en az 6 saatlik bir sessizlikten sonra ilk yazan kişiye göre belirlenir."}},
+    {"@type":"Question","name":"Ücretli mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Sohbet analizi ve paylaşım kartları ücretsizdir ve kayıt gerektirmez."}}
+  ]}
+  </script>
+  <style>
+    :root { --bg:#1a1918; --bg2:#141312; --surf:rgba(255,255,255,.045); --bord:rgba(255,255,255,.09); --bord2:rgba(255,255,255,.16);
+            --text:#f2ede8; --sec:#a8a09a; --muted:#8a8078; --accent:#d4715a; --acc2:#e8956e; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; line-height:1.55; }
+    a { color:inherit; }
+    .wrap { max-width:760px; margin:0 auto; padding:0 18px; }
+    header { padding:18px 0; }
+    .hdr { display:flex; justify-content:space-between; align-items:center; }
+    .logo { font-weight:800; letter-spacing:.18em; font-size:.85rem; text-decoration:none; }
+    .logo span { color:var(--accent); }
+    .hdr a.small { font-size:.82rem; color:var(--sec); text-decoration:none; }
+    .hero { text-align:center; padding:34px 0 18px; }
+    h1 { font-size:clamp(1.7rem,5.4vw,2.6rem); line-height:1.12; letter-spacing:-.02em; font-weight:800; }
+    h1 em { font-style:normal; color:var(--accent); }
+    .sub { color:var(--sec); margin:14px auto 0; max-width:520px; font-size:1rem; }
+    .privacy { display:inline-block; margin-top:14px; font-size:.82rem; color:var(--sec); border:1px solid var(--bord); border-radius:999px; padding:6px 12px; }
+    .drop { margin:26px auto 0; max-width:520px; border:1.5px dashed var(--bord2); border-radius:18px; padding:28px 18px; text-align:center; cursor:pointer; background:var(--surf); transition:border-color .2s, background .2s; }
+    .drop:hover, .drop.over { border-color:var(--accent); background:rgba(212,113,90,.06); }
+    .drop b { display:block; font-size:1.08rem; margin-bottom:4px; }
+    .drop span { color:var(--muted); font-size:.85rem; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:12px; padding:13px 20px; font:inherit; font-weight:800; font-size:.95rem; cursor:pointer; background:var(--accent); color:#fff; text-decoration:none; }
+    .btn.ghost { background:transparent; border:1px solid var(--bord2); color:var(--text); font-weight:700; }
+    details.howto { max-width:520px; margin:14px auto 0; text-align:left; border:1px solid var(--bord); border-radius:12px; padding:10px 14px; font-size:.88rem; color:var(--sec); }
+    details.howto summary { cursor:pointer; color:var(--text); font-weight:700; }
+    details.howto ol { margin:8px 0 2px 18px; }
+    .err { color:#ff8a7a; margin-top:12px; font-size:.9rem; min-height:1.2em; }
+    #results { display:none; padding:10px 0 20px; }
+    .who { text-align:center; margin:18px 0 6px; font-size:.9rem; color:var(--sec); }
+    .who .chips { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+    .chip { border:1px solid var(--bord2); background:transparent; color:var(--text); border-radius:999px; padding:8px 14px; font:inherit; font-size:.86rem; cursor:pointer; }
+    .chip.on { border-color:var(--accent); background:rgba(212,113,90,.14); }
+    .toolbar { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0 18px; }
+    .summary { text-align:center; font-size:1.05rem; margin:6px 0 4px; }
+    .summary b { color:var(--accent); }
+    .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; }
+    .cardbox { display:flex; flex-direction:column; gap:8px; }
+    .card { position:relative; aspect-ratio:9/16; border-radius:22px; overflow:hidden; padding:26px 22px; display:flex; flex-direction:column;
+            background:radial-gradient(120% 80% at 20% 0%, rgba(232,149,110,.30), transparent 60%), linear-gradient(165deg,#2b211d,#161312); border:1px solid rgba(255,255,255,.07); }
+    .card .eyebrow { font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--acc2); font-weight:700; }
+    .card h3 { font-size:1.35rem; line-height:1.18; margin-top:8px; letter-spacing:-.01em; }
+    .card .big { font-size:2.6rem; font-weight:800; letter-spacing:-.03em; margin-top:auto; line-height:1; }
+    .card .big small { font-size:1rem; font-weight:600; color:var(--sec); margin-left:4px; }
+    .card .line { font-size:.95rem; color:var(--sec); margin-top:10px; }
+    .card .line b { color:var(--text); }
+    .bar { display:flex; height:46px; border-radius:12px; overflow:hidden; margin-top:auto; font-weight:800; font-size:.9rem; }
+    .bar div { display:flex; align-items:center; padding:0 10px; white-space:nowrap; overflow:hidden; }
+    .bar .a { background:var(--accent); color:#fff; }
+    .bar .b { background:rgba(255,255,255,.12); justify-content:flex-end; }
+    .legend { display:flex; justify-content:space-between; font-size:.85rem; color:var(--sec); margin-top:8px; gap:10px; }
+    .legend span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .duel { margin-top:auto; display:flex; flex-direction:column; gap:12px; }
+    .duel .row { display:flex; justify-content:space-between; align-items:baseline; gap:10px; border-bottom:1px solid rgba(255,255,255,.08); padding-bottom:10px; }
+    .duel .row span { color:var(--sec); font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .duel .row b { font-size:1.5rem; }
+    .words { margin-top:auto; display:flex; flex-wrap:wrap; gap:8px; }
+    .words span { background:rgba(255,255,255,.08); border-radius:999px; padding:7px 12px; font-weight:700; font-size:.95rem; }
+    .wm { margin-top:16px; font-size:.72rem; letter-spacing:.14em; color:rgba(255,255,255,.55); font-weight:700; }
+    .card.locked { background:linear-gradient(165deg,#3a2620,#1b1513); border-color:rgba(212,113,90,.45); cursor:pointer; }
+    .card.locked .blur { filter:blur(6px); user-select:none; margin-top:auto; font-size:1rem; color:var(--sec); line-height:1.7; }
+    .card.locked .lock { font-size:2rem; }
+    .cardbtns { display:flex; gap:6px; }
+    .cardbtns button { flex:1; border:1px solid var(--bord); background:transparent; color:var(--sec); border-radius:10px; padding:8px; font:inherit; font-size:.8rem; cursor:pointer; }
+    .bridge { margin:30px auto 0; max-width:560px; text-align:center; border:1px solid rgba(212,113,90,.4); background:rgba(212,113,90,.07); border-radius:18px; padding:22px 18px; }
+    .bridge h2 { font-size:1.3rem; line-height:1.25; }
+    .bridge p { color:var(--sec); margin:10px 0 16px; font-size:.95rem; }
+    .bridge .fine { font-size:.75rem; color:var(--muted); margin:12px 0 0; }
+    section.info { border-top:1px solid var(--bord); margin-top:40px; padding:30px 0 10px; }
+    section.info h2 { font-size:1.25rem; margin-bottom:10px; }
+    section.info h3 { font-size:1rem; margin:18px 0 6px; }
+    section.info p, section.info li { color:var(--sec); font-size:.95rem; }
+    section.info ol, section.info ul { margin-left:20px; }
+    footer { border-top:1px solid var(--bord); margin-top:30px; padding:22px 0 40px; font-size:.8rem; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap; justify-content:space-between; }
+    footer a { color:var(--muted); text-decoration:none; }
+  </style>
+</head>
+<body>
+  <header><div class="wrap hdr">
+    <a class="logo" href="/" lang="en">AIWILL<span>MAKE</span></a>
+    <a class="small" href="/">İkizini kur →</a>
+  </div></header>
+
+  <main class="wrap">
+    <div class="hero">
+      <h1>WhatsApp Sohbet Analizi:<br><em>Kim daha çok yazıyor?</em></h1>
+      <p class="sub">Sohbetini yükle, 30 saniyede öğren: kim önce yazıyor, kim bekletiyor, en uzun sessizliğiniz ne zamandı. Ücretsiz, kayıt yok.</p>
+      <span class="privacy">🔒 Sohbetin telefonundan çıkmaz — sayılar tarayıcında hesaplanır</span>
+
+      <div class="drop" id="drop" role="button" tabindex="0">
+        <b>📂 Sohbet dosyanı seç</b>
+        <span>WhatsApp'tan dışa aktardığın .txt veya .zip</span>
+        <input id="file" type="file" accept=".txt,.zip,text/plain,application/zip" hidden>
+      </div>
+      <details class="howto">
+        <summary>Sohbet dosyasını nasıl alırım? (1 dakika)</summary>
+        <ol>
+          <li>WhatsApp'ta analiz etmek istediğin sohbeti aç.</li>
+          <li>iPhone: üstteki isme dokun. Android: ⋮ → Diğer.</li>
+          <li>"Sohbeti dışa aktar" → "Medya olmadan" seç.</li>
+          <li>Dosyalar'a kaydet (ya da kendine gönder), sonra burada seç.</li>
+        </ol>
+      </details>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div id="results">
+      <p class="summary" id="summary"></p>
+      <div class="who" id="whoBox">Sen hangisisin? <span style="opacity:.75">(kartlarda "Sen" yazsın)</span>
+        <div class="chips" id="whoChips"></div>
+      </div>
+      <div class="toolbar">
+        <button class="chip" id="initials">İsimleri gizle</button>
+        <button class="chip" id="dlAll">⬇ Hepsini indir</button>
+      </div>
+      <div class="cards" id="cards"></div>
+
+      <div class="bridge" id="bridge">
+        <h2 id="bridgeTitle">Sayılar ne yaptığınızı söylüyor. Nedenini söylemiyor.</h2>
+        <p id="bridgeText">Bu sohbetten onun yapay zekâ ikizini kur: nasıl konuştuğunu, neye nasıl tepki verdiğini öğrensin. Söyleyemediğin o şeyi önce onunla dene.</p>
+        <button class="btn" id="bridgeBtn">İkizini kur →</button>
+        <p class="fine">İkizi kurmak için sohbetin, sen onaylarsan şifreli bağlantıyla sunucumuza gönderilir. Analiz sayfası hiçbir şey göndermez.</p>
+      </div>
+    </div>
+
+    <section class="info">
+      <h2>WhatsApp sohbet analizi nasıl çalışır?</h2>
+      <p>WhatsApp'ın kendi "Sohbeti dışa aktar" özelliğiyle aldığın metin dosyasını tarayıcında okuyoruz. Her mesajın kime ait olduğunu ve ne zaman gönderildiğini sayıyoruz; mesajlarının içeriği hiçbir yere gönderilmiyor, kaydedilmiyor.</p>
+      <h3>Hangi sonuçları görürsün?</h3>
+      <ul>
+        <li><b>Kim daha çok yazıyor:</b> toplam mesaj payı.</li>
+        <li><b>Sohbeti kim başlatıyor:</b> en az 6 saatlik bir sessizlikten sonra ilk yazan kişi.</li>
+        <li><b>Cevap hızı düellosu:</b> ikinizin ortanca cevap süresi.</li>
+        <li><b>Gece kuşu:</b> gece yarısı ile sabah 6 arası yazılan mesajların payı.</li>
+        <li><b>Rekor gün ve en uzun sessizlik:</b> en çok yazıştığınız gün ve en uzun ara.</li>
+        <li><b>Sadece ikinizin dili:</b> ikinizin de sık kullandığı kelimeler ve emojiler.</li>
+      </ul>
+      <h3>Güvenli mi?</h3>
+      <p>Evet. Dosya tarayıcında işlenir, sunucuya yüklenmez, kayıt gerekmez. Paylaşım kartları mesajlarını değil, yalnızca sayıları ve isimleri gösterir; istersen isimleri gizleyebilirsin.</p>
+      <h3>Grup sohbetleri de olur mu?</h3>
+      <p>Bu analiz iki kişilik sohbetler için tasarlandı. Grup sohbetinde en çok yazan iki kişi karşılaştırılır.</p>
+      <h3>Sonra ne yapabilirim?</h3>
+      <p>Aynı sohbetten o kişinin yapay zekâ ikizini kurabilirsin: zor bir konuşmayı önce onunla prova edersin, göndermeden önce mesajının nasıl karşılanacağını görürsün. Bu bilimsel bir test değil, sohbetinin sayılarla bir hatırası.</p>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <span>© 2026 aiwillmake</span>
+    <span><a href="/">Ana sayfa</a> · <a href="/privacy.html">Gizlilik</a> · <a href="/terms.html">Kullanım Koşulları</a></span>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/app_stats.js"></script>
+  <script>
+  (function () {
+    // ── tracking: own endpoint, first-touch attribution shared with the app ──
+    try {
+      var q = new URLSearchParams(location.search), a = null;
+      if (q.get('ref')) a = 'ref:' + q.get('ref');
+      else if (q.get('utm_source')) a = 'utm:' + q.get('utm_source') + (q.get('utm_medium') ? '/' + q.get('utm_medium') : '');
+      else if (document.referrer) { var h = new URL(document.referrer).hostname.replace(/^www\./, ''); if (h && h !== location.hostname.replace(/^www\./, '')) a = 'r:' + h; }
+      if (a && !localStorage.getItem('_attr')) localStorage.setItem('_attr', a.slice(0, 60));
+      if (!localStorage.getItem('_attr')) localStorage.setItem('_attr', 'direct');
+      if (!localStorage.getItem('_did')) localStorage.setItem('_did', Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4));
+    } catch (e) {}
+    function track(e, p) {
+      try {
+        var o = {}; for (var k in (p || {})) o[k] = p[k];
+        o.src = localStorage.getItem('_attr') || 'direct'; o.did = localStorage.getItem('_did') || null;
+        var sid = sessionStorage.getItem('_sid');
+        if (!sid) { sid = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('_sid', sid); }
+        fetch('/api/e', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ e: e, p: o, sid: sid }) }).catch(function () {});
+      } catch (err) {}
+    }
+    // This page is Turkish: carry that into the app if no language was chosen yet.
+    try { if (!localStorage.getItem('app_lang')) localStorage.setItem('app_lang', 'tr'); } catch (e) {}
+    track('wrapped_view');
+
+    var $ = function (id) { return document.getElementById(id); };
+    var raw = '', st = null, me = null, hideNames = false;
+
+    function fail(msg) { $('err').textContent = msg; }
+    function readFile(f) {
+      fail('');
+      track('wrapped_file', { kind: /\.zip$/i.test(f.name) ? 'zip' : 'txt' });
+      if (/\.zip$/i.test(f.name) || f.type === 'application/zip') {
+        if (!window.JSZip) return fail('Zip dosyası açılamadı — sohbeti .txt olarak dışa aktarıp dene.');
+        JSZip.loadAsync(f).then(function (z) {
+          var txt = Object.keys(z.files).filter(function (n) { return /\.txt$/i.test(n); })[0];
+          if (!txt) throw new Error('no txt');
+          return z.files[txt].async('string');
+        }).then(run).catch(function () { fail('Zip içinde sohbet dosyası bulunamadı — "Medya olmadan" dışa aktarıp tekrar dene.'); });
+      } else {
+        var r = new FileReader();
+        r.onload = function () { run(String(r.result || '')); };
+        r.onerror = function () { fail('Dosya okunamadı.'); };
+        r.readAsText(f);
+      }
+    }
+    function run(text) {
+      raw = text;
+      var msgs = ChatStats.parse(text);
+      st = ChatStats.compute(msgs);
+      if (!st.ok) {
+        track('wrapped_fail', { reason: st.reason });
+        return fail(st.reason === 'single_sender' ? 'Bu dosyada tek kişi yazmış görünüyor — iki kişilik bir sohbet seç.'
+          : 'Bu dosyada sohbet bulunamadı. WhatsApp\'tan "Sohbeti dışa aktar" ile alınmış .txt dosyası olduğundan emin ol.');
+      }
+      var n = st.totalMessages;
+      track('wrapped_done', { msgs: n < 200 ? '<200' : n < 1000 ? '<1k' : n < 10000 ? '<10k' : '10k+' });
+      me = null;
+      renderWho();
+      render();
+      $('results').style.display = 'block';
+      $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function nm(s) {
+      if (s === me) return 'Sen';
+      if (!hideNames) return s;
+      return s.split(/\s+/).map(function (w) { return w.charAt(0).toLocaleUpperCase('tr') + '.'; }).join('');
+    }
+    function other() { return st.senders[0] === me ? st.senders[1] : st.senders[me === st.senders[1] ? 0 : 1]; }
+    function dur(ms) {
+      if (ms == null) return '—';
+      var m = ms / 60000;
+      if (m < 1) return Math.max(1, Math.round(ms / 1000)) + ' sn';
+      if (m < 60) return Math.round(m) + ' dk';
+      var h = m / 60; if (h < 24) return (Math.round(h * 10) / 10) + ' sa';
+      return (Math.round(h / 24 * 10) / 10) + ' gün';
+    }
+    function trDate(d) { try { return new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return String(d); } }
+    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+    function renderWho() {
+      var box = $('whoChips'); box.innerHTML = '';
+      st.senders.forEach(function (s) {
+        var b = el('button', 'chip', s);
+        b.addEventListener('click', function () { me = (me === s ? null : s); renderWho(); render(); });
+        if (me === s) b.classList.add('on');
+        box.appendChild(b);
+      });
+    }
+
+    function card(eyebrow, title) {
+      var c = el('div', 'card');
+      c.appendChild(el('div', 'eyebrow', eyebrow));
+      c.appendChild(el('h3', null, title));
+      return c;
+    }
+    function wm(c) { c.appendChild(el('div', 'wm', 'AIWILLMAKE.COM · SOHBET ANALİZİ')); }
+
+    function render() {
+      var A = st.senders[0], B = st.senders[1], P = st.perSender;
+      $('summary').innerHTML = '';
+      $('summary').append(document.createTextNode((me === B ? nm(B) + ' ve ' + nm(A) : nm(A) + ' ve ' + nm(B)) + ': '), el('b', null, st.spanDays.toLocaleString('tr-TR') + ' gün'), document.createTextNode(', '), el('b', null, st.totalMessages.toLocaleString('tr-TR') + ' mesaj'));
+      var cards = $('cards'); cards.innerHTML = '';
+      var list = [];
+
+      // 1 — who writes more
+      var c1 = card('Kim daha çok yazıyor?', P[A].share >= 60 ? (A === me ? 'Bu sohbeti sen sırtlıyorsun' : nm(A) + ' bu sohbeti sırtlıyor') : 'Neredeyse başa baş');
+      var bar = el('div', 'bar'); var a1 = el('div', 'a', '%' + P[A].share); a1.style.width = Math.max(18, P[A].share) + '%';
+      var b1 = el('div', 'b', '%' + P[B].share); b1.style.width = Math.max(18, P[B].share) + '%'; bar.append(a1, b1); c1.appendChild(bar);
+      var lg = el('div', 'legend'); lg.append(el('span', null, nm(A) + ' · ' + P[A].count.toLocaleString('tr-TR')), el('span', null, nm(B) + ' · ' + P[B].count.toLocaleString('tr-TR'))); c1.appendChild(lg);
+      wm(c1); list.push(['yazan', c1]);
+
+      // 2 — who starts
+      var starter = P[A].initiationShare >= P[B].initiationShare ? A : B;
+      var c2 = card('Sohbeti kim başlatıyor?', starter === me ? 'Genelde ilk yazan sensin' : nm(starter) + ' genelde ilk yazan');
+      var big2 = el('div', 'big', '%' + P[starter].initiationShare); big2.appendChild(el('small', null, 'ilk mesaj')); c2.appendChild(big2);
+      c2.appendChild(el('div', 'line', 'Her sessizlikten (6+ saat) sonra ' + (starter === me ? 'ilk adımı sen atıyorsun' : nm(starter) + ' ilk adımı atıyor') + '. Diğer taraf: %' + P[starter === A ? B : A].initiationShare + '.'));
+      wm(c2); list.push(['baslatan', c2]);
+
+      // 3 — reply duel
+      var fast = (P[A].replyMedianMs || 9e15) <= (P[B].replyMedianMs || 9e15) ? A : B;
+      var c3 = card('Cevap hızı düellosu', fast === me ? 'Sen daha hızlı cevap veriyorsun' : nm(fast) + ' daha hızlı cevap veriyor');
+      var d3 = el('div', 'duel');
+      [A, B].forEach(function (s) { var r = el('div', 'row'); r.append(el('span', null, nm(s)), el('b', null, dur(P[s].replyMedianMs))); d3.appendChild(r); });
+      c3.appendChild(d3); c3.appendChild(el('div', 'line', 'Ortanca cevap süresi.'));
+      wm(c3); list.push(['cevap', c3]);
+
+      // 4 — night owls
+      var owl = P[A].nightPct >= P[B].nightPct ? A : B;
+      var c4 = card('Gece kuşu endeksi', st.nightPct >= 8 ? 'Geceleri de konuşuyorsunuz' : 'Gündüz insanlarısınız');
+      var big4 = el('div', 'big', '%' + st.nightPct); big4.appendChild(el('small', null, 'gece 00–06')); c4.appendChild(big4);
+      c4.appendChild(el('div', 'line', 'En gece kuşu: ' + nm(owl) + ' (%' + P[owl].nightPct + ').'));
+      wm(c4); list.push(['gece', c4]);
+
+      // 5 — record day + longest silence
+      var rd = st.recordDays[0];
+      var c5 = card('Rekor gün', rd ? trDate(rd.date) : '—');
+      var big5 = el('div', 'big', rd ? rd.count.toLocaleString('tr-TR') : '—'); big5.appendChild(el('small', null, 'mesaj, tek günde')); c5.appendChild(big5);
+      if (st.longestSilence && st.longestSilence.days >= 1) {
+        var ls = el('div', 'line'); ls.append(document.createTextNode('En uzun sessizlik: '), el('b', null, Math.round(st.longestSilence.days) + ' gün'),
+          document.createTextNode('. Sessizliği bozan: ' + nm(st.longestSilence.brokenBy) + '.')); c5.appendChild(ls);
+      }
+      wm(c5); list.push(['rekor', c5]);
+
+      // 6 — shared language
+      var c6 = card('Sadece ikinizin dili', 'İkinizin de durmadan kullandığı');
+      var w6 = el('div', 'words');
+      var shared = (st.sharedWords || []).slice(0, 5).map(function (x) { return x.value; });
+      var emo = [];
+      [A, B].forEach(function (s) { (P[s].topEmojis || []).forEach(function (e) { if (emo.indexOf(e.value) < 0) emo.push(e.value); }); });
+      shared.concat(emo.slice(0, 4)).forEach(function (t) { w6.appendChild(el('span', null, t)); });
+      if (!w6.children.length) w6.appendChild(el('span', null, 'Kısa ve öz yazışıyorsunuz'));
+      c6.appendChild(w6);
+      wm(c6); list.push(['dil', c6]);
+
+      list.forEach(function (pair) {
+        var box = el('div', 'cardbox'); box.appendChild(pair[1]);
+        var btns = el('div', 'cardbtns');
+        var dl = el('button', null, '⬇ İndir'), sh = el('button', null, '↗ Paylaş');
+        dl.addEventListener('click', function () { exportCard(pair[1], pair[0], false); });
+        sh.addEventListener('click', function () { exportCard(pair[1], pair[0], true); });
+        btns.append(dl, sh); box.appendChild(btns); cards.appendChild(box);
+      });
+
+      // 7 — locked bridge card
+      var lockBox = el('div', 'cardbox');
+      var c7 = el('div', 'card locked');
+      c7.appendChild(el('div', 'lock', '🔒'));
+      c7.appendChild(el('div', 'eyebrow', 'Sayıların ötesi'));
+      c7.appendChild(el('h3', null, 'Barışı hep kim başlatıyor?'));
+      c7.appendChild(el('div', 'blur', 'Tartışmalardan sonra ilk adımı genelde… · “…” · kanıtıyla, 3 alıntı'));
+      c7.appendChild(el('div', 'line', 'Yapay zekâ ilişki kartları: kanıtlarıyla, sohbetinden alıntılarla. Ve onun ikizi.'));
+      c7.addEventListener('click', bridge);
+      lockBox.appendChild(c7); cards.appendChild(lockBox);
+
+      var o = me ? other() : null;
+      $('bridgeTitle').textContent = 'Sayılar ne yaptığınızı söylüyor. Nedenini söylemiyor.';
+      $('bridgeBtn').textContent = o ? (o + ' ile konuşmayı prova et →') : 'Onun ikizini kur →';
+    }
+
+    function exportCard(node, key, share) {
+      if (!window.html2canvas) return;
+      var w = node.getBoundingClientRect().width || 300;
+      track(share ? 'wrapped_share' : 'wrapped_download', { card: key });
+      html2canvas(node, { backgroundColor: '#161312', scale: 1080 / w, useCORS: true }).then(function (cv) {
+        cv.toBlob(function (blob) {
+          if (!blob) return;
+          var file = new File([blob], 'sohbet-' + key + '.png', { type: 'image/png' });
+          var url = 'https://www.aiwillmake.com/whatsapp-sohbet-analizi?ref=card';
+          if (share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], text: 'Sohbetimizin sayıları 👀 Sen de bak: ' + url, url: url }).catch(function () {});
+          } else {
+            var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+          }
+        }, 'image/png');
+      });
+    }
+
+    function idbPut(val) {
+      return new Promise(function (res, rej) {
+        var r = indexedDB.open('aiw', 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('kv'); };
+        r.onsuccess = function () { var tx = r.result.transaction('kv', 'readwrite'); tx.objectStore('kv').put(val, 'pendingChat'); tx.oncomplete = function () { res(); }; tx.onerror = rej; };
+        r.onerror = rej;
+      });
+    }
+    function bridge() {
+      if (!st) return;
+      var o = me ? other() : null;
+      track('wrapped_bridge', { me: !!me });
+      idbPut({ text: raw, name: o || '', ts: Date.now() }).catch(function () {}).then(function () {
+        location.href = '/app.html?import=1&mode=fromstats';
+      });
+    }
+
+    var drop = $('drop'), file = $('file');
+    drop.addEventListener('click', function () { file.click(); });
+    drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+    file.addEventListener('change', function () { if (file.files[0]) readFile(file.files[0]); });
+    ['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+    drop.addEventListener('drop', function (e) { var f = e.dataTransfer.files[0]; if (f) readFile(f); });
+    $('initials').addEventListener('click', function () { hideNames = !hideNames; this.textContent = hideNames ? 'İsimleri göster' : 'İsimleri gizle'; this.classList.toggle('on', hideNames); if (st) render(); });
+    $('dlAll').addEventListener('click', function () {
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('#cards .card:not(.locked)'));
+      boxes.forEach(function (c, i) { setTimeout(function () { exportCard(c, 'kart' + (i + 1), false); }, i * 700); });
+    });
+    $('bridgeBtn').addEventListener('click', bridge);
+  })();
+  </script>
+</body>
+</html>

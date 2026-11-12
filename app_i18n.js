@@ -235,3 +235,9 @@ Object.assign(window.I18N_C, {
   "e.g. \"Yemek yedin mi sen?\"\n\"Aman be evladım, takma kafana.\"": { "tr":"örn. \"Yemek yedin mi sen?\"\n\"Aman be evladım, takma kafana.\"", "en":"e.g. \"Did you eat yet?\"\n\"Oh don't worry about it, kiddo.\"", "es":"ej. \"¿Ya comiste?\"\n\"Ay, no te preocupes, mijo.\"" },
   "e.g. Saw me as stubborn but hard-working, always worried I worked too much": { "tr":"örn. Beni inatçı ama çalışkan bulurdu, hep çok çalıştığımdan endişelenirdi", "en":"e.g. Saw me as stubborn but hard-working, always worried I worked too much", "es":"ej. Me veía terco pero trabajador, siempre preocupado porque trabajaba demasiado" }
 });
+
+// Consent line
+Object.assign(window.I18N_C, {
+  "I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad).": { "tr":"18 yaşından büyüğüm, bu bilgileri paylaşma hakkım var ve yapay zekâ ile işlenmesine (yurt dışındaki hizmet sağlayıcılar dahil) onay veriyorum.", "en":"I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad).", "es":"Tengo 18 años o más, tengo derecho a compartir esto y acepto que lo procese la IA (incluidos proveedores en el extranjero)." },
+  "Privacy notice": { "tr":"Aydınlatma metni", "en":"Privacy notice", "es":"Aviso de privacidad" }
+});

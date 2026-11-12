@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KVKK Aydınlatma Metni — aiwillmake</title>
+  <meta name="description" content="aiwillmake kişisel verilerin işlenmesine ilişkin aydınlatma metni (6698 sayılı KVKK)." />
+  <style>
+    :root {
+      --bg:     #09090b;
+      --bg2:    #111113;
+      --surf:   rgba(255,255,255,0.04);
+      --bord:   rgba(255,255,255,0.07);
+      --bord2:  rgba(255,255,255,0.13);
+      --text:   #f4f4f5;
+      --sec:    #a1a1aa;
+      --muted:  #52525b;
+      --accent: #818cf8;
+      --acc2:   #a78bfa;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 50% -80px, rgba(129,140,248,.07) 0%, transparent 65%),
+        radial-gradient(ellipse 500px 500px at 90% 90%,  rgba(167,139,250,.04) 0%, transparent 65%);
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--bord);
+      background: rgba(9,9,11,.88);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .hdr-inner {
+      max-width: 780px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .brand {
+      font-size: .88rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-decoration: none;
+    }
+    .hdr-back {
+      font-size: .82rem; color: var(--muted); text-decoration: none;
+      transition: color .2s;
+    }
+    .hdr-back:hover { color: var(--sec); }
+
+    /* ── Page ── */
+    .page {
+      position: relative; z-index: 1;
+      max-width: 780px; margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    /* ── Title block ── */
+    .page-title {
+      font-size: clamp(1.7rem, 4vw, 2.3rem);
+      font-weight: 900; letter-spacing: -.03em; line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .page-title span {
+      background: linear-gradient(90deg, var(--accent), var(--acc2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .page-meta {
+      font-size: .84rem; color: var(--muted); margin-bottom: 56px;
+    }
+
+    /* ── Sections ── */
+    .sections { display: grid; gap: 40px; }
+
+    .section {
+      border-top: 1px solid var(--bord);
+      padding-top: 32px;
+    }
+
+    .section-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--acc2));
+      font-size: .65rem; font-weight: 800; color: #fff;
+      margin-bottom: 14px;
+    }
+
+    .section h2 {
+      font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em;
+      margin-bottom: 14px; color: var(--text);
+    }
+
+    .section p {
+      font-size: .9rem; line-height: 1.75; color: var(--sec);
+    }
+
+    .section p + p { margin-top: 10px; }
+
+    .section ul {
+      margin: 10px 0 0 2px;
+      padding: 0; list-style: none;
+      display: grid; gap: 7px;
+    }
+
+    .section ul li {
+      font-size: .9rem; line-height: 1.65; color: var(--sec);
+      padding-left: 18px; position: relative;
+    }
+
+    .section ul li::before {
+      content: '–';
+      position: absolute; left: 0; color: var(--muted);
+    }
+
+    .highlight {
+      display: inline-block;
+      background: rgba(129,140,248,.09); border: 1px solid rgba(129,140,248,.2);
+      color: var(--accent); border-radius: 5px;
+      padding: 1px 7px; font-size: .84rem; font-weight: 500;
+    }
+
+    .callout {
+      background: rgba(129,140,248,.06); border: 1px solid rgba(129,140,248,.18);
+      border-radius: 12px; padding: 18px 20px; margin-top: 14px;
+    }
+    .callout p { color: var(--text); }
+
+    a.inline-link {
+      color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(129,140,248,.3);
+      transition: border-color .2s;
+    }
+    a.inline-link:hover { border-color: var(--accent); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--bord);
+      padding: 32px 24px;
+      max-width: 780px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+      font-size: .8rem; color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
+    footer a:hover { color: var(--sec); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hdr-inner">
+      <a href="index.html" class="brand" lang="en">aiwillmake</a>
+      <a href="index.html" class="hdr-back">← Ana sayfa</a>
+    </div>
+  </header>
+  <div class="page">
+    <h1 class="page-title">KVKK <span>Aydınlatma Metni</span></h1>
+    <p class="page-meta">Son güncelleme: Kasım 2026</p>
+    <div class="sections">
+      <div class="section">
+        <div class="section-num">1</div>
+        <h2>Veri sorumlusu</h2>
+        <p>aiwillmake, Rasim Kurum tarafından işletilen bir web uygulamasıdır. 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu sıfatıyla bu metni hazırladık. İletişim: <a href="mailto:rasimkurum@gmail.com" class="inline-link">rasimkurum@gmail.com</a></p>
+      </div>
+      <div class="section">
+        <div class="section-num">2</div>
+        <h2>Hangi verileri işliyoruz?</h2>
+        <ul>
+          <li><strong>Hesap bilgileri:</strong> Google ile giriş yaptığında e-posta adresin ve adın.</li>
+          <li><strong>Senin verdiğin içerik:</strong> yüklediğin WhatsApp sohbetleri (karşı tarafın mesajları dahil), bir kişiyi anlatırken yazdığın cevaplar ve ikizle yaptığın konuşmalar.</li>
+          <li><strong>Kullanım verileri:</strong> hangi ekranların kullanıldığı gibi olaylar ve tek yönlü şifrelenmiş (geri çevrilemez) bir IP özeti.</li>
+        </ul>
+        <p>Sohbetler sağlık, inanç veya özel hayata ilişkin bilgiler (özel nitelikli kişisel veriler) içerebilir. Bu bilgileri yalnızca senin açık rızanla, ikizi oluşturmak amacıyla işleriz.</p>
+        <p><strong>Ücretsiz WhatsApp Sohbet Analizi</strong> sayfası sohbetini cihazında işler; sen ikiz kurmayı seçmedikçe hiçbir sunucuya göndermez.</p>
+      </div>
+      <div class="section">
+        <div class="section-num">3</div>
+        <h2>Hangi amaçla işliyoruz?</h2>
+        <ul>
+          <li>Anlattığın ya da sohbetini yüklediğin kişinin yapay zekâ ikizini oluşturmak ve seninle konuşmasını sağlamak.</li>
+          <li>Konuşmalarını kaydedip ikizin önceki konuşmaları hatırlamasını sağlamak.</li>
+          <li>Hesabını yönetmek, güvenliği sağlamak ve hizmeti iyileştirmek.</li>
+        </ul>
+      </div>
+      <div class="section">
+        <div class="section-num">4</div>
+        <h2>Hukuki sebepler</h2>
+        <p>Verilerini; hizmetin sunulması için gerekli olması (KVKK m.5/2-c), hizmeti iyileştirmeye yönelik meşru menfaatimiz (m.5/2-f) ve özel nitelikli veriler ile yurt dışına aktarım bakımından açık rızan (m.6 ve m.9) hukuki sebeplerine dayanarak işleriz. Yüklediğin içerikteki üçüncü kişilere ait mesajları paylaşma hakkına sahip olduğunu sen beyan edersin.</p>
+      </div>
+      <div class="section">
+        <div class="section-num">5</div>
+        <h2>Verilerin aktarıldığı yerler (yurt dışı dahil)</h2>
+        <p>Hizmeti sunabilmek için verilerin şu hizmet sağlayıcılara aktarılır; bunların bir kısmı yurt dışındadır:</p>
+        <ul>
+          <li><strong>Anthropic (ABD):</strong> yapay zekâ işleme. Anthropic, API üzerinden gönderilen verileri modellerini eğitmek için kullanmaz.</li>
+          <li><strong>Supabase:</strong> veritabanı ve kimlik doğrulama.</li>
+          <li><strong>Railway (ABD):</strong> uygulama sunucusu.</li>
+          <li><strong>Google:</strong> Google ile oturum açma.</li>
+          <li><strong>Lemon Squeezy:</strong> yalnızca ödeme yaparsan, ödeme işlemleri.</li>
+        </ul>
+        <p>Verilerini satmayız ve reklam amacıyla kimseyle paylaşmayız.</p>
+      </div>
+      <div class="section">
+        <div class="section-num">6</div>
+        <h2>Ne kadar süre saklıyoruz?</h2>
+        <p>Verilerini hesabın açık olduğu sürece saklarız. Bir kişiyi, bir konuşmayı ya da hesabının tamamını uygulama içinden istediğin an silebilirsin; silme işlemi kalıcıdır.</p>
+      </div>
+      <div class="section">
+        <div class="section-num">7</div>
+        <h2>Hakların (KVKK m.11)</h2>
+        <p>Verilerinin işlenip işlenmediğini öğrenme, bilgi talep etme, düzeltilmesini veya silinmesini isteme, aktarıldığı üçüncü kişileri öğrenme, itiraz etme ve zararın giderilmesini talep etme haklarına sahipsin. Taleplerini <a href="mailto:rasimkurum@gmail.com" class="inline-link">rasimkurum@gmail.com</a> adresine iletebilirsin; en geç 30 gün içinde yanıtlarız.</p>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <span>© 2026 aiwillmake</span>
+    <span><a href="privacy.html">Gizlilik</a> · <a href="terms.html">Kullanım Koşulları</a> · <a href="index.html">Ana sayfa</a></span>
+  </footer>
+</body>
+</html>
