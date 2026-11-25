@@ -6,6 +6,46 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://www.aiwillmake.com/guides</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/guides/save-text-messages-from-someone-who-died</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/guides/letter-to-someone-who-died</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/guides/talk-to-a-loved-one-who-died-with-ai</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/kaybettigin-birine-mektup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/vefat-eden-birinin-mesajlarini-saklamak</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.aiwillmake.com/rehber/yapay-zeka-ile-kaybettigin-biriyle-konusmak</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.aiwillmake.com/privacy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
@@ -16,63 +56,8 @@
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.aiwillmake.com/whatsapp-sohbet-analizi</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://www.aiwillmake.com/aydinlatma-metni</loc>
     <changefreq>monthly</changefreq>
     <priority>0.2</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/whatsapp-sohbeti-disa-aktarma</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/chatgpt-whatsapp-sohbet-analizi</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/zam-isteme-konusmasi</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/babana-zor-bir-sey-soylemek</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/kaybettigin-birine-mektup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/eski-sevgiliye-mesaj-atmali-miyim</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/babama-sevgilim-oldugunu-nasil-soylerim</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/kus-oldugun-biriyle-barismak</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/whatsapp-kim-once-yaziyor</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
 </urlset>

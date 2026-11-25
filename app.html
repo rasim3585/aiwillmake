@@ -4,21 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AIWILLMAKE — Say the things you never said.</title>
-  <meta name="description" content="Talk with the AI twin of someone in your life — built from your real WhatsApp history or from memory. Rehearse the hard conversation. Finish the unfinished one." />
+  <meta name="description" content="Talk again with someone you've lost. Tell us about them in three answers or bring your messages — their AI twin writes back the way they used to." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/app.html" />
-  <meta property="og:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
-  <meta property="og:locale"      content="tr_TR" />
-  <meta property="og:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
+  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta property="og:locale"      content="en_US" />
+  <meta property="og:description" content="Talk again with someone you've lost. Tell us about them in three answers or bring your messages — their AI twin writes back the way they used to." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
-  <meta name="twitter:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta name="twitter:description" content="Talk again with someone you've lost. Tell us about them in three answers or bring your messages — their AI twin writes back the way they used to." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/app.html" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -2653,6 +2653,12 @@
     .aiw-consent-row.need { color:#ff8a7a; }
     .ai-down-banner { border:1px solid rgba(232,149,110,.4); background:rgba(212,113,90,.08); border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:.86rem; line-height:1.5; display:flex; flex-direction:column; gap:6px; }
     .ai-down-banner a { color:var(--accent); font-weight:700; }
+    /* Rehearsal-era UI, not part of the grief product */
+    #bysHomeCta, #wowMirrorCard, #wowArchetypeCard, #wowArchetypeTeaser, #wowLoopSection, #wowDnaSection,
+    #rp-prediction-result, #rp-next-move, #rp-mirror-block, #rp-cross-mirror-block, .rp-accuracy-row,
+    #rp-outcome-later, #rp-real-outcome, #rp-strategy-btn, #rp-share-btn, #rp-turn, #personGoalBtn,
+    #importMetaStatus { display:none !important; }
+    .rp-pause-note { margin:10px 0; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.05); color:var(--sec); font-size:.84rem; line-height:1.5; text-align:center; }
     .rp-modes { display:flex; gap:6px; padding:6px 14px 0; flex-wrap:wrap; }
     .rp-mode-chip { border:1px solid var(--bord); background:transparent; color:var(--sec); border-radius:999px; padding:6px 12px; font:inherit; font-size:.78rem; cursor:pointer; }
     .rp-mode-chip.on { border-color:var(--accent); color:var(--text); background:rgba(212,113,90,.12); }
@@ -2812,7 +2818,7 @@
       <div class="roleplay-turn-bar" id="rp-turn">Turn 1</div>
       <div class="roleplay-messages" id="rp-messages"></div>
       <div class="roleplay-suggest hidden" id="rp-suggest">
-        <button class="roleplay-suggest-btn" id="rp-suggest-btn">End &amp; see how it went →</button>
+        <button class="roleplay-suggest-btn" id="rp-suggest-btn">Say goodbye for now</button>
       </div>
       <div id="rp-debrief" class="hidden">
         <div class="rp-prediction-result hidden" id="rp-prediction-result">
@@ -2872,12 +2878,12 @@
         <div class="rp-debrief-tertiary">
           <button class="rp-correction-toggle" id="rp-correction-toggle">+ Add a correction about them</button>
           <div class="rp-correction hidden" id="rp-correction">
-            <textarea id="rp-correction-input" class="rp-correction-input" placeholder='e.g. "Yağmur is his wife, not his sister"' rows="2"></textarea>
+            <textarea id="rp-correction-input" class="rp-correction-input" placeholder='e.g. "She always called me kuzum, never by my name"' rows="2"></textarea>
             <button id="rp-correction-save" class="rp-correction-save">Save correction</button>
           </div>
         </div>
         <div class="rp-debrief-actions" id="rp-debrief-actions">
-          <button id="rp-again-btn">Practice again</button>
+          <button id="rp-again-btn">Talk again</button>
           <button id="rp-share-btn">Share</button>
           <button id="rp-copy-conv-btn">📋 Copy chat</button>
           <button id="rp-strategy-btn">Strategy card</button>
@@ -2927,31 +2933,31 @@
       <div class="landing-brand" lang="en">aiwillmake</div>
 
       <div class="landing-chat">
-        <div class="landing-bubble landing-bubble-user">Mert, I need to ask you something...</div>
-        <div class="landing-bubble landing-bubble-other">Tell me bro, everything okay?</div>
-        <span class="landing-chat-label">⚡ Simulated from real WhatsApp history</span>
+        <div class="landing-bubble landing-bubble-other">My dear, have you eaten today? 🙂</div>
+        <div class="landing-bubble landing-bubble-user">Mom, I missed you so much today.</div>
+        <span class="landing-chat-label">An AI reflection built from memories — not them</span>
       </div>
 
       <h1 class="landing-headline">Say the things you never said.</h1>
-      <p class="landing-sub">Upload your real WhatsApp history — or describe them from memory. Rehearse the hard conversation first — plan what to say, see how they'll react.</p>
-      <p class="landing-diff">Not a fictional character — someone you actually know.</p>
+      <p class="landing-sub">Tell us about someone you've lost — or bring your WhatsApp chats with them. Their AI twin writes back the way they used to.</p>
+      <p class="landing-diff">A space for the words left unsaid.</p>
 
       <div class="landing-values">
         <div class="landing-value">
-          <div class="landing-value-title">Rehearse before it matters</div>
-          <div class="landing-value-desc">Practice the hard conversation before having it for real.</div>
+          <div class="landing-value-title">In their own words</div>
+          <div class="landing-value-desc">Their greetings, their phrases, the way they called you.</div>
         </div>
         <div class="landing-value">
-          <div class="landing-value-title">See different outcomes</div>
-          <div class="landing-value-desc">Explore how different approaches change the response.</div>
+          <div class="landing-value-title">Tell them what happened</div>
+          <div class="landing-value-desc">It asks about the years since — and remembers what you tell it.</div>
         </div>
         <div class="landing-value">
-          <div class="landing-value-title">Built from real history</div>
-          <div class="landing-value-desc">Uses your actual conversations, not a generic AI personality.</div>
+          <div class="landing-value-title">A letter, a goodbye</div>
+          <div class="landing-value-desc">Write them a letter, or say the goodbye you never got to say.</div>
         </div>
       </div>
 
-      <p class="landing-trust">🔒 Your conversations stay yours. Never used to train AI models. Delete anytime.</p>
+      <p class="landing-trust">🔒 Private to you. Never used to train AI. Delete everything anytime.</p>
       <button class="btn-google landing-cta" onclick="signInWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         Continue with Google
@@ -3088,8 +3094,8 @@
           'person.brief':'🛡️ Revisar antes de enviar',
         },
       };
-      let APP_LANG = localStorage.getItem('app_lang') || (navigator.language || 'tr').slice(0,2).toLowerCase();
-      if (!['tr','en','es'].includes(APP_LANG)) APP_LANG = 'tr';
+      let APP_LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();
+      if (!['tr','en','es'].includes(APP_LANG)) APP_LANG = 'en';
       window.APP_LANG = APP_LANG;
       function t(key, fb) { const d = I18N[APP_LANG] || I18N.tr; return d[key] || I18N.tr[key] || fb || key; }
       function aiLang() { return { tr:'Turkish', en:'English', es:'Spanish' }[APP_LANG] || 'Turkish'; }
@@ -3546,10 +3552,10 @@
       <div class="import-inner">
         <div id="aiDownBanner" class="ai-down-banner hidden">
           <span>The twin is in short maintenance right now — building twins will be back soon.</span>
-          <a href="/whatsapp-sohbet-analizi?ref=aidown-app">Meanwhile, see your chat's numbers for free →</a>
+          <a href="/guides/letter-to-someone-who-died">Meanwhile: how to write them a letter →</a>
         </div>
-        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who do you want to talk to?</h2>
-        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Tell us about them in three answers — or upload your chats for a more lifelike twin.</p>
+        <h2 style="font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px">Who would you like to talk to again?</h2>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:22px">Tell us about them in three answers — or bring your WhatsApp chats with them.</p>
 
         <div class="import-tabs">
           <button class="import-tab active" id="importTab-text" onclick="switchImportTab('text',this)">Describe them</button>
@@ -3558,7 +3564,7 @@
         </div>
 
         <div id="import-pane-whatsapp" class="hidden">
-          <p class="import-quality">★★★ Best: full simulation + strategy</p>
+          <p class="import-quality">Their own words make the closest twin.</p>
           <details class="wa-export-howto" style="margin:0 0 12px;border:1px solid var(--bord);border-radius:12px;padding:10px 14px;font-size:.84rem;line-height:1.6">
             <summary style="cursor:pointer;font-weight:700">How do I get the chat file? (1 minute)</summary>
             <ol style="margin:8px 0 4px 18px;padding:0">
@@ -3576,7 +3582,7 @@
         </div>
 
         <div id="import-pane-screenshot" class="hidden">
-          <p class="import-quality">★★☆ Partial: strategy works, simulation limited</p>
+          <p class="import-quality">A few screenshots of their messages are enough to start.</p>
           <div class="import-drop-zone" onclick="document.getElementById('importImgFile').click()">
             <p>📸 Upload screenshot<br><span style="font-size:.77rem;opacity:.65">JPG, PNG</span></p>
             <input id="importImgFile" type="file" accept="image/*" style="display:none" onchange="handleImportFileSelect(this)">
@@ -3591,12 +3597,11 @@
             <div class="qd-chips" id="qdRel">
               <button type="button" class="qd-chip" data-v="annem">Mom</button>
               <button type="button" class="qd-chip" data-v="babam">Dad</button>
-              <button type="button" class="qd-chip" data-v="dedem/nenem">Grandparent</button>
-              <button type="button" class="qd-chip" data-v="eşim/sevgilim">Partner</button>
-              <button type="button" class="qd-chip" data-v="eski sevgilim">Ex</button>
-              <button type="button" class="qd-chip" data-v="arkadaşım">Friend</button>
+              <button type="button" class="qd-chip" data-v="dedem">Grandfather</button>
+              <button type="button" class="qd-chip" data-v="ninem">Grandmother</button>
+              <button type="button" class="qd-chip" data-v="eşim">Spouse / partner</button>
               <button type="button" class="qd-chip" data-v="kardeşim">Sibling</button>
-              <button type="button" class="qd-chip" data-v="patronum">Boss</button>
+              <button type="button" class="qd-chip" data-v="arkadaşım">Friend</button>
             </div>
             <div class="qd-row">
               <input id="qdName" type="text" maxlength="40" placeholder="Their name" autocomplete="off" />
@@ -3614,12 +3619,9 @@
               <textarea id="qdGoz" rows="2" maxlength="600" placeholder="e.g. Saw me as stubborn but hard-working, always worried I worked too much"></textarea>
             </details>
 
-            <label class="qd-label"><span>Can you still talk to them?</span></label>
-            <div class="qd-chips" id="qdStatus">
-              <button type="button" class="qd-chip active" data-v="active">We talk</button>
-              <button type="button" class="qd-chip" data-v="estranged">We're on bad terms</button>
-              <button type="button" class="qd-chip" data-v="unreachable">I can't reach them anymore</button>
-            </div>
+            <label class="qd-label"><span>When did you lose them? (optional)</span></label>
+            <input id="qdWhen" type="text" maxlength="40" placeholder="e.g. 3 years ago, 2021" autocomplete="off" />
+            <div class="qd-chips" id="qdStatus" style="display:none"><button type="button" class="qd-chip active" data-v="unreachable"></button></div>
 
             <p class="qd-hint" id="qdHint">Its first version — the more you tell it, the more it sounds like them.</p>
             <label class="aiw-consent-row"><input type="checkbox" class="aiw-consent"> <span>I'm 18 or older, I have the right to share this, and I agree to it being processed by AI (including providers abroad). <a href="kvkk.html" target="_blank" rel="noopener">Privacy notice</a></span></label>
@@ -3634,13 +3636,11 @@
           <input id="importName" type="text" placeholder="Name (e.g. Alex)" />
           <select id="importType">
             <option value="">Relationship type…</option>
-            <option>Sibling</option>
-            <option>Partner/Spouse</option>
-            <option>Ex</option>
-            <option>Boss</option>
             <option>Parent</option>
+            <option>Grandparent</option>
+            <option>Partner/Spouse</option>
+            <option>Sibling</option>
             <option>Friend</option>
-            <option>Partner</option>
             <option>Other</option>
           </select>
         </div>
@@ -3649,9 +3649,7 @@
              Umbrella framing: "yarım kalan konuşmalar" — never leads with death. -->
         <div class="import-meta" id="importMetaStatus" style="margin-top:8px;display:none">
           <select id="importStatus" style="width:100%">
-            <option value="active">Bu kişiyle aran nasıl? — Konuşuyoruz</option>
-            <option value="estranged">Aramız bozuk / küsüz</option>
-            <option value="unreachable">Artık ulaşamıyorum</option>
+            <option value="unreachable" selected>unreachable</option>
           </select>
         </div>
 
@@ -3781,7 +3779,7 @@
         <div class="wow-cta-area">
           <button class="wow-cta-btn" id="wowTalkBtn">🎭 <span id="wowCtaName">them</span> ile konuşmaya başla →</button>
           <button class="wow-cta-profile" id="wowProfileBtn">kişi sayfası →</button>
-          <p class="wow-cta-note hidden" id="wowCtaNote">Sign in to save your twin &amp; start practicing. Free.</p>
+          <p class="wow-cta-note hidden" id="wowCtaNote">Sign in to keep their twin and your conversations. Free.</p>
         </div>
       </div>
     </section>
@@ -5664,7 +5662,7 @@
       document.getElementById('importAnalyzeBtn')?.classList.toggle('hidden', tab === 'text');
       // The quick describe form carries its own name/status fields.
       const _isText = tab === 'text';
-      ['importMetaMain', 'importMetaStatus', 'importConsentWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isText ? 'none' : ''; });
+      ['importMetaMain', 'importConsentWrap'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = _isText ? 'none' : ''; });
       if (_isText) _qdInit();
     }
 
@@ -5857,7 +5855,7 @@
     // Sparse on purpose. Quality comes from the two highest-signal answers (how
     // they addressed you + their own words), from the server's no-invention rule,
     // and from the "did that sound like them?" fix loop after the first reply.
-    let _qdRel = '', _qdStatus = 'active', _qdInited = false;
+    let _qdRel = '', _qdStatus = 'unreachable', _qdInited = false;
     const _QD_T = {
       needName: { tr: 'Onun adını yaz', en: 'Write their name', es: 'Escribe su nombre' },
       needVoice: { tr: 'Sana nasıl hitap ettiğini ya da onun bir cümlesini yaz — ikiz bunlarla konuşur', en: 'Add what they called you or one of their sentences — the twin speaks from these', es: 'Añade cómo te llamaba o una frase suya — el gemelo habla con eso' },
@@ -5886,10 +5884,10 @@
     }
     function _qdCollect() {
       const v = id => (document.getElementById(id)?.value || '').trim();
-      const name = v('qdName'), me = v('qdMe'), hitap = v('qdHitap'), laf = v('qdLaf'), goz = v('qdGoz');
+      const name = v('qdName'), me = v('qdMe'), hitap = v('qdHitap'), laf = v('qdLaf'), goz = v('qdGoz'), when = v('qdWhen');
       const am = {
         who: [_qdRel ? (_qdRel + ' ' + name) : name, me ? ('ben ' + me) : ''].filter(Boolean).join(', '),
-        hitap, laflar: laf, gozunden: goz, _me: me
+        hitap, laflar: laf, gozunden: goz, zaman: when, _me: me
       };
       return { name, me, hitap, laf, am };
     }
@@ -5923,8 +5921,8 @@
         openSimulatorFresh({
           id: null, name, type: _qdRel || null, relationship_state: null, observed_patterns: null,
           relationship_summary: dd.relationship_summary || null, character_profile: dd.character_profile,
-          relationship_tier: 2, contact_status: _qdStatus, opener_samples: openers.length ? openers : null,
-          last_message_ts: null, source: 'described', person_a: me || null
+          relationship_tier: 2, contact_status: 'unreachable', opener_samples: openers.length ? openers : null,
+          last_message_ts: _dtParseWhen(am.zaman), source: 'described', person_a: me || null
         }, null);
       } catch (e) {
         console.error('[quick-describe]', e);
@@ -6004,8 +6002,8 @@
         openSimulatorFresh({
           id: contact.id, name: pg.name, type: null, relationship_state: null, observed_patterns: null,
           relationship_summary: pg.rel || null, character_profile: pg.profile, relationship_tier: 2,
-          contact_status: pg.status || 'active', opener_samples: openers.length ? openers : null,
-          last_message_ts: null, source: 'described', person_a: pg.me || null
+          contact_status: 'unreachable', opener_samples: openers.length ? openers : null,
+          last_message_ts: _dtParseWhen(pg.am && pg.am.zaman), source: 'described', person_a: pg.me || null
         }, null);
       } catch (e) {
         console.error('[resume-guest-twin]', e);
@@ -7330,7 +7328,7 @@
       _simHistory = [];
       _simTurn = 0;
       _inviteAsked = false;
-      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false;
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false; _farewellMode = false; _farewellOnce = false; _pauseShown = false;
       window._track?.('practice_open', { status: (contactCtx && contactCtx.contact_status) || 'active' });
       // Knowledge score powers the in-chat data invite (thin profile → the twin
       // itself asks for more of the user's world at a natural moment).
@@ -9569,7 +9567,7 @@
     let _simSess = { convId: null, saved: 0 };
     let _simSaveQ = Promise.resolve();
     let _rpFeedbackShown = false;
-    let _simDifficulty = null, _letterMode = false, _letterOnce = false;
+    let _simDifficulty = null, _letterMode = false, _letterOnce = false, _farewellMode = false, _farewellOnce = false, _pauseShown = false;
     function _rpRenderModes() {
       const bar = document.getElementById('rp-modes');
       if (!bar) return;
@@ -9583,6 +9581,9 @@
         letter: { tr: '💌 Ona mektup yaz', en: '💌 Write them a letter', es: '💌 Escríbele una carta' },
         letterOn: { tr: '💌 Mektup modu — yazmayı bitirince gönder', en: '💌 Letter mode — send when you are done', es: '💌 Modo carta — envía al terminar' },
         letterPh: { tr: 'Ona söyleyemediklerini yaz. Acele etme…', en: 'Write what you never got to say. Take your time…', es: 'Escribe lo que nunca pudiste decir. Sin prisa…' },
+        bye: { tr: '🕊 Vedalaş', en: '🕊 Say goodbye', es: '🕊 Despedirte' },
+        byeOn: { tr: '🕊 Veda — hazır olduğunda gönder', en: '🕊 Goodbye — send when you are ready', es: '🕊 Despedida — envía cuando estés listo' },
+        byePh: { tr: 'Ona vedanı yaz…', en: 'Write your goodbye…', es: 'Escribe tu despedida…' },
         ph: { tr: 'Mesajını yaz…', en: 'Type or speak your message…', es: 'Escribe tu mensaje…' }
       };
       const tx = k => T[k][L] || T[k].tr;
@@ -9596,8 +9597,17 @@
           input.placeholder = _letterMode ? tx('letterPh') : tx('ph');
           input.rows = _letterMode ? 6 : 1;
         };
-        chip.addEventListener('click', () => { _letterMode = !_letterMode; if (_letterMode) window._track?.('letter_open'); paint(); input.focus(); });
-        paint();
+        chip.addEventListener('click', () => { _letterMode = !_letterMode; if (_letterMode) { _farewellMode = false; window._track?.('letter_open'); } paint(); paintBye(); input.focus(); });
+        const bye = document.createElement('button');
+        bye.type = 'button'; bye.className = 'rp-mode-chip';
+        const paintBye = () => {
+          bye.textContent = _farewellMode ? tx('byeOn') : tx('bye');
+          bye.classList.toggle('on', _farewellMode);
+          if (_farewellMode) { input.placeholder = tx('byePh'); input.rows = 4; input.classList.add('letter'); }
+        };
+        bye.addEventListener('click', () => { _farewellMode = !_farewellMode; if (_farewellMode) _letterMode = false; paint(); paintBye(); input.focus(); });
+        paint(); paintBye();
+        bar.appendChild(bye);
       } else {
         const paint = () => { chip.textContent = _simDifficulty === 'hard' ? tx('hardOn') : tx('hard'); chip.classList.toggle('on', _simDifficulty === 'hard'); };
         chip.addEventListener('click', () => { _simDifficulty = _simDifficulty === 'hard' ? null : 'hard'; if (_simDifficulty) window._track?.('difficulty_on'); paint(); });
@@ -9886,9 +9896,9 @@
         const resp = await fetch('/api/simulate-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}) },
-          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: (inviteNow && !_letterOnce) || undefined, conversation_id: _simSess.convId || undefined, difficulty: _simDifficulty || undefined, letter: _letterOnce || undefined })
+          body: JSON.stringify({ character: _simCharacter, history: _simHistory, language: lang, invite_data: (inviteNow && !_letterOnce) || undefined, conversation_id: _simSess.convId || undefined, difficulty: _simDifficulty || undefined, letter: _letterOnce || undefined, farewell: _farewellOnce || undefined })
         });
-        _letterOnce = false;
+        _letterOnce = false; _farewellOnce = false;
         const data = await resp.json();
         typingEl.remove();
         if (resp.status === 402) { showUpgradeModal(); return; }
@@ -9902,6 +9912,15 @@
         _simTurn++;
         if (_simTurn === 1) window._track?.('practice_first_msg', { status: _simCharacter?.contact_status || 'active' });
         if (!accessToken && _simTurn >= 3) _rpGuestSaveBar('soft');
+        if (!_pauseShown && _simHistory.filter(m => m.role === 'user').length >= 30) {
+          _pauseShown = true;
+          const L = window.APP_LANG || 'tr';
+          const note = document.createElement('div');
+          note.className = 'rp-pause-note';
+          note.textContent = ({ tr: 'Uzun süredir konuşuyorsunuz. İstersen biraz ara ver; bir yürüyüş, bir çay ya da sevdiğin biriyle bir sohbet iyi gelebilir. Burası seni bekler. 🤍', en: 'You have been talking for a while. Maybe take a short break — a walk, a tea, or a chat with someone you love. This place will be here. 🤍', es: 'Llevan un buen rato hablando. Quizá un descanso — un paseo, un té o hablar con alguien querido. Esto seguirá aquí. 🤍' })[L];
+          document.getElementById('rp-messages').appendChild(note);
+          window._track?.('pause_nudge');
+        }
         document.getElementById('rp-turn').textContent = `Turn ${_simTurn}`;
         if (_simTurn > 3) document.getElementById('rp-suggest').classList.remove('hidden');
       } catch (e) {
@@ -9947,7 +9966,7 @@
       document.querySelectorAll('.rp-outcome-btn').forEach(b => b.classList.remove('selected'));
       document.querySelectorAll('.rp-star').forEach(s => s.classList.remove('selected'));
       _simHistory = []; _simCharacter = null; _simInitialMsg = '';
-      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false;
+      _simSess = { convId: null, saved: 0 }; _rpFeedbackShown = false; _guestSaveShown = false; _simDifficulty = null; _letterMode = false; _letterOnce = false; _farewellMode = false; _farewellOnce = false; _pauseShown = false;
       if (_isListening && _recognition) _recognition.stop();
       window.speechSynthesis.cancel();
       _ttsEnabled = false;
@@ -10621,6 +10640,7 @@
       _rpInput.value = '';
       document.querySelector('#rp-messages .rp-fb')?.remove();
       if (_letterMode) { _letterOnce = true; _letterMode = false; window._track?.('letter_sent', { len: text.length }); _rpRenderModes(); }
+      if (_farewellMode) { _farewellOnce = true; _farewellMode = false; window._track?.('farewell_sent'); _rpRenderModes(); }
       _simAutosave();
       _rpCallSimulate();
     });

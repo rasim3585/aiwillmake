@@ -9,14 +9,18 @@ const post = async (p, body) => { const r = await fetch(BASE + p, { method: 'POS
 (async () => {
   console.log('smoke test →', BASE);
   // pages
-  for (const [p, needle] of [['/', 'Say the things you never said'], ['/app.html', 'qdForm'], ['/whatsapp-sohbet-analizi', 'Kim daha çok yazıyor'],
-    ['/rehber', 'Rehberler'], ['/rehber/zam-isteme-konusmasi', 'FAQPage'], ['/aydinlatma-metni', 'Aydınlatma'], ['/terms.html', 'Terms'],
+  for (const [p, needle] of [['/', 'Say the things you never said'], ['/app.html', 'qdForm'], ['/guides', 'Guides'], ['/guides/letter-to-someone-who-died', 'FAQPage'],
+    ['/rehber', 'Rehberler'], ['/rehber/kaybettigin-birine-mektup', 'FAQPage'], ['/guides/save-text-messages-from-someone-who-died', 'Voicemails'], ['/aydinlatma-metni', 'Aydınlatma'], ['/terms.html', 'Terms'],
     ['/privacy.html', 'Privacy'], ['/sitemap.xml', '/rehber/'], ['/og-image.png', '']]) {
     const r = await get(p);
     check('GET ' + p, r.status === 200 && (!needle || r.text.includes(needle)), r.status);
   }
   // static lock-down: source files must never be served
-  for (const p of ['/server.js', '/guides.js', '/package.json', '/.env', '/e2e_test.js', '/rehber/does-not-exist']) {
+  for (const [p, code] of [['/whatsapp-sohbet-analizi', 301], ['/sohbet-analizi.html', 301], ['/rehber/zam-isteme-konusmasi', 301]]) {
+    const r = await get(p);
+    check('retired ' + p + ' → ' + code, r.status === code, r.status);
+  }
+  for (const p of ['/server.js', '/guides.js', '/package.json', '/.env', '/e2e_test.js', '/rehber/does-not-exist', '/guides/does-not-exist']) {
     const r = await get(p);
     check('blocked ' + p, r.status === 404, r.status);
   }
@@ -30,7 +34,9 @@ const post = async (p, body) => { const r = await fetch(BASE + p, { method: 'POS
   check('/api/e accepts events', ev.status === 200, ev.status);
   // safety + guest limits (no model call needed)
   const crisis = await post('/api/simulate-reply', { character: { name: 'Dede', contact_status: 'unreachable' }, history: [{ role: 'user', content: 'artık yaşamak istemiyorum' }], language: 'Turkish' });
-  check('crisis line intercepted before the model', crisis.status === 200 && crisis.json.safety === true, JSON.stringify(crisis.json).slice(0, 80));
+  check('crisis line intercepted before the model (TR)', crisis.status === 200 && crisis.json.safety === true, JSON.stringify(crisis.json).slice(0, 80));
+  const crisisEn = await post('/api/simulate-reply', { character: { name: 'Mom' }, history: [{ role: 'user', content: 'I just want to be with you again' }], language: 'English' });
+  check('crisis line intercepted (EN) with 988', crisisEn.status === 200 && crisisEn.json.safety === true && /988/.test(crisisEn.json.reply || ''), JSON.stringify(crisisEn.json).slice(0, 80));
   const hist = []; for (let i = 1; i <= 11; i++) { hist.push({ role: 'user', content: 'mesaj ' + i }); if (i < 11) hist.push({ role: 'assistant', content: 'cevap ' + i }); }
   const cap = await post('/api/simulate-reply', { character: { name: 'A' }, history: hist, language: 'Turkish' });
   check('guest message cap → 401 signin_required', cap.status === 401 && cap.json.error === 'signin_required', cap.status);

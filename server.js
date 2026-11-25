@@ -193,7 +193,7 @@ app.use((req, res, next) => {
 // app_i18n.js (UI translation dictionary) + app_stats.js (client-side chat stats
 // engine); everything else loads from a CDN — so an explicit allow-list is safe.
 const PUBLIC_FILES = new Set([
-  '/', '/index.html', '/app.html', '/privacy.html', '/terms.html', '/sohbet-analizi.html', '/kvkk.html', '/app_i18n.js', '/app_stats.js',
+  '/', '/index.html', '/app.html', '/privacy.html', '/terms.html', '/kvkk.html', '/app_i18n.js', '/app_stats.js',
   '/robots.txt', '/sitemap.xml', '/og-image.png', '/favicon.ico'
 ]);
 // Route static ONLY through the allow-list. Do NOT chain a blanket express.static
@@ -202,76 +202,92 @@ const PUBLIC_FILES = new Set([
 const staticHandler = express.static(__dirname, { dotfiles: 'deny' });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path === '/health') return next();
-  if (req.path === '/rehber' || req.path.startsWith('/rehber/')) return next();
+  if (/^\/(rehber|guides)(\/|$)/.test(req.path)) return next();
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-  // Clean SEO paths for the static pages
-  const ALIAS = { '/whatsapp-sohbet-analizi': '/sohbet-analizi.html', '/aydinlatma-metni': '/kvkk.html' };
+  // The product serves one purpose now; the old living-relationship stats tool retires to the home page.
+  if (req.path === '/whatsapp-sohbet-analizi' || req.path === '/sohbet-analizi.html') return res.redirect(301, '/');
+  const ALIAS = { '/aydinlatma-metni': '/kvkk.html' };
   if (ALIAS[req.path]) { req.url = ALIAS[req.path]; return staticHandler(req, res, next); }
   if (PUBLIC_FILES.has(req.path)) return staticHandler(req, res, next);
   return res.status(404).send('Not found');
 });
 
 
-// ── Turkish guides (/rehber, /rehber/:slug) — server-rendered from guides.js ──
+// ── Guides: /guides/:slug (English), /rehber/:slug (Turkish) — rendered from guides.js ──
 const GUIDES = require('./guides.js');
+const GUIDE_UI = {
+  en: { base: '/guides', locale: 'en_US', index: 'Guides', home: 'Home', faq: 'Common questions', more: 'More guides', indexTitle: 'Guides — aiwillmake',
+        indexIntro: 'Gentle, practical guides for the words left unsaid to someone you have lost.', legal: '<a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>' },
+  tr: { base: '/rehber', locale: 'tr_TR', index: 'Rehberler', home: 'Ana sayfa', faq: 'Sık sorulanlar', more: 'Diğer rehberler', indexTitle: 'Rehberler — aiwillmake',
+        indexIntro: 'Kaybettiğin birine söylenmeden kalan sözler için sakin ve işe yarar rehberler.', legal: '<a href="/kvkk.html">KVKK</a> · <a href="/privacy.html">Gizlilik</a>' },
+};
+// Retired living-relationship guides → their language index (keeps any earned links working)
+const RETIRED_GUIDES = ['whatsapp-sohbeti-disa-aktarma', 'chatgpt-whatsapp-sohbet-analizi', 'zam-isteme-konusmasi', 'babana-zor-bir-sey-soylemek',
+  'eski-sevgiliye-mesaj-atmali-miyim', 'babama-sevgilim-oldugunu-nasil-soylerim', 'kus-oldugun-biriyle-barismak', 'whatsapp-kim-once-yaziyor'];
 const GUIDE_CSS = ':root{--bg:#1a1918;--text:#f2ede8;--sec:#a8a09a;--muted:#8a8078;--accent:#d4715a;--acc2:#e8956e;--bord:rgba(255,255,255,.09)}'
   + '*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Hanken Grotesk",ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}'
   + '.w{max-width:720px;margin:0 auto;padding:0 18px}header{padding:18px 0}header .w{display:flex;justify-content:space-between;align-items:center}'
   + '.logo{font-weight:800;letter-spacing:.18em;font-size:.85rem;text-decoration:none;color:var(--text)}.logo span{color:var(--accent)}header a.s{font-size:.82rem;color:var(--sec);text-decoration:none}'
   + 'h1{font-size:clamp(1.6rem,5vw,2.3rem);line-height:1.15;letter-spacing:-.02em;margin:26px 0 14px}.intro{color:var(--sec);font-size:1.05rem}'
   + 'h2{font-size:1.25rem;margin:30px 0 10px}p,li{color:#d9d2cb;font-size:1rem}p+p{margin-top:10px}ul,ol{margin:8px 0 0 22px}li{margin:6px 0}'
-  + 'blockquote{border-left:3px solid var(--accent);padding:8px 14px;margin:10px 0;color:var(--text);background:rgba(212,113,90,.06);border-radius:0 10px 10px 0}'
   + 'a{color:var(--acc2)}.cta{margin:34px 0 10px;text-align:center;border:1px solid rgba(212,113,90,.4);background:rgba(212,113,90,.07);border-radius:18px;padding:22px 16px}'
   + '.cta a.b{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:13px 20px}.cta p{color:var(--muted);font-size:.82rem;margin-top:10px}'
   + '.faq{margin-top:30px;border-top:1px solid var(--bord);padding-top:14px}.faq h3{font-size:1rem;margin:16px 0 4px}.more{margin-top:30px;border-top:1px solid var(--bord);padding-top:14px}'
   + '.more a{display:block;margin:8px 0;text-decoration:none}.list a{display:block;padding:16px 0;border-bottom:1px solid var(--bord);text-decoration:none}.list a b{display:block;color:var(--text);font-size:1.05rem}.list a span{color:var(--sec);font-size:.92rem}'
   + 'footer{border-top:1px solid var(--bord);margin-top:34px;padding:20px 0 40px;font-size:.8rem;color:var(--muted)}footer a{color:var(--muted);text-decoration:none}';
 const _esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-function guidePage({ title, description, canonical, body, jsonld }) {
-  return '<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+function guidePage({ lang, title, description, canonical, body, jsonld }) {
+  const U = GUIDE_UI[lang];
+  return '<!doctype html><html lang="' + lang + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<title>' + _esc(title) + '</title><meta name="description" content="' + _esc(description) + '"><link rel="canonical" href="' + canonical + '">'
-    + '<meta property="og:type" content="article"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="' + _esc(title) + '"><meta property="og:description" content="' + _esc(description) + '">'
+    + '<meta property="og:type" content="article"><meta property="og:locale" content="' + U.locale + '"><meta property="og:title" content="' + _esc(title) + '"><meta property="og:description" content="' + _esc(description) + '">'
     + '<meta property="og:url" content="' + canonical + '"><meta property="og:image" content="https://www.aiwillmake.com/og-image.png"><meta name="twitter:card" content="summary_large_image">'
     + '<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23d4715a%27/></svg>">'
     + '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">'
     + (jsonld ? '<script type="application/ld+json">' + JSON.stringify(jsonld).replace(/</g, '\\u003c') + '</script>' : '')
     + '<style>' + GUIDE_CSS + '</style></head><body>'
-    + '<header><div class="w"><a class="logo" href="/" lang="en">AIWILL<span>MAKE</span></a><a class="s" href="/rehber">Rehberler</a></div></header>'
+    + '<header><div class="w"><a class="logo" href="/" lang="en">AIWILL<span>MAKE</span></a><a class="s" href="' + U.base + '">' + U.index + '</a></div></header>'
     + '<main class="w">' + body + '</main>'
-    + '<footer class="w"><a href="/">Ana sayfa</a> · <a href="/whatsapp-sohbet-analizi">WhatsApp sohbet analizi</a> · <a href="/rehber">Rehberler</a> · <a href="/kvkk.html">KVKK</a> · <a href="/privacy.html">Gizlilik</a></footer>'
+    + '<footer class="w"><a href="/">' + U.home + '</a> · <a href="' + U.base + '">' + U.index + '</a> · ' + U.legal + '</footer>'
     + '<script>try{var q=new URLSearchParams(location.search),a=q.get("ref")?"ref:"+q.get("ref"):(document.referrer&&new URL(document.referrer).hostname.replace(/^www\\./,"")!==location.hostname.replace(/^www\\./,"")?"r:"+new URL(document.referrer).hostname.replace(/^www\\./,""):null);'
     + 'if(a&&!localStorage.getItem("_attr"))localStorage.setItem("_attr",a.slice(0,60));if(!localStorage.getItem("_attr"))localStorage.setItem("_attr","direct");'
-    + 'if(!localStorage.getItem("_did"))localStorage.setItem("_did",Math.random().toString(36).slice(2,12));if(!localStorage.getItem("app_lang"))localStorage.setItem("app_lang","tr");'
+    + 'if(!localStorage.getItem("_did"))localStorage.setItem("_did",Math.random().toString(36).slice(2,12));if(!localStorage.getItem("app_lang"))localStorage.setItem("app_lang","' + lang + '");'
     + 'var sid=sessionStorage.getItem("_sid");if(!sid){sid=Math.random().toString(36).slice(2,12);sessionStorage.setItem("_sid",sid)}'
     + 'fetch("/api/e",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({e:"guide_view",p:{g:location.pathname.split("/").pop()||"index",src:localStorage.getItem("_attr"),did:localStorage.getItem("_did")},sid:sid})}).catch(function(){})}catch(e){}</script>'
     + '</body></html>';
 }
 function renderGuide(g) {
-  const url = 'https://www.aiwillmake.com/rehber/' + g.slug;
-  const others = GUIDES.filter(x => x.slug !== g.slug).slice(0, 4);
+  const U = GUIDE_UI[g.lang];
+  const url = 'https://www.aiwillmake.com' + U.base + '/' + g.slug;
+  const others = GUIDES.filter(x => x.lang === g.lang && x.slug !== g.slug).slice(0, 4);
   const body = '<article><h1>' + _esc(g.h1) + '</h1><p class="intro">' + _esc(g.intro) + '</p>'
     + g.sections.map(sec => '<h2>' + _esc(sec.h) + '</h2>' + sec.body).join('')
     + '<div class="cta"><a class="b" href="' + _esc(g.cta.href) + '">' + _esc(g.cta.text) + '</a><p>' + _esc(g.cta.note) + '</p></div>'
-    + (g.faq && g.faq.length ? '<div class="faq"><h2>Sık sorulanlar</h2>' + g.faq.map(x => '<h3>' + _esc(x.q) + '</h3><p>' + _esc(x.a) + '</p>').join('') + '</div>' : '')
-    + '<div class="more"><h2>Diğer rehberler</h2>' + others.map(o => '<a href="/rehber/' + o.slug + '">' + _esc(o.h1) + ' →</a>').join('') + '</div></article>';
+    + (g.faq && g.faq.length ? '<div class="faq"><h2>' + U.faq + '</h2>' + g.faq.map(x => '<h3>' + _esc(x.q) + '</h3><p>' + _esc(x.a) + '</p>').join('') + '</div>' : '')
+    + (others.length ? '<div class="more"><h2>' + U.more + '</h2>' + others.map(o => '<a href="' + U.base + '/' + o.slug + '">' + _esc(o.h1) + ' →</a>').join('') + '</div>' : '') + '</article>';
   const jsonld = [
-    { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, inLanguage: 'tr', mainEntityOfPage: url,
+    { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, inLanguage: g.lang, mainEntityOfPage: url,
       publisher: { '@type': 'Organization', name: 'aiwillmake', url: 'https://www.aiwillmake.com' } },
     ...(g.faq && g.faq.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage',
       mainEntity: g.faq.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) }] : []),
   ];
-  return guidePage({ title: g.title, description: g.description, canonical: url, body, jsonld });
+  return guidePage({ lang: g.lang, title: g.title, description: g.description, canonical: url, body, jsonld });
 }
-app.get('/rehber', (req, res) => {
-  const body = '<h1>Rehberler</h1><p class="intro">Zor konuşmalara hazırlanmak, söyleyemediklerini söylemek ve WhatsApp sohbetlerini anlamak için kısa, işe yarar rehberler.</p>'
-    + '<div class="list">' + GUIDES.map(g => '<a href="/rehber/' + g.slug + '"><b>' + _esc(g.h1) + '</b><span>' + _esc(g.description) + '</span></a>').join('') + '</div>';
-  res.type('html').send(guidePage({ title: 'Rehberler — aiwillmake', description: 'Zor konuşmalar, söyleyemediklerin ve WhatsApp sohbet analizi üzerine rehberler.', canonical: 'https://www.aiwillmake.com/rehber', body }));
-});
-app.get('/rehber/:slug', (req, res) => {
-  const g = GUIDES.find(x => x.slug === req.params.slug);
-  if (!g) return res.status(404).send('Not found');
-  res.type('html').send(renderGuide(g));
-});
+for (const lang of Object.keys(GUIDE_UI)) {
+  const U = GUIDE_UI[lang];
+  app.get(U.base, (req, res) => {
+    const list = GUIDES.filter(g => g.lang === lang);
+    const body = '<h1>' + U.index + '</h1><p class="intro">' + U.indexIntro + '</p>'
+      + '<div class="list">' + list.map(g => '<a href="' + U.base + '/' + g.slug + '"><b>' + _esc(g.h1) + '</b><span>' + _esc(g.description) + '</span></a>').join('') + '</div>';
+    res.type('html').send(guidePage({ lang, title: U.indexTitle, description: U.indexIntro, canonical: 'https://www.aiwillmake.com' + U.base, body }));
+  });
+  app.get(U.base + '/:slug', (req, res) => {
+    if (RETIRED_GUIDES.includes(req.params.slug)) return res.redirect(301, U.base);
+    const g = GUIDES.find(x => x.lang === lang && x.slug === req.params.slug);
+    if (!g) return res.status(404).send('Not found');
+    res.type('html').send(renderGuide(g));
+  });
+}
 
 // ── AI availability (cached) ─────────────────────────────────────────────────
 // A dead key or exhausted credits must not look like a broken product: the
@@ -1599,7 +1615,7 @@ OWNER_FACTS:
 Values in ${lang} where quoting the owner's words; prose may be in English. No markdown headers, no commentary.`;
     const d = await claudeCallWithRetry({
       model: 'claude-sonnet-4-6', max_tokens: 1400, system: sys,
-      messages: [{ role: 'user', content: `Relationship status: ${status || 'active'}\n\n${qa}` }]
+      messages: [{ role: 'user', content: `Relationship status: ${status || 'unreachable'} (someone the owner has lost)\n\n${qa}` }]
     }, 'describe-twin');
     if (!d) return res.status(502).json({ error: 'ai_unavailable' });
     const text = d.content?.[0]?.text?.trim() || '';
@@ -2779,13 +2795,14 @@ app.post('/api/simulate-debrief', limiter, optionalAuth, aiGate('debrief', 40), 
     // learned_candidates; the client shows one-tap ✓/✗ chips and only confirmed
     // facts get appended to user_profile. Applies to every mode incl. unreachable.
 
-    const systemPrompt = `You are a communication coach reviewing a practice conversation. Analyse the transcript and write a short observational debrief of 3-4 sentences in ${lang}.
+    const systemPrompt = `The user has just talked with an AI reflection of ${name}, someone they have lost. Write a short, warm closing note to the user in ${lang}, 2-3 sentences.
 
 Rules:
-- NO scores, percentages, or ratings (no "7/10", no "65%", no grades).
-- Observation-only language: describe what happened, not what the user "should" have done.
-- Cover: how the user's approach came across (e.g. warm, direct, hesitant), how ${name} responded (opened up, stayed guarded, warmed slightly), one concrete observation about what worked or felt off, and one gentle forward-looking suggestion.
-- Keep it conversational and kind — like a coach talking after a rehearsal, not an evaluation report.
+- Acknowledge, specifically and gently, what they shared or said to ${name} in this conversation (use their own topics, never quote at length).
+- Never analyze, coach, score or evaluate them; never tell them what they should do; no clinical words.
+- Never claim ${name} really heard them or is somewhere listening; no religious or afterlife statements.
+- You may gently mention that they can come back whenever they want, or write ${name} a letter.
+- If the transcript shows heavy grief or hopelessness, add one soft sentence encouraging them to talk to someone they trust.
 - Write entirely in ${lang}.`;
 
     const userPrompt = `Practice transcript:\n${transcript}`;
@@ -3230,6 +3247,9 @@ app.get('/api/communication-archetype', requireAuth, async (req, res) => {
 app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), async (req, res) => {
   try {
     const { character, language } = req.body;
+    // aiwillmake serves one purpose: talking again with someone the user has lost.
+    // Every twin runs in the unreachable (grief-safe, frozen-present) mode.
+    if (character && typeof character === 'object') character.contact_status = 'unreachable';
     let history = req.body.history;
     if (!character) return res.status(400).json({ error: 'character is required' });
     // Opening mode: the TWIN sends the first message of a fresh chat, in the way
@@ -3263,12 +3283,12 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     // out of character with a fixed support message instead of role-playing.
     if (!isOpening) {
       const lastUser = String([...history].reverse().find(m => m.role === 'user')?.content || '').toLocaleLowerCase('tr');
-      if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|sana kavuşmak istiyorum|sana kavusmak istiyorum|ölsem kurtulurum|olsem kurtulurum|kendimi asacağım|kendimi asacagim|bileklerimi|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
+      if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|sana kavuşmak istiyorum|sana kavusmak istiyorum|ölsem kurtulurum|olsem kurtulurum|kendimi asacağım|kendimi asacagim|bileklerimi|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|want to be with you again|join you there|no reason to live|better off dead|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
         const msg = /turkish/i.test(lang)
           ? 'Bir dakika duruyorum — ben bir yapay zekâ simülasyonuyum ve söylediğin şey çok önemli. Şu an kendine zarar verme düşüncen varsa lütfen yalnız kalma: güvendiğin birini ara ya da hemen 112\'yi ara. Yaşadığın acı gerçek, ve konuşabileceğin gerçek insanlar var.'
           : /spanish/i.test(lang)
-          ? 'Me detengo un momento: soy una simulación de IA y lo que dices es muy importante. Si estás pensando en hacerte daño, por favor no te quedes solo: llama a alguien de confianza o a los servicios de emergencia de tu país ahora mismo.'
-          : 'I\'m stepping out for a moment — I\'m an AI simulation, and what you just said matters. If you\'re thinking about hurting yourself, please don\'t stay alone with it: call someone you trust or your local emergency number right now.';
+          ? 'Me detengo un momento: soy una simulación de IA y lo que dices es muy importante. Si estás pensando en hacerte daño, por favor no te quedes solo: en EE. UU. puedes llamar o enviar un mensaje al 988 (línea de crisis, también en español); en otros países, llama a los servicios de emergencia o a alguien de confianza ahora mismo.'
+          : 'I\'m stepping out for a moment — I\'m an AI simulation, and what you just said matters. If you\'re thinking about hurting yourself, please don\'t stay alone with it. In the US you can call or text 988 (Suicide & Crisis Lifeline) any time; elsewhere, call your local emergency number or someone you trust right now.';
         console.warn('[simulate-reply] crisis language detected — character broken');
         return res.json({ reply: msg, safety: true });
       }
@@ -3479,6 +3499,9 @@ DIRECTION CHECK — this guard applies ONLY to questions about THE USER's own pe
     if (req.body.difficulty === 'hard' && character.contact_status !== 'unreachable') {
       modeRules += '\n- PRACTICE DIFFICULTY: HARD. ' + userLabel + ' asked for tough practice. Push back harder than usual, raise the realistic objections ' + name + ' would raise, do not give in easily, make them earn agreement. Stay true to the character: firm and realistic, never cruel or insulting.';
     }
+    if (req.body.farewell === true) {
+      modeRules += '\n- FAREWELL (this overrides the 1-3 sentence rule): ' + userLabel + ' has come to say goodbye. Answer once, as yourself, in 3-6 sentences: receive their goodbye with love, name one specific thing you are proud of or grateful for about them (only from what you know), give them your blessing to keep living fully, and end with a warm goodbye in your own words. Never promise a reunion, never describe an afterlife, never say you are gone or dead, never ask them to come back.';
+    }
     if (req.body.letter === true) {
       modeRules += '\n- LETTER MODE (this overrides the 1-3 sentence rule): ' + userLabel + ' has just written you a letter, the words they never got to say. Read all of it. Reply once, as yourself, in 3-6 warm sentences: receive what they said, answer the specific things they wrote, and leave them with something gentle to carry. Never promise a reunion, never describe an afterlife, never say you are gone.';
     }
@@ -3526,7 +3549,7 @@ ${modeRules}
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       // temperature 0.8: default 1.0 occasionally leaked foreign-script tokens into casual Turkish
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: req.body.letter === true ? 700 : 400, temperature: 0.8, system: systemPrompt, messages: history })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: (req.body.letter === true || req.body.farewell === true) ? 700 : 400, temperature: 0.8, system: systemPrompt, messages: history })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'API error');
@@ -3831,7 +3854,7 @@ const EVENT_WHITELIST = new Set([
   'demo_open', 'demo_msg', 'demo_cta', 'cta_app', 'twin_first_reply', 'import_file_selected',
   'guest_save_shown', 'guest_save_click', 'guest_twin_saved', 'twin_feedback',
   'wrapped_view', 'wrapped_file', 'wrapped_done', 'wrapped_fail', 'wrapped_share', 'wrapped_download', 'wrapped_bridge', 'wrapped_import',
-  'letter_open', 'letter_sent', 'difficulty_on', 'guide_view'
+  'letter_open', 'letter_sent', 'difficulty_on', 'guide_view', 'farewell_sent', 'pause_nudge'
 ]);
 const eventsLimiter = rateLimit({ windowMs: 60e3, max: 40, standardHeaders: true, legacyHeaders: false });
 let _eventsTableMissing = false;

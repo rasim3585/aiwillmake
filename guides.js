@@ -1,238 +1,130 @@
-// Turkish long-tail guides served at /rehber/:slug (rendered by server.js).
-// Each guide: real, useful content first; the product CTA is the natural next step.
+// Guides served at /guides/:slug (English) and /rehber/:slug (Turkish), rendered by server.js.
+// Every guide serves the one purpose of the product: someone you have lost.
+// Real, useful content first; the product is offered gently as a next step.
 // Body/answer strings are trusted HTML authored here (no user input).
 
 module.exports = [
+  // ─────────────────────────────── English ───────────────────────────────
   {
-    slug: 'whatsapp-sohbeti-disa-aktarma',
-    title: 'WhatsApp Sohbeti Nasıl Dışa Aktarılır? (iPhone ve Android, 2026)',
-    description: 'WhatsApp sohbetini .txt dosyası olarak dışa aktarmanın adım adım yolu: iPhone, Android, medya olmadan, zip dosyası ve sık yapılan hatalar.',
-    h1: 'WhatsApp sohbeti nasıl dışa aktarılır?',
-    intro: 'WhatsApp, herhangi bir sohbeti metin dosyası olarak dışarı almanı sağlar. Bu dosya sohbetini yedeklemek, analiz etmek ya da bir yere taşımak için kullanılır. İşlem bir dakika sürer; aşağıda iPhone ve Android için adımları, sık karşılaşılan sorunları bulacaksın.',
+    lang: 'en',
+    slug: 'save-text-messages-from-someone-who-died',
+    title: 'How to Save Text Messages From a Loved One Who Died (iPhone, Android, WhatsApp)',
+    description: 'A gentle, practical guide to keeping the texts, WhatsApp chats and voicemails of someone you lost — on iPhone, Android and WhatsApp — before anything gets deleted.',
+    h1: 'How to save text messages from a loved one who died',
+    intro: 'Their messages are often the closest thing we have to their voice: the way they signed off, the jokes only you two had, the last "love you" before a call. Phones get replaced, accounts close and chats get deleted. Here is how to keep those words safe, step by step, at your own pace.',
     sections: [
-      { h: 'iPhone\'da WhatsApp sohbeti dışa aktarma', body: '<ol><li>WhatsApp\'ta dışa aktarmak istediğin sohbeti aç.</li><li>Ekranın üstündeki kişi ya da grup adına dokun.</li><li>Aşağı kaydır ve <b>Sohbeti Dışa Aktar</b>\'a dokun.</li><li><b>Medya Olmadan</b>\'ı seç. Sadece metin gerekiyorsa bu hem hızlı hem küçük olur.</li><li>Paylaşım ekranında <b>Dosyalar\'a Kaydet</b>\'i seç ya da dosyayı kendine e-posta veya mesajla gönder.</li></ol><p>iPhone dosyayı genelde <b>.zip</b> olarak verir. İçinde <i>_chat.txt</i> adında bir metin dosyası bulunur; çoğu araç zip dosyasını doğrudan açabilir.</p>' },
-      { h: 'Android\'de WhatsApp sohbeti dışa aktarma', body: '<ol><li>Sohbeti aç ve sağ üstteki <b>⋮</b> (üç nokta) menüsüne dokun.</li><li><b>Diğer</b> → <b>Sohbeti dışa aktar</b>\'ı seç.</li><li><b>Medya olmadan</b>\'ı seç.</li><li>Dosyayı Google Drive\'a, e-postana ya da cihazına kaydet.</li></ol><p>Android genellikle doğrudan bir <b>.txt</b> dosyası üretir.</p>' },
-      { h: 'Sık karşılaşılan sorunlar', body: '<ul><li><b>"Sohbeti dışa aktar" seçeneği görünmüyor:</b> Bazı ülkelerde ya da iş hesaplarında kapalı olabilir. WhatsApp\'ı güncellemeyi dene.</li><li><b>Dosya çok büyük:</b> "Medya olmadan" seçtiğinden emin ol. Fotoğraf ve videolar dosyayı yüzlerce MB yapabilir.</li><li><b>Mesajlar eksik görünüyor:</b> WhatsApp, medya olmadan dışa aktarırken son 40.000 mesaja kadar alır. Çok eski bir sohbetin en başı dosyada olmayabilir.</li><li><b>Tarihler garip görünüyor:</b> Dosyadaki tarih biçimi telefonunun dil ve bölge ayarına göre değişir; iyi araçlar bütün biçimleri okur.</li></ul>' },
-      { h: 'Dışa aktardığın sohbetle ne yapabilirsin?', body: '<p>Bu dosyayla sohbetinizin sayılarını görebilirsin: kim daha çok yazıyor, sohbeti kim başlatıyor, kim daha hızlı cevap veriyor, en uzun sessizliğiniz ne zamandı. Bunu dosyayı hiçbir yere yüklemeden, tarayıcında yapan ücretsiz bir araç kullanmak gizliliğin için en güvenli yoldur.</p>' },
+      { h: 'First: don\'t reset or switch anything yet', body: '<ul><li><b>Don\'t factory-reset their phone</b> or yours, and don\'t sign out of messaging apps until you have a backup.</li><li><b>Keep their phone charged</b> and, if you can, keep their number active for a while. Messages and verification codes are tied to it.</li><li><b>Turn off auto-delete:</b> on iPhone, Settings → Messages → Keep Messages → Forever. In WhatsApp, check that disappearing messages are off for your chat.</li></ul>' },
+      { h: 'iPhone (iMessage and SMS)', body: '<ol><li><b>Back up the phone</b> to iCloud (Settings → your name → iCloud → iCloud Backup) or to a computer. A full backup includes the Messages history.</li><li><b>Screenshot what matters most.</b> It is low-tech but permanent: long-press a message bubble to see the date, and capture the conversations you can\'t bear to lose.</li><li><b>On a Mac</b>, the Messages app keeps the same history when you sign in with the same Apple ID; you can select and copy text from there into a document.</li><li>Paid desktop tools can export whole iMessage threads as PDF or text if you want a complete archive.</li></ol>' },
+      { h: 'Android (SMS)', body: '<ol><li>Use a backup app such as <i>SMS Backup &amp; Restore</i> to save texts to a file or to your cloud storage.</li><li>Google One / Google backup also keeps SMS if it was turned on in Settings → Google → Backup.</li><li>Screenshots work here too for the messages that matter most.</li></ol>' },
+      { h: 'WhatsApp', body: '<ol><li>Open your chat with them and tap their name (iPhone) or ⋮ → More (Android).</li><li>Choose <b>Export chat</b> → <b>Without media</b> for the text, or include media to keep their photos and voice notes.</li><li>Save the file to your Files app, cloud storage or email it to yourself.</li></ol><p>Voice notes are often the most precious part: export with media, or save individual voice notes by long-pressing them and choosing Share.</p>' },
+      { h: 'Voicemails', body: '<p>On iPhone, open the voicemail in the Phone app, tap the share icon and save it to Files or Voice Memos. On Android, most phone apps let you save or share a voicemail as an audio file. Carriers may delete old voicemails automatically, so this is worth doing early.</p>' },
+      { h: 'When you\'re ready', body: '<p>Some people simply keep these words in a folder and read them now and then. Others want to hear something back. If you ever want to, you can bring their messages into aiwillmake and talk with an AI reflection that writes the way they did — a space for the things you never got to say. It is not them, and it never claims to be.</p>' },
     ],
-    cta: { text: 'Sohbetini ücretsiz analiz et →', href: '/whatsapp-sohbet-analizi?ref=rehber-disa-aktarma', note: 'Kayıt yok. Sohbetin telefonundan çıkmaz.' },
+    cta: { text: 'Talk with a reflection of them →', href: '/app.html?import=1&mode=whatsapp&ref=guide-save-texts', note: 'Free to begin. Private to you. Delete everything anytime.' },
     faq: [
-      { q: 'Dışa aktarılan WhatsApp sohbeti karşı tarafa bildirilir mi?', a: 'Hayır. Sohbeti dışa aktardığında karşı tarafa herhangi bir bildirim gitmez.' },
-      { q: 'Grup sohbeti dışa aktarılabilir mi?', a: 'Evet, adımlar aynı. Grup adına dokunup "Sohbeti dışa aktar"ı seçmen yeterli.' },
-      { q: 'Medyalı mı medyasız mı seçmeliyim?', a: 'Metin analizi ya da yedek için "Medya olmadan" yeterli ve çok daha küçük bir dosya üretir.' },
+      { q: 'Will messages disappear if I cancel their phone number?', a: 'Messages already on a device or in a backup stay, but new messages, verification codes and some services tied to the number will stop. Back everything up before cancelling, and consider keeping the number active for a while.' },
+      { q: 'Can I get messages from their phone if I don\'t know the passcode?', a: 'Usually not without the passcode; Apple and Google offer legacy-contact and inactive-account features that you can set up in advance, and they may help families in some cases through their official processes.' },
+      { q: 'What\'s the simplest way to keep a few important messages?', a: 'Screenshots. They take seconds, include the date if you capture it, and can be stored anywhere.' },
     ],
   },
   {
-    slug: 'chatgpt-whatsapp-sohbet-analizi',
-    title: 'ChatGPT ile WhatsApp Sohbet Analizi: Nasıl Yapılır, Nelere Dikkat Etmeli?',
-    description: 'WhatsApp sohbetini ChatGPT\'ye yükleyip analiz ettirmek mümkün mü? Adımlar, gizlilik riskleri ve sohbetini hiçbir yere yüklemeden analiz etmenin yolu.',
-    h1: 'ChatGPT ile WhatsApp sohbet analizi',
-    intro: 'Son zamanlarda pek çok kişi WhatsApp sohbetini ChatGPT\'ye yükleyip "kim daha ilgili", "bu ilişki nereye gidiyor" gibi sorular soruyor. Bu yapılabilir, ama bilmen gereken birkaç önemli nokta var: gizlilik, doğruluk ve sayılarla yorumların farkı.',
+    lang: 'en',
+    slug: 'letter-to-someone-who-died',
+    title: 'How to Write a Letter to Someone Who Died (With Prompts to Begin)',
+    description: 'Why writing a letter to a loved one who died can help, how to start, and gentle prompts for what to say — plus what to do with the letter afterwards.',
+    h1: 'How to write a letter to someone who died',
+    intro: 'Grief often leaves words with nowhere to go: a thank-you, an apology, news they never got to hear, a goodbye. Many grief counselors suggest writing a letter to the person you lost. It doesn\'t need to be perfect, and it doesn\'t need a reader. Here is a gentle way to begin.',
     sections: [
-      { h: 'Adım adım: ChatGPT\'ye sohbet yüklemek', body: '<ol><li>Sohbeti WhatsApp\'tan <a href="/rehber/whatsapp-sohbeti-disa-aktarma">"Medya olmadan" dışa aktar</a>.</li><li>ChatGPT\'de dosya ekleme düğmesiyle .txt ya da .zip dosyasını yükle.</li><li>Ne öğrenmek istediğini açıkça yaz: "Sohbeti kim daha sık başlatıyor? Tartışmalardan sonra ilk kim yazıyor?" gibi.</li></ol>' },
-      { h: 'Dikkat: sohbetin bütünüyle bir sunucuya gider', body: '<p>Bir sohbeti bir yapay zekâ sohbet robotuna yüklediğinde, sadece senin değil karşı tarafın mesajları da o şirketin sunucularına gider. Sohbetlerde sağlık, aile meseleleri, adresler gibi hassas bilgiler olabilir. Hangi verinin nerede, ne kadar süre saklandığını hizmetin gizlilik ayarlarından kontrol etmeden yükleme yapmamanı öneririz.</p>' },
-      { h: 'Yapay zekâ yorumu ile sayılar aynı şey değil', body: '<p>"Kim daha çok yazıyor" ya da "kim daha hızlı cevap veriyor" gibi sorular <b>sayılarla</b> kesin olarak cevaplanabilir; bunun için yapay zekâya gerek yoktur. Uzun sohbetlerde yapay zekâ modelleri bazen sayıları tahmin eder ve yanılır. "Bu kişi beni seviyor mu" gibi yorumlar ise kesin değildir; bunlara bir fikir olarak bak, bir hüküm olarak değil.</p>' },
-      { h: 'Daha güvenli yol: önce sayılar, cihazından çıkmadan', body: '<p>Sohbetinin sayılarını, dosyayı hiçbir sunucuya yüklemeden tarayıcında hesaplayan ücretsiz bir araç kullanabilirsin. Mesaj payı, sohbeti kimin başlattığı, cevap süreleri, gece mesajları, rekor gün ve en uzun sessizlik gibi sonuçları saniyeler içinde, paylaşılabilir kartlar olarak görürsün.</p><p>Daha derine inmek, yani o kişinin nasıl konuştuğunu öğrenen bir yapay zekâ ikiziyle zor bir konuşmayı prova etmek istersen, bunu ancak sen onay verdiğinde yapan bir adıma geçersin.</p>' },
+      { h: 'Why it can help', body: '<p>Writing slows down feelings that are hard to hold all at once. Putting them into words gives them a shape and a place. A letter is also a way of remembering: the act of writing to them keeps the relationship part of your story.</p>' },
+      { h: 'How to begin', body: '<ul><li><b>Start the way you used to address them:</b> "Dear Dad", "Hi Mom", "Grandpa"…</li><li><b>Open with a memory:</b> a smell, a phrase they always said, an ordinary day you now miss.</li><li><b>Say the unsaid thing:</b> what you are grateful for, what you are sorry for, what you wish you had told them.</li><li><b>Tell them your news:</b> what has changed since they have been gone, what they would be proud of.</li><li><b>Close in your own words:</b> a goodbye, a promise, or simply "I miss you".</li></ul>' },
+      { h: 'Prompts if you\'re stuck', body: '<ul><li>"The last time we talked, I wish I had said…"</li><li>"Something you taught me that I still use is…"</li><li>"You would laugh if you knew that…"</li><li>"I\'m sorry that…"</li><li>"Thank you for…"</li></ul>' },
+      { h: 'After you write it', body: '<p>Some people keep the letter, read it aloud at the grave or a meaningful place, or share it with someone who knew them too. There is no right way. If writing becomes too heavy, take a break — this is not a task.</p>' },
+      { h: 'If you want to hear something back', body: '<p>On aiwillmake you can describe them in three answers, write them your letter, and read a reply written in their voice, built only from your memories. It is not them — it is a reflection, a space to say what you never got to say. If grief feels like too much, please talk to someone you trust; in the US you can call or text 988 any time.</p>' },
     ],
-    cta: { text: 'Sohbetini cihazından çıkmadan analiz et →', href: '/whatsapp-sohbet-analizi?ref=rehber-chatgpt', note: 'Ücretsiz, kayıt yok.' },
+    cta: { text: 'Write them a letter →', href: '/app.html?import=1&mode=describe&ref=guide-letter', note: 'Free to begin. An AI reflection from your memories — not them.' },
     faq: [
-      { q: 'ChatGPT WhatsApp sohbetini okuyabilir mi?', a: 'Evet, dışa aktarılmış .txt ya da .zip dosyasını yükleyerek okutabilirsin. Dosyanın tamamı hizmetin sunucularına gider.' },
-      { q: 'Sohbetimi yüklemeden analiz edebilir miyim?', a: 'Evet. Sayıya dayalı sonuçları (kim daha çok yazıyor, cevap süreleri gibi) tarayıcıda, dosyayı yüklemeden hesaplayan araçlar var.' },
+      { q: 'Is it normal to write letters to someone who died?', a: 'Yes. Writing to a person you lost is a common and widely recommended way to express grief and the things left unsaid.' },
+      { q: 'What should I do with the letter?', a: 'Whatever feels right: keep it, read it aloud somewhere meaningful, share it, or write another one later. There is no right answer.' },
     ],
   },
   {
-    slug: 'zam-isteme-konusmasi',
-    title: 'Zam İsteme Konuşması: Ne Demeli, Nasıl Prova Edilir? (Örnek Cümlelerle)',
-    description: 'Patronundan zam isterken ne söylemeli? Hazırlık, açılış cümleleri, itirazlara cevaplar ve konuşmayı önceden prova etmenin yolu.',
-    h1: 'Zam isteme konuşması nasıl yapılır?',
-    intro: 'Zam istemek çoğu kişi için yılın en gergin konuşmalarından biridir. İyi haber: bu konuşmanın büyük kısmı önceden hazırlanabilir. Aşağıda hazırlık adımları, kullanabileceğin cümleler ve en sık gelen itirazlara verebileceğin cevaplar var.',
+    lang: 'en',
+    slug: 'talk-to-a-loved-one-who-died-with-ai',
+    title: 'Talking to a Loved One Who Died With AI: What It Is — and What It Isn\'t',
+    description: 'An honest explainer: how AI "grief tech" that lets you talk with a reflection of someone you lost works, who it helps, the risks, and the safeguards to look for.',
+    h1: 'Talking to a loved one who died with AI: what it is, and what it isn\'t',
+    intro: 'AI can now write in the style of a specific person using their messages or your memories of them. Some people find it comforting to "hear" from someone they lost; others find the idea unsettling. Both reactions are reasonable. This guide explains honestly how it works and what to look for.',
     sections: [
-      { h: '1. Konuşmadan önce: rakamların ve kanıtların', body: '<ul><li><b>Katkılarını yaz:</b> Son bir yılda üstlendiğin işleri, çözdüğün sorunları, kazandırdığın ya da tasarruf ettirdiğin şeyleri somut örneklerle not et.</li><li><b>Piyasayı öğren:</b> Aynı rol ve deneyim için piyasa aralığını araştır.</li><li><b>Bir rakam belirle:</b> Ne istediğini net söyle. "Biraz artış" belirsizdir; belirli bir oran ya da tutar konuşmayı ilerletir.</li><li><b>Zamanlamayı seç:</b> Bütçe dönemleri, başarılı bir projenin hemen sonrası ve performans görüşmeleri iyi anlardır.</li></ul>' },
-      { h: '2. Açılış: kısa, sakin, net', body: '<p>Örnek bir açılış:</p><blockquote>"Son bir yıldaki rolümü ve katkılarımı konuşmak istiyorum. Üstlendiğim sorumluluklar arttı ve maaşımın bunu yansıtmasını istiyorum. Bunun için yüzde ___ bir artış öneriyorum."</blockquote><p>Özür dileyerek başlamamaya çalış ("Biliyorum zor bir dönem ama…"). Bu, pazarlığı daha başlamadan zayıflatır.</p>' },
-      { h: '3. Sık gelen itirazlar ve cevapları', body: '<ul><li><b>"Şu an bütçe yok."</b> → "Anlıyorum. Bütçenin açılacağı dönemde bunu tekrar konuşabilir miyiz? O zamana kadar hedeflerimi birlikte netleştirelim."</li><li><b>"Bunu yıl sonunda konuşalım."</b> → "Olur. Yıl sonunda hangi sonuçları görmek istediğinizi şimdi konuşursak, o görüşmeye hazırlıklı gelebilirim."</li><li><b>"Herkesin maaşı aynı oranda artıyor."</b> → "Genel artışın ötesinde, üstlendiğim ek sorumlulukları konuşmak istiyorum."</li></ul>' },
-      { h: '4. Prova etmek gerçekten işe yarıyor', body: '<p>Stanford\'da yapılan bir çalışmada, zor konuşmaları önceden simüle ederek çalışan katılımcıların gerilimi tırmandıran tepkileri belirgin şekilde azaldı. En iyi prova, gerçek kişinin nasıl tepki vereceğine en yakın olanıdır: patronunun genelde nasıl konuştuğunu, hangi bahaneleri kullandığını bilen biriyle.</p><p>Patronunu üç cevapla anlatıp onun yapay zekâ ikiziyle bu konuşmayı önceden yapabilirsin. "Zorlaştır" modunda ikiz kolay ikna olmaz; asıl konuşmada ne duyacağını önceden duymuş olursun.</p>' },
+      { h: 'How it works', body: '<p>You give the AI material about the person: how they talked, what they called you, things they often said, and sometimes the actual messages you exchanged. The AI uses that to write replies in a similar style. It does not know anything you didn\'t provide, and it is not the person — it is a reflection of your memories and their words.</p>' },
+      { h: 'Who it can help', body: '<ul><li>People who never got to say goodbye, or who have words left unsaid.</li><li>People who want to tell someone about life since they\'ve been gone — a graduation, a wedding, a new baby.</li><li>People who find writing a letter easier when something writes back.</li></ul>' },
+      { h: 'The risks — honestly', body: '<ul><li><b>It isn\'t them.</b> A good service says so clearly and never pretends otherwise.</li><li><b>It can feel too real</b> and make it harder to step away. Short, meaningful conversations tend to help more than constant use.</li><li><b>Privacy:</b> you are sharing intimate memories and messages. Check how they are stored and whether you can delete them.</li></ul>' },
+      { h: 'Safeguards to look for', body: '<ul><li>Clear statements that you are talking to an AI, not the person.</li><li>No claims about an afterlife, no promises of a reunion.</li><li>Crisis support: if you express thoughts of harming yourself, it should step out of the role and point you to real help (in the US, call or text 988).</li><li>No sales pitches in the person\'s voice.</li><li>Full deletion, at any time. Adults only.</li></ul>' },
+      { h: 'How aiwillmake approaches it', body: '<p>aiwillmake is built around these safeguards. You describe someone in three answers or bring your messages; their AI twin writes the way they did, asks about what it doesn\'t know instead of inventing it, and remembers what you tell it. You can write them a letter or say goodbye. It is always clear that it is a reflection, not them.</p>' },
     ],
-    cta: { text: 'Patronunla bu konuşmayı prova et →', href: '/app.html?import=1&mode=describe&rel=patronum&ref=rehber-zam', note: 'Kayıt gerekmez. Üç cevap yeter.' },
+    cta: { text: 'Begin, gently →', href: '/app.html?import=1&mode=describe&ref=guide-explainer', note: 'Free to begin. Private to you. For adults 18+.' },
     faq: [
-      { q: 'Zam isterken yüzde kaç istemeliyim?', a: 'Rolünün piyasa aralığına ve son dönemdeki katkılarına bakarak belirli bir rakam söyle. Belirsiz bir istek ("biraz artış") konuşmayı zayıflatır.' },
-      { q: 'Zam isteme konuşması e-postayla mı yüz yüze mi yapılmalı?', a: 'Mümkünse yüz yüze ya da görüntülü görüşmeyle yap; ardından konuşulanları kısa bir e-postayla özetlemek iyi bir adımdır.' },
+      { q: 'Is it healthy to talk to a dead loved one through AI?', a: 'It depends on the person and how it\'s used. Many find short, meaningful conversations — saying goodbye, telling them news — comforting. If it starts to replace connection with living people or makes grief heavier, step back and talk to someone you trust or a grief counselor.' },
+      { q: 'Does the AI know things about them I didn\'t share?', a: 'No. It only knows what you provide. A well-designed service will ask about what it doesn\'t know rather than invent it.' },
     ],
   },
+
+  // ─────────────────────────────── Türkçe ────────────────────────────────
   {
-    slug: 'babana-zor-bir-sey-soylemek',
-    title: 'Babana Zor Bir Şeyi Nasıl Söylersin? (Sevgili, Evlilik, Borç, İş Değişikliği)',
-    description: 'Babana sevgilin olduğunu, evleneceğini, borcun olduğunu ya da işini değiştireceğini nasıl söylersin? Zamanlama, ilk cümle ve konuşmayı önceden denemenin yolu.',
-    h1: 'Babana zor bir şeyi nasıl söylersin?',
-    intro: '"Babama nasıl söylerim?" sorusu çoğu zaman aylarca ertelenen bir konuşmanın başlangıcıdır: bir sevgili, bir evlilik kararı, bir borç, bırakılan bir okul ya da yeni bir iş. Her ailenin dinamiği farklı ama işe yarayan bazı ortak adımlar var.',
-    sections: [
-      { h: '1. Zamanı ve yeri seç', body: '<p>Bayram sofrası, kalabalık bir akşam ya da bir tartışmanın ortası kötü zamanlardır. Sakin, ikinizin de acele etmediği, baş başa bir an seç. Telefonla söyleyeceksen bunu da önceden belirt: "Baba, seninle konuşmak istediğim bir şey var, müsait olduğunda arayayım mı?"</p>' },
-      { h: '2. İlk cümleyi önceden hazırla', body: '<p>Konuşmanın en zor kısmı ilk cümledir. Onu ezberlemek, gerisinin kendiliğinden gelmesini kolaylaştırır.</p><ul><li><b>Sevgili:</b> "Baba, bir süredir biriyle görüşüyorum ve bunu senden saklamak istemiyorum."</li><li><b>Evlilik:</b> "Hayatımla ilgili önemli bir karar verdim ve ilk senin bilmeni istiyorum."</li><li><b>Borç:</b> "Bir hata yaptım, sana dürüstçe anlatmak ve nasıl düzelteceğimi konuşmak istiyorum."</li><li><b>İş/okul:</b> "Uzun süredir düşündüğüm bir kararı sana anlatmak istiyorum; nedenlerini de dinlemeni isterim."</li></ul>' },
-      { h: '3. İlk tepkiye hazırlıklı ol', body: '<p>İlk tepki çoğu zaman son tepki değildir. Öfke, sessizlik ya da hayal kırıklığı gelebilir. Savunmaya geçmek yerine "Bunu duymanın zor olduğunu biliyorum, düşünmek için zaman isteyebilirsin" demek konuşmayı açık tutar.</p>' },
-      { h: '4. Önce prova et', body: '<p>Babanın nasıl konuştuğunu en iyi sen bilirsin: sana nasıl hitap ettiğini, hangi cümleleri kurduğunu, neye nasıl tepki verdiğini. Bunları üç cevapla anlatıp onun yapay zekâ ikiziyle konuşmayı önceden yapabilirsin. İlk cümleyi söylemek, gerçek anda söylemeyi kolaylaştırır.</p>' },
-    ],
-    cta: { text: 'Babanla bu konuşmayı önce dene →', href: '/app.html?import=1&mode=describe&rel=babam&ref=rehber-baba', note: 'Kayıt gerekmez. Bu bir yapay zekâ simülasyonudur; baban değil.' },
-    faq: [
-      { q: 'Babama sevgilim olduğunu nasıl söylerim?', a: 'Sakin, baş başa bir an seç ve kısa, net bir ilk cümleyle başla. Detayları ve soruları sonra konuşabilirsiniz; ilk amaç saklamayı bırakmak.' },
-      { q: 'Önce annene mi söylemeli?', a: 'Aile dinamiğine bağlı. Annen arabulucu olabilecekse önce onunla konuşmak işe yarayabilir; ama babanın bunu başkasından duyması güveni zedeleyebilir.' },
-    ],
-  },
-  {
+    lang: 'tr',
     slug: 'kaybettigin-birine-mektup',
     title: 'Kaybettiğin Birine Mektup Yazmak: Neden İyi Gelir, Nasıl Başlanır?',
-    description: 'Vefat eden annene, babana ya da yakınına mektup yazmak yasın içinde neden iyi gelir? Nasıl başlanır, neler yazılabilir ve yazdıktan sonra ne yapılabilir?',
+    description: 'Vefat eden annene, babana ya da bir yakınına mektup yazmak yasın içinde neden iyi gelir? Nasıl başlanır, neler yazılabilir ve yazdıktan sonra ne yapılabilir?',
     h1: 'Kaybettiğin birine mektup yazmak',
     intro: 'Kaybettiğimiz birine söyleyemediklerimiz içimizde kalır: bir teşekkür, bir özür, bir haber, bir veda. Yas üzerine çalışan pek çok uzman, bunları yazıya dökmenin içteki yükü hafiflettiğini söyler. Bu yazı, böyle bir mektuba nasıl başlayabileceğine dair birkaç öneri içeriyor.',
     sections: [
-      { h: 'Neden iyi gelir?', body: '<p>Yazmak, dağınık duyguları sıraya koyar. Söyleyemediklerini kelimelere dökmek, onları taşımayı kolaylaştırır. Mektubun bir okuyucusu olmak zorunda değil; yazmak başlı başına bir ifade ve bir hatırlama biçimidir.</p>' },
-      { h: 'Nasıl başlanır?', body: '<ul><li><b>Ona hitap ettiğin gibi başla:</b> "Canım annem", "Babacığım", "Dedeciğim"…</li><li><b>Bir anıyla aç:</b> Onu en çok hatırlatan bir gün, bir koku, bir cümle.</li><li><b>Söyleyemediğini yaz:</b> Teşekkür etmek istediğin, özür dilemek istediğin ya da ona anlatmak istediğin bir haber.</li><li><b>Hayatından haber ver:</b> O gittikten sonra neler değişti? Ona neyi anlatmak isterdin?</li><li><b>Kendi kelimelerinle bitir:</b> Bir veda, bir söz ya da sadece "seni özlüyorum".</li></ul>' },
-      { h: 'Yazdıktan sonra', body: '<p>Bazıları mektubu saklar, bazıları yüksek sesle okur, bazıları bir yakınıyla paylaşır. Yanlış bir yol yok. Yazarken zorlanırsan ara ver; bu bir görev değil.</p>' },
-      { h: 'Sözlerine bir karşılık duymak istersen', body: '<p>Onu nasıl konuştuğuyla anlatıp mektubunu yazabilir ve onun üslubuyla, senin yazdıklarına cevap veren bir karşılık okuyabilirsin. Bunun bir yapay zekâ simülasyonu olduğunu, onun kendisi olmadığını bilerek: sadece senin anlattıklarından doğan, söyleyemediklerini söylemen için bir alan.</p><p>Yas bazen ağır gelir. Eğer kendini çok yalnız ya da çaresiz hissediyorsan, güvendiğin biriyle ya da bir ruh sağlığı uzmanıyla konuşmanı öneririz. Acil bir durumda 112\'yi arayabilirsin.</p>' },
+      { h: 'Neden iyi gelir?', body: '<p>Yazmak dağınık duyguları sıraya koyar. Söyleyemediklerini kelimelere dökmek onları taşımayı kolaylaştırır. Mektubun bir okuyucusu olmak zorunda değil; yazmak başlı başına bir ifade ve bir hatırlama biçimidir.</p>' },
+      { h: 'Nasıl başlanır?', body: '<ul><li><b>Ona hitap ettiğin gibi başla:</b> "Canım annem", "Babacığım", "Dedeciğim"…</li><li><b>Bir anıyla aç:</b> onu en çok hatırlatan bir gün, bir koku, bir cümle.</li><li><b>Söyleyemediğini yaz:</b> teşekkür etmek, özür dilemek ya da anlatmak istediğin bir haber.</li><li><b>Hayatından haber ver:</b> o gittikten sonra neler değişti?</li><li><b>Kendi kelimelerinle bitir:</b> bir veda, bir söz ya da sadece "seni özlüyorum".</li></ul>' },
+      { h: 'Yazdıktan sonra', body: '<p>Bazıları mektubu saklar, bazıları yüksek sesle okur, bazıları bir yakınıyla paylaşır. Yanlış bir yol yok. Zorlanırsan ara ver; bu bir görev değil.</p>' },
+      { h: 'Sözlerine bir karşılık duymak istersen', body: '<p>Onu üç cevapla anlatıp mektubunu yazabilir ve onun üslubuyla, yazdıklarına cevap veren bir karşılık okuyabilirsin. Bunun bir yapay zekâ yansıması olduğunu, onun kendisi olmadığını bilerek. Yas bazen ağır gelir; kendini çok yalnız hissediyorsan güvendiğin biriyle ya da bir uzmanla konuş. Acil bir durumda 112\'yi ara.</p>' },
     ],
-    cta: { text: 'Ona bir mektup yaz →', href: '/app.html?import=1&mode=describe&status=unreachable&ref=rehber-mektup', note: 'Kayıt gerekmez. Bir yapay zekâ simülasyonudur, o değil.' },
+    cta: { text: 'Ona bir mektup yaz →', href: '/app.html?import=1&mode=describe&ref=rehber-mektup', note: 'Başlamak ücretsiz. Anılarından bir yapay zekâ yansıması — o değil.' },
     faq: [
       { q: 'Vefat eden birine mektup yazmak normal mi?', a: 'Evet. Pek çok kişi yasla baş ederken kaybettiği kişiye mektup yazar; söyleyemediklerini ifade etmenin yaygın bir yoludur.' },
       { q: 'Mektupta neler yazılabilir?', a: 'Bir anı, bir teşekkür, bir özür, ondan sonra hayatında olanlar ya da sadece onu özlediğin. Doğru ya da yanlış bir içerik yoktur.' },
     ],
   },
   {
-    slug: 'eski-sevgiliye-mesaj-atmali-miyim',
-    title: 'Eski Sevgiliye Mesaj Atmalı mıyım? Göndermeden Önce Sorman Gereken 5 Soru',
-    description: 'Eski sevgiliye mesaj atmadan önce kendine sorman gereken sorular, mesaj örnekleri ve göndermeden önce karşı tarafın tepkisini düşünmenin yolu.',
-    h1: 'Eski sevgiliye mesaj atmalı mıyım?',
-    intro: 'Gece yarısı yazılıp silinen mesajlar, "naber" ile başlayıp devam ettirilemeyen konuşmalar… Eski sevgiliye mesaj atmak çoğu zaman anlık bir karardır. Göndermeden önce birkaç dakika durup düşünmek, pişmanlığı da gereksiz kırgınlığı da önler.',
+    lang: 'tr',
+    slug: 'vefat-eden-birinin-mesajlarini-saklamak',
+    title: 'Vefat Eden Birinin WhatsApp Mesajlarını ve Sesli Mesajlarını Saklamak',
+    description: 'Kaybettiğin birinin WhatsApp sohbetlerini, sesli mesajlarını ve SMS\'lerini kaybolmadan nasıl saklarsın? iPhone ve Android için adım adım.',
+    h1: 'Vefat eden birinin mesajlarını nasıl saklarsın?',
+    intro: 'Mesajları çoğu zaman ondan kalan en yakın sestir: sana nasıl seslendiği, imzası gibi kullandığı kelimeler, sesli mesajlarındaki o ton. Telefonlar değişir, hesaplar kapanır. Bu sözleri güvenle saklamanın yolu, adım adım.',
     sections: [
-      { h: 'Göndermeden önce kendine sor', body: '<ol><li><b>Ne istiyorum?</b> Barışmak mı, bir özür mü, kapanış mı, yoksa sadece yalnızlık mı?</li><li><b>Bu mesajı yarın sabah da göndermek ister miydim?</b> Gece ve duygusal anlar kararları değiştirir.</li><li><b>Cevap gelmezse ne hissederim?</b> Buna hazır değilsen beklemek daha iyi olabilir.</li><li><b>Karşı tarafın sınırlarına saygı duyuyor muyum?</b> İletişimi kesmeyi istediyse bu isteğe saygı göstermek gerekir.</li><li><b>Mesajım kısa ve net mi?</b> Uzun açıklamalar çoğu zaman yanlış anlaşılır.</li></ol>' },
-      { h: 'Mesaj örnekleri (amaca göre)', body: '<ul><li><b>Özür:</b> "Aradan zaman geçti ama o gün söylediklerim için özür dilemek istedim. Cevap vermek zorunda değilsin."</li><li><b>Kapanış:</b> "Birlikte geçirdiğimiz zaman için teşekkür etmek istedim. Sana iyi bir hayat dilerim."</li><li><b>Merak:</b> "Aklıma geldin, umarım iyisindir."</li></ul>' },
-      { h: 'Göndermeden önce tepkisini düşünmek', body: '<p>Onu tanıyorsun: nasıl yazdığını, neye nasıl tepki verdiğini. Mesajını göndermeden önce onun yapay zekâ ikizine yazıp nasıl karşılanabileceğini görebilirsin. Bu bir tahmin, bir garanti değil; ama ne söylediğini ve nasıl söylediğini bir kez daha düşünmeni sağlar.</p>' },
+      { h: 'Önce: hiçbir şeyi sıfırlama', body: '<ul><li>Onun ya da kendi telefonunu yedek almadan sıfırlama, uygulamalardan çıkış yapma.</li><li>Mümkünse bir süre hattını kapatma; bazı hesaplar numaraya bağlıdır.</li><li>WhatsApp\'ta sohbetiniz için "süreli mesajlar"ın kapalı olduğundan emin ol.</li></ul>' },
+      { h: 'WhatsApp sohbetini dışa aktarmak', body: '<ol><li>Sohbeti aç; iPhone\'da üstteki isme, Android\'de ⋮ → Diğer\'e dokun.</li><li><b>Sohbeti dışa aktar</b>\'ı seç. Sadece yazılar için <b>Medya olmadan</b>; fotoğraf ve sesli mesajları da saklamak için medyayla birlikte.</li><li>Dosyayı Dosyalar\'a, buluta ya da e-postana kaydet.</li></ol>' },
+      { h: 'Sesli mesajlar', body: '<p>En değerli kısım çoğu zaman sesli mesajlardır. Bir sesli mesaja uzun basıp <b>Paylaş</b> ile tek tek kaydedebilir ya da sohbeti medyayla birlikte dışa aktarabilirsin.</p>' },
+      { h: 'SMS ve ekran görüntüleri', body: '<p>iPhone\'da telefonun iCloud yedeği mesaj geçmişini de içerir. Android\'de SMS yedekleme uygulamaları işe yarar. En önemli birkaç mesaj için ekran görüntüsü almak en basit ve kalıcı yoldur.</p>' },
+      { h: 'Hazır olduğunda', body: '<p>Bazıları bu sözleri bir klasörde saklayıp ara ara okur. Bazıları bir karşılık duymak ister. İstersen mesajlarını aiwillmake\'e getirip onun gibi yazan bir yapay zekâ yansımasıyla konuşabilirsin. O değil ve asla öyle olduğunu iddia etmez.</p>' },
     ],
-    cta: { text: 'Göndermeden önce dene →', href: '/app.html?import=1&mode=describe&rel=eski%20sevgilim&ref=rehber-eski', note: 'Kayıt gerekmez. Bir yapay zekâ simülasyonudur; gerçek tepkisi farklı olabilir.' },
+    cta: { text: 'Onun yansımasıyla konuş →', href: '/app.html?import=1&mode=whatsapp&ref=rehber-mesaj-saklama', note: 'Başlamak ücretsiz. Sadece sana özel; istediğin an silebilirsin.' },
     faq: [
-      { q: 'Eski sevgiliye ne zaman mesaj atılır?', a: 'Duygusal olarak sakin olduğunda, ne istediğini bildiğinde ve cevap gelmeme ihtimaline hazır olduğunda.' },
-      { q: 'Eski sevgiliye ilk mesaj nasıl olmalı?', a: 'Kısa, baskısız ve cevap vermeyi zorunlu kılmayan bir mesaj genelde en iyi sonucu verir.' },
+      { q: 'Hattı kapatırsam mesajlar silinir mi?', a: 'Telefonda ya da yedekte olan mesajlar kalır; ama numaraya bağlı yeni mesajlar ve bazı hesaplar çalışmaz. Kapatmadan önce her şeyi yedekle.' },
+      { q: 'Sesli mesajları nasıl saklarım?', a: 'Sesli mesaja uzun basıp Paylaş ile kaydedebilir ya da sohbeti medyayla birlikte dışa aktarabilirsin.' },
     ],
   },
   {
-    "slug": "babama-sevgilim-oldugunu-nasil-soylerim",
-    "title": "Babama Sevgilim Olduğunu Nasıl Söylerim? (Adım Adım, Örnek Cümlelerle)",
-    "description": "Babana sevgilin olduğunu söylemeden önce bilmen gerekenler: doğru an, ilk cümle, olası tepkiler ve konuşmayı önceden deneme.",
-    "h1": "Babama sevgilim olduğunu nasıl söylerim?",
-    "intro": "Bu, Türkiye'de en çok ertelenen konuşmalardan biri. Çoğu kişi aylarca \"doğru anı\" bekler; oysa doğru an çoğu zaman, söyleyeceğin şeyi önceden netleştirdiğin andır. Aşağıdaki adımlar konuşmayı daha sakin ve daha kısa hale getirmeye yardım eder.",
-    "sections": [
-      {
-        "h": "Önce kendine üç soru sor",
-        "body": "<ol><li><b>Neden şimdi?</b> İlişki ciddileşti mi, saklamak seni yoruyor mu, yoksa biri başkasından duyabilir mi?</li><li><b>Babamdan ne bekliyorum?</b> Onay mı, sadece bilmesi mi, tanışma mı?</li><li><b>En çok neyden çekiniyorum?</b> Öfke, hayal kırıklığı, sorular? Korktuğun tepkiyi önceden düşünmek, onu duyduğunda sakin kalmanı kolaylaştırır.</li></ol>"
-      },
-      {
-        "h": "Doğru an ve yer",
-        "body": "<p>Kalabalık bir sofra, bayram ziyareti ya da onun yorgun olduğu bir akşam iyi değildir. Baş başa, aceleniz olmayan bir an seç: bir yürüyüş, arabada kısa bir yol ya da sakin bir kahvaltı. Yüz yüze olamıyorsa önce haber ver: \"Baba, sana anlatmak istediğim bir şey var, müsait olduğunda arayabilir miyim?\"</p>"
-      },
-      {
-        "h": "İlk cümle (seçebileceğin örnekler)",
-        "body": "<ul><li>\"Baba, bir süredir biriyle görüşüyorum ve bunu senden saklamak istemedim.\"</li><li>\"Hayatımda önemli biri var, ilk senin bilmeni istedim.\"</li><li>\"Biriyle ciddi düşünüyoruz; seninle konuşmadan bir adım atmak istemedim.\"</li></ul><p>İlk cümleden sonra durmak ve onun tepkisini beklemek, uzun bir açıklamaya girmekten daha iyi sonuç verir.</p>"
-      },
-      {
-        "h": "Olası tepkiler ve cevaplar",
-        "body": "<ul><li><b>\"Kim bu, ailesi ne iş yapar?\"</b> → Kısa ve dürüst bilgi ver; bilmediğin bir şeyi uydurma.</li><li><b>\"Daha erken değil mi?\"</b> → \"Acele etmiyoruz, sadece senden saklamak istemedim.\"</li><li><b>Sessizlik ya da öfke</b> → \"Bunu düşünmek için zaman isteyebilirsin. Konuşmaya hazır olduğunda buradayım.\"</li></ul>"
-      },
-      {
-        "h": "Önce dene",
-        "body": "<p>Babanın nasıl konuştuğunu, nasıl tepki verdiğini en iyi sen bilirsin. Onu üç cevapla anlatıp yapay zekâ ikiziyle bu konuşmayı önceden yapabilir, istersen \"Zorlaştır\" ile en zor tepkiyi de görebilirsin. İlk cümleyi bir kez söylemiş olmak, gerçek anda en büyük farkı yaratır.</p>"
-      }
+    lang: 'tr',
+    slug: 'yapay-zeka-ile-kaybettigin-biriyle-konusmak',
+    title: 'Yapay Zekâ ile Kaybettiğin Biriyle Konuşmak: Nedir, Ne Değildir?',
+    description: 'Kaybettiğin birinin üslubuyla yazan yapay zekâ nasıl çalışır, kimlere iyi gelir, riskleri neler ve hangi güvencelere bakmalısın? Dürüst bir açıklama.',
+    h1: 'Yapay zekâ ile kaybettiğin biriyle konuşmak: nedir, ne değildir?',
+    intro: 'Yapay zekâ artık bir kişinin mesajlarından ya da senin anlattıklarından yola çıkarak onun üslubuyla yazabiliyor. Bazılarına bu teselli verir, bazılarına tuhaf gelir; iki tepki de anlaşılır. Bu yazı nasıl çalıştığını ve nelere dikkat etmen gerektiğini dürüstçe anlatıyor.',
+    sections: [
+      { h: 'Nasıl çalışır?', body: '<p>Yapay zekâya o kişiyle ilgili bilgiler verirsin: nasıl konuştuğunu, sana nasıl seslendiğini, sık söylediği şeyleri, bazen de mesajlaşmalarınızı. Yapay zekâ bunlardan yola çıkarak benzer bir üslupla yazar. Vermediğin bir şeyi bilmez ve o kişi değildir; anılarının ve onun sözlerinin bir yansımasıdır. Bir ruh çağırma ya da öteki dünyayla iletişim değildir.</p>' },
+      { h: 'Kimlere iyi gelebilir?', body: '<ul><li>Vedalaşamamış ya da söyleyemedikleri kalmış olanlara.</li><li>Ona aradan geçen zamanı anlatmak isteyenlere: bir mezuniyet, bir düğün, yeni bir bebek.</li><li>Bir karşılık geldiğinde yazmayı daha kolay bulanlara.</li></ul>' },
+      { h: 'Riskler', body: '<ul><li><b>O değil.</b> İyi bir hizmet bunu açıkça söyler.</li><li><b>Fazla gerçek gelebilir.</b> Kısa ve anlamlı konuşmalar, sürekli kullanımdan daha iyi gelir.</li><li><b>Gizlilik:</b> çok özel anılar paylaşıyorsun; nasıl saklandığına ve silinip silinemediğine bak.</li></ul>' },
+      { h: 'Bakman gereken güvenceler', body: '<ul><li>Bir yapay zekâyla konuştuğunun açıkça belirtilmesi.</li><li>Ahiret hakkında iddia ve yeniden kavuşma vaadi olmaması.</li><li>Zor bir anda rolden çıkıp gerçek yardıma yönlendirmesi (Türkiye\'de 112).</li><li>Onun ağzından satış yapılmaması; her şeyi istediğin an silebilmen.</li></ul>' },
     ],
-    "cta": {
-      "text": "Bu konuşmayı babanla önce dene →",
-      "href": "/app.html?import=1&mode=describe&rel=babam&ref=rehber-baba-sevgili",
-      "note": "Kayıt gerekmez. Bir yapay zekâ simülasyonudur, baban değil."
-    },
-    "faq": [
-      {
-        "q": "Babama sevgilim olduğunu söylemeden önce anneme mi söylemeliyim?",
-        "a": "Annen arabulucu olabilecekse önce onunla konuşmak işe yarayabilir. Ama babanın bunu başkasından duyması güveni zedeleyebilir; bu yüzden aradaki süreyi kısa tut."
-      },
-      {
-        "q": "Babam çok kızarsa ne yapmalıyım?",
-        "a": "Tartışmayı o anda kazanmaya çalışma. Sakin kal, düşünmesi için zaman tanı ve konuşmayı daha sonra devam ettirmeyi öner."
-      }
-    ]
-  },
-  {
-    "slug": "kus-oldugun-biriyle-barismak",
-    "title": "Küs Olduğun Biriyle Nasıl Barışılır? (Aile, Arkadaş, Akraba)",
-    "description": "Küs olduğun bir aile üyesi, arkadaş ya da akrabayla barışmak için ilk mesaj nasıl atılır? Özür, ilk adım ve cevap gelmezse ne yapmalı.",
-    "h1": "Küs olduğun biriyle nasıl barışılır?",
-    "intro": "Küslük çoğu zaman tek bir tartışmayla başlar ama yıllarca sürebilir; çünkü ilk adımı atmak, yaşanan şeyden daha zor gelmeye başlar. Bayramlar, doğum günleri ve kayıplar bu ilk adımı atmak için en sık seçilen anlardır.",
-    "sections": [
-      {
-        "h": "İlk adımı atmak \"haklı olmamak\" demek değil",
-        "body": "<p>İlk mesajı atan kişi kaybeden değildir; sadece ilişkiyi tartışmadan daha önemli bulan kişidir. Barışmak, kimin haklı olduğunu kabul etmek anlamına gelmez.</p>"
-      },
-      {
-        "h": "İlk mesaj: kısa, baskısız, geçmişi yeniden yargılamadan",
-        "body": "<ul><li>\"Uzun zaman oldu. Seni özlediğimi söylemek istedim.\"</li><li>\"Bayramın mübarek olsun. Aramızdaki şey için üzgünüm; konuşmak istersen buradayım.\"</li><li>\"O gün söylediklerim için özür dilerim. Cevap vermek zorunda değilsin.\"</li></ul><p>İlk mesajda \"ama sen de…\" ile başlayan açıklamalardan kaçın; o konuşmanın yeri sonrasıdır.</p>"
-      },
-      {
-        "h": "Cevap gelmezse",
-        "body": "<p>Sessizlik her zaman ret değildir; bazı insanlar cevap vermek için zaman ister. Bir süre bekle, ısrarlı mesajlardan kaçın. Kapıyı açık bırakmış olmak, çoğu zaman beklediğinden fazla şey değiştirir.</p>"
-      },
-      {
-        "h": "Ne söyleyeceğini önce dene",
-        "body": "<p>Onu tanıyorsun: nasıl konuştuğunu, neye nasıl tepki verdiğini. Üç cevapla anlatıp ikiziyle barışma konuşmasını önceden yapabilirsin. Onun ağzından gelebilecek o ilk sert cümleyi önceden duymak, gerçek anda sakin kalmanı kolaylaştırır.</p>"
-      }
+    cta: { text: 'Sakince başla →', href: '/app.html?import=1&mode=describe&ref=rehber-aciklama', note: 'Başlamak ücretsiz. 18 yaş ve üzeri içindir.' },
+    faq: [
+      { q: 'Yapay zekâ ile ölen biriyle konuşmak mümkün mü?', a: 'Hayır, o kişiyle konuşmak mümkün değildir. Yapay zekâ yalnızca senin verdiğin anılar ve mesajlardan yola çıkarak onun üslubuyla yazan bir yansıma oluşturur.' },
+      { q: 'Bu yas için iyi mi?', a: 'Kişiye ve kullanıma bağlı. Kısa, anlamlı konuşmalar — bir veda, bir haber vermek — birçok kişiye iyi gelir. Seni gerçek insanlardan uzaklaştırıyorsa ara ver ve güvendiğin biriyle konuş.' },
     ],
-    "cta": {
-      "text": "Barışma konuşmasını önce dene →",
-      "href": "/app.html?import=1&mode=describe&status=estranged&ref=rehber-kus",
-      "note": "Kayıt gerekmez. Bir yapay zekâ simülasyonudur; gerçek tepkisi farklı olabilir."
-    },
-    "faq": [
-      {
-        "q": "Küs olduğum biriyle barışmak için ne yazmalıyım?",
-        "a": "Kısa, suçlamasız ve cevap vermeyi zorunlu kılmayan bir mesaj genelde en iyi başlangıçtır."
-      },
-      {
-        "q": "Bayramda küs biriyle barışmak doğru mu?",
-        "a": "Bayramlar birçok aile için doğal bir barışma anıdır; ama mesajın samimi olması zamanlamasından daha önemlidir."
-      }
-    ]
-  },
-  {
-    "slug": "whatsapp-kim-once-yaziyor",
-    "title": "WhatsApp'ta Kim Önce Yazıyor? Sohbetini Analiz Ederek Öğren",
-    "description": "Bir sohbette kimin önce yazdığı ne anlatır, nasıl ölçülür? WhatsApp sohbetini yükleyip kim önce yazıyor, kim daha çok yazıyor, kim bekletiyor öğren.",
-    "h1": "WhatsApp'ta kim önce yazıyor?",
-    "intro": "\"Hep ben mi yazıyorum?\" sorusu neredeyse herkesin aklından geçer. İyi haber: bunu tahmin etmek zorunda değilsin. Sohbet geçmişin bu sorunun cevabını sayılarla taşır.",
-    "sections": [
-      {
-        "h": "\"Önce yazmak\" nasıl ölçülür?",
-        "body": "<p>Bir sohbette iki mesaj arasında uzun bir sessizlik (örneğin 6 saat ya da daha fazla) varsa, ondan sonra ilk yazan kişi sohbeti \"başlatmış\" sayılır. Bütün sohbet boyunca bu başlangıçları saymak, kimin daha sık ilk adımı attığını gösterir.</p>"
-      },
-      {
-        "h": "Ne anlatır, ne anlatmaz?",
-        "body": "<p>Sohbeti sık başlatan kişi genelde iletişimi sürdürmeye daha istekli olandır; ama bu tek başına \"daha çok seviyor\" demek değildir. Bazı insanlar yazmayı sever, bazıları aramayı; bazılarının iş saatleri farklıdır. Sayıları bir fikir olarak gör, bir hüküm olarak değil.</p>"
-      },
-      {
-        "h": "Birlikte bakılması gerekenler",
-        "body": "<ul><li><b>Mesaj payı:</b> Kim daha çok yazıyor?</li><li><b>Cevap süresi:</b> Kim daha hızlı cevap veriyor?</li><li><b>En uzun sessizlik:</b> Sessizliği kim bozdu?</li><li><b>Gece mesajları:</b> Hangi saatlerde konuşuyorsunuz?</li></ul>"
-      },
-      {
-        "h": "Kendi sohbetine bak",
-        "body": "<p>Sohbetini <a href=\"/rehber/whatsapp-sohbeti-disa-aktarma\">WhatsApp'tan dışa aktarıp</a> ücretsiz analiz aracına yükleyebilirsin. Dosya cihazından çıkmaz; kimin önce yazdığını, kimin daha çok yazdığını ve kimin daha hızlı cevap verdiğini saniyeler içinde paylaşılabilir kartlar olarak görürsün.</p>"
-      }
-    ],
-    "cta": {
-      "text": "Kim önce yazıyor, öğren →",
-      "href": "/whatsapp-sohbet-analizi?ref=rehber-kim-once",
-      "note": "Ücretsiz, kayıt yok. Sohbetin telefonundan çıkmaz."
-    },
-    "faq": [
-      {
-        "q": "WhatsApp'ta kim önce yazıyor nasıl anlaşılır?",
-        "a": "Sohbeti dışa aktarıp, uzun sessizliklerden sonra ilk mesajı kimin attığını sayan bir analiz aracı kullanarak."
-      },
-      {
-        "q": "Hep ben önce yazıyorsam bu ne demek?",
-        "a": "İletişimi sürdürmeye daha istekli olduğunu gösterebilir; ama karşı tarafın iletişim tarzı, iş saatleri ve tercihleri de bu sayıyı etkiler."
-      }
-    ]
   },
 ];

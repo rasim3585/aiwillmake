@@ -4,21 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AIWILLMAKE — Say the things you never said.</title>
-  <meta name="description" content="Talk with the AI twin of someone in your life — built from your real WhatsApp history or from memory. Rehearse the hard conversation. Finish the unfinished one." />
+  <meta name="description" content="Talk again with someone you've lost. Tell us about them in three answers or bring your messages — their AI twin writes back the way they used to. A space for the words left unsaid." />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="AIWILLMAKE" />
   <meta property="og:url"         content="https://www.aiwillmake.com/" />
-  <meta property="og:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
-  <meta property="og:locale"      content="tr_TR" />
-  <meta property="og:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
+  <meta property="og:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta property="og:locale"      content="en_US" />
+  <meta property="og:description" content="Talk again with someone you've lost. Their AI twin writes back the way they used to — a space for the words left unsaid." />
   <meta property="og:image"        content="https://www.aiwillmake.com/og-image.png" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="AIWILLMAKE — Söyleyemediklerini söyle." />
-  <meta name="twitter:description" content="Hayatındaki birini 3 cevapla anlat ya da WhatsApp sohbetini yükle — yapay zekâ ikizi seninle onun gibi konuşsun. Zor konuşmayı prova et, yarım kalanı tamamla." />
+  <meta name="twitter:title"       content="AIWILLMAKE — Say the things you never said." />
+  <meta name="twitter:description" content="Talk again with someone you've lost. Their AI twin writes back the way they used to — a space for the words left unsaid." />
   <meta name="twitter:image"       content="https://www.aiwillmake.com/og-image.png" />
   <link rel="canonical" href="https://www.aiwillmake.com/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23d4715a'/><text x='16' y='23' font-family='sans-serif' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>" />
@@ -238,9 +238,15 @@
     }
     .hero-free-tool { display:inline-flex; flex-wrap:wrap; justify-content:center; gap:4px 6px; margin-top:22px; font-size:.84rem; color:var(--sec); text-decoration:none; border-bottom:1px dotted var(--bord2); padding-bottom:2px; }
     .hero-free-tool b { color:var(--text); }
+    .eth { padding: 20px 0 50px; }
+    .eth-box { max-width: 620px; margin: 0 auto; border: 1px solid var(--bord); border-radius: 20px; padding: 30px 26px; background: rgba(255,255,255,.025); }
+    .eth-title { font-size: clamp(1.3rem, 3vw, 1.7rem); font-weight: 800; letter-spacing: -.02em; text-align: center; margin-bottom: 18px; }
+    .eth-list { list-style: none; display: grid; gap: 12px; }
+    .eth-list li { color: var(--sec); font-size: .95rem; line-height: 1.6; padding-left: 22px; position: relative; }
+    .eth-list li::before { content: '·'; position: absolute; left: 6px; color: var(--accent); font-weight: 800; }
     .ai-down-box { display:none; }
     html.ai-down .ai-down-box { display:block; }
-    html.ai-down #heroImportCta, html.ai-down .hero-describe-btn, html.ai-down #demo10, html.ai-down .hero-free-tool { display:none !important; }
+    html.ai-down #heroImportCta, html.ai-down .hero-describe-btn, html.ai-down #ctaBottom { display:none !important; }
     .ai-down-note { font-size:.86rem; color:var(--sec); margin:0 0 12px; }
     .hero-describe-btn b { color: var(--text); font-weight: 700; }
     .hero-describe-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -432,185 +438,89 @@
   <div class="wrap">
     <div class="hero-inner">
       <h1 class="hero-h1">Say the things you never said.</h1>
-      <p class="hero-tagline">Describe someone in your life in three answers — their AI twin talks to you the way they do.<br>Rehearse the hard conversation. Finish the unfinished one.</p>
+      <p class="hero-tagline">Talk again with someone you've lost.<br>Tell us about them in three answers — or bring your messages with them. Their AI twin writes back the way they used to.</p>
 
-      <!-- Logged-out: import card (shown by default, hidden if logged in) -->
-      <!-- Shown instead of the twin doors while the AI is unavailable (cfg.ai === false) -->
+      <!-- Shown instead of the doors while the AI is unavailable (cfg.ai === false) -->
       <div class="ai-down-box" id="aiDownBox">
-        <p class="ai-down-note">The twin is in short maintenance right now. Meanwhile, see the numbers of your chat — free, no sign-up, nothing leaves your phone.</p>
-        <a href="/whatsapp-sohbet-analizi?ref=aidown" class="hero-import-card ai-down-card">
-          <span class="hero-import-icon">📊</span>
-          <span class="hero-import-info">
-            <span class="hero-import-label">Who texts more in your chat?</span>
-            <span class="hero-import-hint">Free WhatsApp chat analysis · 30 seconds</span>
-          </span>
-          <span class="hero-import-arrow">Analyze →</span>
-        </a>
+        <p class="ai-down-note">We are resting for a short while. Please come back soon — your words will wait.</p>
       </div>
       <a href="app.html?import=1&amp;mode=describe" class="hero-import-card" id="heroImportCta">
-        <span class="hero-import-icon">🖊</span>
+        <span class="hero-import-icon">🕯️</span>
         <span class="hero-import-info">
-          <span class="hero-import-label">Describe them in 3 answers</span>
-          <span class="hero-import-hint">No sign-up · their first message in about 20 seconds</span>
+          <span class="hero-import-label">Tell us about them</span>
+          <span class="hero-import-hint">3 answers · no sign-up · their first message in about 20 seconds</span>
         </span>
-        <span class="hero-import-arrow">Hear them →</span>
+        <span class="hero-import-arrow">Begin →</span>
       </a>
 
-      <!-- Secondary door: build the twin from memory (no export needed) -->
-      <a href="app.html?import=1&amp;mode=whatsapp" class="hero-describe-btn">📤 <span>Have your WhatsApp chats?</span> <b>Upload them for a more lifelike twin →</b></a>
+      <a href="app.html?import=1&amp;mode=whatsapp" class="hero-describe-btn">📸 <span>Have your messages with them?</span> <b>Add WhatsApp chats or screenshots →</b></a>
 
       <!-- Logged-in: open app button (hidden by default) -->
       <a href="app.html" class="hero-cta" id="heroOpenAppCta" style="display:none">
-        Go to your twins →
+        Continue your conversations →
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
 
-      <p class="hero-trust">🔒 Stored privately in your account so the twin can remember. Never used to train AI. Delete everything anytime.</p>
+      <p class="hero-trust">🔒 Private to you. Never used to train AI. Delete everything anytime.</p>
 
       <div class="hero-steps">
-        <div class="hero-step"><span class="hero-step-num">1</span>Describe them</div>
+        <div class="hero-step"><span class="hero-step-num">1</span>Tell us about them</div>
         <span class="hero-step-arrow">→</span>
-        <div class="hero-step"><span class="hero-step-num">2</span>Hear their first message</div>
+        <div class="hero-step"><span class="hero-step-num">2</span>Read their first message</div>
         <span class="hero-step-arrow">→</span>
         <div class="hero-step"><span class="hero-step-num">3</span>Say what you never said</div>
       </div>
-
-      <a href="/whatsapp-sohbet-analizi" class="hero-free-tool">📊 <span>Free · no sign-up:</span> <b>Who texts more in your WhatsApp chat? →</b></a>
     </div>
   </div>
 </section>
-
-<!-- ⚡ 10-second demo: zero-friction wow. Talk to a ready-made twin (3 messages)
-     before doing any work — then the CTA routes into the real import flow. -->
-<style>
-  .d10 { padding: 40px 0 56px; }
-  .d10-box { max-width: 430px; margin: 0 auto; background: rgba(255,255,255,.04); border: 1px solid var(--bord); border-radius: 18px; padding: 22px 20px; }
-  .d10-title { text-align: center; font-size: 1.25rem; font-weight: 800; margin: 0 0 4px; }
-  .d10-sub { text-align: center; font-size: .85rem; color: var(--muted); margin: 0 0 16px; }
-  .d10-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-  .d10-chip { border: 1px solid var(--bord); background: rgba(255,255,255,.05); color: var(--text); border-radius: 999px; padding: 9px 16px; font: inherit; font-size: .87rem; cursor: pointer; transition: border-color .15s; }
-  .d10-chip:hover, .d10-chip.active { border-color: var(--accent); }
-  .d10-chat { margin-top: 14px; }
-  .d10-msgs { min-height: 90px; max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding: 4px 2px; }
-  .d10-b { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: .87rem; line-height: 1.45; }
-  .d10-b.them { background: rgba(255,255,255,.07); align-self: flex-start; border-bottom-left-radius: 4px; }
-  .d10-b.me { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .d10-typing { align-self: flex-start; color: var(--muted); font-size: .8rem; padding: 4px 6px; }
-  .d10-row { display: flex; gap: 8px; margin-top: 10px; }
-  .d10-in { flex: 1; border: 1px solid var(--bord); background: rgba(0,0,0,.25); color: var(--text); border-radius: 12px; padding: 11px 13px; font: inherit; font-size: 16px; }
-  .d10-send { border: none; background: var(--accent); color: #fff; border-radius: 12px; padding: 0 18px; font: inherit; font-weight: 700; cursor: pointer; }
-  .d10-cta { display: none; margin-top: 12px; text-align: center; }
-  .d10-cta a { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; border-radius: 12px; padding: 13px 22px; font-weight: 800; font-size: .95rem; }
-  .d10-cta p { font-size: .78rem; color: var(--muted); margin: 8px 0 0; }
-  .d10-note { text-align: center; font-size: .72rem; color: var(--muted); margin-top: 10px; }
-</style>
-<section class="d10" id="demo10">
-  <div class="wrap">
-    <div class="d10-box">
-      <h2 class="d10-title">⚡ Try it in 10 seconds</h2>
-      <p class="d10-sub">No signup, no upload — talk to a ready-made twin.</p>
-      <div class="d10-chips" id="d10Chips"></div>
-      <div class="d10-chat" id="d10Chat" style="display:none">
-        <div class="d10-msgs" id="d10Msgs"></div>
-        <div class="d10-row">
-          <input class="d10-in" id="d10In" maxlength="300" />
-          <button class="d10-send" id="d10Send">➤</button>
-        </div>
-        <div class="d10-cta" id="d10Cta">
-          <a href="app.html?import=1" id="d10CtaLink">Now bring YOUR person →</a>
-          <p>These are generic characters. The real magic is someone you actually know.</p>
-        </div>
-      </div>
-      <p class="d10-note">🔒 Demo messages aren't stored.</p>
-    </div>
-  </div>
-</section>
-
 
 <!-- How it works -->
 <section class="s" id="how">
   <div class="wrap">
     <div class="how-wrap">
-
       <div class="how-eyebrow">How it works</div>
-      <div class="how-headline">The AI learns them.<br><em>The more you use it, the better it knows them.</em></div>
-
+      <div class="how-headline">Three answers are enough to begin.</div>
       <div class="how-steps">
-
         <div class="how-step">
           <div class="how-step-connector"></div>
-          <div class="how-step-left">
-            <div class="how-step-dot">💬</div>
-          </div>
+          <div class="how-step-left"><div class="how-step-dot">🖊</div></div>
           <div class="how-step-body">
-            <div class="how-step-title">Upload your conversation history.</div>
-            <div class="how-step-desc">A WhatsApp export, a screenshot, or your own description. We read how they write, what they care about, the people in their life — and your shared history together.</div>
+            <div class="how-step-title">Tell us who they were.</div>
+            <div class="how-step-desc">What they called you, how they talked, a few things they always said. If you have your messages with them, add them — their own words make the twin closer.</div>
           </div>
         </div>
-
         <div class="how-step">
           <div class="how-step-connector"></div>
-          <div class="how-step-left">
-            <div class="how-step-dot">🧠</div>
-          </div>
+          <div class="how-step-left"><div class="how-step-dot">💬</div></div>
           <div class="how-step-body">
-            <div class="how-step-title">We build their AI twin.</div>
-            <div class="how-step-desc">Not a generic AI. One that knows their tone, their patterns, and your specific dynamic with them.</div>
+            <div class="how-step-title">Read their first message.</div>
+            <div class="how-step-desc">It writes the way they did — their greeting, their phrases, their warmth. It doesn't pretend to know what you never told it: it asks, and remembers what you share.</div>
           </div>
         </div>
-
-        <div class="how-step">
-          <div class="how-step-connector"></div>
-          <div class="how-step-left">
-            <div class="how-step-dot">🎭</div>
-          </div>
-          <div class="how-step-body">
-            <div class="how-step-title">Practice the hard conversation.</div>
-            <div class="how-step-desc">Say what you've been meaning to say. See how they react. Try a different approach. Every practice session teaches the AI more about them.</div>
-          </div>
-        </div>
-
-        <div class="how-loop">
-          <div class="how-loop-arrow">↻</div>
-          <div class="how-loop-text">
-            <strong>The AI keeps learning.</strong>
-            After each practice, after each real conversation, after every correction you make — the twin gets more accurate. Over time it stops guessing and starts knowing.
-          </div>
-        </div>
-
         <div class="how-step how-step-final">
-          <div class="how-step-left">
-            <div class="how-step-dot">✓</div>
-          </div>
+          <div class="how-step-left"><div class="how-step-dot">🕊</div></div>
           <div class="how-step-body">
-            <div class="how-step-title">Go have the real conversation.</div>
-            <div class="how-step-desc">With a strategy. With confidence. And when it's done — tell us how it went. The AI learns from that too.</div>
+            <div class="how-step-title">Say what you never said.</div>
+            <div class="how-step-desc">Tell them about the years since. Thank them. Apologize. Write them a letter and read a reply in their voice. When you're ready, say goodbye.</div>
           </div>
         </div>
-
       </div>
-
-      <div class="how-footer">
-        <div class="how-footer-text">
-          The longer you use it, the more it knows them.<br>
-          <strong>Eventually, it's not simulating. It's predicting.</strong>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
 
-<!-- Quiet door: for conversations that never got to happen. Deliberately below the
-     fold and calm — grief is never a headline here; the door is simply findable. -->
-<section class="qd" id="unfinished">
+<!-- What this is — and isn't -->
+<section class="eth" id="about">
   <div class="wrap">
-    <div class="qd-box">
-      <div class="qd-eyebrow">For the ones out of reach</div>
-      <h2 class="qd-title">Some conversations never got to happen.</h2>
-      <p class="qd-text">Someone you drifted apart from. Someone you never got to say goodbye to. This is a space for the unsaid words — you knew them best, so describe them, and talk.</p>
-      <a href="app.html?import=1&amp;mode=describe&amp;status=unreachable" class="qd-cta">Describe them from memory →</a>
-      <p class="qd-note">No chat history needed. Private, always.</p>
+    <div class="eth-box">
+      <div class="how-eyebrow">What this is — and isn't</div>
+      <h2 class="eth-title">A reflection of your memories. Not them.</h2>
+      <ul class="eth-list">
+        <li>It's an AI built only from what you share — your memories and your messages. It isn't them, and it never claims to be.</li>
+        <li>It never talks about an afterlife, never promises a reunion, and never asks you for anything in their voice.</li>
+        <li>If you're struggling, it steps out of the role and points you to real people. In the US, you can call or text 988 any time.</li>
+        <li>Only you can see your conversations, and you can delete everything at any moment. For adults 18+.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -620,8 +530,8 @@
   <div class="wrap">
     <div class="bcta">
       <h2>The words are still there.<br><span class="g">Say them.</span></h2>
-      <a href="app.html?import=1" class="hero-cta" id="ctaBottom">
-        Create your twin →
+      <a href="app.html?import=1&amp;mode=describe" class="hero-cta" id="ctaBottom">
+        Begin →
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -633,16 +543,16 @@
   <div class="ft-inner">
     <div>
       <div class="ft-brand g" lang="en">aiwillmake</div>
-      <div class="ft-desc">Talk with their AI twin. Say the things you never said.</div>
+      <div class="ft-desc">A space for the words left unsaid to someone you've lost.</div>
     </div>
     <nav class="ft-links">
       <a href="#how" class="ft-link">How it works</a>
+      <a href="#about" class="ft-link">What this is</a>
       <a href="app.html" class="ft-link">App</a>
       <a href="privacy.html" class="ft-link">Privacy Policy</a>
       <a href="terms.html" class="ft-link">Terms of Use</a>
       <a href="kvkk.html" class="ft-link">KVKK</a>
-      <a href="/whatsapp-sohbet-analizi" class="ft-link">WhatsApp chat analysis</a>
-      <a href="/rehber" class="ft-link">Guides</a>
+      <a href="/guides" class="ft-link">Guides</a>
     </nav>
   </div>
   <div class="ft-bottom">
@@ -679,13 +589,13 @@
         if (heroImportCta) heroImportCta.style.display = 'none';
         if (heroOpenAppCta) heroOpenAppCta.style.display = 'inline-flex';
         // Secondary CTAs → app.html (no import mode for returning users)
-        if (ctaBottom) { ctaBottom.href = 'app.html'; ctaBottom.textContent = 'Open App →'; }
+        if (ctaBottom) { ctaBottom.href = 'app.html'; ctaBottom.textContent = 'Continue your conversations →'; }
       } else {
         document.getElementById('hdrAuthBtn').style.display = 'inline-flex';
         document.getElementById('hdrProfile').style.display = 'none';
         if (heroImportCta) heroImportCta.style.display = 'flex';
         if (heroOpenAppCta) heroOpenAppCta.style.display = 'none';
-        if (ctaBottom) { ctaBottom.href = 'app.html?import=1'; ctaBottom.textContent = 'Create your twin →'; }
+        if (ctaBottom) { ctaBottom.href = 'app.html?import=1&mode=describe'; ctaBottom.textContent = 'Begin →'; }
       }
     } catch (e) {
       console.warn('Auth init failed:', e);
@@ -714,6 +624,32 @@
    'app_lang' localStorage key with app.html so the language choice carries into the app. */
 (function () {
   const DICT = {
+    "Talk again with someone you've lost.":{tr:"Kaybettiğin biriyle yeniden konuş.",es:"Vuelve a hablar con alguien que perdiste."},
+    "Tell us about them in three answers — or bring your messages with them. Their AI twin writes back the way they used to.":{tr:"Onu üç cevapla anlat — ya da onunla mesajlarınızı getir. Onun yapay zekâ ikizi sana eskisi gibi yazsın.",es:"Cuéntanos sobre esa persona en tres respuestas — o trae sus mensajes. Su gemelo de IA te escribe como solía hacerlo."},
+    "We are resting for a short while. Please come back soon — your words will wait.":{tr:"Kısa bir süre dinleniyoruz. Lütfen birazdan tekrar gel — sözlerin bekler.",es:"Estamos descansando un momento. Vuelve pronto — tus palabras esperarán."},
+    "Tell us about them":{tr:"Onu anlat",es:"Háblanos de esa persona"},
+    "3 answers · no sign-up · their first message in about 20 seconds":{tr:"3 cevap · kayıt yok · ilk mesajı yaklaşık 20 saniyede",es:"3 respuestas · sin registro · su primer mensaje en unos 20 segundos"},
+    "Begin →":{tr:"Başla →",es:"Empezar →"},
+    "Have your messages with them?":{tr:"Onunla mesajlarınız duruyor mu?",es:"¿Tienes sus mensajes?"},
+    "Add WhatsApp chats or screenshots →":{tr:"WhatsApp sohbetlerini ya da ekran görüntülerini ekle →",es:"Añade chats de WhatsApp o capturas →"},
+    "Continue your conversations →":{tr:"Konuşmalarına devam et →",es:"Continúa tus conversaciones →"},
+    "🔒 Private to you. Never used to train AI. Delete everything anytime.":{tr:"🔒 Sadece sana özel. Yapay zekâ eğitiminde asla kullanılmaz. İstediğin an hepsini silebilirsin.",es:"🔒 Solo para ti. Nunca se usa para entrenar IA. Bórralo todo cuando quieras."},
+    "Read their first message":{tr:"İlk mesajını oku",es:"Lee su primer mensaje"},
+    "Three answers are enough to begin.":{tr:"Başlamak için üç cevap yeter.",es:"Tres respuestas bastan para empezar."},
+    "Tell us who they were.":{tr:"Bize onun kim olduğunu anlat.",es:"Cuéntanos quién era."},
+    "What they called you, how they talked, a few things they always said. If you have your messages with them, add them — their own words make the twin closer.":{tr:"Sana nasıl seslendiğini, nasıl konuştuğunu, hep söylediği birkaç şeyi. Onunla mesajlarınız varsa ekle — kendi sözleri ikizi ona daha çok benzetir.",es:"Cómo te llamaba, cómo hablaba, algunas cosas que siempre decía. Si tienes sus mensajes, añádelos — sus propias palabras hacen que el gemelo se parezca más."},
+    "Read their first message.":{tr:"İlk mesajını oku.",es:"Lee su primer mensaje."},
+    "It writes the way they did — their greeting, their phrases, their warmth. It doesn't pretend to know what you never told it: it asks, and remembers what you share.":{tr:"Onun gibi yazar — selamlaşması, lafları, sıcaklığı. Ona anlatmadığın şeyi biliyormuş gibi yapmaz: sorar ve anlattıklarını hatırlar.",es:"Escribe como lo hacía — su saludo, sus frases, su calidez. No finge saber lo que nunca le contaste: pregunta y recuerda lo que compartes."},
+    "Say what you never said.":{tr:"Söyleyemediğini söyle.",es:"Di lo que nunca dijiste."},
+    "Tell them about the years since. Thank them. Apologize. Write them a letter and read a reply in their voice. When you're ready, say goodbye.":{tr:"Ona aradan geçen yılları anlat. Teşekkür et. Özür dile. Ona bir mektup yaz, onun üslubuyla bir cevap oku. Hazır olduğunda vedalaş.",es:"Cuéntale los años que pasaron. Agradécele. Pide perdón. Escríbele una carta y lee una respuesta con su voz. Cuando estés listo, despídete."},
+    "What this is — and isn't":{tr:"Bu nedir, ne değildir?",es:"Qué es esto — y qué no es"},
+    "A reflection of your memories. Not them.":{tr:"Anılarının bir yansıması. O değil.",es:"Un reflejo de tus recuerdos. No es esa persona."},
+    "It's an AI built only from what you share — your memories and your messages. It isn't them, and it never claims to be.":{tr:"Sadece senin paylaştıklarından — anılarından ve mesajlarından — kurulmuş bir yapay zekâdır. O kişi değildir ve öyle olduğunu asla iddia etmez.",es:"Es una IA hecha solo con lo que compartes — tus recuerdos y tus mensajes. No es esa persona y nunca dice serlo."},
+    "It never talks about an afterlife, never promises a reunion, and never asks you for anything in their voice.":{tr:"Ahiret hakkında konuşmaz, yeniden kavuşma vaat etmez ve onun ağzından senden hiçbir şey istemez.",es:"Nunca habla del más allá, nunca promete un reencuentro y nunca te pide nada con su voz."},
+    "If you're struggling, it steps out of the role and points you to real people. In the US, you can call or text 988 any time.":{tr:"Zorlandığını fark ederse rolden çıkar ve seni gerçek insanlara yönlendirir. Türkiye'de acil durumda 112'yi arayabilirsin.",es:"Si lo estás pasando mal, sale del papel y te orienta hacia personas reales. En EE. UU. puedes llamar o escribir al 988 en cualquier momento."},
+    "Only you can see your conversations, and you can delete everything at any moment. For adults 18+.":{tr:"Konuşmalarını yalnızca sen görebilirsin ve istediğin an hepsini silebilirsin. 18 yaş ve üzeri içindir.",es:"Solo tú puedes ver tus conversaciones y puedes borrarlo todo en cualquier momento. Para mayores de 18."},
+    "A space for the words left unsaid to someone you've lost.":{tr:"Kaybettiğin birine söylenmeden kalan sözler için bir yer.",es:"Un espacio para las palabras que quedaron sin decir a alguien que perdiste."},
+    "What this is":{tr:"Bu nedir?",es:"Qué es esto"},
     "AIWILLMAKE — Say the things you never said.":{tr:"AIWILLMAKE — Söyleyemediklerini söyle.",es:"AIWILLMAKE — Di lo que nunca dijiste."},
     "Sign in":{tr:"Giriş yap",es:"Iniciar sesión"},"Go to App →":{tr:"Uygulamaya git →",es:"Ir a la app →"},"Log out":{tr:"Çıkış yap",es:"Cerrar sesión"},
     "Say the things you never said.":{tr:"Söyleyemedik­lerini söyle.",es:"Di lo que nunca dijiste."},

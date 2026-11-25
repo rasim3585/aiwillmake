@@ -247,3 +247,37 @@ Object.assign(window.I18N_C, {
   "The twin is in short maintenance right now — building twins will be back soon.": { "tr":"İkiz şu an kısa bir bakımda — ikiz kurma birazdan geri gelecek.", "en":"The twin is in short maintenance right now — building twins will be back soon.", "es":"El gemelo está en un breve mantenimiento — crear gemelos volverá pronto." },
   "Meanwhile, see your chat's numbers for free →": { "tr":"Bu arada sohbetinin sayılarını ücretsiz gör →", "en":"Meanwhile, see your chat's numbers for free →", "es":"Mientras tanto, mira gratis los números de tu chat →" }
 });
+
+// Grief-only product copy (Nov 2026)
+Object.assign(window.I18N_C, {
+  "My dear, have you eaten today? 🙂": {"tr":"Kuzum, bugün yemek yedin mi? 🙂","en":"My dear, have you eaten today? 🙂","es":"Cariño, ¿ya comiste hoy? 🙂"},
+  "Mom, I missed you so much today.": {"tr":"Anne, bugün seni çok özledim.","en":"Mom, I missed you so much today.","es":"Mamá, hoy te extrañé muchísimo."},
+  "An AI reflection built from memories — not them": {"tr":"Anılardan kurulmuş bir yapay zekâ yansıması — o değil","en":"An AI reflection built from memories — not them","es":"Un reflejo de IA hecho de recuerdos — no es esa persona"},
+  "Tell us about someone you've lost — or bring your WhatsApp chats with them. Their AI twin writes back the way they used to.": {"tr":"Kaybettiğin birini anlat — ya da onunla WhatsApp sohbetlerinizi getir. Onun yapay zekâ ikizi sana eskisi gibi yazsın.","en":"Tell us about someone you've lost — or bring your WhatsApp chats with them. Their AI twin writes back the way they used to.","es":"Cuéntanos sobre alguien que perdiste — o trae tus chats de WhatsApp con esa persona. Su gemelo de IA te escribe como solía hacerlo."},
+  "A space for the words left unsaid.": {"tr":"Söylenmeden kalan sözler için bir yer.","en":"A space for the words left unsaid.","es":"Un espacio para las palabras que quedaron sin decir."},
+  "In their own words": {"tr":"Onun kendi sözleriyle","en":"In their own words","es":"Con sus propias palabras"},
+  "Their greetings, their phrases, the way they called you.": {"tr":"Selamlaşması, lafları, sana nasıl seslendiği.","en":"Their greetings, their phrases, the way they called you.","es":"Sus saludos, sus frases, cómo te llamaba."},
+  "Tell them what happened": {"tr":"Ona olanları anlat","en":"Tell them what happened","es":"Cuéntale lo que pasó"},
+  "It asks about the years since — and remembers what you tell it.": {"tr":"Aradan geçen yılları sorar — anlattıklarını hatırlar.","en":"It asks about the years since — and remembers what you tell it.","es":"Pregunta por los años que pasaron — y recuerda lo que le cuentas."},
+  "A letter, a goodbye": {"tr":"Bir mektup, bir veda","en":"A letter, a goodbye","es":"Una carta, una despedida"},
+  "Write them a letter, or say the goodbye you never got to say.": {"tr":"Ona bir mektup yaz ya da söyleyemediğin vedayı söyle.","en":"Write them a letter, or say the goodbye you never got to say.","es":"Escríbele una carta, o di la despedida que nunca pudiste decir."},
+  "🔒 Private to you. Never used to train AI. Delete everything anytime.": {"tr":"🔒 Sadece sana özel. Yapay zekâ eğitiminde asla kullanılmaz. İstediğin an hepsini silebilirsin.","en":"🔒 Private to you. Never used to train AI. Delete everything anytime.","es":"🔒 Solo para ti. Nunca se usa para entrenar IA. Bórralo todo cuando quieras."},
+  "Who would you like to talk to again?": {"tr":"Kiminle yeniden konuşmak istersin?","en":"Who would you like to talk to again?","es":"¿Con quién te gustaría volver a hablar?"},
+  "Tell us about them in three answers — or bring your WhatsApp chats with them.": {"tr":"Onu üç cevapla anlat — ya da onunla WhatsApp sohbetlerinizi getir.","en":"Tell us about them in three answers — or bring your WhatsApp chats with them.","es":"Cuéntanos sobre esa persona en tres respuestas — o trae tus chats de WhatsApp con ella."},
+  "Grandfather": {"tr":"Dedem","en":"Grandfather","es":"Abuelo"},
+  "Grandmother": {"tr":"Ninem / anneannem / babaannem","en":"Grandmother","es":"Abuela"},
+  "Spouse / partner": {"tr":"Eşim / sevgilim","en":"Spouse / partner","es":"Pareja"},
+  "When did you lose them? (optional)": {"tr":"Onu ne zaman kaybettin? (isteğe bağlı)","en":"When did you lose them? (optional)","es":"¿Cuándo la perdiste? (opcional)"},
+  "e.g. 3 years ago, 2021": {"tr":"örn. 3 yıl önce, 2021","en":"e.g. 3 years ago, 2021","es":"ej. hace 3 años, 2021"},
+  "Grandparent": {"tr":"Dede / nine","en":"Grandparent","es":"Abuelo/a"},
+  "Their own words make the closest twin.": {"tr":"Onun kendi yazdıkları, ona en çok benzeyen ikizi kurar.","en":"Their own words make the closest twin.","es":"Sus propias palabras crean el gemelo más parecido."},
+  "A few screenshots of their messages are enough to start.": {"tr":"Mesajlarından birkaç ekran görüntüsü başlamak için yeter.","en":"A few screenshots of their messages are enough to start.","es":"Unas capturas de sus mensajes bastan para empezar."},
+  "Say goodbye for now": {"tr":"Şimdilik hoşça kal","en":"Say goodbye for now","es":"Adiós por ahora"},
+  "Talk again": {"tr":"Yeniden konuş","en":"Talk again","es":"Hablar de nuevo"},
+  "e.g. \"She always called me kuzum, never by my name\"": {"tr":"örn. \"Bana hep kuzum derdi, adımla hiç seslenmezdi\"","en":"e.g. \"She always called me kuzum, never by my name\"","es":"ej. \"Siempre me llamaba cariño, nunca por mi nombre\""},
+  "Sign in to keep their twin and your conversations. Free.": {"tr":"İkizini ve konuşmalarınızı saklamak için giriş yap. Ücretsiz.","en":"Sign in to keep their twin and your conversations. Free.","es":"Inicia sesión para guardar su gemelo y tus conversaciones. Gratis."}
+});
+
+Object.assign(window.I18N_C, {
+  "Meanwhile: how to write them a letter →": { "tr":"Bu arada: ona nasıl mektup yazılır →", "en":"Meanwhile: how to write them a letter →", "es":"Mientras tanto: cómo escribirle una carta →" }
+});

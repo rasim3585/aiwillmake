@@ -1,87 +1,62 @@
-# aiwillmake — Strategy (Nov 2026)
+# aiwillmake — Strategy (updated Nov 25, 2026)
 
-Built from four research sweeps (grief-tech, conversation rehearsal / texting AI, WhatsApp chat
-analyzers, Turkish market & distribution) plus the 8-analyst product audit. Revenue figures for
-competitors are mostly third-party estimates; treat them as directional.
+## The product, in one line
+**Talk again with someone you've lost.** Describe them in three answers (or bring your messages with them);
+their AI twin writes back the way they used to — a space for the words left unsaid: news, thanks, apologies,
+a letter, a goodbye. Founder decision (Nov 25, 2026): the product serves **only** this purpose.
 
-## Where we stand
-- 4 real accounts (all June 2026), no stranger has ever paid, the funnel has never been run on
-  strangers. Site was down Aug 11 → Nov 12. The Anthropic key is invalid: every AI feature is off
-  until it is replaced. **Distribution, not features, is the bottleneck.**
+## Market
+- **Global, US-weighted**, English first (TR/ES translations kept). Unknown browser languages open in English.
+- In the US, iMessage dominates and WhatsApp is secondary → the **3-answer describe path is the main door**;
+  WhatsApp export and screenshots are the "make it closer" option.
+- Turkey remains a secondary market (Turkish guides under /rehber).
 
-## What the market says
-1. **Nobody owns "a twin of one specific real person from real chat history."** Closest attempts
-   are tiny (Unsaid on Product Hunt: 1 upvote), dead (Talkers), delisted ("talk to your ex" apps
-   after backlash), or developer-only GitHub projects. Free ChatGPT is the real substitute — a
-   Turkish post in April 2025 showed exactly this hack going viral.
-2. **Money in adjacent categories:** dating reply helpers (Rizz, Plug: weekly subs $3.99–9.99,
-   screenshot → reply in seconds, no signup wall) and B2B roleplay (Yoodli ~$300M valuation).
-   Consumer "practice a hard conversation" apps are tiny.
-3. **Grief-tech:** the emotional hit comes from text built from the person's real messages. Long
-   subscriptions don't hold (zero renewals past a year at NewZia); one-time / per-person pricing
-   works. Viral ads aimed at the bereaved backfire (2wai: 40M views, mostly hostile).
-4. **WhatsApp "Wrapped" analyzers** spread through comparison/drama cards (who writes more, who
-   starts, who ghosts) as 9:16 story images, seasonally late Nov → Jan. Stats alone earn little;
-   money sits behind the AI interpretation. Turkey has WhatsScope + a few iOS clones; none offers
-   evidence quotes, a twin, or a good free web share flow.
-5. **Turkey:** Diyanet treats spirit-summoning (ruh çağırma) as superstition → never say "talk to
-   the dead / bring back / ruh". "Mektup yaz, içini dök", "yarım kalan sözler", "prova" are safe.
-   Lead with living hard conversations; grief stays a gentle, secondary door. Grok was blocked in
-   Turkey partly over insulting religious values → hard guardrail in the twin prompt.
-6. **Payments in Turkey:** PayPal and Papara are gone; weekly plans are 45.7% of new AI subs;
-   USD web checkout likely hurts conversion. LemonSqueezy accepts Turkish buyers but is being
-   folded into Stripe Managed Payments (Turkey support unclear).
+## What the research says (Nov 2026 sweeps)
+- The emotional hit comes from **text built from the person's real words** (Project December, Replika's origin,
+  people pasting a parent's texts into ChatGPT). Video-avatar / interview-before-death models are expensive and
+  have struggled (StoryFile bankrupt, Eternos pivoted, HereAfter's site 404).
+- **Pricing that fits grief:** one-time / per-person or small packs, not long subscriptions (zero renewals past a
+  year at NewZia). Never interrupt a conversation with a paywall; never sell in the person's voice.
+- **Backlash risk is real** (2wai: ~40M views, called "demonic"). Framing must stay: a reflection of *your*
+  memories, not them; no "bring them back", no afterlife, no contact-with-the-dead claims.
+- **Regulation:** California SB 243 (companion chatbots, in force since 2026-01-01; applies to any operator
+  serving California users; private right of action): clear AI disclosure, a suicide/self-harm protocol with
+  crisis referral, protections for minors. KVKK/GDPR for TR/EU data.
 
-## Decisions taken (shipped)
-- **Free on-device "WhatsApp Sohbet Analizi"** at `/whatsapp-sohbet-analizi`: no signup, no AI,
-  nothing leaves the device; 6 share cards (who writes more, who starts, reply duel, night owl,
-  record day + longest silence, shared words) + a locked 7th card that bridges to the twin; the
-  chat is handed to the app via IndexedDB (no second upload). SEO content + FAQ schema in Turkish.
-- **Guest-first twin in 3 answers**, autosave, cross-session memory (previous commit).
-- **Letter mode** for unreachable contacts ("💌 Ona mektup yaz" → one warm reply that answers what
-  was written) — the safe Turkish framing and the Cambridge "dignified closure" recommendation.
-- **Hard practice mode** ("🎚 Zorlaştır") for living contacts.
-- **Safety:** crisis interception (TR/EN/ES incl. "sana kavuşmak istiyorum"), grief rails keyed on
-  status, honest answer to a sincere "are you real?" in unreachable mode, no religious / national /
-  group insults, no upsell in a deceased person's voice.
-- **KVKK:** Turkish `kvkk.html` (aydınlatma metni, foreign processors named) + one-tap consent
-  (18+, right to share, AI processing incl. abroad), remembered on the device.
-- **Measurement:** first-touch attribution (`ref` / `utm` / referrer) + persistent device id on
-  every event; `?ref=` links on every share card.
-- **Turkish link preview:** new 1200×630 OG image and Turkish og/twitter tags.
-- **6 Turkish guides** at `/rehber/:slug` (server-rendered from guides.js, Article + FAQPage schema, in sitemap):
-  sohbet dışa aktarma, ChatGPT ile sohbet analizi, zam isteme konuşması, babana zor bir şey söylemek,
-  kaybettiğin birine mektup, eski sevgiliye mesaj. Each CTA deep-links into the quick form with the
-  relationship preselected (`?rel=`) and a `?ref=rehber-*` tag. Add guides by appending to guides.js.
-- **Graceful AI-down mode:** server probes the key every 15 min; while down, the landing/app route visitors
-  to the free stats tool with an honest maintenance note instead of failing. Self-heals when the key works.
-- **Stats → WhatsApp send-back** ("💬 Sohbete gönder", ?ref=wa) to pull the other person in.
-- **Ops:** `node smoke_test.js [url]` (22 no-AI checks, run after every deploy) and
-  `node -r dotenv/config funnel_report.js [days]` (funnel + first-touch source, unique by device id).
-- **Mobile back gesture:** History API per screen + chat modal (back closes the chat instead of leaving).
+## What the product does (shipped)
+- Every twin runs in **lost-person mode** (server forces `contact_status = 'unreachable'`): frozen present at the
+  date of loss, warm non-denial if the user names the death, no afterlife/reunion claims, honest answer to a
+  sincere "are you real?", knowledge boundary (asks instead of inventing), memory of previous conversations.
+- **3-answer quick form** (relationship, what they called you, 1–2 of their sentences) + optional "how they saw
+  you" and "when did you lose them?". Guests reach the first message without sign-in; saving needs Google.
+- **💌 Letter** (one reply that answers what you wrote) and **🕊 Goodbye** (a dignified farewell reply).
+- **"Did that sound like them?"** fix loop after the first message (USER CORRECTIONS).
+- **Safety:** crisis interception before the model (EN → 988, TR → 112, ES → 988/local), values guardrail,
+  gentle pause note after a long session, 18+ consent, simulation disclaimer at the start of every chat,
+  full deletion. The closing note after a conversation is warm and never coaches.
+- Rehearsal-era UI (before-you-send, strategy cards, accuracy stars, archetype/mirror, demo personas) is hidden;
+  the code stays dormant. The living-relationship stats page and guides are retired (301 → home / guides index).
+- **Content:** /guides (EN): save texts from someone who died · letter to someone who died · AI and a lost
+  loved one (honest explainer). /rehber (TR): mektup · mesajları saklamak · yapay zekâ açıklaması.
+- **Ops:** graceful AI-down mode, `node smoke_test.js [url]` (29 checks), `node -r dotenv/config
+  funnel_report.js [days]`, first-touch attribution on every event.
 
-## Pricing — recommendation (paywall stays OFF until ~30–50 strangers reach a twin reply)
-- Free: the stats tool, one twin, the first full conversation.
-- Then a **one-time per-person unlock in TRY** (test ~₺99–149) plus a small weekly option
-  (~₺49–79). Avoid long monthly/annual subscriptions for this use pattern.
-- Payment rail: verify LemonSqueezy for Turkish cards on a real test purchase; plan iyzico if not.
-- Never interrupt an unreachable-mode conversation with a paywall; never upsell in the twin's voice.
+## Pricing recommendation (paywall stays off until ~30–50 strangers reach a first message)
+Free: one person, the first conversation. Then a one-time unlock per person (test $9–19) and/or a small
+message pack. No long subscriptions. Never gate a letter or a goodbye mid-flow.
 
-## Distribution plan (cheap, founder-doable)
-1. **Season now:** push the free WhatsApp analysis before December; year-end is when Turkish press
-   covers "WhatsApp Wrapped" (ShiftDelete, Webrazzi).
-2. **Faceless short videos** (TikTok/Reels): "babama hiç söyleyemediğim cümle…" typed into a
-   3-answer twin; comic rehearsals ("patrondan zam isterken"). Pin "yapay zekâ, o değil".
-3. **Long-tail Turkish SEO:** "whatsapp sohbet analizi", "chatgpt whatsapp sohbet analizi",
-   "babama ___ nasıl söylerim", "zam isteme konuşması", "ölen anneme mektup" (letter framing).
-4. **Honest answers** on Kızlarsoruyor / Ekşi where the question is literally ours.
-5. **Calendar:** Jan raise season, 14 Feb, bayram reconciliations, Anneler/Babalar Günü letters.
+## Distribution (US-first, cheap)
+1. **SEO on practical grief needs:** "how to save text messages from someone who died", "letter to someone
+   who died", "talk to a deceased loved one AI". Add guides over time (guides.js).
+2. **Founder-told short video:** an honest story ("I never got to tell my grandfather…"), the first message
+   on screen, the disclaimer visible. Never targeted at the freshly bereaved, never ad-heavy.
+3. **Grief communities** (respectfully, disclosed): r/GriefSupport-style forums only where self-promotion is
+   allowed; grief writers, hospice/bereavement newsletters.
+4. **Calendar:** Mother's Day, Father's Day, holidays, anniversaries — "write them a letter" framing.
 
 ## Open items for the founder
-- Replace `ANTHROPIC_API_KEY` (Railway Variables + local `.env`) — nothing AI works until then;
-  then run `node -r dotenv/config twin_quality_smoke.js <url>`.
-- External uptime alert (UptimeRobot → `/api/keepalive`); the GitHub keepalive self-disables.
-- KVKK: foreign transfers need the standard contract notified to the Authority (Law 7499, since
-  June 2024) — consent alone is no longer a sustainable basis. Get a lawyer's eye on this before
-  any marketing push.
-- Supabase Pro once real users arrive (no backups on free).
+- Replace `ANTHROPIC_API_KEY` in Railway (everything AI is off until then); then run twin_quality_smoke.js.
+- Re-enable the GitHub keepalive workflow if disabled; add an UptimeRobot alert on /api/keepalive.
+- Legal review before marketing: SB 243 compliance check (minors, disclosures), KVKK cross-border transfer
+  notification, a US privacy policy pass.
+- Supabase Pro once real users arrive (backups).
