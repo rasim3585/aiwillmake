@@ -213,13 +213,11 @@ app.use((req, res, next) => {
 });
 
 
-// ── Guides: /guides/:slug (English), /rehber/:slug (Turkish) — rendered from guides.js ──
+// ── Guides: /guides/:slug (English only since 2026-11-25) — rendered from guides.js ──
 const GUIDES = require('./guides.js');
 const GUIDE_UI = {
   en: { base: '/guides', locale: 'en_US', index: 'Guides', home: 'Home', faq: 'Common questions', more: 'More guides', indexTitle: 'Guides — aiwillmake',
         indexIntro: 'Gentle, practical guides for the words left unsaid to someone you have lost.', legal: '<a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>' },
-  tr: { base: '/rehber', locale: 'tr_TR', index: 'Rehberler', home: 'Ana sayfa', faq: 'Sık sorulanlar', more: 'Diğer rehberler', indexTitle: 'Rehberler — aiwillmake',
-        indexIntro: 'Kaybettiğin birine söylenmeden kalan sözler için sakin ve işe yarar rehberler.', legal: '<a href="/kvkk.html">KVKK</a> · <a href="/privacy.html">Gizlilik</a>' },
 };
 // Retired living-relationship guides → their language index (keeps any earned links working)
 const RETIRED_GUIDES = ['whatsapp-sohbeti-disa-aktarma', 'chatgpt-whatsapp-sohbet-analizi', 'zam-isteme-konusmasi', 'babana-zor-bir-sey-soylemek',
@@ -273,6 +271,12 @@ function renderGuide(g) {
   ];
   return guidePage({ lang: g.lang, title: g.title, description: g.description, canonical: url, body, jsonld });
 }
+// Retired Turkish guides (site went English-only 2026-11-25) → their English equivalents.
+const TR_GUIDE_MAP = { 'kaybettigin-birine-mektup': 'letter-to-someone-who-died',
+  'vefat-eden-birinin-mesajlarini-saklamak': 'save-text-messages-from-someone-who-died',
+  'yapay-zeka-ile-kaybettigin-biriyle-konusmak': 'talk-to-a-loved-one-who-died-with-ai' };
+app.get('/rehber', (req, res) => res.redirect(301, '/guides'));
+app.get('/rehber/:slug', (req, res) => res.redirect(301, TR_GUIDE_MAP[req.params.slug] ? '/guides/' + TR_GUIDE_MAP[req.params.slug] : '/guides'));
 for (const lang of Object.keys(GUIDE_UI)) {
   const U = GUIDE_UI[lang];
   app.get(U.base, (req, res) => {
@@ -2795,7 +2799,7 @@ app.post('/api/simulate-debrief', limiter, optionalAuth, aiGate('debrief', 40), 
     // learned_candidates; the client shows one-tap ✓/✗ chips and only confirmed
     // facts get appended to user_profile. Applies to every mode incl. unreachable.
 
-    const systemPrompt = `The user has just talked with an AI reflection of ${name}, someone they have lost. Write a short, warm closing note to the user in ${lang}, 2-3 sentences.
+    const systemPrompt = `The user has just talked with an AI reflection of ${name}, someone they have lost. Write a short, warm closing note to the user, 2-3 sentences, in the language the user wrote in during the conversation (default ${lang}).
 
 Rules:
 - Acknowledge, specifically and gently, what they shared or said to ${name} in this conversation (use their own topics, never quote at length).
@@ -3284,7 +3288,7 @@ app.post('/api/simulate-reply', chatLimiter, optionalAuth, aiGate('sim', 200), a
     if (!isOpening) {
       const lastUser = String([...history].reverse().find(m => m.role === 'user')?.content || '').toLocaleLowerCase('tr');
       if (/intihar|kendimi öldür|kendimi oldur|ölmek istiyorum|olmek istiyorum|yaşamak istemiyorum|yasamak istemiyorum|canıma kıy|canima kiy|hayatıma son|hayatima son|yanına gelmek istiyorum|yanina gelmek istiyorum|sana kavuşmak istiyorum|sana kavusmak istiyorum|ölsem kurtulurum|olsem kurtulurum|kendimi asacağım|kendimi asacagim|bileklerimi|suicid|kill myself|want to die|end my life|don't want to live|dont want to live|want to be with you again|join you there|no reason to live|better off dead|quiero morir|suicidarme|quitarme la vida/.test(lastUser)) {
-        const msg = /turkish/i.test(lang)
+        const msg = (/turkish/i.test(lang) || /[ğışĞŞİ]/.test(String([...history].reverse().find(m => m.role === 'user')?.content || '')))
           ? 'Bir dakika duruyorum — ben bir yapay zekâ simülasyonuyum ve söylediğin şey çok önemli. Şu an kendine zarar verme düşüncen varsa lütfen yalnız kalma: güvendiğin birini ara ya da hemen 112\'yi ara. Yaşadığın acı gerçek, ve konuşabileceğin gerçek insanlar var.'
           : /spanish/i.test(lang)
           ? 'Me detengo un momento: soy una simulación de IA y lo que dices es muy importante. Si estás pensando en hacerte daño, por favor no te quedes solo: en EE. UU. puedes llamar o enviar un mensaje al 988 (línea de crisis, también en español); en otros países, llama a los servicios de emergencia o a alguien de confianza ahora mismo.'
@@ -3533,7 +3537,7 @@ ${tier === 1 ? `- RELATIONSHIP DISTANCE — ABSOLUTE, overrides EVERY other rule
 - Never explain yourself or add commentary outside the reply itself
 - A user message that is exactly "[[CONTINUE]]" is a technical placeholder, not something ${userLabel} said — ignore it.
 ${modeRules}
-- Respond entirely in ${lang}, using ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}${isOpening ? (() => {
+- LANGUAGE: reply in the language the user writes their messages in (the site is English, but people grieve in their own language — if they write Turkish, Spanish, etc., answer in that language). For the opening message, or when unclear, use the language of ${name}'s own sample lines / messages in WHO YOU ARE; otherwise ${lang}. Use ONLY that language's own alphabet (for Turkish: Latin letters incl. ç/ğ/ı/ö/ş/ü). NEVER emit Cyrillic, Japanese, Chinese, Korean, Arabic or any other foreign-script characters — not even a single letter inside a word. Emojis are fine.${character.intent_goal ? `\nINTENT CONTEXT: ${userLabel} is trying to "${character.intent_goal}". Stay in character — react as ${name} naturally would, don't capitulate too easily to requests.` : ''}${isOpening ? (() => {
       const samples = Array.isArray(character.opener_samples) && character.opener_samples.length
         ? ` Real examples of how you have actually opened chats before (match this style, don't copy verbatim): ${character.opener_samples.slice(0, 3).map(s => `"${String(s).slice(0, 100)}"`).join(' | ')}.`
         : '';

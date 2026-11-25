@@ -11,11 +11,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.aiwillmake.com/rehber</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.aiwillmake.com/guides/save-text-messages-from-someone-who-died</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -31,21 +26,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.aiwillmake.com/rehber/kaybettigin-birine-mektup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/vefat-eden-birinin-mesajlarini-saklamak</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/rehber/yapay-zeka-ile-kaybettigin-biriyle-konusmak</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.aiwillmake.com/privacy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
@@ -54,10 +34,5 @@
     <loc>https://www.aiwillmake.com/terms.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://www.aiwillmake.com/aydinlatma-metni</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.2</priority>
   </url>
 </urlset>

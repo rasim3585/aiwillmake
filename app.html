@@ -2802,7 +2802,7 @@
   <!-- Reaction Bet Modal -->
   <div id="predictionBetModal" class="prediction-bet-overlay hidden">
     <div class="prediction-bet-sheet">
-      <p class="prediction-bet-title" id="predictionBetTitle">Sence nasıl tepki verir?</p>
+      <p class="prediction-bet-title" id="predictionBetTitle">How do you think they will react?</p>
       <div class="prediction-bet-options" id="predictionBetOptions"></div>
       <button type="button" class="prediction-bet-skip" id="predictionBetSkip">Skip →</button>
     </div>
@@ -2839,11 +2839,11 @@
              Rendered by endSimulation from data.learned_candidates. -->
         <div id="rp-learned" class="rp-learned hidden"></div>
         <div id="rp-mirror-block" class="rp-mirror-block hidden">
-          <div class="rp-mirror-label">👁 Senin için bir gözlem</div>
+          <div class="rp-mirror-label">👁 An observation for you</div>
           <div class="rp-mirror-text" id="rp-mirror-text"></div>
         </div>
         <div id="rp-cross-mirror-block" class="rp-cross-mirror-block hidden">
-          <div class="rp-cross-mirror-label">🪞 Bir kalıp fark ettik</div>
+          <div class="rp-cross-mirror-label">🪞 We noticed a pattern</div>
           <div class="rp-cross-mirror-text" id="rp-cross-mirror-text"></div>
         </div>
         <div class="rp-debrief-secondary">
@@ -2917,8 +2917,8 @@
   <div id="importAuthModal" class="import-auth-overlay hidden">
     <div class="import-auth-card">
       <div class="import-auth-icon">🔒</div>
-      <h3 class="import-auth-title">Analizin hazırlanıyor</h3>
-      <p class="import-auth-msg">Verilerinin güvenliği ve sadece senin görebilmen için tek tıkla hesabını oluştur.</p>
+      <h3 class="import-auth-title">Getting things ready</h3>
+      <p class="import-auth-msg">Create your account in one click so your data stays private and only you can see it.</p>
       <button class="btn-google import-auth-google" id="importAuthGoogleBtn" onclick="importAuthContinue()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 15.5 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.4-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.3 35.5 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.2 5.2C41.3 35.6 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         Continue with Google
@@ -2972,7 +2972,7 @@
       <div class="brand" lang="en">aiwillmake</div>
       <nav class="nav">
         <a href="index.html" data-i18n="nav.home">Home</a>
-        <div class="lang-switch" id="langSwitch">
+        <div class="lang-switch" id="langSwitch" style="display:none">
           <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')">TR</button>
           <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
           <button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
@@ -3094,8 +3094,8 @@
           'person.brief':'🛡️ Revisar antes de enviar',
         },
       };
-      let APP_LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();
-      if (!['tr','en','es'].includes(APP_LANG)) APP_LANG = 'en';
+      // English-only product (founder decision 2026-11-25). TR/ES dictionaries stay dormant.
+      let APP_LANG = 'en'; try { localStorage.setItem('app_lang', 'en'); } catch (_) {}
       window.APP_LANG = APP_LANG;
       function t(key, fb) { const d = I18N[APP_LANG] || I18N.tr; return d[key] || I18N.tr[key] || fb || key; }
       function aiLang() { return { tr:'Turkish', en:'English', es:'Spanish' }[APP_LANG] || 'Turkish'; }
@@ -3160,7 +3160,7 @@
       </div>
       <button type="button" class="bys-home-cta" id="bysHomeCta">
         <span class="bys-home-icon">🛡️</span>
-        <span class="bys-home-txt"><b>Bir mesaj mı yazdın?</b><small>Göndermeden önce nasıl karşılanacağını gör</small></span>
+        <span class="bys-home-txt"><b>Wrote a message?</b><small>See how it lands before you send it</small></span>
         <span class="bys-home-arrow">→</span>
       </button>
       <input type="search" id="convSearchInput" class="home-conv-search" placeholder="Search people or conversations…" autocomplete="off" />
@@ -3177,7 +3177,7 @@
              area scores + user-provided facts). The weakest area drives the nudge. -->
         <div class="up-meter hidden" id="upMeter">
           <div class="up-meter-row">
-            <span class="up-meter-label">🧠 İkizler seni ne kadar tanıyor?</span>
+            <span class="up-meter-label">🧠 How well do the twins know you?</span>
             <span class="up-meter-pct" id="upMeterPct">—</span>
           </div>
           <div class="up-meter-bar"><i id="upMeterFill"></i></div>
@@ -3185,17 +3185,17 @@
         </div>
         <!-- Interview: 5 short questions targeting what imports rarely reveal -->
         <div class="up-interview" id="upInterview">
-          <button type="button" class="up-interview-start" id="upInterviewStart">🎙 Beni tanı — 5 kısa soru</button>
+          <button type="button" class="up-interview-start" id="upInterviewStart">🎙 Get to know me — 5 short questions</button>
           <div class="up-interview-body hidden" id="upInterviewBody">
             <div class="up-interview-q" id="upInterviewQ"></div>
             <textarea id="upInterviewA" rows="2" class="up-interview-input"></textarea>
             <div class="up-interview-actions">
-              <button type="button" id="upInterviewNext" class="up-interview-next">Kaydet ve devam →</button>
+              <button type="button" id="upInterviewNext" class="up-interview-next">Save and continue →</button>
               <button type="button" id="upInterviewSkip" class="up-interview-skip">Atla</button>
             </div>
             <div class="up-interview-progress" id="upInterviewProgress"></div>
           </div>
-          <div class="up-interview-done hidden" id="upInterviewDone">✓ Teşekkürler — ikizler artık seni daha iyi tanıyor</div>
+          <div class="up-interview-done hidden" id="upInterviewDone">✓ Thank you — the twins know you better now</div>
         </div>
         <div class="user-profile-confidence" id="userProfileConfidence"></div>
         <button id="userProfileBuildBtn" class="user-profile-build-btn hidden"></button>
@@ -3205,8 +3205,8 @@
           <span id="userProfileSaved" class="user-profile-saved hidden">✓ Saved</span>
         </div>
         <div class="danger-zone">
-          <button type="button" id="deleteAccountBtn" class="delete-account-btn">Hesabımı ve tüm verimi sil</button>
-          <p class="danger-note">Tüm kişilerin, sohbetlerin, profilin ve kayıtların kalıcı olarak silinir. Geri alınamaz.</p>
+          <button type="button" id="deleteAccountBtn" class="delete-account-btn">Delete my account and all my data</button>
+          <p class="danger-note">All your people, conversations, profile and records are permanently deleted. This cannot be undone.</p>
         </div>
       </div>
     </section>
@@ -3595,13 +3595,13 @@
           <div class="qd-form" id="qdForm">
             <label class="qd-label">1 · <span>Who are they to you?</span></label>
             <div class="qd-chips" id="qdRel">
-              <button type="button" class="qd-chip" data-v="annem">Mom</button>
-              <button type="button" class="qd-chip" data-v="babam">Dad</button>
-              <button type="button" class="qd-chip" data-v="dedem">Grandfather</button>
-              <button type="button" class="qd-chip" data-v="ninem">Grandmother</button>
-              <button type="button" class="qd-chip" data-v="eşim">Spouse / partner</button>
-              <button type="button" class="qd-chip" data-v="kardeşim">Sibling</button>
-              <button type="button" class="qd-chip" data-v="arkadaşım">Friend</button>
+              <button type="button" class="qd-chip" data-v="my mom">Mom</button>
+              <button type="button" class="qd-chip" data-v="my dad">Dad</button>
+              <button type="button" class="qd-chip" data-v="my grandfather">Grandfather</button>
+              <button type="button" class="qd-chip" data-v="my grandmother">Grandmother</button>
+              <button type="button" class="qd-chip" data-v="my spouse">Spouse / partner</button>
+              <button type="button" class="qd-chip" data-v="my sibling">Sibling</button>
+              <button type="button" class="qd-chip" data-v="my friend">Friend</button>
             </div>
             <div class="qd-row">
               <input id="qdName" type="text" maxlength="40" placeholder="Their name" autocomplete="off" />
@@ -3609,10 +3609,10 @@
             </div>
 
             <label class="qd-label">2 · <span>What did they call you?</span></label>
-            <input id="qdHitap" type="text" maxlength="80" placeholder="e.g. evladım, kızım, canım, kanka…" autocomplete="off" />
+            <input id="qdHitap" type="text" maxlength="80" placeholder="e.g. sweetheart, kiddo, buddy, my girl…" autocomplete="off" />
 
             <label class="qd-label">3 · <span>Write 1–2 things they would typically say — in their words</span></label>
-            <textarea id="qdLaf" rows="3" maxlength="600" placeholder="e.g. &quot;Yemek yedin mi sen?&quot;&#10;&quot;Aman be evladım, takma kafana.&quot;"></textarea>
+            <textarea id="qdLaf" rows="3" maxlength="600" placeholder="e.g. &quot;Did you eat today?&quot;&#10;&quot;Don&#39;t you worry about it, kiddo.&quot;"></textarea>
 
             <details class="qd-more">
               <summary>Optional: how did they see you? (makes the twin know you)</summary>
@@ -3712,7 +3712,7 @@
         </div>
 
         <div class="wow-card wow-card-mirror" id="wowMirrorCard">
-          <div class="wow-card-eyebrow" data-i18n="wow.mirror.eyebrow">👁 We saw you too &nbsp;·&nbsp; Seni de gördük</div>
+          <div class="wow-card-eyebrow" data-i18n="wow.mirror.eyebrow">👁 We saw you too</div>
           <ul class="wow-mirror-list" id="wowMirrorList"></ul>
           <div class="wow-evidence hidden" id="wowMirrorEvidence"></div>
         </div>
@@ -3739,14 +3739,14 @@
              core facts (spouse/kids/nickname) into user_profile once. Shown until used
              or dismissed (localStorage profile_nudge_done). -->
         <div class="wow-card hidden" id="wowKnowMe" style="border-color:rgba(160,126,224,.4)">
-          <div class="wow-card-eyebrow">🧠 İkizler seni sohbetlerinden tanır</div>
-          <p class="wow-card-summary" style="margin:6px 0 10px">Sohbette hiç geçmemiş şeyi bilemezler — eşinin, çocuklarının isimleri gibi. Bir cümleyle tanıt, her ikiz anında öğrensin:</p>
-          <textarea id="wowKnowMeTa" class="wow-rehearse-textarea" rows="2" placeholder="örn. Eşim Ayşe, çocuklarım Ali (7) ve Duru (4). Arkadaşlarım bana Memo der."></textarea>
+          <div class="wow-card-eyebrow">🧠 Help the twins know you</div>
+          <p class="wow-card-summary" style="margin:6px 0 10px">They can’t know what you never told them — like your partner’s or kids’ names. Add a sentence and every twin learns it:</p>
+          <textarea id="wowKnowMeTa" class="wow-rehearse-textarea" rows="2" placeholder="e.g. My wife is Anna, my kids are Leo (7) and Mia (4). Friends call me Mo."></textarea>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="wow-rehearse-btn" id="wowKnowMeSave" style="flex:1">Ekle</button>
-            <button class="wow-rehearse-again" id="wowKnowMeSkip" style="flex:0 0 auto">Geç</button>
+            <button class="wow-rehearse-btn" id="wowKnowMeSave" style="flex:1">Add</button>
+            <button class="wow-rehearse-again" id="wowKnowMeSkip" style="flex:0 0 auto">Skip</button>
           </div>
-          <div class="hidden" id="wowKnowMeDone" style="color:var(--ok,#7fb069);font-size:.85rem;margin-top:8px">✓ Eklendi — tüm ikizler artık biliyor</div>
+          <div class="hidden" id="wowKnowMeDone" style="color:var(--ok,#7fb069);font-size:.85rem;margin-top:8px">✓ Added — every twin knows it now</div>
         </div>
 
         <!-- Secondary depth, collapsed — keeps the first glance focused on the 2-3 cards that land -->
@@ -3777,8 +3777,8 @@
              to the twin. Tools (strategy/generate/analyze) live on the person page
              for return visits; a small link leads there. -->
         <div class="wow-cta-area">
-          <button class="wow-cta-btn" id="wowTalkBtn">🎭 <span id="wowCtaName">them</span> ile konuşmaya başla →</button>
-          <button class="wow-cta-profile" id="wowProfileBtn">kişi sayfası →</button>
+          <button class="wow-cta-btn" id="wowTalkBtn">🕯️ Talk with <span id="wowCtaName">them</span> →</button>
+          <button class="wow-cta-profile" id="wowProfileBtn">their page →</button>
           <p class="wow-cta-note hidden" id="wowCtaNote">Sign in to keep their twin and your conversations. Free.</p>
         </div>
       </div>
@@ -4942,20 +4942,20 @@
       const preview = c.length > 90 ? c.slice(0, 90) + '…' : c;
       box.innerHTML = `
         <div class="outcome-prompt-card">
-          <div class="op-q">${escH(contactName || 'Bu kişiye')}'e gönderdiğin mesaj nasıl gitti?</div>
+          <div class="op-q">How did your message to ${escH(contactName || 'them')} go?</div>
           <div class="op-msg">“${escH(preview)}”</div>
           <div class="op-btns">
-            <button type="button" class="op-btn" data-o="positive" data-n="İyi karşılandı">😊 İyi gitti</button>
-            <button type="button" class="op-btn" data-o="neutral" data-n="Nötr karşılandı">😐 İdare eder</button>
+            <button type="button" class="op-btn" data-o="positive" data-n="Went well">😊 Went well</button>
+            <button type="button" class="op-btn" data-o="neutral" data-n="Neutral">😐 So-so</button>
             <button type="button" class="op-btn" data-o="negative" data-n="Ters gitti">😔 Ters gitti</button>
-            <button type="button" class="op-btn op-skip" data-o="" data-n="">Henüz bilmiyorum</button>
+            <button type="button" class="op-btn op-skip" data-o="" data-n="">Not sure yet</button>
           </div>
         </div>`;
       box.classList.remove('hidden');
       box.querySelectorAll('.op-btn').forEach(b => b.onclick = async () => {
         const o = b.dataset.o;
         if (!o) { box.classList.add('hidden'); box.innerHTML = ''; return; }
-        box.innerHTML = '<div class="outcome-prompt-card"><div class="op-confirm">✓ Kaydedildi — twin bundan öğreniyor</div></div>';
+        box.innerHTML = '<div class="outcome-prompt-card"><div class="op-confirm">✓ Saved — the twin learns from this</div></div>';
         await postOutcome(target.msg.id, o, b.dataset.n, target.convId);
         try { await fetch(`/api/contacts/${contactId_for_outcome()}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }, body: JSON.stringify({ last_outcome: o, last_outcome_at: new Date().toISOString() }) }); } catch (_) {}
         if (activeContactContext) activeContactContext.last_outcome = o;
@@ -5886,7 +5886,7 @@
       const v = id => (document.getElementById(id)?.value || '').trim();
       const name = v('qdName'), me = v('qdMe'), hitap = v('qdHitap'), laf = v('qdLaf'), goz = v('qdGoz'), when = v('qdWhen');
       const am = {
-        who: [_qdRel ? (_qdRel + ' ' + name) : name, me ? ('ben ' + me) : ''].filter(Boolean).join(', '),
+        who: [_qdRel ? (_qdRel + ' ' + name) : name, me ? ('I am ' + me) : ''].filter(Boolean).join(', '),
         hitap, laflar: laf, gozunden: goz, zaman: when, _me: me
       };
       return { name, me, hitap, laf, am };
@@ -6091,7 +6091,7 @@
 
         let analyzeSource = dataSource;
         if (_importMode === 'screenshot') {
-          updateProcessingMsg('Ekran görüntüsü okunuyor…');
+          updateProcessingMsg('Reading the screenshot…');
           analyzeSource = await extractScreenshot(dataSource);
         }
 
@@ -6231,8 +6231,8 @@
       const conf = data.confidence_score || 0;
       const msgCount = parseInt(data.message_count || data.total_messages || 0, 10);
       const metaParts = [];
-      if (msgCount > 0) metaParts.push(`${msgCount.toLocaleString()} mesaj analiz edildi`);
-      if (conf > 0) metaParts.push(`Güven: ${data.confidence_label === 'High' ? 'Yüksek' : data.confidence_label === 'Medium' ? 'Orta' : data.confidence_label === 'Low' ? 'Düşük' : (conf >= 70 ? 'Yüksek' : conf >= 40 ? 'Orta' : 'Düşük')}`);
+      if (msgCount > 0) metaParts.push(`${msgCount.toLocaleString()} messages read`);
+      if (conf > 0) metaParts.push(`Confidence: ${data.confidence_label || (conf >= 70 ? 'High' : conf >= 40 ? 'Medium' : 'Low')}`);
       document.getElementById('wowConfidenceMeta').textContent = metaParts.join(' · ');
 
       // Mirror Card (star)
@@ -6382,7 +6382,7 @@
         document.getElementById('wowArchetypeTraits').innerHTML = (a.traits || []).map(t => `<li>${escH(t)}</li>`).join('');
         const rels = Array.isArray(d.relationships) ? d.relationships : [];
         const relText = rels.length >= 2
-          ? `${rels.slice(0, -1).join(', ')} ve ${rels[rels.length - 1]} olan konuşmalarında beliriyor.`
+          ? `shows up in your conversations with ${rels.slice(0, -1).join(', ')} and ${rels[rels.length - 1]}.`
           : '';
         const relEl = document.getElementById('wowArchetypeRel');
         relEl.textContent = relText; relEl.style.display = relText ? '' : 'none';
@@ -6393,22 +6393,22 @@
 
     async function shareArchetype() {
       const btn = document.getElementById('wowArchetypeShareBtn');
-      if (typeof html2canvas === 'undefined') { showToast('Görsel kütüphanesi yüklenemedi — sayfayı yenile', 'error'); return; }
+      if (typeof html2canvas === 'undefined') { showToast('Image library failed to load — refresh the page', 'error'); return; }
       const node = document.getElementById('wowArchetypeShareable');
-      const old = btn.textContent; btn.textContent = 'Hazırlanıyor…'; btn.disabled = true;
+      const old = btn.textContent; btn.textContent = 'Preparing…'; btn.disabled = true;
       try {
         const canvas = await html2canvas(node, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
         const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
         const file = new File([blob], 'iletisim-kisiligim.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'İletişim Kişiliğim', text: 'İletişim kişiliğimi buldum 👇 Sen de bak: https://www.aiwillmake.com/?ref=archetype', url: 'https://www.aiwillmake.com/?ref=archetype' });
+          await navigator.share({ files: [file], title: 'aiwillmake', text: 'https://www.aiwillmake.com/?ref=archetype', url: 'https://www.aiwillmake.com/?ref=archetype' });
         } else {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a'); link.href = url; link.download = 'iletisim-kisiligim.png'; link.click();
           URL.revokeObjectURL(url);
-          showToast('Görsel indirildi', 'success');
+          showToast('Image downloaded', 'success');
         }
-      } catch (e) { showToast('Paylaşım başarısız', 'error'); }
+      } catch (e) { showToast('Sharing failed', 'error'); }
       finally { btn.textContent = old; btn.disabled = false; }
     }
 
@@ -6416,10 +6416,10 @@
     let _bysCtx = null;
     function openBeforeYouSend(ctx) {
       const c = ctx || activeContactContext;
-      if (!c || !c.name) { showToast('Önce bir kişi seç', 'info'); return; }
+      if (!c || !c.name) { showToast('Pick a person first', 'info'); return; }
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       _bysCtx = c;
-      document.getElementById('bysTitle').textContent = `${c.name}'e göndermeden önce`;
+      document.getElementById('bysTitle').textContent = `Before you send to ${c.name}`;
       document.getElementById('bysName').textContent = c.name;
       document.getElementById('bysDraft').value = '';
       const res = document.getElementById('bysResult'); res.classList.add('hidden'); res.innerHTML = '';
@@ -6445,8 +6445,8 @@
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || 'hata');
         renderBysResult(d);
-      } catch (e) { showToast('Analiz başarısız, tekrar dene', 'error'); }
-      finally { btn.disabled = false; btn.textContent = 'Nasıl karşılanır? →'; }
+      } catch (e) { showToast('Something went wrong — try again', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'How will it land? →'; }
     }
     function renderBysResult(d) {
       const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -6456,29 +6456,29 @@
         <div class="bys-bar"><div class="bys-bar-fill" style="width:${Math.max(3, r.pct)}%;background:${colors[i % 3]}"></div></div></div>`).join('');
       const v = (d.verdict || '').toLowerCase();
       const vClass = /gönder|gonder|send/.test(v) ? 'bys-v-send' : /rethink|yeniden/.test(v) ? 'bys-v-rethink' : 'bys-v-soften';
-      const name = escH(_bysCtx?.name || 'Bu kişi');
+      const name = escH(_bysCtx?.name || 'They');
       const parts = [];
-      if (reactHtml) parts.push(`<div class="bys-block"><div class="bys-block-lbl">${name} nasıl karşılar</div><div class="bys-react-row">${reactHtml}</div></div>`);
-      if (d.risky_line) parts.push(`<div class="bys-block bys-risky"><div class="bys-block-lbl">⚠️ Riskli kısım</div><div class="bys-risky-quote">“${escH(d.risky_line)}”</div>${d.risk_reason ? `<div class="bys-risky-reason">${escH(d.risk_reason)}</div>` : ''}</div>`);
-      if (d.how_they_read) parts.push(`<div class="bys-block"><div class="bys-block-lbl">Nasıl okur</div><div class="bys-read">“${escH(d.how_they_read)}”</div></div>`);
+      if (reactHtml) parts.push(`<div class="bys-block"><div class="bys-block-lbl">How ${name} reacts</div><div class="bys-react-row">${reactHtml}</div></div>`);
+      if (d.risky_line) parts.push(`<div class="bys-block bys-risky"><div class="bys-block-lbl">⚠️ Risky part</div><div class="bys-risky-quote">“${escH(d.risky_line)}”</div>${d.risk_reason ? `<div class="bys-risky-reason">${escH(d.risk_reason)}</div>` : ''}</div>`);
+      if (d.how_they_read) parts.push(`<div class="bys-block"><div class="bys-block-lbl">How they read it</div><div class="bys-read">“${escH(d.how_they_read)}”</div></div>`);
       if (d.rewrite) parts.push(`<div class="bys-block bys-rewrite"><div class="bys-block-lbl">✅ Daha iyi bir versiyon</div><div class="bys-rewrite-text">${escH(d.rewrite)}</div><div class="bys-rewrite-actions"><button type="button" class="bys-mini-btn" id="bysCopyBtn">📋 Kopyala</button><button type="button" class="bys-mini-btn primary" id="bysRehearseBtn">🎭 Prova et</button></div></div>`);
       if (d.verdict) parts.push(`<div class="bys-verdict ${vClass}"><div class="bys-verdict-badge">${escH(d.verdict)}</div>${d.verdict_reason ? `<div class="bys-verdict-reason">${escH(d.verdict_reason)}</div>` : ''}</div>`);
       const el = document.getElementById('bysResult');
       el.innerHTML = parts.join(''); el.classList.remove('hidden');
       const copyBtn = document.getElementById('bysCopyBtn');
-      if (copyBtn) copyBtn.onclick = () => { try { navigator.clipboard?.writeText(d.rewrite); showToast('Kopyalandı ✓', 'success'); } catch (_) {} };
+      if (copyBtn) copyBtn.onclick = () => { try { navigator.clipboard?.writeText(d.rewrite); showToast('Copied ✓', 'success'); } catch (_) {} };
       const rehBtn = document.getElementById('bysRehearseBtn');
-      if (rehBtn) rehBtn.onclick = () => openSimulatorFresh(_bysCtx, 'Bu mesajı göndermeden önce prova');
+      if (rehBtn) rehBtn.onclick = () => openSimulatorFresh(_bysCtx, 'Rehearse this message before sending');
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     document.getElementById('bysAnalyzeBtn')?.addEventListener('click', runBys);
 
     async function startBeforeYouSend() {
-      if (!accessToken) { showToast('Önce giriş yap', 'info'); return; }
+      if (!accessToken) { showToast('Please sign in first', 'info'); return; }
       if (window._userPlan === 'free') { showUpgradeModal(); return; }
       let contacts = [];
       try { contacts = await (await fetch('/api/contacts', { headers: { 'Authorization': `Bearer ${accessToken}` } })).json(); } catch (_) {}
-      if (!Array.isArray(contacts) || !contacts.length) { showToast('Önce bir sohbet analiz et — sonra o kişiye göndermeden önce kontrol edebilirsin', 'info'); return; }
+      if (!Array.isArray(contacts) || !contacts.length) { showToast('Add a person first', 'info'); return; }
       if (contacts.length === 1) return pickBysContact(contacts[0].id);
       showBysPicker(contacts);
     }
@@ -6487,14 +6487,14 @@
         const c = await (await fetch('/api/contacts/' + id, { headers: { 'Authorization': `Bearer ${accessToken}` } })).json();
         activeContactContext = { id: c.id, name: c.name, type: c.type, relationship_state: c.relationship_state, relationship_summary: c.relationship_summary, relationship_tier: c.relationship_tier, observed_patterns: c.observed_patterns, character_profile: c.character_profile, role_names: c.role_names, person_a: c.person_a };
         openBeforeYouSend(activeContactContext);
-      } catch (_) { showToast('Kişi yüklenemedi', 'error'); }
+      } catch (_) { showToast('Could not load that person', 'error'); }
     }
     function showBysPicker(contacts) {
       const escH = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       document.getElementById('bysPickerOverlay')?.remove();
       const ov = document.createElement('div');
       ov.id = 'bysPickerOverlay'; ov.className = 'bys-picker-overlay';
-      ov.innerHTML = `<div class="bys-picker"><div class="bys-picker-head">Kime göndereceksin?</div><div class="bys-picker-list">${contacts.map(c => `<button type="button" class="bys-picker-item" data-id="${escH(c.id)}">${escH(c.name || '?')}<span>${escH(c.type || '')}</span></button>`).join('')}</div><button type="button" class="bys-picker-cancel">Vazgeç</button></div>`;
+      ov.innerHTML = `<div class="bys-picker"><div class="bys-picker-head">Who is it for?</div><div class="bys-picker-list">${contacts.map(c => `<button type="button" class="bys-picker-item" data-id="${escH(c.id)}">${escH(c.name || '?')}<span>${escH(c.type || '')}</span></button>`).join('')}</div><button type="button" class="bys-picker-cancel">Vazgeç</button></div>`;
       document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
       ov.querySelector('.bys-picker-cancel').onclick = () => ov.remove();
@@ -6503,17 +6503,17 @@
     document.getElementById('bysHomeCta')?.addEventListener('click', startBeforeYouSend);
     document.getElementById('deleteAccountBtn')?.addEventListener('click', async function () {
       if (!accessToken) return;
-      const typed = prompt('Hesabın ve TÜM verin kalıcı olarak silinecek. Onaylamak için SIL yaz:');
+      const typed = prompt('Your account and ALL your data will be permanently deleted. Type DELETE to confirm:');
       if (typed == null) return;
-      if (!/^s[iıİI]l$/i.test(typed.trim())) { showToast('Silme iptal edildi', 'info'); return; }
-      this.disabled = true; this.textContent = 'Siliniyor…';
+      if (!/^(delete|s[iıİI]l)$/i.test(typed.trim())) { showToast('Deletion cancelled', 'info'); return; }
+      this.disabled = true; this.textContent = 'Deleting…';
       try {
         const r = await fetch('/api/account', { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } });
         if (!r.ok) throw new Error('fail');
-        showToast('Hesabın ve tüm verin silindi', 'success');
+        showToast('Your account and all your data were deleted', 'success');
         try { await sbClient?.auth.signOut(); } catch (_) {}
         setTimeout(() => { location.href = '/'; }, 1200);
-      } catch (e) { showToast('Silme başarısız, tekrar dene', 'error'); this.disabled = false; this.textContent = 'Hesabımı ve tüm verimi sil'; }
+      } catch (e) { showToast('Deletion failed — please try again', 'error'); this.disabled = false; this.textContent = 'Delete my account and all my data'; }
     });
     document.getElementById('wowDetailsToggle')?.addEventListener('click', function () {
       const d = document.getElementById('wowDetails');
@@ -6901,15 +6901,15 @@
         const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
         const file = new File([blob], 'sayilarla-iliskimiz.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], text: 'Sohbetimizin sayıları 👀 https://www.aiwillmake.com/?ref=statcard', url: 'https://www.aiwillmake.com/?ref=statcard' });
+          await navigator.share({ files: [file], text: 'https://www.aiwillmake.com/?ref=statcard', url: 'https://www.aiwillmake.com/?ref=statcard' });
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'sayilarla-iliskimiz.png'; a.click();
           setTimeout(() => URL.revokeObjectURL(url), 4000);
-          showToast('Görsel indirildi', 'success');
+          showToast('Image downloaded', 'success');
         }
       } catch (e) {
-        if (e?.name !== 'AbortError') { console.error('[ws-share]', e); showToast('Paylaşım başarısız', 'error'); }
+        if (e?.name !== 'AbortError') { console.error('[ws-share]', e); showToast('Sharing failed', 'error'); }
       } finally {
         touched.forEach(([n, v]) => { n.nodeValue = v; });
         if (shareRow) shareRow.style.display = '';
@@ -7076,12 +7076,12 @@
       document.getElementById('upgradeModalTitle').textContent = isImport
         ? 'More people, more insight.'
         : isRehearse
-          ? 'Tam prova için üye ol.'
+          ? 'Sign up to continue.'
           : 'Your AI twin is ready.';
       document.getElementById('upgradeModalSub').textContent = isImport
         ? 'You\'ve used your free import. Subscribe to add more people and start practicing.'
         : isRehearse
-          ? 'Ücretsiz 1 prova hakkın bitti. Sınırsız prova + canlı pratik için üye ol.'
+          ? 'You used your free conversation. Sign up to keep talking.'
           : 'Subscribe to start practicing with them.';
       const preview = document.getElementById('upgradePreview');
       if (!isImport && activeContactContext) {
@@ -9696,14 +9696,14 @@
     let _predictionId = null;
 
     const PREDICTION_OPTIONS = [
-      { key: 'positive',  label: 'Olumlu karşılar' },
-      { key: 'resistant', label: 'Direnç gösterir' },
-      { key: 'deflect',   label: 'Konuyu geçiştirir' },
+      { key: 'positive',  label: 'Receptive' },
+      { key: 'resistant', label: 'Resistant' },
+      { key: 'deflect',   label: 'Deflects' },
     ];
 
     function showPredictionBet(msgText, contactCtx, intentGoal) {
-      const name = contactCtx?.name || 'karşı taraf';
-      document.getElementById('predictionBetTitle').textContent = `Sence ${name} nasıl tepki verir?`;
+      const name = contactCtx?.name || 'they';
+      document.getElementById('predictionBetTitle').textContent = `How do you think ${name} will react?`;
       const optEl = document.getElementById('predictionBetOptions');
       optEl.innerHTML = '';
       PREDICTION_OPTIONS.forEach(opt => {
@@ -9848,7 +9848,7 @@
     async function ensureTwinProfile(typingEl) {
       const c = _simCharacter;
       if (!c || !c.contact_id || (c.character_profile && String(c.character_profile).trim())) return;
-      if (typingEl) typingEl.textContent = 'Twin hazırlanıyor…';
+      if (typingEl) typingEl.textContent = 'Getting them ready…';
       const started = Date.now();
       while (Date.now() - started < 90000) {
         try {
@@ -10058,8 +10058,8 @@
           let outcomeKey = 'deflect';
           if (positiveHints.some(w => debriefLower.includes(w))) outcomeKey = 'positive';
           else if (resistantHints.some(w => debriefLower.includes(w))) outcomeKey = 'resistant';
-          const outcomeLabelMap = { positive: 'Olumlu karşıladı', resistant: 'Direnç gösterdi', deflect: 'Konuyu geçiştirdi' };
-          const personName = _simCharacter?.name || 'Karşı taraf';
+          const outcomeLabelMap = { positive: 'Receptive', resistant: 'Resistant', deflect: 'Deflected' };
+          const personName = _simCharacter?.name || 'They';
           const isMatch = outcomeKey === _userPrediction.key;
           if (_predictionId && accessToken) {
             fetch(`/api/predictions/${_predictionId}/resolve`, {
@@ -10069,8 +10069,8 @@
             }).catch(() => {});
           }
           document.getElementById('rp-prediction-result-text').innerHTML =
-            `<p style="margin:0 0 5px">Sen: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simülasyon: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
-            `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `${personName}'i iyi tanıyorsun! ✓` : `${personName} seni şaşırttı.`}</p>`;
+            `<p style="margin:0 0 5px">You: <strong>${_userPrediction.label}</strong> &nbsp;·&nbsp; Simulation: <strong>${outcomeLabelMap[outcomeKey]}</strong></p>` +
+            `<p style="margin:0" class="${isMatch ? 'rp-prediction-match' : 'rp-prediction-miss'}">${isMatch ? `You know ${personName} well! ✓` : `${personName} surprised you.`}</p>`;
         }
         // ────────────────────────────────────────────────────────────
 
@@ -10314,7 +10314,7 @@
           const file = new File([blob], 'relationship-profile.png', { type: 'image/png' });
           if (navigator.share && navigator.canShare?.({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: 'İlişki profili', text: 'https://www.aiwillmake.com/?ref=profilecard', url: 'https://www.aiwillmake.com/?ref=profilecard' });
+              await navigator.share({ files: [file], title: 'aiwillmake', text: 'https://www.aiwillmake.com/?ref=profilecard', url: 'https://www.aiwillmake.com/?ref=profilecard' });
             } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
           } else {
             const url = URL.createObjectURL(blob);
@@ -10416,7 +10416,7 @@
           const file = new File([blob], 'strategy-card.png', { type: 'image/png' });
           if (navigator.share && navigator.canShare?.({ files: [file] })) {
             try {
-              await navigator.share({ files: [file], title: 'Prova kartı', text: 'https://www.aiwillmake.com/?ref=strategycard', url: 'https://www.aiwillmake.com/?ref=strategycard' });
+              await navigator.share({ files: [file], title: 'aiwillmake', text: 'https://www.aiwillmake.com/?ref=strategycard', url: 'https://www.aiwillmake.com/?ref=strategycard' });
             } catch (e) { if (e.name !== 'AbortError') showToast('Share cancelled', 'error'); }
           } else {
             const url = URL.createObjectURL(blob);

@@ -6,10 +6,10 @@ their AI twin writes back the way they used to — a space for the words left un
 a letter, a goodbye. Founder decision (Nov 25, 2026): the product serves **only** this purpose.
 
 ## Market
-- **Global, US-weighted**, English first (TR/ES translations kept). Unknown browser languages open in English.
+- **Global, US-weighted, English-only site** (founder decision Nov 25, 2026: language switcher removed, TR/ES dictionaries dormant). The twin still replies in whatever language the user writes in, and the crisis message follows that language (Turkish → 112, otherwise 988).
 - In the US, iMessage dominates and WhatsApp is secondary → the **3-answer describe path is the main door**;
   WhatsApp export and screenshots are the "make it closer" option.
-- Turkey remains a secondary market (Turkish guides under /rehber).
+- Turkish guides retired: /rehber/* 301 → the matching /guides page. The KVKK notice stays (legal), labelled "Turkey (KVKK) notice".
 
 ## What the research says (Nov 2026 sweeps)
 - The emotional hit comes from **text built from the person's real words** (Project December, Replika's origin,
@@ -36,8 +36,7 @@ a letter, a goodbye. Founder decision (Nov 25, 2026): the product serves **only*
   full deletion. The closing note after a conversation is warm and never coaches.
 - Rehearsal-era UI (before-you-send, strategy cards, accuracy stars, archetype/mirror, demo personas) is hidden;
   the code stays dormant. The living-relationship stats page and guides are retired (301 → home / guides index).
-- **Content:** /guides (EN): save texts from someone who died · letter to someone who died · AI and a lost
-  loved one (honest explainer). /rehber (TR): mektup · mesajları saklamak · yapay zekâ açıklaması.
+- **Content:** /guides: save texts from someone who died · letter to someone who died · AI and a lost loved one (honest explainer).
 - **Ops:** graceful AI-down mode, `node smoke_test.js [url]` (29 checks), `node -r dotenv/config
   funnel_report.js [days]`, first-touch attribution on every event.
 

@@ -9,7 +9,7 @@
 > and "live-verified" were true-as-believed at the time and are NOT current facts. External audit of product
 > value/moat/retention/monetization: 8-analyst report, findings applied in commit after 31c5e29.
 > **PRODUCT PIVOT (2026-11-25): aiwillmake now serves ONLY "talk again with someone you've lost" — global, US-weighted,
-> English-first. Every twin is forced to contact_status=unreachable server-side; rehearsal UI is hidden (code dormant).
+> ENGLISH-ONLY site (switcher removed 2026-11-25; /rehber → /guides; twin replies in the user's own language). Every twin is forced to contact_status=unreachable server-side; rehearsal UI is hidden (code dormant).
 > STRATEGY.md is the source of truth; sections below describing rehearsal/navigator features are historical.**
 > **Strategy + market research (Nov 2026): see STRATEGY.md** — competitors, Turkish market, pricing, distribution,
 > and the decisions behind the free /whatsapp-sohbet-analizi tool, letter/hard modes, KVKK consent.

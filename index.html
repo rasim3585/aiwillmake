@@ -403,7 +403,7 @@
       <span class="hdr-logo-icon">◈</span>
       <span class="hdr-logo-text">AIWILLMAKE</span>
     </a>
-    <div id="langSwitch" style="display:inline-flex;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:2px;margin-right:10px;">
+    <div id="langSwitch" style="display:none;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:2px;margin-right:10px;">
       <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">TR</button>
       <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">EN</button>
       <button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')" style="border:none;background:transparent;color:inherit;opacity:.7;font:inherit;font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:6px;cursor:pointer;line-height:1;">ES</button>
@@ -551,7 +551,7 @@
       <a href="app.html" class="ft-link">App</a>
       <a href="privacy.html" class="ft-link">Privacy Policy</a>
       <a href="terms.html" class="ft-link">Terms of Use</a>
-      <a href="kvkk.html" class="ft-link">KVKK</a>
+      <a href="kvkk.html" class="ft-link">Turkey (KVKK) notice</a>
       <a href="/guides" class="ft-link">Guides</a>
     </nav>
   </div>
@@ -707,8 +707,7 @@
     "App":{tr:"Uygulama",es:"App"},"Privacy Policy":{tr:"Gizlilik Politikası",es:"Política de privacidad"},"Terms of Use":{tr:"Kullanım Koşulları",es:"Términos de uso"},
     "© 2026 aiwillmake. All rights reserved.":{tr:"© 2026 aiwillmake. Tüm hakları saklıdır.",es:"© 2026 aiwillmake. Todos los derechos reservados."},"Built by":{tr:"Geliştiren:",es:"Creado por"}
   };
-  let LANG = localStorage.getItem('app_lang') || (navigator.language || 'en').slice(0,2).toLowerCase();
-  if (!['tr','en','es'].includes(LANG)) LANG = 'en';
+  let LANG = 'en'; try { localStorage.setItem('app_lang', 'en'); } catch (_) {}
   const origText = new WeakMap();
   function walk(node) {
     if (node.nodeType === 3) {
