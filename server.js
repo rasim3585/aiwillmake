@@ -314,10 +314,13 @@ async function probeAiHealth() {
     }
   } catch (_) { /* network blip: keep the last known state */ }
 }
-setTimeout(probeAiHealth, 3000);
+// Probe at boot (no delay): on a serverless cold start the first visitor's /api/config
+// must not see ai:true before the probe has answered.
+const _aiFirstProbe = probeAiHealth();
 setInterval(probeAiHealth, 15 * 60 * 1000).unref?.();
 
-app.get('/api/config', (req, res) => {
+app.get('/api/config', async (req, res) => {
+  if (_aiHealth.ok === null) await Promise.race([_aiFirstProbe, new Promise(r => setTimeout(r, 4000))]);
   res.json({
     supabaseUrl,
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
